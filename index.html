@@ -354,13 +354,14 @@
 
   <script>
     // -------------------------------------------------------------
-    // CONFIGURACIÓN DE CONEXIÓN (REEMPLAZA AQUÍ TUS CREDENCIALES)
+    // CONFIGURACIÓN DE CONEXIÓN
     // -------------------------------------------------------------
     const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
     const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
     const GEMINI_API_KEY = "AQ.Ab8RN6J_iYjSvQ-3bn1E_61jyXKDUrvtuXFgKGjzpGnXyOYZmA";    
 
-    const supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Declaración correcta sin colisión
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let usuarioActual = null;
     let moduloActual = null;
@@ -385,7 +386,7 @@
 
       err.innerText = "Verificando en padrón...";
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('usuarios')
         .select('*')
         .eq('email', email)
@@ -425,7 +426,7 @@
     async function cargarModuloDocencia() {
       document.getElementById('seccionDocencia').classList.remove('hidden');
 
-      const { data, error } = await supabase
+      const { data, error } = await supabaseClient
         .from('modulos')
         .select('*')
         .eq('activo', true)
@@ -535,7 +536,7 @@
     }
 
     async function verificarProgresoExistente() {
-      const { data } = await supabase
+      const { data } = await supabaseClient
         .from('progreso_maestro')
         .select('*')
         .eq('usuario_id', usuarioActual.id)
@@ -555,7 +556,7 @@
       const contenedor = document.getElementById('contenedorMuro');
       muro.classList.remove('hidden');
 
-      const { data } = await supabase
+      const { data } = await supabaseClient
         .from('progreso_maestro')
         .select('reflexion, completado_en, usuarios(nombre)')
         .eq('modulo_id', moduloActual.id)
