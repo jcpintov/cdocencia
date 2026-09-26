@@ -360,7 +360,7 @@
     const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
     const GEMINI_API_KEY = "AQ.Ab8RN6J_iYjSvQ-3bn1E_61jyXKDUrvtuXFgKGjzpGnXyOYZmA";    
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabase = supabaseClient.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let usuarioActual = null;
     let moduloActual = null;
@@ -516,7 +516,7 @@
       }
 
       // Guardar en Supabase
-      const { error } = await supabase.from('progreso_maestro').upsert({
+      const { error } = await supabaseClient.from('progreso_maestro').upsert({
         usuario_id: usuarioActual.id,
         modulo_id: moduloActual.id,
         respuestas_evaluacion: {},
@@ -620,7 +620,7 @@ Responde ÚNICAMENTE con un objeto JSON válido con este formato:
         const jsonResultado = JSON.parse(rawData.candidates[0].content.parts[0].text);
 
         // Guardar en Supabase
-        const { error } = await supabase.from('modulos').insert({
+        const { error } = await supabaseClient.from('modulos').insert({
           numero_orden: orden,
           titulo: titulo,
           contenido_trazado: texto,
