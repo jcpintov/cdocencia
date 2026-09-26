@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Docencia Masónica de Tercer Grado</title>
+  
+  <!-- Tipografía accesible -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Supabase JS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --bg-color: #F8F7F4;
+      --card-bg: #FFFFFF;
+      --text-main: #1C2321;
+      --text-muted: #495057;
+      --primary: #1A2B3C;
+      --primary-hover: #0F1A24;
+      --accent-gold: #9E7D3B;
+      --gold-light: #F4EEDF;
+      --border-color: #DDE1E5;
+      --success: #1E5E3A;
+      --error: #8A1C14;
+      --font-reading: 'Literata', Georgia, serif;
+      --font-ui: 'Inter', system-ui, sans-serif;
+      --base-font-size: 19px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      font-family: var(--font-reading);
+      font-size: var(--base-font-size);
+      line-height: 1.75;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Prevención básica de copia de trazados */
+    .protected-text {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    /* Encabezado */
+    header {
+      background: var(--primary);
+      color: #FFFFFF;
+      padding: 18px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 3px solid var(--accent-gold);
+      font-family: var(--font-ui);
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+
+    .header-controls {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .font-btn {
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: bold;
+    }
+
+    .logout-btn {
+      background: transparent;
+      border: 1px solid var(--accent-gold);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    /* Contenedor principal */
+    main {
+      flex: 1;
+      max-width: 860px;
+      width: 100%;
+      margin: 32px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 36px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+      margin-bottom: 28px;
+    }
+
+    h1, h2, h3 {
+      font-family: var(--font-reading);
+      color: var(--primary);
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+
+    /* Formularios y Botones accesibles */
+    input[type="email"], input[type="password"], textarea, select {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 1.05rem;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      margin-top: 8px;
+      margin-bottom: 20px;
+      font-family: var(--font-ui);
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #FFFFFF;
+      font-family: var(--font-ui);
+      font-size: 1.15rem;
+      font-weight: 600;
+      padding: 16px 28px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-block;
+      width: 100%;
+      text-align: center;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    /* Modal de Descargo Obligatorio */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(10, 16, 22, 0.75);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: #FFFFFF;
+      border-top: 5px solid var(--accent-gold);
+      border-radius: 8px;
+      max-width: 620px;
+      width: 100%;
+      padding: 32px;
+      text-align: center;
+    }
+
+    /* Cuestionario de Preguntas */
+    .pregunta-card {
+      margin-bottom: 30px;
+      padding: 20px;
+      border-left: 4px solid var(--accent-gold);
+      background: #FAFAFA;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .opcion-label {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 1rem;
+    }
+
+    .opcion-label input {
+      margin-right: 14px;
+      transform: scale(1.3);
+    }
+
+    .feedback-box {
+      margin-top: 12px;
+      padding: 14px;
+      background: var(--gold-light);
+      border-left: 4px solid var(--accent-gold);
+      border-radius: 4px;
+      font-size: 0.95rem;
+      display: none;
+    }
+
+    /* Muro de Reflexiones */
+    .reflexion-item {
+      background: #FAFAF8;
+      border-left: 3px solid var(--primary);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .reflexion-autor {
+      font-size: 0.85rem;
+      font-family: var(--font-ui);
+      font-weight: 600;
+      color: var(--accent-gold);
+      margin-bottom: 4px;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body oncontextmenu="return false;">
+
+  <!-- ENCABEZADO -->
+  <header>
+    <div class="brand-title">DOCENCIA MASÓNICA DE TERCER GRADO</div>
+    <div class="header-controls">
+      <button class="font-btn" onclick="cambiarTamanoFuente(1)" title="Aumentar letra">A+</button>
+      <button class="font-btn" onclick="cambiarTamanoFuente(-1)" title="Disminuir letra">A-</button>
+      <button id="btnSalir" class="logout-btn hidden" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </header>
+
+  <!-- PANTALLA 1: INGRESO AL TEMPLO VIRTUAL -->
+  <main id="seccionLogin">
+    <div class="card" style="max-width: 480px; margin: 40px auto;">
+      <h2 style="text-align: center;">Cámara de Maestros</h2>
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui);">
+        Ingrese con su correo registrado y credencial de acceso.
+      </p>
+      
+      <label for="inputEmail" style="font-family: var(--font-ui); font-size: 0.95rem;">Correo Electrónico:</label>
+      <input type="email" id="inputEmail" placeholder="su.correo@ejemplo.com">
+
+      <label for="inputClave" style="font-family: var(--font-ui); font-size: 0.95rem;">Clave de Paso:</label>
+      <input type="password" id="inputClave" placeholder="••••••••">
+
+      <button class="btn-primary" onclick="iniciarSesion()">Acceder a la Cámara</button>
+      <p id="errorLogin" style="color: var(--error); margin-top: 14px; text-align: center; font-size: 0.95rem;"></p>
+    </div>
+  </main>
+
+  <!-- MODAL: DECLARACIÓN DE SIGILO Y PRIVACIDAD -->
+  <div id="modalSigilo" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h2 style="color: var(--accent-gold);">Compromiso de Sigilo</h2>
+      <p style="font-size: 1.05rem; margin-bottom: 24px; text-align: justify;">
+        Al ingresar a esta Cámara, declaro mi solemne compromiso de mantener estricta reserva sobre los contenidos, 
+        símbolos y reflexiones de mis Hermanos aquí expuestos. Reconozco que este espacio pertenece al ámbito exclusivo 
+        del Tercer Grado, quedando estrictamente prohibida su difusión o copia bajo los preceptos del deber masónico.
+      </p>
+      <button class="btn-primary" onclick="aceptarSigilo()">Acepto y Reafirmo mi Deber</button>
+    </div>
+  </div>
+
+  <!-- PANTALLA 2: CONTENIDO DOCENTE Y EVALUACIÓN -->
+  <main id="seccionDocencia" class="hidden">
+    <!-- Lectura del Trazado -->
+    <div class="card">
+      <h1 id="temaTitulo">Cargando tema de instrucción...</h1>
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
+      <div id="temaCuerpo" class="protected-text" style="white-space: pre-line;"></div>
+    </div>
+
+    <!-- Evaluación de 6 preguntas -->
+    <div class="card">
+      <h2>Examen de Comprensión Simbólica</h2>
+      <p style="color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui);">
+        Seleccione la respuesta que considere correcta en cada una de las 6 interrogantes.
+      </p>
+      
+      <div id="contenedorPreguntas"></div>
+
+      <button id="btnVerificar" class="btn-primary" onclick="verificarRespuestas()">Verificar Respuestas</button>
+    </div>
+
+    <!-- Reflexión personal -->
+    <div id="bloqueReflexion" class="card hidden">
+      <h2>Aporte Personal a la Cámara</h2>
+      <p style="color: var(--text-muted); margin-bottom: 12px; font-family: var(--font-ui);">
+        Deje una reflexión (máximo 200 palabras) sobre lo aprehendido para completar el tema.
+      </p>
+
+      <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión..."></textarea>
+      <p id="contadorPalabras" style="font-family: var(--font-ui); font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
+        Palabras: 0 / 200
+      </p>
+
+      <button class="btn-primary" onclick="guardarReflexionYCompletar()">Consagrar Reflexión y Concluir Módulo</button>
+    </div>
+
+    <!-- Muro Fraterno de Reflexiones -->
+    <div id="bloqueMuro" class="card hidden">
+      <h2>Reflexiones de los Maestros</h2>
+      <p style="color: var(--text-muted); margin-bottom: 20px; font-family: var(--font-ui);">
+        Aportes de los Hermanos que han completado este tema de docencia:
+      </p>
+      <div id="contenedorMuro"></div>
+    </div>
+  </main>
+
+  <!-- PANTALLA 3: PANEL DE ADMINISTRACIÓN -->
+  <main id="seccionAdmin" class="hidden">
+    <div class="card">
+      <h2>Panel de Administración - Crear Nuevo Tema</h2>
+      <p style="color: var(--text-muted); margin-bottom: 20px; font-family: var(--font-ui);">
+        Pegue el trazado crudo. La IA estructurará las 6 preguntas, la retroalimentación y la síntesis pedagógica.
+      </p>
+
+      <label for="adminOrden" style="font-family: var(--font-ui);">Número de Módulo/Tema:</label>
+      <input type="number" id="adminOrden" value="1">
+
+      <label for="adminTitulo" style="font-family: var(--font-ui);">Título del Trazado:</label>
+      <input type="text" id="adminTitulo" placeholder="Ej: El Sentido Simbólico del Acanto">
+
+      <label for="adminTexto" style="font-family: var(--font-ui);">Texto Completo del Trazado:</label>
+      <textarea id="adminTexto" rows="10" placeholder="Pegue aquí el contenido doctrinal..."></textarea>
+
+      <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">Procesar y Publicar Tema con Gemini</button>
+      <p id="adminStatus" style="margin-top: 14px; font-family: var(--font-ui); font-size: 0.95rem;"></p>
+    </div>
+  </main>
+
+  <script>
+    // -------------------------------------------------------------
+    // CONFIGURACIÓN DE CONEXIÓN (REEMPLAZA AQUÍ TUS CREDENCIALES)
+    // -------------------------------------------------------------
+    const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
+    const GEMINI_API_KEY = "AQ.Ab8RN6J_iYjSvQ-3bn1E_61jyXKDUrvtuXFgKGjzpGnXyOYZmA";    
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let usuarioActual = null;
+    let moduloActual = null;
+    let tamanoBase = 19;
+
+    // --- ACCESIBILIDAD: AJUSTE DE FUENTE ---
+    function cambiarTamanoFuente(delta) {
+      tamanoBase = Math.min(Math.max(tamanoBase + delta, 16), 28);
+      document.body.style.fontSize = tamanoBase + 'px';
+    }
+
+    // --- AUTENTICACIÓN SIMPLIFICADA ---
+    async function iniciarSesion() {
+      const email = document.getElementById('inputEmail').value.trim().toLowerCase();
+      const clave = document.getElementById('inputClave').value.trim();
+      const err = document.getElementById('errorLogin');
+
+      if (clave !== "OFL.146!") {
+        err.innerText = "Credencial de paso no válida.";
+        return;
+      }
+
+      err.innerText = "Verificando en padrón...";
+
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('email', email)
+        .single();
+
+      if (error || !data) {
+        err.innerText = "El correo no figura en el padrón de la Cámara.";
+        return;
+      }
+
+      usuarioActual = data;
+      document.getElementById('seccionLogin').classList.add('hidden');
+      document.getElementById('btnSalir').classList.remove('hidden');
+
+      // Mostrar modal de sigilo en cada ingreso
+      document.getElementById('modalSigilo').classList.remove('hidden');
+    }
+
+    function aceptarSigilo() {
+      document.getElementById('modalSigilo').classList.add('hidden');
+      if (usuarioActual.es_admin) {
+        document.getElementById('seccionAdmin').classList.remove('hidden');
+      }
+      cargarModuloDocencia();
+    }
+
+    function cerrarSesion() {
+      usuarioActual = null;
+      document.getElementById('seccionDocencia').classList.add('hidden');
+      document.getElementById('seccionAdmin').classList.add('hidden');
+      document.getElementById('modalSigilo').classList.add('hidden');
+      document.getElementById('btnSalir').classList.add('hidden');
+      document.getElementById('seccionLogin').classList.remove('hidden');
+    }
+
+    // --- CARGA DE CONTENIDOS Y DOCENCIA ---
+    async function cargarModuloDocencia() {
+      document.getElementById('seccionDocencia').classList.remove('hidden');
+
+      const { data, error } = await supabase
+        .from('modulos')
+        .select('*')
+        .eq('activo', true)
+        .order('numero_orden', { ascending: true })
+        .limit(1)
+        .single();
+
+      if (error || !data) {
+        document.getElementById('temaTitulo').innerText = "No hay módulos activos actualmente.";
+        return;
+      }
+
+      moduloActual = data;
+      document.getElementById('temaTitulo').innerText = "Módulo " + data.numero_orden + ": " + data.titulo;
+      document.getElementById('temaCuerpo').innerText = data.contenido_trazado;
+
+      renderizarPreguntas(data.preguntas_json.preguntas || []);
+      verificarProgresoExistente();
+    }
+
+    function renderizarPreguntas(preguntas) {
+      const cont = document.getElementById('contenedorPreguntas');
+      cont.innerHTML = "";
+
+      preguntas.forEach((p, idx) => {
+        let opcionesHtml = p.opciones.map(op => `
+          <label class="opcion-label">
+            <input type="radio" name="preg_${idx}" value="${op.letra}">
+            <span><strong>${op.letra})</strong> ${op.texto}</span>
+          </label>
+        `).join('');
+
+        cont.innerHTML += `
+          <div class="pregunta-card" id="card_preg_${idx}">
+            <p style="font-weight: 600; margin-bottom: 12px;">${idx + 1}. ${p.enunciado}</p>
+            ${opcionesHtml}
+            <div class="feedback-box" id="feedback_${idx}">
+              <strong>Respuesta Correcta: ${p.respuesta_correcta}</strong><br>
+              ${p.retroalimentacion}
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function verificarRespuestas() {
+      const preguntas = moduloActual.preguntas_json.preguntas || [];
+      let todasRespondidas = true;
+
+      preguntas.forEach((p, idx) => {
+        const seleccionada = document.querySelector(`input[name="preg_${idx}"]:checked`);
+        if (!seleccionada) todasRespondidas = false;
+        
+        // Mostrar retroalimentación con la respuesta correcta
+        const fb = document.getElementById(`feedback_${idx}`);
+        if (fb) fb.style.display = "block";
+      });
+
+      if (!todasRespondidas) {
+        alert("Por favor responda todas las preguntas antes de avanzar a la reflexión.");
+        return;
+      }
+
+      document.getElementById('bloqueReflexion').classList.remove('hidden');
+      document.getElementById('bloqueReflexion').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // --- REFLEXIÓN PERSONAL Y MURO FRATERNO ---
+    function contarPalabras() {
+      const texto = document.getElementById('textoReflexion').value.trim();
+      const cant = texto === "" ? 0 : texto.split(/\s+/).length;
+      const el = document.getElementById('contadorPalabras');
+      el.innerText = `Palabras: ${cant} / 200`;
+      el.style.color = cant > 200 ? "var(--error)" : "var(--text-muted)";
+    }
+
+    async function guardarReflexionYCompletar() {
+      const texto = document.getElementById('textoReflexion').value.trim();
+      const cant = texto === "" ? 0 : texto.split(/\s+/).length;
+
+      if (cant === 0) {
+        alert("Por favor ingrese su reflexión antes de continuar.");
+        return;
+      }
+      if (cant > 200) {
+        alert("Su reflexión supera las 200 palabras reglamentarias.");
+        return;
+      }
+
+      // Guardar en Supabase
+      const { error } = await supabase.from('progreso_maestro').upsert({
+        usuario_id: usuarioActual.id,
+        modulo_id: moduloActual.id,
+        respuestas_evaluacion: {},
+        reflexion: texto,
+        completado: true,
+        completado_en: new Date().toISOString()
+      }, { onConflict: 'usuario_id,modulo_id' });
+
+      if (error) {
+        alert("Ocurrió un error al consagrar su reflexión.");
+        return;
+      }
+
+      alert("Módulo completado con éxito. Se ha desbloqueado el muro fraterno.");
+      cargarMuroReflexiones();
+    }
+
+    async function verificarProgresoExistente() {
+      const { data } = await supabase
+        .from('progreso_maestro')
+        .select('*')
+        .eq('usuario_id', usuarioActual.id)
+        .eq('modulo_id', moduloActual.id)
+        .single();
+
+      if (data && data.completado) {
+        document.getElementById('bloqueReflexion').classList.remove('hidden');
+        document.getElementById('textoReflexion').value = data.reflexion;
+        document.getElementById('textoReflexion').disabled = true;
+        cargarMuroReflexiones();
+      }
+    }
+
+    async function cargarMuroReflexiones() {
+      const muro = document.getElementById('bloqueMuro');
+      const contenedor = document.getElementById('contenedorMuro');
+      muro.classList.remove('hidden');
+
+      const { data } = await supabase
+        .from('progreso_maestro')
+        .select('reflexion, completado_en, usuarios(nombre)')
+        .eq('modulo_id', moduloActual.id)
+        .eq('completado', true);
+
+      contenedor.innerHTML = "";
+      if (data) {
+        data.forEach(item => {
+          contenedor.innerHTML += `
+            <div class="reflexion-item">
+              <div class="reflexion-autor">${item.usuarios?.nombre || "Hermano Maestro"}</div>
+              <div>"${item.reflexion}"</div>
+            </div>
+          `;
+        });
+      }
+    }
+
+    // --- PROCESAMIENTO CON GEMINI API (PANEL ADMIN) ---
+    async function generarModuloConIA() {
+      const titulo = document.getElementById('adminTitulo').value.trim();
+      const orden = parseInt(document.getElementById('adminOrden').value);
+      const texto = document.getElementById('adminTexto').value.trim();
+      const status = document.getElementById('adminStatus');
+
+      if (!titulo || !texto) {
+        alert("Por favor complete el título y el texto del trazado.");
+        return;
+      }
+
+      status.innerText = "La IA está procesando el trazado, formulando 6 preguntas y sintetizando conclusiones...";
+
+      const promptSistema = `
+Eres un docente especializado en Tercer Grado Masónico. Analiza este texto y genera exactamente 6 preguntas con 4 opciones (A, B, C, D), indicando la respuesta correcta, la retroalimentación de cada una, un resumen formativo y una conclusión de enlace.
+Responde ÚNICAMENTE con un objeto JSON válido con este formato:
+{
+  "resumen_formativo": "...",
+  "conclusion_enlace": "...",
+  "preguntas": [
+    {
+      "numero": 1,
+      "enunciado": "...",
+      "opciones": [{"letra": "A", "texto": "..."}, {"letra": "B", "texto": "..."}, {"letra": "C", "texto": "..."}, {"letra": "D", "texto": "..."}],
+      "respuesta_correcta": "A",
+      "retroalimentacion": "..."
+    }
+  ]
+}
+`;
+
+      try {
+        const respuesta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: promptSistema + "\n\nTEXTO DEL TRAZADO:\n" + texto }] }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        });
+
+        const rawData = await respuesta.json();
+        const jsonResultado = JSON.parse(rawData.candidates[0].content.parts[0].text);
+
+        // Guardar en Supabase
+        const { error } = await supabase.from('modulos').insert({
+          numero_orden: orden,
+          titulo: titulo,
+          contenido_trazado: texto,
+          resumen_formativo: jsonResultado.resumen_formativo,
+          conclusion_enlace: jsonResultado.conclusion_enlace,
+          preguntas_json: jsonResultado,
+          activo: true
+        });
+
+        if (error) {
+          status.innerText = "Error al guardar el módulo en la base de datos: " + error.message;
+        } else {
+          status.innerText = "¡Módulo publicado con éxito en la Cámara!";
+          cargarModuloDocencia();
+        }
+
+      } catch (err) {
+        status.innerText = "Error durante el análisis con IA: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
