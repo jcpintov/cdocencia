@@ -14,10 +14,10 @@
   <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <!-- Librería para leer archivos Word (.docx) -->
+  <!-- Lector de Word (.docx) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
 
-  <!-- Librería para leer archivos PDF -->
+  <!-- Lector de PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
   <style>
@@ -174,12 +174,12 @@
     }
 
     .upload-box {
-      background: #F0F4F8;
+      background: #F4F6F9;
       border: 2px dashed var(--accent-gold);
       border-radius: 8px;
-      padding: 18px;
+      padding: 20px;
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
       font-family: var(--font-ui);
     }
 
@@ -387,13 +387,13 @@
         </p>
       </div>
 
-      <!-- Zona de subida de archivos PDF / Word -->
+      <!-- Zona de carga de archivos -->
       <div class="upload-box">
         <label for="archivoDoc" style="font-weight: 600; color: var(--primary); cursor: pointer; display: block; margin-bottom: 8px;">
           📄 Cargar Plancha desde Archivo (PDF o Word .docx)
         </label>
         <input type="file" id="archivoDoc" accept=".docx, .pdf" onchange="leerArchivoPlancha(event)" style="font-size: 0.95rem;">
-        <p id="archivoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 6px;"></p>
+        <p id="archivoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 8px; font-weight: 500;"></p>
       </div>
 
       <div class="admin-grid">
@@ -403,11 +403,11 @@
         </div>
         <div class="form-group">
           <label for="adminTitulo">Título de la Plancha</label>
-          <input type="text" id="adminTitulo" placeholder="Ej: La Muerte Simbólica y el Renacer">
+          <input type="text" id="adminTitulo" placeholder="Ej: Celo, Fervor y Constancia">
         </div>
         <div class="form-group">
           <label for="adminAutor">Autor de la Plancha</label>
-          <input type="text" id="adminAutor" placeholder="Ej: Q.·.H.·. Nombre Apellido">
+          <input type="text" id="adminAutor" placeholder="Ej: Q.·.H.·. Juan Eduardo Iturriaga Osses 3º">
         </div>
       </div>
 
@@ -456,7 +456,6 @@
       const status = document.getElementById('archivoStatus');
       status.innerText = "Extrayendo texto del archivo...";
 
-      // Sugerir título si está vacío
       const inputTitulo = document.getElementById('adminTitulo');
       if (!inputTitulo.value) {
         inputTitulo.value = file.name.replace(/\.[^/.]+$/, "");
@@ -464,7 +463,6 @@
 
       const reader = new FileReader();
 
-      // Caso 1: Archivo Word (.docx)
       if (file.name.endsWith('.docx')) {
         reader.onload = function(e) {
           mammoth.extractRawText({ arrayBuffer: e.target.result })
@@ -478,7 +476,6 @@
         };
         reader.readAsArrayBuffer(file);
       } 
-      // Caso 2: Archivo PDF
       else if (file.name.endsWith('.pdf')) {
         reader.onload = async function(e) {
           try {
@@ -718,7 +715,7 @@
       }
     }
 
-    // --- PROCESAMIENTO CON GEMINI API (PANEL ADMIN) ---
+    // --- PROCESAMIENTO ROBUSTO CON GEMINI API ---
     async function generarModuloConIA() {
       const titulo = document.getElementById('adminTitulo').value.trim();
       const autor = document.getElementById('adminAutor').value.trim() || 'Cámara del Medio';
@@ -731,11 +728,23 @@
         return;
       }
 
-      status.innerHTML = "<em>Procesando la Plancha con IA... analizando simbolismo y formulando 6 preguntas reflexivas...</em>";
+      status.innerHTML = "<em>Procesando la Plancha con IA... analizando simbolismo, citas y formulando 6 preguntas reflexivas...</em>";
 
       const promptSistema = `
-Eres un docente especializado en Tercer Grado Masónico. Analiza este texto y genera exactamente 6 preguntas con 4 opciones (A, B, C, D), indicando la respuesta correcta, la retroalimentación de cada una, un resumen formativo y una conclusión de enlace.
-Responde ÚNICAMENTE con un objeto JSON válido con este formato:
+Eres un pedagogo e instructor especializado en la Cámara del Medio (Tercer Grado de la Masonería).
+Analiza el siguiente trazado (el cual puede incluir citas al pie, notas bibliográficas, enlaces o encabezados). Debes enfocarte en el contenido filosófico y moral profundo del texto, ignorando números de página o URLs de referencia aisladas.
+
+Genera exactamente:
+1. "resumen_formativo": Síntesis sobria de las ideas centrales (máximo 150 palabras).
+2. "conclusion_enlace": Una reflexión armónica que enlace los deberes y las virtudes expuestas (120-180 palabras).
+3. "preguntas": Un arreglo de exactamente 6 preguntas pedagógicas de selección múltiple sobre los conceptos del trazado. Cada pregunta debe contener:
+   - "numero": (1 a 6)
+   - "enunciado": Texto claro y reflexivo de la pregunta.
+   - "opciones": 4 opciones con campos "letra" (A, B, C, D) y "texto".
+   - "respuesta_correcta": La letra de la opción verdadera.
+   - "retroalimentacion": Breve explicación fraterna y docente de por qué esa es la respuesta y qué enseñanza transmite.
+
+REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto previo ni posterior, cumpliendo esta estructura:
 {
   "resumen_formativo": "...",
   "conclusion_enlace": "...",
@@ -743,7 +752,12 @@ Responde ÚNICAMENTE con un objeto JSON válido con este formato:
     {
       "numero": 1,
       "enunciado": "...",
-      "opciones": [{"letra": "A", "texto": "..."}, {"letra": "B", "texto": "..."}, {"letra": "C", "texto": "..."}, {"letra": "D", "texto": "..."}],
+      "opciones": [
+        {"letra": "A", "texto": "..."},
+        {"letra": "B", "texto": "..."},
+        {"letra": "C", "texto": "..."},
+        {"letra": "D", "texto": "..."}
+      ],
       "respuesta_correcta": "A",
       "retroalimentacion": "..."
     }
@@ -752,18 +766,45 @@ Responde ÚNICAMENTE con un objeto JSON válido con este formato:
 `;
 
       try {
-        const respuesta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
+        const respuesta = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: promptSistema + "\n\nTEXTO DEL TRAZADO:\n" + texto }] }],
-            generationConfig: { responseMimeType: "application/json" }
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  { text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }
+                ]
+              }
+            ],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.2
+            }
           })
         });
 
         const rawData = await respuesta.json();
-        const jsonResultado = JSON.parse(rawData.candidates[0].content.parts[0].text);
 
+        if (rawData.error) {
+          throw new Error(`Google API: ${rawData.error.message} (Código ${rawData.error.code})`);
+        }
+
+        if (!rawData.candidates || rawData.candidates.length === 0) {
+          throw new Error("La IA no devolvió candidatos válidos para este texto.");
+        }
+
+        let contenidoTexto = rawData.candidates[0].content.parts[0].text;
+        
+        // Limpieza de caracteres de formato
+        contenidoTexto = contenidoTexto.replace(/```json/gi, '').replace(/```/gi, '').trim();
+
+        const jsonResultado = JSON.parse(contenidoTexto);
+
+        // Guardar en Supabase
         const { error } = await sbApp.from('modulos').insert({
           numero_orden: orden,
           titulo: titulo,
@@ -776,7 +817,7 @@ Responde ÚNICAMENTE con un objeto JSON válido con este formato:
         });
 
         if (error) {
-          status.innerText = "Error al guardar el módulo en la base de datos: " + error.message;
+          status.innerText = "Error al registrar en la base de datos: " + error.message;
         } else {
           status.innerText = "¡Plancha procesada y consagrada con éxito en la Cámara!";
           cargarModuloDocencia();
