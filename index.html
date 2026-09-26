@@ -286,11 +286,15 @@
 
   <!-- PANTALLA 2: CONTENIDO DOCENTE Y EVALUACIÓN -->
   <main id="seccionDocencia" class="hidden">
-    <!-- Lectura del Trazado -->
-    <div class="card">
-      <h1 id="temaTitulo">Cargando tema de instrucción...</h1>
-      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0;">
-      <div id="temaCuerpo" class="protected-text" style="white-space: pre-line;"></div>
+<!-- Lectura del Trazado -->
+    <div class="card" style="border-top: 4px solid var(--accent-gold);">
+      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px;">
+        <span id="temaNumero" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1px;">Módulo 1</span>
+        <span id="temaAutor" style="font-family: var(--font-ui); font-size: 0.95rem; color: var(--text-muted); font-style: italic;"></span>
+      </div>
+      <h1 id="temaTitulo" style="margin-bottom: 18px;">Cargando tema de instrucción...</h1>
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0 28px 0;">
+      <div id="temaCuerpo" class="protected-text" style="white-space: pre-line; line-height: 1.85;"></div>
     </div>
 
     <!-- Evaluación de 6 preguntas -->
