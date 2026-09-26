@@ -14,6 +14,12 @@
   <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+  <!-- Librería para leer archivos Word (.docx) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
+
+  <!-- Librería para leer archivos PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
   <style>
     :root {
       --bg-color: #F8F7F4;
@@ -165,6 +171,16 @@
       .admin-grid {
         grid-template-columns: 1fr;
       }
+    }
+
+    .upload-box {
+      background: #F0F4F8;
+      border: 2px dashed var(--accent-gold);
+      border-radius: 8px;
+      padding: 18px;
+      text-align: center;
+      margin-bottom: 20px;
+      font-family: var(--font-ui);
     }
 
     .btn-primary {
@@ -367,8 +383,17 @@
       <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 14px; margin-bottom: 22px;">
         <h2 style="margin-bottom: 6px;">Panel de Docencia: Nueva Plancha</h2>
         <p style="color: var(--text-muted); font-family: var(--font-ui); font-size: 0.95rem;">
-          Ingrese los datos del trabajo. La IA generará automáticamente la síntesis pedagógica, las 6 preguntas con alternativas y la conclusión.
+          Suba un archivo Word (.docx), PDF o pegue el trazado. La IA generará automáticamente la síntesis pedagógica, las 6 preguntas con alternativas y la conclusión.
         </p>
+      </div>
+
+      <!-- Zona de subida de archivos PDF / Word -->
+      <div class="upload-box">
+        <label for="archivoDoc" style="font-weight: 600; color: var(--primary); cursor: pointer; display: block; margin-bottom: 8px;">
+          📄 Cargar Plancha desde Archivo (PDF o Word .docx)
+        </label>
+        <input type="file" id="archivoDoc" accept=".docx, .pdf" onchange="leerArchivoPlancha(event)" style="font-size: 0.95rem;">
+        <p id="archivoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 6px;"></p>
       </div>
 
       <div class="admin-grid">
@@ -388,7 +413,7 @@
 
       <div class="form-group">
         <label for="adminTexto">Texto Completo del Trazado / Plancha</label>
-        <textarea id="adminTexto" rows="12" placeholder="Pegue aquí el contenido doctrinal completo..."></textarea>
+        <textarea id="adminTexto" rows="12" placeholder="El texto del archivo o el que pegue aquí será procesado por la IA..."></textarea>
       </div>
 
       <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">
@@ -400,6 +425,11 @@
   </main>
 
   <script>
+    // Configuración para el lector de PDF
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    }
+
     // -------------------------------------------------------------
     // CONFIGURACIÓN DE CONEXIÓN
     // -------------------------------------------------------------
@@ -418,6 +448,64 @@
       document.body.style.fontSize = tamanoBase + 'px';
     }
 
+    // --- LECTURA DE ARCHIVOS PDF Y DOCX ---
+    async function leerArchivoPlancha(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const status = document.getElementById('archivoStatus');
+      status.innerText = "Extrayendo texto del archivo...";
+
+      // Sugerir título si está vacío
+      const inputTitulo = document.getElementById('adminTitulo');
+      if (!inputTitulo.value) {
+        inputTitulo.value = file.name.replace(/\.[^/.]+$/, "");
+      }
+
+      const reader = new FileReader();
+
+      // Caso 1: Archivo Word (.docx)
+      if (file.name.endsWith('.docx')) {
+        reader.onload = function(e) {
+          mammoth.extractRawText({ arrayBuffer: e.target.result })
+            .then(function(result) {
+              document.getElementById('adminTexto').value = result.value.trim();
+              status.innerText = "Documento Word cargado correctamente.";
+            })
+            .catch(function(err) {
+              status.innerText = "Error al leer Word: " + err.message;
+            });
+        };
+        reader.readAsArrayBuffer(file);
+      } 
+      // Caso 2: Archivo PDF
+      else if (file.name.endsWith('.pdf')) {
+        reader.onload = async function(e) {
+          try {
+            const typedarray = new Uint8Array(e.target.result);
+            const pdf = await pdfjsLib.getDocument(typedarray).promise;
+            let fullText = "";
+
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+              const page = await pdf.getPage(pageNum);
+              const textContent = await page.getTextContent();
+              const pageText = textContent.items.map(item => item.str).join(' ');
+              fullText += pageText + "\n\n";
+            }
+
+            document.getElementById('adminTexto').value = fullText.trim();
+            status.innerText = `PDF cargado con éxito (${pdf.numPages} páginas).`;
+          } catch (err) {
+            status.innerText = "Error al procesar PDF: " + err.message;
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else {
+        status.innerText = "Formato no compatible. Por favor suba un archivo .pdf o .docx";
+      }
+    }
+
+    // --- AUTENTICACIÓN SIMPLIFICADA ---
     async function iniciarSesion() {
       const email = document.getElementById('inputEmail').value.trim().toLowerCase();
       const clave = document.getElementById('inputClave').value.trim();
@@ -464,6 +552,7 @@
       document.getElementById('seccionLogin').classList.remove('hidden');
     }
 
+    // --- CARGA DE CONTENIDOS Y DOCENCIA ---
     async function cargarModuloDocencia() {
       document.getElementById('seccionDocencia').classList.remove('hidden');
 
@@ -478,7 +567,7 @@
         document.getElementById('temaNumero').innerText = "";
         document.getElementById('temaAutor').innerText = "";
         document.getElementById('temaTitulo').innerText = "No hay módulos activos actualmente.";
-        document.getElementById('temaCuerpo').innerText = "Use el Panel de Administración ubicado abajo para cargar la primera Plancha con Gemini.";
+        document.getElementById('temaCuerpo').innerText = "Suba un archivo PDF, Word o pegue un texto en el panel inferior para consagrar la primera Plancha.";
         moduloActual = null;
         return;
       }
@@ -549,6 +638,7 @@
       document.getElementById('bloqueReflexion').scrollIntoView({ behavior: 'smooth' });
     }
 
+    // --- REFLEXIÓN PERSONAL Y MURO FRATERNO ---
     function contarPalabras() {
       const texto = document.getElementById('textoReflexion').value.trim();
       const cant = texto === "" ? 0 : texto.split(/\s+/).length;
@@ -628,6 +718,7 @@
       }
     }
 
+    // --- PROCESAMIENTO CON GEMINI API (PANEL ADMIN) ---
     async function generarModuloConIA() {
       const titulo = document.getElementById('adminTitulo').value.trim();
       const autor = document.getElementById('adminAutor').value.trim() || 'Cámara del Medio';
@@ -687,7 +778,7 @@ Responde ÚNICAMENTE con un objeto JSON válido con este formato:
         if (error) {
           status.innerText = "Error al guardar el módulo en la base de datos: " + error.message;
         } else {
-          status.innerText = "¡Plancha procesada y publicada con éxito en la Cámara!";
+          status.innerText = "¡Plancha procesada y consagrada con éxito en la Cámara!";
           cargarModuloDocencia();
         }
 
