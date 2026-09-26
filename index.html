@@ -383,7 +383,7 @@
       <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 14px; margin-bottom: 22px;">
         <h2 style="margin-bottom: 6px;">Panel de Docencia: Nueva Plancha</h2>
         <p style="color: var(--text-muted); font-family: var(--font-ui); font-size: 0.95rem;">
-          Suba un archivo Word (.docx), PDF o pegue el trazado. La IA generará automáticamente la síntesis pedagógica, las 6 preguntas con alternativas y la conclusión.
+          Suba un archivo Word (.docx), PDF o pegue el trazado. Ingrese solo el nombre del autor (el sistema le antepondrá el apelativo masónico automáticamente).
         </p>
       </div>
 
@@ -406,8 +406,8 @@
           <input type="text" id="adminTitulo" placeholder="Ej: Celo, Fervor y Constancia">
         </div>
         <div class="form-group">
-          <label for="adminAutor">Autor de la Plancha</label>
-          <input type="text" id="adminAutor" placeholder="Ej: Q.·.H.·. Juan Eduardo Iturriaga Osses 3º">
+          <label for="adminAutor">Nombre del Autor (Solo Nombre)</label>
+          <input type="text" id="adminAutor" placeholder="Ej: Juan Eduardo Iturriaga Osses 3º">
         </div>
       </div>
 
@@ -435,13 +435,29 @@
     // -------------------------------------------------------------
     const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
     const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
-    const GEMINI_API_KEY = "AQ.Ab8RN6J_iYjSvQ-3bn1E_61jyXKDUrvtuXFgKGjzpGnXyOYZmA";    
+    
+    // REEMPLAZA AQUÍ CON TU CLAVE ESTÁNDAR DE GOOGLE AI STUDIO (QUE INICIA CON "AIzaSy...")
+    const GEMINI_API_KEY = "PEGA_AQUI_TU_NUEVA_CLAVE_AIzaSy";    
 
     const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let usuarioActual = null;
     let moduloActual = null;
     let tamanoBase = 19;
+
+    // --- FORMATEO AUTOMÁTICO DEL APELATIVO MASÓNICO ---
+    function formatearAutorMasonico(nombreCrudo) {
+      if (!nombreCrudo) return 'Cámara del Medio';
+      let nombreLimpio = nombreCrudo.trim();
+      
+      // Si ya contiene alguna variante del apelativo, lo respeta
+      if (/^(Q\.?·?H\.?·?|QH|Q\.\s*H\.)/i.test(nombreLimpio)) {
+        return nombreLimpio;
+      }
+      
+      // Antepone automáticamente Q.·.H.·.
+      return `Q.·.H.·. ${nombreLimpio}`;
+    }
 
     function cambiarTamanoFuente(delta) {
       tamanoBase = Math.min(Math.max(tamanoBase + delta, 16), 28);
@@ -572,7 +588,9 @@
       moduloActual = data[0];
       document.getElementById('temaNumero').innerText = "Módulo " + moduloActual.numero_orden;
       document.getElementById('temaTitulo').innerText = moduloActual.titulo;
-      document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + moduloActual.autor : "";
+      
+      // Muestra siempre el autor con el apelativo masónico asegurado
+      document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
       document.getElementById('temaCuerpo').innerText = moduloActual.contenido_trazado;
 
       renderizarPreguntas(moduloActual.preguntas_json.preguntas || []);
@@ -715,10 +733,14 @@
       }
     }
 
-    // --- PROCESAMIENTO ROBUSTO CON GEMINI API ---
+    // --- PROCESAMIENTO CON GEMINI API ---
     async function generarModuloConIA() {
       const titulo = document.getElementById('adminTitulo').value.trim();
-      const autor = document.getElementById('adminAutor').value.trim() || 'Cámara del Medio';
+      const autorInput = document.getElementById('adminAutor').value.trim();
+      
+      // Aplicación del apelativo canónico
+      const autorFinal = formatearAutorMasonico(autorInput);
+      
       const orden = parseInt(document.getElementById('adminOrden').value);
       const texto = document.getElementById('adminTexto').value.trim();
       const status = document.getElementById('adminStatus');
@@ -808,7 +830,7 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
         const { error } = await sbApp.from('modulos').insert({
           numero_orden: orden,
           titulo: titulo,
-          autor: autor,
+          autor: autorFinal,
           contenido_trazado: texto,
           resumen_formativo: jsonResultado.resumen_formativo,
           conclusion_enlace: jsonResultado.conclusion_enlace,
