@@ -19,11 +19,11 @@
       --bg-color: #F8F7F4;
       --card-bg: #FFFFFF;
       --text-main: #1C2321;
-      --text-muted: #495057;
+      --text-muted: #555E68;
       --primary: #1A2B3C;
       --primary-hover: #0F1A24;
       --accent-gold: #9E7D3B;
-      --gold-light: #F4EEDF;
+      --gold-light: #F6F1E5;
       --border-color: #DDE1E5;
       --success: #1E5E3A;
       --error: #8A1C14;
@@ -39,13 +39,12 @@
       color: var(--text-main);
       font-family: var(--font-reading);
       font-size: var(--base-font-size);
-      line-height: 1.75;
+      line-height: 1.8;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
-    /* Prevención básica de copia de trazados */
     .protected-text {
       -webkit-user-select: none;
       -moz-user-select: none;
@@ -53,7 +52,6 @@
       user-select: none;
     }
 
-    /* Encabezado */
     header {
       background: var(--primary);
       color: #FFFFFF;
@@ -99,10 +97,9 @@
       font-size: 0.9rem;
     }
 
-    /* Contenedor principal */
     main {
       flex: 1;
-      max-width: 860px;
+      max-width: 900px;
       width: 100%;
       margin: 32px auto;
       padding: 0 20px;
@@ -120,38 +117,67 @@
     h1, h2, h3 {
       font-family: var(--font-reading);
       color: var(--primary);
-      margin-bottom: 20px;
+      margin-bottom: 18px;
       line-height: 1.3;
     }
 
-    /* Formularios y Botones accesibles */
-    input[type="email"], input[type="password"], textarea, select {
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 18px;
+    }
+
+    .form-group label {
+      font-family: var(--font-ui);
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    textarea {
       width: 100%;
-      padding: 14px 16px;
+      padding: 12px 14px;
       font-size: 1.05rem;
       border: 2px solid var(--border-color);
       border-radius: 6px;
-      margin-top: 8px;
-      margin-bottom: 20px;
       font-family: var(--font-ui);
+      background-color: #FFFFFF;
     }
 
     input:focus, textarea:focus {
       outline: none;
-      border-color: var(--primary);
+      border-color: var(--accent-gold);
+    }
+
+    .admin-grid {
+      display: grid;
+      grid-template-columns: 140px 1.4fr 1.2fr;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .admin-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     .btn-primary {
       background-color: var(--primary);
       color: #FFFFFF;
       font-family: var(--font-ui);
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 600;
-      padding: 16px 28px;
+      padding: 15px 24px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
-      display: inline-block;
+      display: block;
       width: 100%;
       text-align: center;
       transition: background 0.2s;
@@ -161,7 +187,6 @@
       background-color: var(--primary-hover);
     }
 
-    /* Modal de Descargo Obligatorio */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -183,9 +208,8 @@
       text-align: center;
     }
 
-    /* Cuestionario de Preguntas */
     .pregunta-card {
-      margin-bottom: 30px;
+      margin-bottom: 24px;
       padding: 20px;
       border-left: 4px solid var(--accent-gold);
       background: #FAFAFA;
@@ -220,7 +244,6 @@
       display: none;
     }
 
-    /* Muro de Reflexiones */
     .reflexion-item {
       background: #FAFAF8;
       border-left: 3px solid var(--primary);
@@ -256,18 +279,22 @@
   <main id="seccionLogin">
     <div class="card" style="max-width: 480px; margin: 40px auto;">
       <h2 style="text-align: center;">Cámara de Maestros</h2>
-      <p style="text-align: center; color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui);">
+      <p style="text-align: center; color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui); font-size: 0.95rem;">
         Ingrese con su correo registrado y credencial de acceso.
       </p>
       
-      <label for="inputEmail" style="font-family: var(--font-ui); font-size: 0.95rem;">Correo Electrónico:</label>
-      <input type="email" id="inputEmail" placeholder="su.correo@ejemplo.com">
+      <div class="form-group">
+        <label for="inputEmail">Correo Electrónico:</label>
+        <input type="email" id="inputEmail" placeholder="su.correo@ejemplo.com">
+      </div>
 
-      <label for="inputClave" style="font-family: var(--font-ui); font-size: 0.95rem;">Clave de Paso:</label>
-      <input type="password" id="inputClave" placeholder="••••••••">
+      <div class="form-group">
+        <label for="inputClave">Clave de Paso:</label>
+        <input type="password" id="inputClave" placeholder="••••••••">
+      </div>
 
       <button class="btn-primary" onclick="iniciarSesion()">Acceder a la Cámara</button>
-      <p id="errorLogin" style="color: var(--error); margin-top: 14px; text-align: center; font-size: 0.95rem;"></p>
+      <p id="errorLogin" style="color: var(--error); margin-top: 14px; text-align: center; font-size: 0.95rem; font-family: var(--font-ui);"></p>
     </div>
   </main>
 
@@ -275,7 +302,7 @@
   <div id="modalSigilo" class="modal-overlay hidden">
     <div class="modal-content">
       <h2 style="color: var(--accent-gold);">Compromiso de Sigilo</h2>
-      <p style="font-size: 1.05rem; margin-bottom: 24px; text-align: justify;">
+      <p style="font-size: 1.05rem; margin-bottom: 24px; text-align: justify; line-height: 1.7;">
         Al ingresar a esta Cámara, declaro mi solemne compromiso de mantener estricta reserva sobre los contenidos, 
         símbolos y reflexiones de mis Hermanos aquí expuestos. Reconozco que este espacio pertenece al ámbito exclusivo 
         del Tercer Grado, quedando estrictamente prohibida su difusión o copia bajo los preceptos del deber masónico.
@@ -286,21 +313,21 @@
 
   <!-- PANTALLA 2: CONTENIDO DOCENTE Y EVALUACIÓN -->
   <main id="seccionDocencia" class="hidden">
-<!-- Lectura del Trazado -->
+    <!-- Lectura de la Plancha -->
     <div class="card" style="border-top: 4px solid var(--accent-gold);">
       <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px;">
-        <span id="temaNumero" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1px;">Módulo 1</span>
+        <span id="temaNumero" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1px;"></span>
         <span id="temaAutor" style="font-family: var(--font-ui); font-size: 0.95rem; color: var(--text-muted); font-style: italic;"></span>
       </div>
       <h1 id="temaTitulo" style="margin-bottom: 18px;">Cargando tema de instrucción...</h1>
-      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 20px 0 28px 0;">
-      <div id="temaCuerpo" class="protected-text" style="white-space: pre-line; line-height: 1.85;"></div>
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 16px 0 24px 0;">
+      <div id="temaCuerpo" class="protected-text" style="white-space: pre-line;"></div>
     </div>
 
     <!-- Evaluación de 6 preguntas -->
     <div class="card">
       <h2>Examen de Comprensión Simbólica</h2>
-      <p style="color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui);">
+      <p style="color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui); font-size: 0.95rem;">
         Seleccione la respuesta que considere correcta en cada una de las 6 interrogantes.
       </p>
       
@@ -312,7 +339,7 @@
     <!-- Reflexión personal -->
     <div id="bloqueReflexion" class="card hidden">
       <h2>Aporte Personal a la Cámara</h2>
-      <p style="color: var(--text-muted); margin-bottom: 12px; font-family: var(--font-ui);">
+      <p style="color: var(--text-muted); margin-bottom: 12px; font-family: var(--font-ui); font-size: 0.95rem;">
         Deje una reflexión (máximo 200 palabras) sobre lo aprehendido para completar el tema.
       </p>
 
@@ -327,7 +354,7 @@
     <!-- Muro Fraterno de Reflexiones -->
     <div id="bloqueMuro" class="card hidden">
       <h2>Reflexiones de los Maestros</h2>
-      <p style="color: var(--text-muted); margin-bottom: 20px; font-family: var(--font-ui);">
+      <p style="color: var(--text-muted); margin-bottom: 20px; font-family: var(--font-ui); font-size: 0.95rem;">
         Aportes de los Hermanos que han completado este tema de docencia:
       </p>
       <div id="contenedorMuro"></div>
@@ -336,23 +363,39 @@
 
   <!-- PANTALLA 3: PANEL DE ADMINISTRACIÓN -->
   <main id="seccionAdmin" class="hidden">
-    <div class="card">
-      <h2>Panel de Administración - Crear Nuevo Tema</h2>
-      <p style="color: var(--text-muted); margin-bottom: 20px; font-family: var(--font-ui);">
-        Pegue el trazado crudo. La IA estructurará las 6 preguntas, la retroalimentación y la síntesis pedagógica.
-      </p>
+    <div class="card" style="border-top: 4px solid var(--primary); background: #FAFBFD;">
+      <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 14px; margin-bottom: 22px;">
+        <h2 style="margin-bottom: 6px;">Panel de Docencia: Nueva Plancha</h2>
+        <p style="color: var(--text-muted); font-family: var(--font-ui); font-size: 0.95rem;">
+          Ingrese los datos del trabajo. La IA generará automáticamente la síntesis pedagógica, las 6 preguntas con alternativas y la conclusión.
+        </p>
+      </div>
 
-      <label for="adminOrden" style="font-family: var(--font-ui);">Número de Módulo/Tema:</label>
-      <input type="number" id="adminOrden" value="1">
+      <div class="admin-grid">
+        <div class="form-group">
+          <label for="adminOrden">N° Módulo</label>
+          <input type="number" id="adminOrden" value="1">
+        </div>
+        <div class="form-group">
+          <label for="adminTitulo">Título de la Plancha</label>
+          <input type="text" id="adminTitulo" placeholder="Ej: La Muerte Simbólica y el Renacer">
+        </div>
+        <div class="form-group">
+          <label for="adminAutor">Autor de la Plancha</label>
+          <input type="text" id="adminAutor" placeholder="Ej: Q.·.H.·. Nombre Apellido">
+        </div>
+      </div>
 
-      <label for="adminTitulo" style="font-family: var(--font-ui);">Título del Trazado:</label>
-      <input type="text" id="adminTitulo" placeholder="Ej: El Sentido Simbólico del Acanto">
+      <div class="form-group">
+        <label for="adminTexto">Texto Completo del Trazado / Plancha</label>
+        <textarea id="adminTexto" rows="12" placeholder="Pegue aquí el contenido doctrinal completo..."></textarea>
+      </div>
 
-      <label for="adminTexto" style="font-family: var(--font-ui);">Texto Completo del Trazado:</label>
-      <textarea id="adminTexto" rows="10" placeholder="Pegue aquí el contenido doctrinal..."></textarea>
-
-      <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">Procesar y Publicar Tema con Gemini</button>
-      <p id="adminStatus" style="margin-top: 14px; font-family: var(--font-ui); font-size: 0.95rem;"></p>
+      <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">
+        ⚙️ Procesar con Gemini y Consagrar Plancha
+      </button>
+      
+      <div id="adminStatus" style="margin-top: 18px; font-family: var(--font-ui); font-size: 1rem; text-align: center; color: var(--primary); font-weight: 500;"></div>
     </div>
   </main>
 
@@ -370,13 +413,11 @@
     let moduloActual = null;
     let tamanoBase = 19;
 
-    // --- ACCESIBILIDAD: AJUSTE DE FUENTE ---
     function cambiarTamanoFuente(delta) {
       tamanoBase = Math.min(Math.max(tamanoBase + delta, 16), 28);
       document.body.style.fontSize = tamanoBase + 'px';
     }
 
-    // --- AUTENTICACIÓN SIMPLIFICADA ---
     async function iniciarSesion() {
       const email = document.getElementById('inputEmail').value.trim().toLowerCase();
       const clave = document.getElementById('inputClave').value.trim();
@@ -403,8 +444,6 @@
       usuarioActual = data[0];
       document.getElementById('seccionLogin').classList.add('hidden');
       document.getElementById('btnSalir').classList.remove('hidden');
-
-      // Mostrar modal de sigilo en cada ingreso
       document.getElementById('modalSigilo').classList.remove('hidden');
     }
 
@@ -425,7 +464,6 @@
       document.getElementById('seccionLogin').classList.remove('hidden');
     }
 
-    // --- CARGA DE CONTENIDOS Y DOCENCIA ---
     async function cargarModuloDocencia() {
       document.getElementById('seccionDocencia').classList.remove('hidden');
 
@@ -437,13 +475,18 @@
         .limit(1);
 
       if (error || !data || data.length === 0) {
+        document.getElementById('temaNumero').innerText = "";
+        document.getElementById('temaAutor').innerText = "";
         document.getElementById('temaTitulo').innerText = "No hay módulos activos actualmente.";
+        document.getElementById('temaCuerpo').innerText = "Use el Panel de Administración ubicado abajo para cargar la primera Plancha con Gemini.";
         moduloActual = null;
         return;
       }
 
       moduloActual = data[0];
-      document.getElementById('temaTitulo').innerText = "Módulo " + moduloActual.numero_orden + ": " + moduloActual.titulo;
+      document.getElementById('temaNumero').innerText = "Módulo " + moduloActual.numero_orden;
+      document.getElementById('temaTitulo').innerText = moduloActual.titulo;
+      document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + moduloActual.autor : "";
       document.getElementById('temaCuerpo').innerText = moduloActual.contenido_trazado;
 
       renderizarPreguntas(moduloActual.preguntas_json.preguntas || []);
@@ -453,6 +496,11 @@
     function renderizarPreguntas(preguntas) {
       const cont = document.getElementById('contenedorPreguntas');
       cont.innerHTML = "";
+
+      if (!preguntas || preguntas.length === 0) {
+        cont.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay preguntas configuradas para este módulo.</p>";
+        return;
+      }
 
       preguntas.forEach((p, idx) => {
         let opcionesHtml = p.opciones.map(op => `
@@ -501,7 +549,6 @@
       document.getElementById('bloqueReflexion').scrollIntoView({ behavior: 'smooth' });
     }
 
-    // --- REFLEXIÓN PERSONAL Y MURO FRATERNO ---
     function contarPalabras() {
       const texto = document.getElementById('textoReflexion').value.trim();
       const cant = texto === "" ? 0 : texto.split(/\s+/).length;
@@ -581,19 +628,19 @@
       }
     }
 
-    // --- PROCESAMIENTO CON GEMINI API (PANEL ADMIN) ---
     async function generarModuloConIA() {
       const titulo = document.getElementById('adminTitulo').value.trim();
+      const autor = document.getElementById('adminAutor').value.trim() || 'Cámara del Medio';
       const orden = parseInt(document.getElementById('adminOrden').value);
       const texto = document.getElementById('adminTexto').value.trim();
       const status = document.getElementById('adminStatus');
 
       if (!titulo || !texto) {
-        alert("Por favor complete el título y el texto del trazado.");
+        alert("Por favor complete al menos el título y el texto del trazado.");
         return;
       }
 
-      status.innerText = "La IA está procesando el trazado, formulando 6 preguntas y sintetizando conclusiones...";
+      status.innerHTML = "<em>Procesando la Plancha con IA... analizando simbolismo y formulando 6 preguntas reflexivas...</em>";
 
       const promptSistema = `
 Eres un docente especializado en Tercer Grado Masónico. Analiza este texto y genera exactamente 6 preguntas con 4 opciones (A, B, C, D), indicando la respuesta correcta, la retroalimentación de cada una, un resumen formativo y una conclusión de enlace.
@@ -629,6 +676,7 @@ Responde ÚNICAMENTE con un objeto JSON válido con este formato:
         const { error } = await sbApp.from('modulos').insert({
           numero_orden: orden,
           titulo: titulo,
+          autor: autor,
           contenido_trazado: texto,
           resumen_formativo: jsonResultado.resumen_formativo,
           conclusion_enlace: jsonResultado.conclusion_enlace,
@@ -639,7 +687,7 @@ Responde ÚNICAMENTE con un objeto JSON válido con este formato:
         if (error) {
           status.innerText = "Error al guardar el módulo en la base de datos: " + error.message;
         } else {
-          status.innerText = "¡Módulo publicado con éxito en la Cámara!";
+          status.innerText = "¡Plancha procesada y publicada con éxito en la Cámara!";
           cargarModuloDocencia();
         }
 
