@@ -32,7 +32,9 @@
       --gold-light: #F6F1E5;
       --border-color: #DDE1E5;
       --success: #1E5E3A;
+      --success-bg: #E8F5E9;
       --error: #8A1C14;
+      --error-bg: #FFEBEE;
       --font-reading: 'Literata', Georgia, serif;
       --font-ui: 'Inter', system-ui, sans-serif;
       --base-font-size: 19px;
@@ -45,7 +47,7 @@
       color: var(--text-main);
       font-family: var(--font-reading);
       font-size: var(--base-font-size);
-      line-height: 1.8;
+      line-height: 1.85;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -105,7 +107,7 @@
 
     main {
       flex: 1;
-      max-width: 900px;
+      max-width: 920px;
       width: 100%;
       margin: 32px auto;
       padding: 0 20px;
@@ -168,9 +170,7 @@
     }
 
     @media (max-width: 768px) {
-      .admin-grid {
-        grid-template-columns: 1fr;
-      }
+      .admin-grid { grid-template-columns: 1fr; }
     }
 
     .upload-box {
@@ -187,9 +187,9 @@
       background-color: var(--primary);
       color: #FFFFFF;
       font-family: var(--font-ui);
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 600;
-      padding: 15px 24px;
+      padding: 14px 22px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
@@ -201,6 +201,27 @@
 
     .btn-primary:hover {
       background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: var(--primary);
+      border: 2px solid var(--accent-gold);
+      font-family: var(--font-ui);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--gold-light);
     }
 
     .modal-overlay {
@@ -224,56 +245,86 @@
       text-align: center;
     }
 
+    /* PREGUNTAS Y FEEDBACK INMEDIATO */
     .pregunta-card {
-      margin-bottom: 24px;
-      padding: 20px;
+      margin-bottom: 28px;
+      padding: 24px;
       border-left: 4px solid var(--accent-gold);
       background: #FAFAFA;
       border-radius: 0 8px 8px 0;
+      transition: all 0.2s ease;
     }
 
-    .opcion-label {
+    .opcion-btn {
       display: flex;
       align-items: center;
-      padding: 12px 16px;
-      margin-bottom: 8px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      background: #fff;
+      width: 100%;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      background: #FFFFFF;
       cursor: pointer;
       font-family: var(--font-ui);
       font-size: 1rem;
+      text-align: left;
+      line-height: 1.4;
+      transition: all 0.15s ease;
     }
 
-    .opcion-label input {
-      margin-right: 14px;
-      transform: scale(1.3);
+    .opcion-btn:hover:not(:disabled) {
+      background-color: #F0F4F8;
+      border-color: var(--primary);
+    }
+
+    .opcion-btn:disabled {
+      cursor: default;
+    }
+
+    .opcion-btn.correcta {
+      background-color: var(--success-bg) !important;
+      border-color: var(--success) !important;
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .opcion-btn.incorrecta {
+      background-color: var(--error-bg) !important;
+      border-color: var(--error) !important;
+      color: var(--error);
     }
 
     .feedback-box {
-      margin-top: 12px;
-      padding: 14px;
+      margin-top: 14px;
+      padding: 16px 18px;
       background: var(--gold-light);
       border-left: 4px solid var(--accent-gold);
       border-radius: 4px;
+      font-family: var(--font-ui);
       font-size: 0.95rem;
+      line-height: 1.6;
       display: none;
     }
 
     .reflexion-item {
       background: #FAFAF8;
       border-left: 3px solid var(--primary);
-      padding: 16px 20px;
+      padding: 18px 20px;
       margin-bottom: 16px;
       border-radius: 0 6px 6px 0;
     }
 
     .reflexion-autor {
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-family: var(--font-ui);
       font-weight: 600;
       color: var(--accent-gold);
       margin-bottom: 4px;
+    }
+
+    .trazado-parrafo {
+      margin-bottom: 1.25em;
+      text-align: justify;
     }
 
     .hidden { display: none !important; }
@@ -291,7 +342,7 @@
     </div>
   </header>
 
-  <!-- PANTALLA 1: INGRESO AL TEMPLO VIRTUAL -->
+  <!-- PANTALLA 1: INGRESO -->
   <main id="seccionLogin">
     <div class="card" style="max-width: 480px; margin: 40px auto;">
       <h2 style="text-align: center;">Cámara de Maestros</h2>
@@ -314,7 +365,7 @@
     </div>
   </main>
 
-  <!-- MODAL: DECLARACIÓN DE SIGILO Y PRIVACIDAD -->
+  <!-- MODAL: DECLARACIÓN DE SIGILO -->
   <div id="modalSigilo" class="modal-overlay hidden">
     <div class="modal-content">
       <h2 style="color: var(--accent-gold);">Compromiso de Sigilo</h2>
@@ -327,39 +378,49 @@
     </div>
   </div>
 
-  <!-- PANTALLA 2: CONTENIDO DOCENTE Y EVALUACIÓN -->
+  <!-- PANTALLA 2: CONTENIDO DOCENTE -->
   <main id="seccionDocencia" class="hidden">
+    <!-- Lectura de la Plancha -->
     <div class="card" style="border-top: 4px solid var(--accent-gold);">
       <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px;">
         <span id="temaNumero" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1px;"></span>
         <span id="temaAutor" style="font-family: var(--font-ui); font-size: 0.95rem; color: var(--text-muted); font-style: italic;"></span>
       </div>
-      <h1 id="temaTitulo" style="margin-bottom: 18px;">Cargando tema de instrucción...</h1>
-      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 16px 0 24px 0;">
-      <div id="temaCuerpo" class="protected-text" style="white-space: pre-line;"></div>
+      <h1 id="temaTitulo" style="margin-bottom: 16px;">Cargando tema de instrucción...</h1>
+
+      <!-- Enlace para ver/descargar PDF original si existe -->
+      <div id="contenedorBotonPdf"></div>
+
+      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0 24px 0;">
+      <div id="temaCuerpo" class="protected-text"></div>
     </div>
 
+    <!-- Evaluación Interactiva Inmediata -->
     <div class="card">
       <h2>Examen de Comprensión Simbólica</h2>
       <p style="color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui); font-size: 0.95rem;">
-        Seleccione la respuesta que considere correcta en cada una de las 6 interrogantes.
+        Haga clic sobre la respuesta que considere correcta. El sistema validará y fundamentará su elección inmediatamente.
       </p>
+      
       <div id="contenedorPreguntas"></div>
-      <button id="btnVerificar" class="btn-primary" onclick="verificarRespuestas()">Verificar Respuestas</button>
     </div>
 
+    <!-- Reflexión personal -->
     <div id="bloqueReflexion" class="card hidden">
       <h2>Aporte Personal a la Cámara</h2>
       <p style="color: var(--text-muted); margin-bottom: 12px; font-family: var(--font-ui); font-size: 0.95rem;">
-        Deje una reflexión (máximo 200 palabras) sobre lo aprehendido para completar el tema.
+        Habiendo respondido las interrogantes, consagre su reflexión (máximo 200 palabras) para concluir el módulo.
       </p>
+
       <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión..."></textarea>
       <p id="contadorPalabras" style="font-family: var(--font-ui); font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
         Palabras: 0 / 200
       </p>
+
       <button class="btn-primary" onclick="guardarReflexionYCompletar()">Consagrar Reflexión y Concluir Módulo</button>
     </div>
 
+    <!-- Muro Fraterno -->
     <div id="bloqueMuro" class="card hidden">
       <h2>Reflexiones de los Maestros</h2>
       <p style="color: var(--text-muted); margin-bottom: 20px; font-family: var(--font-ui); font-size: 0.95rem;">
@@ -369,13 +430,13 @@
     </div>
   </main>
 
-  <!-- PANTALLA 3: PANEL DE ADMINISTRACIÓN -->
+  <!-- PANTALLA 3: PANEL ADMINISTRACIÓN -->
   <main id="seccionAdmin" class="hidden">
     <div class="card" style="border-top: 4px solid var(--primary); background: #FAFBFD;">
       <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 14px; margin-bottom: 22px;">
         <h2 style="margin-bottom: 6px;">Panel de Docencia: Nueva Plancha</h2>
         <p style="color: var(--text-muted); font-family: var(--font-ui); font-size: 0.95rem;">
-          Suba un archivo Word (.docx), PDF o pegue el trazado. Ingrese solo el nombre del autor (el sistema antepondrá el apelativo masónico automáticamente).
+          Suba un PDF o Word. El sistema limpiará encabezados y pies de página automáticamente para una lectura armónica.
         </p>
       </div>
 
@@ -403,8 +464,8 @@
       </div>
 
       <div class="form-group">
-        <label for="adminTexto">Texto Completo del Trazado / Plancha</label>
-        <textarea id="adminTexto" rows="12" placeholder="El texto del archivo o el que pegue aquí será procesado por la IA..."></textarea>
+        <label for="adminTexto">Texto Normalizado y Depurado</label>
+        <textarea id="adminTexto" rows="12" placeholder="El texto depurado aparecerá aquí..."></textarea>
       </div>
 
       <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">
@@ -422,8 +483,6 @@
 
     const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
     const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
-    
-    // Tu clave activa en Google Cloud
     const GEMINI_API_KEY = "AQ.Ab8RN6KkSJ4RhmWB_KIloRGdf33nk4gdN_onygONXcjPP1rOTQ";    
 
     const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -431,6 +490,7 @@
     let usuarioActual = null;
     let moduloActual = null;
     let tamanoBase = 19;
+    let respuestasMarcadas = {};
 
     function formatearAutorMasonico(nombreCrudo) {
       if (!nombreCrudo) return 'Cámara del Medio';
@@ -446,12 +506,44 @@
       document.body.style.fontSize = tamanoBase + 'px';
     }
 
+    // --- NORMALIZADOR AVANZADO DE TEXTO (ELIMINA ENCABEZADOS Y PIES DE PÁGINA) ---
+    function depurarTextoPlancha(texto) {
+      if (!texto) return "";
+      
+      let limpio = texto
+        // Normalización Unicode (tildes, eñes y caracteres especiales latinos)
+        .normalize("NFC")
+        // Elimina encabezados típicos de logias o números de página aislados
+        .replace(/^(Resp\.?|R\.?·?|R\.?L\.?|Logia|Valle de|Página|Pág\.?|\d+)\s*.*$/gim, '')
+        // Elimina líneas que consisten solo en números (números de página)
+        .replace(/^\s*\d+\s*$/gm, '')
+        // Elimina URLs y enlaces sueltos en el texto
+        .replace(/https?:\/\/\S+/gi, '')
+        // Elimina llamadas numéricas de notas al pie pegadas a palabras (ej: palabra[1] o palabra1)
+        .replace(/\[\d+\]/g, '')
+        // Compacta múltiples saltos de línea continuos
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+
+      return limpio;
+    }
+
+    // Formateador visual con párrafos HTML
+    function formatearTextoEnParrafos(textoPlano) {
+      if (!textoPlano) return "";
+      const parrafos = textoPlano.split(/\n\s*\n/);
+      return parrafos
+        .map(p => `<p class="trazado-parrafo">${p.trim().replace(/\n/g, '<br>')}</p>`)
+        .join('');
+    }
+
+    // --- LECTURA DE ARCHIVOS CON DEPURACIÓN AUTOMÁTICA ---
     async function leerArchivoPlancha(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       const status = document.getElementById('archivoStatus');
-      status.innerText = "Extrayendo texto del archivo...";
+      status.innerText = "Extrayendo y depurando texto del archivo...";
 
       const inputTitulo = document.getElementById('adminTitulo');
       if (!inputTitulo.value) {
@@ -464,8 +556,9 @@
         reader.onload = function(e) {
           mammoth.extractRawText({ arrayBuffer: e.target.result })
             .then(function(result) {
-              document.getElementById('adminTexto').value = result.value.trim();
-              status.innerText = "Documento Word cargado correctamente.";
+              const textoDepurado = depurarTextoPlancha(result.value);
+              document.getElementById('adminTexto').value = textoDepurado;
+              status.innerText = "Documento Word depurado y normalizado con éxito.";
             })
             .catch(function(err) {
               status.innerText = "Error al leer Word: " + err.message;
@@ -487,8 +580,9 @@
               fullText += pageText + "\n\n";
             }
 
-            document.getElementById('adminTexto').value = fullText.trim();
-            status.innerText = `PDF cargado con éxito (${pdf.numPages} páginas).`;
+            const textoDepurado = depurarTextoPlancha(fullText);
+            document.getElementById('adminTexto').value = textoDepurado;
+            status.innerText = `PDF procesado: ${pdf.numPages} páginas normalizadas sin encabezados residuales.`;
           } catch (err) {
             status.innerText = "Error al procesar PDF: " + err.message;
           }
@@ -499,6 +593,7 @@
       }
     }
 
+    // --- AUTENTICACIÓN ---
     async function iniciarSesion() {
       const email = document.getElementById('inputEmail').value.trim().toLowerCase();
       const clave = document.getElementById('inputClave').value.trim();
@@ -545,8 +640,10 @@
       document.getElementById('seccionLogin').classList.remove('hidden');
     }
 
+    // --- CARGA DE CONTENIDOS ---
     async function cargarModuloDocencia() {
       document.getElementById('seccionDocencia').classList.remove('hidden');
+      respuestasMarcadas = {};
 
       const { data, error } = await sbApp
         .from('modulos')
@@ -559,7 +656,7 @@
         document.getElementById('temaNumero').innerText = "";
         document.getElementById('temaAutor').innerText = "";
         document.getElementById('temaTitulo').innerText = "No hay módulos activos actualmente.";
-        document.getElementById('temaCuerpo').innerText = "Suba un archivo PDF, Word o pegue un texto en el panel inferior para consagrar la primera Plancha.";
+        document.getElementById('temaCuerpo').innerHTML = "<p>Suba un trazado en el panel inferior para comenzar la instrucción.</p>";
         moduloActual = null;
         return;
       }
@@ -568,68 +665,87 @@
       document.getElementById('temaNumero').innerText = "Módulo " + moduloActual.numero_orden;
       document.getElementById('temaTitulo').innerText = moduloActual.titulo;
       document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
-      document.getElementById('temaCuerpo').innerText = moduloActual.contenido_trazado;
+      
+      // Renderizado legible con párrafos
+      document.getElementById('temaCuerpo').innerHTML = formatearTextoEnParrafos(moduloActual.contenido_trazado);
 
-      renderizarPreguntas(moduloActual.preguntas_json.preguntas || []);
+      renderizarPreguntasInteractivas(moduloActual.preguntas_json.preguntas || []);
       verificarProgresoExistente();
     }
 
-    function renderizarPreguntas(preguntas) {
+    // --- INTERACTIVIDAD Y VALIDACIÓN INMEDIATA ---
+    function renderizarPreguntasInteractivas(preguntas) {
       const cont = document.getElementById('contenedorPreguntas');
       cont.innerHTML = "";
 
       if (!preguntas || preguntas.length === 0) {
-        cont.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay preguntas configuradas para este módulo.</p>";
+        cont.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay preguntas configuradas.</p>";
         return;
       }
 
       preguntas.forEach((p, idx) => {
         let opcionesHtml = p.opciones.map(op => `
-          <label class="opcion-label">
-            <input type="radio" name="preg_${idx}" value="${op.letra}">
-            <span><strong>${op.letra})</strong> ${op.texto}</span>
-          </label>
+          <button type="button" 
+                  class="opcion-btn" 
+                  id="btn_preg_${idx}_${op.letra}"
+                  onclick="seleccionarOpcionInmediata(${idx}, '${op.letra}', '${p.respuesta_correcta}')">
+            <strong>${op.letra})</strong>&nbsp;&nbsp;${op.texto}
+          </button>
         `).join('');
 
         cont.innerHTML += `
           <div class="pregunta-card" id="card_preg_${idx}">
-            <p style="font-weight: 600; margin-bottom: 12px;">${idx + 1}. ${p.enunciado}</p>
+            <p style="font-weight: 600; margin-bottom: 14px; font-size: 1.05rem;">${idx + 1}. ${p.enunciado}</p>
             ${opcionesHtml}
             <div class="feedback-box" id="feedback_${idx}">
-              <strong>Respuesta Correcta: ${p.respuesta_correcta}</strong><br>
-              ${p.retroalimentacion}
+              <div style="font-weight: 600; margin-bottom: 4px;" id="feedback_title_${idx}"></div>
+              <div id="feedback_body_${idx}">${p.retroalimentacion}</div>
             </div>
           </div>
         `;
       });
     }
 
-    function verificarRespuestas() {
-      if (!moduloActual || !moduloActual.preguntas_json) {
-        alert("Aún no hay preguntas cargadas en este módulo.");
-        return;
-      }
+    function seleccionarOpcionInmediata(idxPregunta, letraElegida, letraCorrecta) {
+      if (respuestasMarcadas[idxPregunta]) return; // Ya respondida
+
+      respuestasMarcadas[idxPregunta] = letraElegida;
 
       const preguntas = moduloActual.preguntas_json.preguntas || [];
-      let todasRespondidas = true;
+      const pregunta = preguntas[idxPregunta];
+      const letras = ['A', 'B', 'C', 'D'];
 
-      preguntas.forEach((p, idx) => {
-        const seleccionada = document.querySelector(`input[name="preg_${idx}"]:checked`);
-        if (!seleccionada) todasRespondidas = false;
-        
-        const fb = document.getElementById(`feedback_${idx}`);
-        if (fb) fb.style.display = "block";
+      // Deshabilitar botones de esta pregunta
+      letras.forEach(l => {
+        const btn = document.getElementById(`btn_preg_${idxPregunta}_${l}`);
+        if (btn) btn.disabled = true;
       });
 
-      if (!todasRespondidas) {
-        alert("Por favor responda todas las preguntas antes de avanzar a la reflexión.");
-        return;
+      const btnElegido = document.getElementById(`btn_preg_${idxPregunta}_${letraElegida}`);
+      const btnCorrecto = document.getElementById(`btn_preg_${idxPregunta}_${letraCorrecta}`);
+      const fbBox = document.getElementById(`feedback_${idxPregunta}`);
+      const fbTitle = document.getElementById(`feedback_title_${idxPregunta}`);
+
+      if (letraElegida === letraCorrecta) {
+        if (btnElegido) btnElegido.classList.add('correcta');
+        fbTitle.innerHTML = `<span style="color: var(--success);">✓ Correcto</span>`;
+      } else {
+        if (btnElegido) btnElegido.classList.add('incorrecta');
+        if (btnCorrecto) btnCorrecto.classList.add('correcta');
+        fbTitle.innerHTML = `<span style="color: var(--error);">Respuesta elegida: ${letraElegida} (Opción sugerida: ${letraCorrecta})</span>`;
       }
 
-      document.getElementById('bloqueReflexion').classList.remove('hidden');
-      document.getElementById('bloqueReflexion').scrollIntoView({ behavior: 'smooth' });
+      // Mostrar fundamentación
+      if (fbBox) fbBox.style.display = "block";
+
+      // Si se completaron las 6 preguntas, habilitar reflexión automáticamente
+      if (Object.keys(respuestasMarcadas).length === preguntas.length) {
+        document.getElementById('bloqueReflexion').classList.remove('hidden');
+        document.getElementById('bloqueReflexion').scrollIntoView({ behavior: 'smooth' });
+      }
     }
 
+    // --- REFLEXIÓN PERSONAL Y MURO FRATERNO ---
     function contarPalabras() {
       const texto = document.getElementById('textoReflexion').value.trim();
       const cant = texto === "" ? 0 : texto.split(/\s+/).length;
@@ -654,7 +770,7 @@
       const { error } = await sbApp.from('progreso_maestro').upsert({
         usuario_id: usuarioActual.id,
         modulo_id: moduloActual.id,
-        respuestas_evaluacion: {},
+        respuestas_evaluacion: respuestasMarcadas,
         reflexion: texto,
         completado: true,
         completado_en: new Date().toISOString()
@@ -665,7 +781,7 @@
         return;
       }
 
-      alert("Módulo completado con éxito. Se ha desbloqueado el muro fraterno.");
+      alert("Módulo concluido con éxito. El muro fraterno ha sido revelado.");
       cargarMuroReflexiones();
     }
 
@@ -709,7 +825,7 @@
       }
     }
 
-    // --- PROCESAMIENTO CON REINTENTO AUTOMÁTICO ANTE CONGESTIÓN (503) ---
+    // --- PROCESAMIENTO CON GEMINI ---
     async function generarModuloConIA() {
       const titulo = document.getElementById('adminTitulo').value.trim();
       const autorInput = document.getElementById('adminAutor').value.trim();
@@ -723,11 +839,11 @@
         return;
       }
 
-      status.innerHTML = "<em>Iniciando análisis con IA...</em>";
+      status.innerHTML = "<em>Iniciando análisis simbólico con IA...</em>";
 
       const promptSistema = `
 Eres un pedagogo e instructor especializado en la Cámara del Medio (Tercer Grado de la Masonería).
-Analiza el siguiente trazado (el cual puede incluir citas al pie, notas bibliográficas, enlaces o encabezados). Enfócate en el contenido filosófico y moral profundo del texto, ignorando números de página o URLs aisladas.
+Analiza el siguiente trazado depurado. Enfócate exclusivamente en las enseñanzas morales, filosóficas y simbólicas profundas.
 
 Genera exactamente:
 1. "resumen_formativo": Síntesis sobria de las ideas centrales (máximo 150 palabras).
@@ -766,7 +882,7 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
 
       for (let intento = 1; intento <= 3; intento++) {
         try {
-          status.innerHTML = `<em>Procesando trazado con gemini-3.8-flash (intento ${intento} de 3)... analizando simbolismo...</em>`;
+          status.innerHTML = `<em>Procesando trazado con gemini-3.8-flash (intento ${intento} de 3)...</em>`;
           
           const respuesta = await fetch(endpoint, {
             method: 'POST',
