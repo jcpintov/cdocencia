@@ -375,7 +375,7 @@
       <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 14px; margin-bottom: 22px;">
         <h2 style="margin-bottom: 6px;">Panel de Docencia: Nueva Plancha</h2>
         <p style="color: var(--text-muted); font-family: var(--font-ui); font-size: 0.95rem;">
-          Suba un archivo Word (.docx), PDF o pegue el trazado. Ingrese solo el nombre del autor (el sistema le antepondrá el apelativo masónico automáticamente).
+          Suba un archivo Word (.docx), PDF o pegue el trazado. Ingrese solo el nombre del autor (el sistema antepondrá el apelativo masónico automáticamente).
         </p>
       </div>
 
@@ -423,7 +423,7 @@
     const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
     const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
     
-    // Tu clave activa de Google
+    // Tu clave AQ activa
     const GEMINI_API_KEY = "AQ.Ab8RN6KkSJ4RhmWB_KIloRGdf33nk4gdN_onygONXcjPP1rOTQ";    
 
     const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -709,7 +709,7 @@
       }
     }
 
-    // --- PROCESAMIENTO CON REINTENTO AUTOMÁTICO DE MODELO ---
+    // --- PROCESAMIENTO ROBUSTO CON HEADER x-goog-api-key Y AUTODETECCIÓN ---
     async function generarModuloConIA() {
       const titulo = document.getElementById('adminTitulo').value.trim();
       const autorInput = document.getElementById('adminAutor').value.trim();
@@ -760,19 +760,25 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
 }
 `;
 
-      const endpointsAProbar = [
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-002:generateContent?key=${GEMINI_API_KEY}`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent?key=${GEMINI_API_KEY}`,
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro-002:generateContent?key=${GEMINI_API_KEY}`
+      // Probamos endpoints enviando la clave vía Header (requerido para credenciales AQ)
+      const rutas = [
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
       ];
+
       let rawData = null;
       let ultimoError = "";
 
-      for (const endpoint of endpointsAProbar) {
+      for (const endpoint of rutas) {
         try {
           const respuesta = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-goog-api-key': GEMINI_API_KEY
+            },
             body: JSON.stringify({
               contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
               generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
@@ -789,6 +795,39 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
           }
         } catch (e) {
           ultimoError = e.message;
+        }
+      }
+
+      // Si fallaron los nombres fijos, autodescubrimos qué modelos tiene habilitados esta clave
+      if (!rawData) {
+        try {
+          status.innerText = "Consultando modelos activos en la cuenta...";
+          const listRes = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
+            headers: { 'x-goog-api-key': GEMINI_API_KEY }
+          });
+          const listData = await listRes.json();
+          if (listData.models && listData.models.length > 0) {
+            const compatible = listData.models.find(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
+            if (compatible) {
+              const resAuto = await fetch(`https://generativelanguage.googleapis.com/v1beta/${compatible.name}:generateContent`, {
+                method: 'POST',
+                headers: { 
+                  'Content-Type': 'application/json',
+                  'x-goog-api-key': GEMINI_API_KEY
+                },
+                body: JSON.stringify({
+                  contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
+                  generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
+                })
+              });
+              const dataAuto = await resAuto.json();
+              if (dataAuto.candidates && dataAuto.candidates.length > 0) {
+                rawData = dataAuto;
+              }
+            }
+          }
+        } catch (errList) {
+          // continuar al informe de error
         }
       }
 
