@@ -709,7 +709,7 @@
       }
     }
 
-    // --- PROCESAMIENTO ROBUSTO CON HEADER x-goog-api-key Y AUTODETECCIÓN ---
+    // --- PROCESAMIENTO DIRECTO CON EL MODELO gemini-2.5-flash CONFIRMADO ---
     async function generarModuloConIA() {
       const titulo = document.getElementById('adminTitulo').value.trim();
       const autorInput = document.getElementById('adminAutor').value.trim();
@@ -760,79 +760,29 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
 }
 `;
 
-      // Probamos endpoints enviando la clave vía Header (requerido para credenciales AQ)
-      const rutas = [
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
-        "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent",
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
-      ];
-
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`;
       let rawData = null;
-      let ultimoError = "";
 
-      for (const endpoint of rutas) {
-        try {
-          const respuesta = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'x-goog-api-key': GEMINI_API_KEY
-            },
-            body: JSON.stringify({
-              contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
-              generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
-            })
-          });
+      try {
+        const respuesta = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': GEMINI_API_KEY
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
+            generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
+          })
+        });
 
-          const data = await respuesta.json();
+        rawData = await respuesta.json();
 
-          if (!data.error && data.candidates && data.candidates.length > 0) {
-            rawData = data;
-            break;
-          } else if (data.error) {
-            ultimoError = `${data.error.message} (Código ${data.error.code})`;
-          }
-        } catch (e) {
-          ultimoError = e.message;
+        if (rawData.error) {
+          throw new Error(`${rawData.error.message} (Código ${rawData.error.code})`);
         }
-      }
-
-      // Si fallaron los nombres fijos, autodescubrimos qué modelos tiene habilitados esta clave
-      if (!rawData) {
-        try {
-          status.innerText = "Consultando modelos activos en la cuenta...";
-          const listRes = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
-            headers: { 'x-goog-api-key': GEMINI_API_KEY }
-          });
-          const listData = await listRes.json();
-          if (listData.models && listData.models.length > 0) {
-            const compatible = listData.models.find(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"));
-            if (compatible) {
-              const resAuto = await fetch(`https://generativelanguage.googleapis.com/v1beta/${compatible.name}:generateContent`, {
-                method: 'POST',
-                headers: { 
-                  'Content-Type': 'application/json',
-                  'x-goog-api-key': GEMINI_API_KEY
-                },
-                body: JSON.stringify({
-                  contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
-                  generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
-                })
-              });
-              const dataAuto = await resAuto.json();
-              if (dataAuto.candidates && dataAuto.candidates.length > 0) {
-                rawData = dataAuto;
-              }
-            }
-          }
-        } catch (errList) {
-          // continuar al informe de error
-        }
-      }
-
-      if (!rawData) {
-        status.innerText = "Error durante el análisis con IA: " + ultimoError;
+      } catch (e) {
+        status.innerText = "Error durante el análisis con IA: " + e.message;
         return;
       }
 
