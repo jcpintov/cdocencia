@@ -8,7 +8,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
@@ -57,17 +57,20 @@
     header {
       background: var(--primary);
       color: #FFFFFF;
-      padding: 18px 24px;
+      padding: 16px 24px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 3px solid var(--accent-gold);
       font-family: var(--font-ui);
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
     .brand-title {
       font-size: 1.15rem;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 0.5px;
     }
 
@@ -99,12 +102,115 @@
       font-size: 0.9rem;
     }
 
-    main {
-      flex: 1;
-      max-width: 920px;
+    /* Disposición de Barra Lateral y Contenido Principal */
+    .temple-layout {
+      display: flex;
+      max-width: 1280px;
       width: 100%;
-      margin: 32px auto;
+      margin: 24px auto;
       padding: 0 20px;
+      gap: 28px;
+      flex: 1;
+    }
+
+    .sidebar {
+      width: 320px;
+      flex-shrink: 0;
+    }
+
+    .content-area {
+      flex: 1;
+      min-width: 0;
+    }
+
+    @media (max-width: 900px) {
+      .temple-layout {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+      }
+    }
+
+    .sidebar-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
+      position: sticky;
+      top: 86px;
+    }
+
+    .sidebar-title {
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 14px;
+      border-bottom: 2px solid var(--accent-gold);
+      padding-bottom: 6px;
+    }
+
+    .module-item {
+      display: block;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      background: #FAFAFA;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: var(--font-ui);
+    }
+
+    .module-item:hover {
+      border-color: var(--accent-gold);
+      background: var(--gold-light);
+    }
+
+    .module-item.active {
+      border-color: var(--accent-gold);
+      background: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(158, 125, 59, 0.2);
+      border-left: 6px solid var(--accent-gold);
+    }
+
+    .module-item-num {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--accent-gold);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .module-item-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--primary);
+      line-height: 1.3;
+      margin-bottom: 6px;
+    }
+
+    .module-item-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .badge-completado {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .badge-pendiente {
+      background: #EAECEF;
+      color: var(--text-muted);
     }
 
     .card {
@@ -141,7 +247,6 @@
     input[type="email"],
     input[type="password"],
     input[type="number"],
-    select,
     textarea {
       width: 100%;
       padding: 12px 14px;
@@ -152,7 +257,7 @@
       background-color: #FFFFFF;
     }
 
-    input:focus, select:focus, textarea:focus {
+    input:focus, textarea:focus {
       outline: none;
       border-color: var(--accent-gold);
     }
@@ -208,17 +313,16 @@
       background-color: transparent;
       color: var(--primary);
       font-family: var(--font-ui);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 600;
-      padding: 8px 16px;
+      padding: 6px 14px;
       border: 2px solid var(--accent-gold);
       border-radius: 6px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       text-decoration: none;
-      margin-bottom: 12px;
       transition: all 0.2s;
     }
 
@@ -228,17 +332,25 @@
 
     .tabs-container {
       display: flex;
-      gap: 10px;
-      margin: 18px 0 24px 0;
+      justify-content: space-between;
+      align-items: center;
+      margin: 16px 0 20px 0;
       border-bottom: 2px solid var(--border-color);
       font-family: var(--font-ui);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tab-group {
+      display: flex;
+      gap: 8px;
     }
 
     .tab-btn {
       background: transparent;
       border: none;
       border-bottom: 3px solid transparent;
-      padding: 10px 16px;
+      padding: 10px 14px;
       font-size: 0.95rem;
       font-weight: 600;
       color: var(--text-muted);
@@ -382,8 +494,8 @@
   </header>
 
   <!-- PANTALLA 1: INGRESO AL TEMPLO VIRTUAL -->
-  <main id="seccionLogin">
-    <div class="card" style="max-width: 480px; margin: 40px auto;">
+  <main id="seccionLogin" style="max-width: 480px; margin: 40px auto; width: 100%; padding: 0 20px;">
+    <div class="card">
       <h2 style="text-align: center;">Cámara de Maestros</h2>
       <p style="text-align: center; color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui); font-size: 0.95rem;">
         Ingrese con su correo registrado y credencial de acceso.
@@ -417,83 +529,94 @@
     </div>
   </div>
 
-  <!-- PANTALLA 2: CONTENIDO DOCENTE Y EVALUACIÓN -->
-  <main id="seccionDocencia" class="hidden">
-    <!-- Selector de Trazado Activo -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-      <label for="selectorModulos" style="font-family: var(--font-ui); font-weight: 600; color: var(--primary);">
-        Seleccionar Plancha de Estudio:
-      </label>
-      <select id="selectorModulos" onchange="seleccionarModulo(this.value)" style="max-width: 380px;"></select>
-    </div>
-
-    <!-- Lectura de la Plancha con Vista Dual -->
-    <div class="card" style="border-top: 4px solid var(--accent-gold);">
-      <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px;">
-        <span id="temaNumero" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1px;"></span>
-        <span id="temaAutor" style="font-family: var(--font-ui); font-size: 0.95rem; color: var(--text-muted); font-style: italic;"></span>
-      </div>
-      <h1 id="temaTitulo" style="margin-bottom: 8px;">Cargando tema de instrucción...</h1>
-
-      <!-- Pestañas de Vista Dual -->
-      <div id="contenedorTabs" class="tabs-container hidden">
-        <button id="tabTexto" class="tab-btn active" onclick="cambiarVistaDocencia('texto')">📖 Lectura Adaptada</button>
-        <button id="tabPdf" class="tab-btn" onclick="cambiarVistaDocencia('pdf')">📜 Documento Original (PDF)</button>
-      </div>
-
-      <!-- Contenedor 1: Texto Limpio y Adaptado -->
-      <div id="vistaTexto" class="protected-text" style="white-space: pre-line; text-align: justify;"></div>
-
-      <!-- Contenedor 2: Visor del Documento Original -->
-      <div id="vistaPdf" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <p style="color: var(--text-muted); font-size: 0.9rem; font-family: var(--font-ui); margin: 0;">
-            Visualización directa del documento original:
-          </p>
-          <a id="btnDescargarPdf" href="#" target="_blank" class="btn-secondary" style="margin: 0;">
-            📥 Abrir en Pantalla Completa / Descargar
-          </a>
+  <!-- PANTALLA 2: CONTENIDO DOCENTE CON BARRA LATERAL -->
+  <div id="seccionDocencia" class="temple-layout hidden">
+    
+    <!-- BARRA LATERAL: CATÁLOGO DE PLANCHAS -->
+    <aside class="sidebar">
+      <div class="sidebar-card">
+        <div class="sidebar-title">Planchas de Docencia</div>
+        <div id="contenedorListaSidebar">
+          <!-- Las tarjetas de cada módulo se inyectan dinámicamente aquí -->
         </div>
-        <iframe id="framePdf" class="pdf-viewer-frame" src=""></iframe>
       </div>
-    </div>
+    </aside>
 
-    <!-- Evaluación con retroalimentación inmediata -->
-    <div class="card">
-      <h2>Examen de Comprensión Simbólica</h2>
-      <p style="color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui); font-size: 0.95rem;">
-        Haga clic sobre la alternativa que considere correcta. El sistema evaluará su respuesta en el acto y le ofrecerá la fundamentación docente.
-      </p>
-      <div id="contenedorPreguntas"></div>
-    </div>
+    <!-- ÁREA PRINCIPAL: LECTURA, EVALUACIÓN Y MURO -->
+    <section class="content-area">
+      <!-- Lectura de la Plancha con Vista Dual -->
+      <div class="card" style="border-top: 4px solid var(--accent-gold);">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px;">
+          <span id="temaNumero" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 700; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1px;"></span>
+          <span id="temaAutor" style="font-family: var(--font-ui); font-size: 0.95rem; color: var(--text-muted); font-style: italic;"></span>
+        </div>
+        <h1 id="temaTitulo" style="margin-bottom: 8px;">Cargando tema de instrucción...</h1>
 
-    <!-- Reflexión personal -->
-    <div id="bloqueReflexion" class="card hidden">
-      <h2>Aporte Personal a la Cámara</h2>
-      <p style="color: var(--text-muted); margin-bottom: 12px; font-family: var(--font-ui); font-size: 0.95rem;">
-        Habiendo examinado los contenidos, consagre su reflexión fraternal (máximo 200 palabras) para concluir el módulo.
-      </p>
+        <!-- Pestañas de Vista y Enlace Directo al Muro -->
+        <div id="contenedorTabs" class="tabs-container">
+          <div class="tab-group">
+            <button id="tabTexto" class="tab-btn active" onclick="cambiarVistaDocencia('texto')">📖 Lectura Adaptada</button>
+            <button id="tabPdf" class="tab-btn hidden" onclick="cambiarVistaDocencia('pdf')">📜 Documento Original (PDF)</button>
+          </div>
+          <div>
+            <button class="btn-secondary" onclick="irAlMuro()">🏛️ Ir al Muro de Reflexiones</button>
+          </div>
+        </div>
 
-      <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión..."></textarea>
-      <p id="contadorPalabras" style="font-family: var(--font-ui); font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
-        Palabras: 0 / 200
-      </p>
+        <!-- Contenedor 1: Texto Limpio y Adaptado -->
+        <div id="vistaTexto" class="protected-text" style="white-space: pre-line; text-align: justify;"></div>
 
-      <button id="btnConsagrarReflexion" class="btn-primary" onclick="guardarReflexionYCompletar()">Consagrar Reflexión y Concluir Módulo</button>
-    </div>
+        <!-- Contenedor 2: Visor del Documento Original -->
+        <div id="vistaPdf" class="hidden">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <p style="color: var(--text-muted); font-size: 0.9rem; font-family: var(--font-ui); margin: 0;">
+              Visualización directa del documento original:
+            </p>
+            <a id="btnDescargarPdf" href="#" target="_blank" class="btn-secondary" style="margin: 0;">
+              📥 Abrir en Pantalla Completa / Descargar
+            </a>
+          </div>
+          <iframe id="framePdf" class="pdf-viewer-frame" src=""></iframe>
+        </div>
+      </div>
 
-    <!-- Muro Fraterno de Reflexiones -->
-    <div id="bloqueMuro" class="card hidden">
-      <h2>Reflexiones de los Maestros</h2>
-      <p style="color: var(--text-muted); margin-bottom: 20px; font-family: var(--font-ui); font-size: 0.95rem;">
-        Aportes de los Hermanos que han completado este tema de docencia:
-      </p>
-      <div id="contenedorMuro"></div>
-    </div>
-  </main>
+      <!-- Evaluación con retroalimentación inmediata -->
+      <div class="card">
+        <h2>Examen de Comprensión Simbólica</h2>
+        <p style="color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui); font-size: 0.95rem;">
+          Haga clic sobre la alternativa que considere correcta. El sistema evaluará su respuesta en el acto y le ofrecerá la fundamentación docente.
+        </p>
+        <div id="contenedorPreguntas"></div>
+      </div>
+
+      <!-- Reflexión personal -->
+      <div id="bloqueReflexion" class="card hidden">
+        <h2>Aporte Personal a la Cámara</h2>
+        <p style="color: var(--text-muted); margin-bottom: 12px; font-family: var(--font-ui); font-size: 0.95rem;">
+          Habiendo examinado los contenidos, consagre su reflexión fraternal (máximo 200 palabras) para concluir el módulo.
+        </p>
+
+        <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión..."></textarea>
+        <p id="contadorPalabras" style="font-family: var(--font-ui); font-size: 0.9rem; color: var(--text-muted); margin-bottom: 20px;">
+          Palabras: 0 / 200
+        </p>
+
+        <button id="btnConsagrarReflexion" class="btn-primary" onclick="guardarReflexionYCompletar()">Consagrar Reflexión y Concluir Módulo</button>
+      </div>
+
+      <!-- Muro Fraterno de Reflexiones -->
+      <div id="bloqueMuro" class="card hidden">
+        <h2>Reflexiones de los Maestros</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px; font-family: var(--font-ui); font-size: 0.95rem;">
+          Aportes de los Hermanos que han completado este tema de docencia:
+        </p>
+        <div id="contenedorMuro"></div>
+      </div>
+    </section>
+  </div>
 
   <!-- PANTALLA 3: PANEL DE ADMINISTRACIÓN -->
-  <main id="seccionAdmin" class="hidden">
+  <main id="seccionAdmin" class="hidden" style="max-width: 920px; width: 100%; margin: 32px auto; padding: 0 20px;">
     <div class="card" style="border-top: 4px solid var(--primary); background: #FAFBFD;">
       <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 14px; margin-bottom: 22px;">
         <h2 style="margin-bottom: 6px;">Panel de Docencia: Nueva Plancha</h2>
@@ -513,15 +636,15 @@
       <div class="admin-grid">
         <div class="form-group">
           <label for="adminOrden">N° Módulo</label>
-          <input type="number" id="adminOrden" value="2">
+          <input type="number" id="adminOrden" value="4">
         </div>
         <div class="form-group">
           <label for="adminTitulo">Título de la Plancha</label>
-          <input type="text" id="adminTitulo" placeholder="Ej: Los 5 Juramentos">
+          <input type="text" id="adminTitulo" placeholder="Ej: La Fuerza del Silencio">
         </div>
         <div class="form-group">
           <label for="adminAutor">Nombre del Autor (Solo Nombre)</label>
-          <input type="text" id="adminAutor" placeholder="Ej: Edinson Arancibia Oro 3º">
+          <input type="text" id="adminAutor" placeholder="Ej: Juan Pérez 3º">
         </div>
       </div>
 
@@ -551,6 +674,7 @@
 
     let usuarioActual = null;
     let listaModulos = [];
+    let progresoUsuarioMap = {};
     let moduloActual = null;
     let tamanoBase = 19;
     let respuestasMarcadas = {};
@@ -628,6 +752,12 @@
         vistaPdf.classList.add('hidden');
         vistaTexto.classList.remove('hidden');
       }
+    }
+
+    function irAlMuro() {
+      const bloqueMuro = document.getElementById('bloqueMuro');
+      bloqueMuro.classList.remove('hidden');
+      bloqueMuro.scrollIntoView({ behavior: 'smooth' });
     }
 
     async function leerArchivoPlancha(event) {
@@ -742,30 +872,61 @@
     async function cargarTodosLosModulos() {
       document.getElementById('seccionDocencia').classList.remove('hidden');
 
-      const { data, error } = await sbApp
+      // Consultar módulos activos
+      const { data: modulosData, error } = await sbApp
         .from('modulos')
         .select('*')
         .eq('activo', true)
         .order('numero_orden', { ascending: true });
 
-      if (error || !data || data.length === 0) {
+      if (error || !modulosData || modulosData.length === 0) {
         document.getElementById('temaNumero').innerText = "";
         document.getElementById('temaAutor').innerText = "";
         document.getElementById('temaTitulo').innerText = "No hay módulos activos actualmente.";
         document.getElementById('vistaTexto').innerText = "Suba un archivo en el panel inferior para consagrar la primera Plancha.";
-        document.getElementById('contenedorTabs').classList.add('hidden');
         moduloActual = null;
         return;
       }
 
-      listaModulos = data;
-      const selector = document.getElementById('selectorModulos');
-      selector.innerHTML = "";
-      data.forEach(m => {
-        selector.innerHTML += `<option value="${m.id}">Módulo ${m.numero_orden}: ${m.titulo}</option>`;
-      });
+      listaModulos = modulosData;
 
-      seleccionarModulo(data[0].id);
+      // Consultar el progreso del usuario para marcar los badges en la barra lateral
+      const { data: progresoData } = await sbApp
+        .from('progreso_maestro')
+        .select('modulo_id, completado')
+        .eq('usuario_id', usuarioActual.id);
+
+      progresoUsuarioMap = {};
+      if (progresoData) {
+        progresoData.forEach(p => {
+          progresoUsuarioMap[p.modulo_id] = p.completado;
+        });
+      }
+
+      renderizarSidebar();
+      seleccionarModulo(listaModulos[0].id);
+    }
+
+    function renderizarSidebar() {
+      const cont = document.getElementById('contenedorListaSidebar');
+      cont.innerHTML = "";
+
+      listaModulos.forEach(m => {
+        const estaCompletado = progresoUsuarioMap[m.id];
+        const esActivo = moduloActual && moduloActual.id === m.id;
+
+        const badgeHtml = estaCompletado 
+          ? `<span class="module-item-badge badge-completado">✓ Completado</span>`
+          : `<span class="module-item-badge badge-pendiente">Pendiente</span>`;
+
+        cont.innerHTML += `
+          <div class="module-item ${esActivo ? 'active' : ''}" onclick="seleccionarModulo('${m.id}')">
+            <div class="module-item-num">Módulo ${m.numero_orden}</div>
+            <div class="module-item-title">${m.titulo}</div>
+            <div>${badgeHtml}</div>
+          </div>
+        `;
+      });
     }
 
     function seleccionarModulo(idModulo) {
@@ -773,28 +934,30 @@
       if (!moduloActual) return;
 
       respuestasMarcadas = {};
+      renderizarSidebar();
 
       document.getElementById('temaNumero').innerText = "Módulo " + moduloActual.numero_orden;
       document.getElementById('temaTitulo').innerText = moduloActual.titulo;
       document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
       document.getElementById('vistaTexto').innerText = moduloActual.contenido_trazado;
 
-      const tabs = document.getElementById('contenedorTabs');
+      const tabPdf = document.getElementById('tabPdf');
       const framePdf = document.getElementById('framePdf');
       const btnDescargar = document.getElementById('btnDescargarPdf');
 
       if (moduloActual.archivo_pdf_base64) {
-        tabs.classList.remove('hidden');
+        tabPdf.classList.remove('hidden');
         framePdf.src = moduloActual.archivo_pdf_base64;
         btnDescargar.href = moduloActual.archivo_pdf_base64;
         btnDescargar.download = `${moduloActual.titulo}.pdf`;
       } else {
-        tabs.classList.add('hidden');
+        tabPdf.classList.add('hidden');
         cambiarVistaDocencia('texto');
       }
 
       renderizarPreguntasInteractivas(moduloActual.preguntas_json.preguntas || []);
       verificarProgresoExistente();
+      cargarMuroReflexiones();
     }
 
     function renderizarPreguntasInteractivas(preguntas) {
@@ -897,6 +1060,9 @@
       alert("Módulo completado con éxito. Se ha desbloqueado el muro fraterno.");
       document.getElementById('textoReflexion').disabled = true;
       document.getElementById('btnConsagrarReflexion').classList.add('hidden');
+      
+      progresoUsuarioMap[moduloActual.id] = true;
+      renderizarSidebar();
       cargarMuroReflexiones();
     }
 
@@ -928,14 +1094,11 @@
             if (fb) fb.style.display = "block";
           });
         }
-
-        cargarMuroReflexiones();
       } else {
         bloqueRef.classList.add('hidden');
         txtRef.value = "";
         txtRef.disabled = false;
         btnRef.classList.remove('hidden');
-        document.getElementById('bloqueMuro').classList.add('hidden');
       }
     }
 
@@ -951,7 +1114,7 @@
         .eq('completado', true);
 
       contenedor.innerHTML = "";
-      if (data) {
+      if (data && data.length > 0) {
         data.forEach(item => {
           contenedor.innerHTML += `
             <div class="reflexion-item">
@@ -960,10 +1123,11 @@
             </div>
           `;
         });
+      } else {
+        contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Aún no hay reflexiones consagradas en esta Plancha. ¡Sea el primero en aportar!</p>";
       }
     }
 
-    // --- TEMPORIZADOR DE CUENTA REGRESIVA PARA LÍMITE DE CUOTA ---
     function iniciarCuentaRegresiva(segundosTotales) {
       if (intervaloCuentaRegresiva) clearInterval(intervaloCuentaRegresiva);
 
@@ -1058,7 +1222,6 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
 
         if (data.error) {
           if (data.error.code === 429) {
-            // Extraer segundos sugeridos por Google o usar 50 segundos por defecto
             const matchSeg = data.error.message.match(/retry in ([\d\.]+)s/i);
             const seg = matchSeg ? parseFloat(matchSeg[1]) : 50;
             iniciarCuentaRegresiva(seg);
