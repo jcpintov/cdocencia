@@ -709,7 +709,7 @@
       }
     }
 
-    // --- PROCESAMIENTO DIRECTO CON EL MODELO gemini-2.5-flash CONFIRMADO ---
+    // --- PROCESAMIENTO ROBUSTO CON MANEJO DE ALTA DEMANDA (503) ---
     async function generarModuloConIA() {
       const titulo = document.getElementById('adminTitulo').value.trim();
       const autorInput = document.getElementById('adminAutor').value.trim();
@@ -723,7 +723,7 @@
         return;
       }
 
-      status.innerHTML = "<em>Procesando la Plancha con IA... analizando simbolismo y formulando 6 preguntas reflexivas...</em>";
+      status.innerHTML = "<em>Iniciando análisis con IA...</em>";
 
       const promptSistema = `
 Eres un pedagogo e instructor especializado en la Cámara del Medio (Tercer Grado de la Masonería).
@@ -760,29 +760,52 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
 }
 `;
 
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent`;
+      const modelos = ["gemini-3.8-flash", "gemini-3.8-pro"];
       let rawData = null;
+      let ultimoError = "";
 
-      try {
-        const respuesta = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-goog-api-key': GEMINI_API_KEY
-          },
-          body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
-            generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
-          })
-        });
+      for (const modelo of modelos) {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`;
+        
+        for (let intento = 1; intento <= 2; intento++) {
+          try {
+            status.innerHTML = `<em>Procesando con ${modelo} (intento ${intento})... analizando simbolismo...</em>`;
+            const respuesta = await fetch(endpoint, {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'x-goog-api-key': GEMINI_API_KEY
+              },
+              body: JSON.stringify({
+                contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
+                generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
+              })
+            });
 
-        rawData = await respuesta.json();
+            const data = await respuesta.json();
 
-        if (rawData.error) {
-          throw new Error(`${rawData.error.message} (Código ${rawData.error.code})`);
+            if (data.candidates && data.candidates.length > 0) {
+              rawData = data;
+              break;
+            } else if (data.error) {
+              ultimoError = `${data.error.message} (Código ${data.error.code})`;
+              if (data.error.code === 503) {
+                status.innerHTML = `<em>Alta demanda en servidores de Google. Reintentando en 3 segundos...</em>`;
+                await new Promise(r => setTimeout(r, 3000));
+              } else {
+                break;
+              }
+            }
+          } catch (e) {
+            ultimoError = e.message;
+          }
         }
-      } catch (e) {
-        status.innerText = "Error durante el análisis con IA: " + e.message;
+
+        if (rawData) break;
+      }
+
+      if (!rawData) {
+        status.innerText = "Error durante el análisis con IA: " + ultimoError;
         return;
       }
 
