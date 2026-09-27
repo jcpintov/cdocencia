@@ -400,7 +400,6 @@
 
   <!-- PANTALLA 2: CONTENIDO DOCENTE Y EVALUACIÓN -->
   <main id="seccionDocencia" class="hidden">
-    <!-- Lectura de la Plancha con Vista Dual -->
     <div class="card" style="border-top: 4px solid var(--accent-gold);">
       <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px;">
         <span id="temaNumero" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1px;"></span>
@@ -408,7 +407,7 @@
       </div>
       <h1 id="temaTitulo" style="margin-bottom: 8px;">Cargando tema de instrucción...</h1>
 
-      <!-- Pestañas de Vista (se muestran si existe PDF cargado) -->
+      <!-- Pestañas de Vista Dual -->
       <div id="contenedorTabs" class="tabs-container hidden">
         <button id="tabTexto" class="tab-btn active" onclick="cambiarVistaDocencia('texto')">📖 Lectura Adaptada</button>
         <button id="tabPdf" class="tab-btn" onclick="cambiarVistaDocencia('pdf')">📜 Documento Original (PDF)</button>
@@ -431,7 +430,7 @@
       </div>
     </div>
 
-    <!-- Evaluación de 6 preguntas con retroalimentación inmediata -->
+    <!-- Evaluación con retroalimentación inmediata -->
     <div class="card">
       <h2>Examen de Comprensión Simbólica</h2>
       <p style="color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui); font-size: 0.95rem;">
@@ -613,7 +612,6 @@
         inputTitulo.value = file.name.replace(/\.[^/.]+$/, "");
       }
 
-      // Si es PDF, lo convertimos a DataURL para guardarlo en la base de datos
       if (file.type === "application/pdf" || file.name.endsWith('.pdf')) {
         const b64Reader = new FileReader();
         b64Reader.onload = function(e) {
@@ -739,7 +737,6 @@
       document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
       document.getElementById('vistaTexto').innerText = moduloActual.contenido_trazado;
 
-      // Configuración de la vista PDF si existe en el módulo
       const tabs = document.getElementById('contenedorTabs');
       const framePdf = document.getElementById('framePdf');
       const btnDescargar = document.getElementById('btnDescargarPdf');
@@ -927,7 +924,7 @@
         return;
       }
 
-      status.innerHTML = "<em>Procesando trazado con IA y generando módulo...</em>";
+      status.innerHTML = "<em>Procesando trazado con Gemini (esperando respuesta de la IA)...</em>";
 
       const promptSistema = `
 Eres un pedagogo e instructor especializado en la Cámara del Medio (Tercer Grado de la Masonería).
@@ -965,51 +962,37 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
 `;
 
       const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent`;
-      let rawData = null;
-      let ultimoError = "";
-
-      for (let intento = 1; intento <= 3; intento++) {
-        try {
-          status.innerHTML = `<em>Procesando con gemini-3.8-flash (intento ${intento} de 3)...</em>`;
-          
-          const respuesta = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 
-              'Content-Type': 'application/json',
-              'x-goog-api-key': GEMINI_API_KEY
-            },
-            body: JSON.stringify({
-              contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
-              generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
-            })
-          });
-
-          const data = await respuesta.json();
-
-          if (data.candidates && data.candidates.length > 0) {
-            rawData = data;
-            break;
-          } else if (data.error) {
-            ultimoError = `${data.error.message} (Código ${data.error.code})`;
-            if (data.error.code === 503) {
-              status.innerHTML = `<em>Servidores con alta demanda temporal. Reintentando en 4 segundos...</em>`;
-              await new Promise(r => setTimeout(r, 4000));
-            } else {
-              break;
-            }
-          }
-        } catch (e) {
-          ultimoError = e.message;
-        }
-      }
-
-      if (!rawData) {
-        status.innerText = "Error durante el análisis con IA: " + ultimoError;
-        return;
-      }
 
       try {
-        let contenidoTexto = rawData.candidates[0].content.parts[0].text;
+        const respuesta = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'x-goog-api-key': GEMINI_API_KEY
+          },
+          body: JSON.stringify({
+            contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
+            generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
+          })
+        });
+
+        const data = await respuesta.json();
+
+        if (data.error) {
+          if (data.error.code === 429) {
+            status.innerText = "Límite de peticiones por minuto alcanzado. Espere 45 segundos antes de volver a presionar el botón.";
+          } else {
+            status.innerText = `Error Google API: ${data.error.message} (Código ${data.error.code})`;
+          }
+          return;
+        }
+
+        if (!data.candidates || data.candidates.length === 0) {
+          status.innerText = "La IA no devolvió respuestas para este texto.";
+          return;
+        }
+
+        let contenidoTexto = data.candidates[0].content.parts[0].text;
         contenidoTexto = contenidoTexto.replace(/```json/gi, '').replace(/```/gi, '').trim();
         const jsonResultado = JSON.parse(contenidoTexto);
 
@@ -1032,7 +1015,7 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
           cargarModuloDocencia();
         }
       } catch (err) {
-        status.innerText = "Error al interpretar la respuesta pedagógica: " + err.message;
+        status.innerText = "Error durante el análisis con IA: " + err.message;
       }
     }
   </script>
