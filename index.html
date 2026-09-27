@@ -6,18 +6,12 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Docencia Masónica de Tercer Grado</title>
   
-  <!-- Tipografía accesible -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   
-  <!-- Supabase JS -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <!-- Lector de Word (.docx) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
-
-  <!-- Lector de PDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
   <style>
@@ -32,9 +26,9 @@
       --gold-light: #F6F1E5;
       --border-color: #DDE1E5;
       --success: #1E5E3A;
-      --success-bg: #E8F5E9;
+      --success-light: #EBF5F0;
       --error: #8A1C14;
-      --error-bg: #FFEBEE;
+      --error-light: #FDF2F2;
       --font-reading: 'Literata', Georgia, serif;
       --font-ui: 'Inter', system-ui, sans-serif;
       --base-font-size: 19px;
@@ -47,7 +41,7 @@
       color: var(--text-main);
       font-family: var(--font-reading);
       font-size: var(--base-font-size);
-      line-height: 1.85;
+      line-height: 1.8;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -187,9 +181,9 @@
       background-color: var(--primary);
       color: #FFFFFF;
       font-family: var(--font-ui);
-      font-size: 1.05rem;
+      font-size: 1.1rem;
       font-weight: 600;
-      padding: 14px 22px;
+      padding: 15px 24px;
       border: none;
       border-radius: 6px;
       cursor: pointer;
@@ -203,25 +197,38 @@
       background-color: var(--primary-hover);
     }
 
-    .btn-secondary {
-      background-color: transparent;
-      color: var(--primary);
-      border: 2px solid var(--accent-gold);
+    /* Pestañas de Vista Dual */
+    .tabs-container {
+      display: flex;
+      gap: 10px;
+      margin: 18px 0 24px 0;
+      border-bottom: 2px solid var(--border-color);
       font-family: var(--font-ui);
-      font-size: 0.95rem;
-      font-weight: 600;
-      padding: 10px 18px;
-      border-radius: 6px;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 20px;
     }
 
-    .btn-secondary:hover {
-      background-color: var(--gold-light);
+    .tab-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      padding: 10px 16px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      margin-bottom: -2px;
+    }
+
+    .tab-btn.active {
+      color: var(--primary);
+      border-bottom-color: var(--accent-gold);
+    }
+
+    .pdf-viewer-frame {
+      width: 100%;
+      height: 600px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      margin-top: 12px;
     }
 
     .modal-overlay {
@@ -245,86 +252,78 @@
       text-align: center;
     }
 
-    /* PREGUNTAS Y FEEDBACK INMEDIATO */
     .pregunta-card {
-      margin-bottom: 28px;
-      padding: 24px;
+      margin-bottom: 24px;
+      padding: 20px;
       border-left: 4px solid var(--accent-gold);
       background: #FAFAFA;
       border-radius: 0 8px 8px 0;
+    }
+
+    .opcion-label {
+      display: flex;
+      align-items: center;
+      padding: 14px 18px;
+      margin-bottom: 10px;
+      border: 2px solid var(--border-color);
+      border-radius: 6px;
+      background: #fff;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 1.05rem;
       transition: all 0.2s ease;
     }
 
-    .opcion-btn {
-      display: flex;
-      align-items: center;
-      width: 100%;
-      padding: 14px 18px;
-      margin-bottom: 10px;
-      border: 1.5px solid var(--border-color);
-      border-radius: 8px;
-      background: #FFFFFF;
+    .opcion-label:hover {
+      border-color: var(--accent-gold);
+      background: #FCFCFA;
+    }
+
+    .opcion-label input {
+      margin-right: 14px;
+      transform: scale(1.3);
       cursor: pointer;
-      font-family: var(--font-ui);
-      font-size: 1rem;
-      text-align: left;
-      line-height: 1.4;
-      transition: all 0.15s ease;
     }
 
-    .opcion-btn:hover:not(:disabled) {
-      background-color: #F0F4F8;
-      border-color: var(--primary);
-    }
-
-    .opcion-btn:disabled {
-      cursor: default;
-    }
-
-    .opcion-btn.correcta {
-      background-color: var(--success-bg) !important;
+    .opcion-correcta {
+      background-color: var(--success-light) !important;
       border-color: var(--success) !important;
-      color: var(--success);
+      color: var(--success) !important;
       font-weight: 600;
     }
 
-    .opcion-btn.incorrecta {
-      background-color: var(--error-bg) !important;
+    .opcion-erronea {
+      background-color: var(--error-light) !important;
       border-color: var(--error) !important;
-      color: var(--error);
+      color: var(--error) !important;
     }
 
     .feedback-box {
       margin-top: 14px;
-      padding: 16px 18px;
+      padding: 16px;
       background: var(--gold-light);
       border-left: 4px solid var(--accent-gold);
-      border-radius: 4px;
-      font-family: var(--font-ui);
+      border-radius: 6px;
       font-size: 0.95rem;
-      line-height: 1.6;
+      font-family: var(--font-ui);
       display: none;
+      line-height: 1.6;
     }
 
     .reflexion-item {
       background: #FAFAF8;
       border-left: 3px solid var(--primary);
-      padding: 18px 20px;
+      padding: 16px 20px;
       margin-bottom: 16px;
       border-radius: 0 6px 6px 0;
     }
 
     .reflexion-autor {
-      font-size: 0.9rem;
+      font-size: 0.85rem;
       font-family: var(--font-ui);
       font-weight: 600;
       color: var(--accent-gold);
       margin-bottom: 4px;
-    }
-
-    .trazado-parrafo {
-      margin-bottom: 1.25em;
-      text-align: justify;
     }
 
     .hidden { display: none !important; }
@@ -342,7 +341,7 @@
     </div>
   </header>
 
-  <!-- PANTALLA 1: INGRESO -->
+  <!-- PANTALLA 1: INGRESO AL TEMPLO VIRTUAL -->
   <main id="seccionLogin">
     <div class="card" style="max-width: 480px; margin: 40px auto;">
       <h2 style="text-align: center;">Cámara de Maestros</h2>
@@ -378,30 +377,40 @@
     </div>
   </div>
 
-  <!-- PANTALLA 2: CONTENIDO DOCENTE -->
+  <!-- PANTALLA 2: CONTENIDO DOCENTE Y EVALUACIÓN -->
   <main id="seccionDocencia" class="hidden">
-    <!-- Lectura de la Plancha -->
+    <!-- Lectura de la Plancha con Vista Dual -->
     <div class="card" style="border-top: 4px solid var(--accent-gold);">
       <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px;">
         <span id="temaNumero" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1px;"></span>
         <span id="temaAutor" style="font-family: var(--font-ui); font-size: 0.95rem; color: var(--text-muted); font-style: italic;"></span>
       </div>
-      <h1 id="temaTitulo" style="margin-bottom: 16px;">Cargando tema de instrucción...</h1>
+      <h1 id="temaTitulo" style="margin-bottom: 8px;">Cargando tema de instrucción...</h1>
 
-      <!-- Enlace para ver/descargar PDF original si existe -->
-      <div id="contenedorBotonPdf"></div>
+      <!-- Pestañas de Vista -->
+      <div class="tabs-container">
+        <button id="tabTexto" class="tab-btn active" onclick="cambiarVistaDocencia('texto')">📖 Lectura Adaptada</button>
+        <button id="tabPdf" class="tab-btn" onclick="cambiarVistaDocencia('pdf')">📜 Documento Original (PDF)</button>
+      </div>
 
-      <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0 24px 0;">
-      <div id="temaCuerpo" class="protected-text"></div>
+      <!-- Contenedor 1: Texto Limpio y Adaptado -->
+      <div id="vistaTexto" class="protected-text" style="white-space: pre-line; text-align: justify;"></div>
+
+      <!-- Contenedor 2: Visor del Documento Original -->
+      <div id="vistaPdf" class="hidden">
+        <p style="color: var(--text-muted); font-size: 0.9rem; font-family: var(--font-ui); margin-bottom: 8px;">
+          Visualización directa del trazado original:
+        </p>
+        <iframe id="framePdf" class="pdf-viewer-frame" src=""></iframe>
+      </div>
     </div>
 
-    <!-- Evaluación Interactiva Inmediata -->
+    <!-- Evaluación de 6 preguntas con retroalimentación inmediata -->
     <div class="card">
       <h2>Examen de Comprensión Simbólica</h2>
       <p style="color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui); font-size: 0.95rem;">
-        Haga clic sobre la respuesta que considere correcta. El sistema validará y fundamentará su elección inmediatamente.
+        Haga clic sobre la alternativa que considere correcta. El sistema evaluará su respuesta en el acto y le ofrecerá la fundamentación docente.
       </p>
-      
       <div id="contenedorPreguntas"></div>
     </div>
 
@@ -409,7 +418,7 @@
     <div id="bloqueReflexion" class="card hidden">
       <h2>Aporte Personal a la Cámara</h2>
       <p style="color: var(--text-muted); margin-bottom: 12px; font-family: var(--font-ui); font-size: 0.95rem;">
-        Habiendo respondido las interrogantes, consagre su reflexión (máximo 200 palabras) para concluir el módulo.
+        Habiendo examinado los contenidos, consagre su reflexión fraternal (máximo 200 palabras) para concluir el módulo.
       </p>
 
       <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión..."></textarea>
@@ -417,10 +426,10 @@
         Palabras: 0 / 200
       </p>
 
-      <button class="btn-primary" onclick="guardarReflexionYCompletar()">Consagrar Reflexión y Concluir Módulo</button>
+      <button id="btnConsagrarReflexion" class="btn-primary" onclick="guardarReflexionYCompletar()">Consagrar Reflexión y Concluir Módulo</button>
     </div>
 
-    <!-- Muro Fraterno -->
+    <!-- Muro Fraterno de Reflexiones -->
     <div id="bloqueMuro" class="card hidden">
       <h2>Reflexiones de los Maestros</h2>
       <p style="color: var(--text-muted); margin-bottom: 20px; font-family: var(--font-ui); font-size: 0.95rem;">
@@ -430,13 +439,13 @@
     </div>
   </main>
 
-  <!-- PANTALLA 3: PANEL ADMINISTRACIÓN -->
+  <!-- PANTALLA 3: PANEL DE ADMINISTRACIÓN -->
   <main id="seccionAdmin" class="hidden">
     <div class="card" style="border-top: 4px solid var(--primary); background: #FAFBFD;">
       <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 14px; margin-bottom: 22px;">
         <h2 style="margin-bottom: 6px;">Panel de Docencia: Nueva Plancha</h2>
         <p style="color: var(--text-muted); font-family: var(--font-ui); font-size: 0.95rem;">
-          Suba un PDF o Word. El sistema limpiará encabezados y pies de página automáticamente para una lectura armónica.
+          Suba un archivo Word (.docx) o PDF. El sistema normalizará ligaduras rotas, removerá encabezados/pies y antepondrá Q.·.H.·. sin duplicaciones.
         </p>
       </div>
 
@@ -464,7 +473,7 @@
       </div>
 
       <div class="form-group">
-        <label for="adminTexto">Texto Normalizado y Depurado</label>
+        <label for="adminTexto">Texto Normalizado del Trazado (Sin ligaduras rotas ni pies)</label>
         <textarea id="adminTexto" rows="12" placeholder="El texto depurado aparecerá aquí..."></textarea>
       </div>
 
@@ -491,14 +500,63 @@
     let moduloActual = null;
     let tamanoBase = 19;
     let respuestasMarcadas = {};
+    let urlPdfBlob = null;
 
+    // --- FORMATEADOR ESTRICTO SIN DUPLICACIÓN DE APELATIVO MASÓNICO ---
     function formatearAutorMasonico(nombreCrudo) {
       if (!nombreCrudo) return 'Cámara del Medio';
-      let nombreLimpio = nombreCrudo.trim();
-      if (/^(Q\.?·?H\.?·?|QH|Q\.\s*H\.)/i.test(nombreLimpio)) {
-        return nombreLimpio;
-      }
+      // Elimina cualquier ocurrencia previa de Q.·.H.·., QH, Q.H., etc., para no duplicar nunca
+      let nombreLimpio = nombreCrudo.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
       return `Q.·.H.·. ${nombreLimpio}`;
+    }
+
+    // --- DEPURADOR DE LIGADURAS DEFECTUOSAS (%), PIES DE PÁGINA Y NOTAS ---
+    function depurarTextoPlancha(textoBruto) {
+      if (!textoBruto) return "";
+      
+      let t = textoBruto.normalize("NFC");
+
+      // Corregir ligaduras tipográficas rotas que pdf.js extrae como "%"
+      t = t.replace(/é%ca/gi, "ética")
+           .replace(/colec%vas/gi, "colectivas")
+           .replace(/en%dad/gi, "entidad")
+           .replace(/É%ca/gi, "Ética")
+           .replace(/puni%vos/gi, "punitivos")
+           .replace(/fana%zantes/gi, "fanatizantes")
+           .replace(/é%cos/gi, "éticos")
+           .replace(/ins%tución/gi, "institución")
+           .replace(/iniciá%ca/gi, "iniciática")
+           .replace(/prác%ca/gi, "práctica")
+           .replace(/gra%ficante/gi, "gratificante")
+           .replace(/par%cipación/gi, "participación")
+           .replace(/au%éntico/gi, "auténtico")
+           .replace(/ac%tud/gi, "actitud")
+           .replace(/sa%sfacción/gi, "satisfacción")
+           .replace(/sen%do/gi, "sentido")
+           .replace(/q\s*ue\b/gi, "que"); // arregla espacios rotos tipo "q ue"
+
+      let lineas = t.split(/\r?\n/);
+      let lineasFiltradas = [];
+
+      for (let linea of lineas) {
+        let l = linea.trim();
+
+        // Eliminar encabezados/pies con números de página
+        if (/^[-–—]?\s*(p[aá]g\.?|p[aá]gina)?\s*\d+\s*[-–—]?$/i.test(l)) continue;
+        // Eliminar URLs
+        if (/^(https?:\/\/|www\.)\S+$/i.test(l)) continue;
+        // Eliminar notas tipo "1 Ibíd.", "2 Cfr."
+        if (/^\d+\s+(ib[ií]d|op\.\s*cit|ob\.\s*cit|cfr|ver)\b/i.test(l)) continue;
+
+        // Limpiar llamadas de notas al pie dentro de los párrafos (ej: "uno. 1 Por esto" -> "uno. Por esto")
+        let lineaLimpia = linea.replace(/\.\s*\d+\s+([A-ZÁÉÍÓÚ])/g, '. $1')
+                               .replace(/([a-záéíóú])\s+\d+\s+([a-záéíóú])/gi, '$1 $2')
+                               .replace(/Masónica\s+\d+\s+/g, 'Masónica ');
+
+        lineasFiltradas.push(lineaLimpia);
+      }
+
+      return lineasFiltradas.join("\n").replace(/\n{3,}/g, "\n\n").trim();
     }
 
     function cambiarTamanoFuente(delta) {
@@ -506,48 +564,41 @@
       document.body.style.fontSize = tamanoBase + 'px';
     }
 
-    // --- NORMALIZADOR AVANZADO DE TEXTO (ELIMINA ENCABEZADOS Y PIES DE PÁGINA) ---
-    function depurarTextoPlancha(texto) {
-      if (!texto) return "";
-      
-      let limpio = texto
-        // Normalización Unicode (tildes, eñes y caracteres especiales latinos)
-        .normalize("NFC")
-        // Elimina encabezados típicos de logias o números de página aislados
-        .replace(/^(Resp\.?|R\.?·?|R\.?L\.?|Logia|Valle de|Página|Pág\.?|\d+)\s*.*$/gim, '')
-        // Elimina líneas que consisten solo en números (números de página)
-        .replace(/^\s*\d+\s*$/gm, '')
-        // Elimina URLs y enlaces sueltos en el texto
-        .replace(/https?:\/\/\S+/gi, '')
-        // Elimina llamadas numéricas de notas al pie pegadas a palabras (ej: palabra[1] o palabra1)
-        .replace(/\[\d+\]/g, '')
-        // Compacta múltiples saltos de línea continuos
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
+    function cambiarVistaDocencia(tipo) {
+      const tabTexto = document.getElementById('tabTexto');
+      const tabPdf = document.getElementById('tabPdf');
+      const vistaTexto = document.getElementById('vistaTexto');
+      const vistaPdf = document.getElementById('vistaPdf');
 
-      return limpio;
+      if (tipo === 'pdf') {
+        tabTexto.classList.remove('active');
+        tabPdf.classList.add('active');
+        vistaTexto.classList.add('hidden');
+        vistaPdf.classList.remove('hidden');
+      } else {
+        tabPdf.classList.remove('active');
+        tabTexto.classList.add('active');
+        vistaPdf.classList.add('hidden');
+        vistaTexto.classList.remove('hidden');
+      }
     }
 
-    // Formateador visual con párrafos HTML
-    function formatearTextoEnParrafos(textoPlano) {
-      if (!textoPlano) return "";
-      const parrafos = textoPlano.split(/\n\s*\n/);
-      return parrafos
-        .map(p => `<p class="trazado-parrafo">${p.trim().replace(/\n/g, '<br>')}</p>`)
-        .join('');
-    }
-
-    // --- LECTURA DE ARCHIVOS CON DEPURACIÓN AUTOMÁTICA ---
     async function leerArchivoPlancha(event) {
       const file = event.target.files[0];
       if (!file) return;
 
       const status = document.getElementById('archivoStatus');
-      status.innerText = "Extrayendo y depurando texto del archivo...";
+      status.innerText = "Extrayendo, corrigiendo caracteres y normalizando texto...";
 
       const inputTitulo = document.getElementById('adminTitulo');
       if (!inputTitulo.value) {
         inputTitulo.value = file.name.replace(/\.[^/.]+$/, "");
+      }
+
+      // Crear URL de Blob para visualizar el PDF cargado en la pestaña
+      if (file.type === "application/pdf" || file.name.endsWith('.pdf')) {
+        urlPdfBlob = URL.createObjectURL(file);
+        document.getElementById('framePdf').src = urlPdfBlob;
       }
 
       const reader = new FileReader();
@@ -556,9 +607,9 @@
         reader.onload = function(e) {
           mammoth.extractRawText({ arrayBuffer: e.target.result })
             .then(function(result) {
-              const textoDepurado = depurarTextoPlancha(result.value);
-              document.getElementById('adminTexto').value = textoDepurado;
-              status.innerText = "Documento Word depurado y normalizado con éxito.";
+              const textoLimpio = depurarTextoPlancha(result.value);
+              document.getElementById('adminTexto').value = textoLimpio;
+              status.innerText = "Word extraído y depurado con éxito.";
             })
             .catch(function(err) {
               status.innerText = "Error al leer Word: " + err.message;
@@ -580,20 +631,17 @@
               fullText += pageText + "\n\n";
             }
 
-            const textoDepurado = depurarTextoPlancha(fullText);
-            document.getElementById('adminTexto').value = textoDepurado;
-            status.innerText = `PDF procesado: ${pdf.numPages} páginas normalizadas sin encabezados residuales.`;
+            const textoLimpio = depurarTextoPlancha(fullText);
+            document.getElementById('adminTexto').value = textoLimpio;
+            status.innerText = `PDF procesado: caracteres '%' corregidos y notas depuradas (${pdf.numPages} págs).`;
           } catch (err) {
             status.innerText = "Error al procesar PDF: " + err.message;
           }
         };
         reader.readAsArrayBuffer(file);
-      } else {
-        status.innerText = "Formato no compatible. Por favor suba un archivo .pdf o .docx";
       }
     }
 
-    // --- AUTENTICACIÓN ---
     async function iniciarSesion() {
       const email = document.getElementById('inputEmail').value.trim().toLowerCase();
       const clave = document.getElementById('inputClave').value.trim();
@@ -640,10 +688,8 @@
       document.getElementById('seccionLogin').classList.remove('hidden');
     }
 
-    // --- CARGA DE CONTENIDOS ---
     async function cargarModuloDocencia() {
       document.getElementById('seccionDocencia').classList.remove('hidden');
-      respuestasMarcadas = {};
 
       const { data, error } = await sbApp
         .from('modulos')
@@ -656,96 +702,85 @@
         document.getElementById('temaNumero').innerText = "";
         document.getElementById('temaAutor').innerText = "";
         document.getElementById('temaTitulo').innerText = "No hay módulos activos actualmente.";
-        document.getElementById('temaCuerpo').innerHTML = "<p>Suba un trazado en el panel inferior para comenzar la instrucción.</p>";
+        document.getElementById('vistaTexto').innerText = "Suba un archivo PDF o Word en el panel inferior para consagrar la primera Plancha.";
         moduloActual = null;
         return;
       }
 
       moduloActual = data[0];
+      respuestasMarcadas = {};
+
       document.getElementById('temaNumero').innerText = "Módulo " + moduloActual.numero_orden;
       document.getElementById('temaTitulo').innerText = moduloActual.titulo;
       document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
-      
-      // Renderizado legible con párrafos
-      document.getElementById('temaCuerpo').innerHTML = formatearTextoEnParrafos(moduloActual.contenido_trazado);
+      document.getElementById('vistaTexto').innerText = moduloActual.contenido_trazado;
 
       renderizarPreguntasInteractivas(moduloActual.preguntas_json.preguntas || []);
       verificarProgresoExistente();
     }
 
-    // --- INTERACTIVIDAD Y VALIDACIÓN INMEDIATA ---
     function renderizarPreguntasInteractivas(preguntas) {
       const cont = document.getElementById('contenedorPreguntas');
       cont.innerHTML = "";
 
       if (!preguntas || preguntas.length === 0) {
-        cont.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay preguntas configuradas.</p>";
+        cont.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay preguntas configuradas para este módulo.</p>";
         return;
       }
 
       preguntas.forEach((p, idx) => {
         let opcionesHtml = p.opciones.map(op => `
-          <button type="button" 
-                  class="opcion-btn" 
-                  id="btn_preg_${idx}_${op.letra}"
-                  onclick="seleccionarOpcionInmediata(${idx}, '${op.letra}', '${p.respuesta_correcta}')">
-            <strong>${op.letra})</strong>&nbsp;&nbsp;${op.texto}
-          </button>
+          <label class="opcion-label" id="label_${idx}_${op.letra}" onclick="evaluarRespuestaInmediata(${idx}, '${op.letra}', '${p.respuesta_correcta}')">
+            <input type="radio" name="preg_${idx}" value="${op.letra}">
+            <span><strong>${op.letra})</strong> ${op.texto}</span>
+          </label>
         `).join('');
 
         cont.innerHTML += `
           <div class="pregunta-card" id="card_preg_${idx}">
-            <p style="font-weight: 600; margin-bottom: 14px; font-size: 1.05rem;">${idx + 1}. ${p.enunciado}</p>
+            <p style="font-weight: 600; margin-bottom: 14px;">${idx + 1}. ${p.enunciado}</p>
             ${opcionesHtml}
             <div class="feedback-box" id="feedback_${idx}">
-              <div style="font-weight: 600; margin-bottom: 4px;" id="feedback_title_${idx}"></div>
-              <div id="feedback_body_${idx}">${p.retroalimentacion}</div>
+              <div style="font-weight: 600; margin-bottom: 6px;" id="feedback_titulo_${idx}"></div>
+              <div id="feedback_texto_${idx}">${p.retroalimentacion}</div>
             </div>
           </div>
         `;
       });
     }
 
-    function seleccionarOpcionInmediata(idxPregunta, letraElegida, letraCorrecta) {
-      if (respuestasMarcadas[idxPregunta]) return; // Ya respondida
+    function evaluarRespuestaInmediata(idxPregunta, letraSeleccionada, letraCorrecta) {
+      if (respuestasMarcadas[idxPregunta]) return;
 
-      respuestasMarcadas[idxPregunta] = letraElegida;
+      respuestasMarcadas[idxPregunta] = letraSeleccionada;
 
-      const preguntas = moduloActual.preguntas_json.preguntas || [];
-      const pregunta = preguntas[idxPregunta];
-      const letras = ['A', 'B', 'C', 'D'];
+      const radios = document.querySelectorAll(`input[name="preg_${idxPregunta}"]`);
+      radios.forEach(r => r.disabled = true);
 
-      // Deshabilitar botones de esta pregunta
-      letras.forEach(l => {
-        const btn = document.getElementById(`btn_preg_${idxPregunta}_${l}`);
-        if (btn) btn.disabled = true;
-      });
+      const labelSeleccionado = document.getElementById(`label_${idxPregunta}_${letraSeleccionada}`);
+      const labelCorrecto = document.getElementById(`label_${idxPregunta}_${letraCorrecta}`);
+      const feedbackBox = document.getElementById(`feedback_${idxPregunta}`);
+      const feedbackTitulo = document.getElementById(`feedback_titulo_${idxPregunta}`);
 
-      const btnElegido = document.getElementById(`btn_preg_${idxPregunta}_${letraElegida}`);
-      const btnCorrecto = document.getElementById(`btn_preg_${idxPregunta}_${letraCorrecta}`);
-      const fbBox = document.getElementById(`feedback_${idxPregunta}`);
-      const fbTitle = document.getElementById(`feedback_title_${idxPregunta}`);
-
-      if (letraElegida === letraCorrecta) {
-        if (btnElegido) btnElegido.classList.add('correcta');
-        fbTitle.innerHTML = `<span style="color: var(--success);">✓ Correcto</span>`;
+      if (letraSeleccionada === letraCorrecta) {
+        labelSeleccionado.classList.add('opcion-correcta');
+        feedbackTitulo.innerHTML = `<span style="color: var(--success);">✓ Respuesta Correcta</span>`;
       } else {
-        if (btnElegido) btnElegido.classList.add('incorrecta');
-        if (btnCorrecto) btnCorrecto.classList.add('correcta');
-        fbTitle.innerHTML = `<span style="color: var(--error);">Respuesta elegida: ${letraElegida} (Opción sugerida: ${letraCorrecta})</span>`;
+        labelSeleccionado.classList.add('opcion-erronea');
+        labelCorrecto.classList.add('opcion-correcta');
+        feedbackTitulo.innerHTML = `<span style="color: var(--error);">✗ Seleccionada: ${letraSeleccionada}</span> | Respuesta Correcta: <strong>${letraCorrecta}</strong>`;
       }
 
-      // Mostrar fundamentación
-      if (fbBox) fbBox.style.display = "block";
+      feedbackBox.style.display = "block";
 
-      // Si se completaron las 6 preguntas, habilitar reflexión automáticamente
-      if (Object.keys(respuestasMarcadas).length === preguntas.length) {
-        document.getElementById('bloqueReflexion').classList.remove('hidden');
-        document.getElementById('bloqueReflexion').scrollIntoView({ behavior: 'smooth' });
+      const totalPreguntas = moduloActual.preguntas_json.preguntas ? moduloActual.preguntas_json.preguntas.length : 6;
+      if (Object.keys(respuestasMarcadas).length === totalPreguntas) {
+        const bloqueReflexion = document.getElementById('bloqueReflexion');
+        bloqueReflexion.classList.remove('hidden');
+        bloqueReflexion.scrollIntoView({ behavior: 'smooth' });
       }
     }
 
-    // --- REFLEXIÓN PERSONAL Y MURO FRATERNO ---
     function contarPalabras() {
       const texto = document.getElementById('textoReflexion').value.trim();
       const cant = texto === "" ? 0 : texto.split(/\s+/).length;
@@ -781,7 +816,9 @@
         return;
       }
 
-      alert("Módulo concluido con éxito. El muro fraterno ha sido revelado.");
+      alert("Módulo completado con éxito. Se ha desbloqueado el muro fraterno.");
+      document.getElementById('textoReflexion').disabled = true;
+      document.getElementById('btnConsagrarReflexion').classList.add('hidden');
       cargarMuroReflexiones();
     }
 
@@ -797,6 +834,19 @@
         document.getElementById('bloqueReflexion').classList.remove('hidden');
         document.getElementById('textoReflexion').value = data[0].reflexion;
         document.getElementById('textoReflexion').disabled = true;
+        document.getElementById('btnConsagrarReflexion').classList.add('hidden');
+        
+        if (moduloActual.preguntas_json && moduloActual.preguntas_json.preguntas) {
+          moduloActual.preguntas_json.preguntas.forEach((p, idx) => {
+            const fb = document.getElementById(`feedback_${idx}`);
+            const fbTit = document.getElementById(`feedback_titulo_${idx}`);
+            const labelCorr = document.getElementById(`label_${idx}_${p.respuesta_correcta}`);
+            if (labelCorr) labelCorr.classList.add('opcion-correcta');
+            if (fbTit) fbTit.innerHTML = `Respuesta Correcta: <strong>${p.respuesta_correcta}</strong>`;
+            if (fb) fb.style.display = "block";
+          });
+        }
+
         cargarMuroReflexiones();
       }
     }
@@ -825,7 +875,6 @@
       }
     }
 
-    // --- PROCESAMIENTO CON GEMINI ---
     async function generarModuloConIA() {
       const titulo = document.getElementById('adminTitulo').value.trim();
       const autorInput = document.getElementById('adminAutor').value.trim();
@@ -835,19 +884,19 @@
       const status = document.getElementById('adminStatus');
 
       if (!titulo || !texto) {
-        alert("Por favor complete al menos el título y el texto del trazado.");
+        alert("Por favor complete el título y el texto depurado del trazado.");
         return;
       }
 
-      status.innerHTML = "<em>Iniciando análisis simbólico con IA...</em>";
+      status.innerHTML = "<em>Procesando trazado con IA y generando módulo...</em>";
 
       const promptSistema = `
 Eres un pedagogo e instructor especializado en la Cámara del Medio (Tercer Grado de la Masonería).
-Analiza el siguiente trazado depurado. Enfócate exclusivamente en las enseñanzas morales, filosóficas y simbólicas profundas.
+Analiza el siguiente trazado masónico depurado. Enfócate en el contenido ético, deberes, símbolos y virtudes del Tercer Grado.
 
 Genera exactamente:
-1. "resumen_formativo": Síntesis sobria de las ideas centrales (máximo 150 palabras).
-2. "conclusion_enlace": Una reflexión armónica que enlace los deberes y las virtudes expuestas (120-180 palabras).
+1. "resumen_formativo": Síntesis sobria de las ideas doctrinales centrales (máximo 150 palabras).
+2. "conclusion_enlace": Una reflexión armónica que enlace los deberes y virtudes expuestas (120-180 palabras).
 3. "preguntas": Arreglo de exactamente 6 preguntas pedagógicas de selección múltiple sobre los conceptos del trazado. Cada pregunta debe contener:
    - "numero": (1 a 6)
    - "enunciado": Texto claro y reflexivo.
@@ -882,7 +931,7 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
 
       for (let intento = 1; intento <= 3; intento++) {
         try {
-          status.innerHTML = `<em>Procesando trazado con gemini-3.8-flash (intento ${intento} de 3)...</em>`;
+          status.innerHTML = `<em>Procesando con gemini-3.8-flash (intento ${intento} de 3)...</em>`;
           
           const respuesta = await fetch(endpoint, {
             method: 'POST',
