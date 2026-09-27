@@ -423,7 +423,7 @@
     const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
     const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
     
-    // Tu clave AQ activa
+    // Tu clave activa en Google Cloud
     const GEMINI_API_KEY = "AQ.Ab8RN6KkSJ4RhmWB_KIloRGdf33nk4gdN_onygONXcjPP1rOTQ";    
 
     const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -709,7 +709,7 @@
       }
     }
 
-    // --- PROCESAMIENTO ROBUSTO CON MANEJO DE ALTA DEMANDA (503) ---
+    // --- PROCESAMIENTO CON REINTENTO AUTOMÁTICO ANTE CONGESTIÓN (503) ---
     async function generarModuloConIA() {
       const titulo = document.getElementById('adminTitulo').value.trim();
       const autorInput = document.getElementById('adminAutor').value.trim();
@@ -760,48 +760,43 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
 }
 `;
 
-      const modelos = ["gemini-3.8-flash", "gemini-3.8-pro"];
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent`;
       let rawData = null;
       let ultimoError = "";
 
-      for (const modelo of modelos) {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`;
-        
-        for (let intento = 1; intento <= 2; intento++) {
-          try {
-            status.innerHTML = `<em>Procesando con ${modelo} (intento ${intento})... analizando simbolismo...</em>`;
-            const respuesta = await fetch(endpoint, {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'x-goog-api-key': GEMINI_API_KEY
-              },
-              body: JSON.stringify({
-                contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
-                generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
-              })
-            });
+      for (let intento = 1; intento <= 3; intento++) {
+        try {
+          status.innerHTML = `<em>Procesando trazado con gemini-3.8-flash (intento ${intento} de 3)... analizando simbolismo...</em>`;
+          
+          const respuesta = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'x-goog-api-key': GEMINI_API_KEY
+            },
+            body: JSON.stringify({
+              contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
+              generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
+            })
+          });
 
-            const data = await respuesta.json();
+          const data = await respuesta.json();
 
-            if (data.candidates && data.candidates.length > 0) {
-              rawData = data;
+          if (data.candidates && data.candidates.length > 0) {
+            rawData = data;
+            break;
+          } else if (data.error) {
+            ultimoError = `${data.error.message} (Código ${data.error.code})`;
+            if (data.error.code === 503) {
+              status.innerHTML = `<em>Servidores de Google con alta demanda temporal. Reintentando en 4 segundos...</em>`;
+              await new Promise(r => setTimeout(r, 4000));
+            } else {
               break;
-            } else if (data.error) {
-              ultimoError = `${data.error.message} (Código ${data.error.code})`;
-              if (data.error.code === 503) {
-                status.innerHTML = `<em>Alta demanda en servidores de Google. Reintentando en 3 segundos...</em>`;
-                await new Promise(r => setTimeout(r, 3000));
-              } else {
-                break;
-              }
             }
-          } catch (e) {
-            ultimoError = e.message;
           }
+        } catch (e) {
+          ultimoError = e.message;
         }
-
-        if (rawData) break;
       }
 
       if (!rawData) {
