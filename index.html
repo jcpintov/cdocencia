@@ -141,6 +141,7 @@
     input[type="email"],
     input[type="password"],
     input[type="number"],
+    select,
     textarea {
       width: 100%;
       padding: 12px 14px;
@@ -151,7 +152,7 @@
       background-color: #FFFFFF;
     }
 
-    input:focus, textarea:focus {
+    input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: var(--accent-gold);
     }
@@ -193,8 +194,14 @@
       transition: background 0.2s;
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
       background-color: var(--primary-hover);
+    }
+
+    .btn-primary:disabled {
+      background-color: var(--border-color);
+      color: var(--text-muted);
+      cursor: not-allowed;
     }
 
     .btn-secondary {
@@ -347,6 +354,18 @@
       margin-bottom: 4px;
     }
 
+    .timer-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      background: #FFF3CD;
+      border: 1px solid #FFEEBA;
+      color: #856404;
+      border-radius: 4px;
+      font-weight: bold;
+      margin-top: 8px;
+      font-family: var(--font-ui);
+    }
+
     .hidden { display: none !important; }
   </style>
 </head>
@@ -400,6 +419,15 @@
 
   <!-- PANTALLA 2: CONTENIDO DOCENTE Y EVALUACIÓN -->
   <main id="seccionDocencia" class="hidden">
+    <!-- Selector de Trazado Activo -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+      <label for="selectorModulos" style="font-family: var(--font-ui); font-weight: 600; color: var(--primary);">
+        Seleccionar Plancha de Estudio:
+      </label>
+      <select id="selectorModulos" onchange="seleccionarModulo(this.value)" style="max-width: 380px;"></select>
+    </div>
+
+    <!-- Lectura de la Plancha con Vista Dual -->
     <div class="card" style="border-top: 4px solid var(--accent-gold);">
       <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; margin-bottom: 8px;">
         <span id="temaNumero" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; color: var(--accent-gold); text-transform: uppercase; letter-spacing: 1px;"></span>
@@ -485,15 +513,15 @@
       <div class="admin-grid">
         <div class="form-group">
           <label for="adminOrden">N° Módulo</label>
-          <input type="number" id="adminOrden" value="1">
+          <input type="number" id="adminOrden" value="2">
         </div>
         <div class="form-group">
           <label for="adminTitulo">Título de la Plancha</label>
-          <input type="text" id="adminTitulo" placeholder="Ej: Celo, Fervor y Constancia">
+          <input type="text" id="adminTitulo" placeholder="Ej: Los 5 Juramentos">
         </div>
         <div class="form-group">
           <label for="adminAutor">Nombre del Autor (Solo Nombre)</label>
-          <input type="text" id="adminAutor" placeholder="Ej: Juan Eduardo Iturriaga Osses 3º">
+          <input type="text" id="adminAutor" placeholder="Ej: Edinson Arancibia Oro 3º">
         </div>
       </div>
 
@@ -522,10 +550,12 @@
     const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let usuarioActual = null;
+    let listaModulos = [];
     let moduloActual = null;
     let tamanoBase = 19;
     let respuestasMarcadas = {};
     let pdfBase64Cargado = null;
+    let intervaloCuentaRegresiva = null;
 
     function formatearAutorMasonico(nombreCrudo) {
       if (!nombreCrudo) return 'Cámara del Medio';
@@ -605,7 +635,7 @@
       if (!file) return;
 
       const status = document.getElementById('archivoStatus');
-      status.innerText = "Extrayendo, corrigiendo caracteres y normalizando texto...";
+      status.innerText = "Extrayendo y normalizando texto...";
 
       const inputTitulo = document.getElementById('adminTitulo');
       if (!inputTitulo.value) {
@@ -654,7 +684,7 @@
 
             const textoLimpio = depurarTextoPlancha(fullText);
             document.getElementById('adminTexto').value = textoLimpio;
-            status.innerText = `PDF procesado: caracteres '%' corregidos y notas depuradas (${pdf.numPages} págs).`;
+            status.innerText = `PDF procesado y caracteres normalizados (${pdf.numPages} págs).`;
           } catch (err) {
             status.innerText = "Error al procesar PDF: " + err.message;
           }
@@ -697,7 +727,7 @@
       if (usuarioActual.es_admin) {
         document.getElementById('seccionAdmin').classList.remove('hidden');
       }
-      cargarModuloDocencia();
+      cargarTodosLosModulos();
     }
 
     function cerrarSesion() {
@@ -709,27 +739,39 @@
       document.getElementById('seccionLogin').classList.remove('hidden');
     }
 
-    async function cargarModuloDocencia() {
+    async function cargarTodosLosModulos() {
       document.getElementById('seccionDocencia').classList.remove('hidden');
 
       const { data, error } = await sbApp
         .from('modulos')
         .select('*')
         .eq('activo', true)
-        .order('numero_orden', { ascending: true })
-        .limit(1);
+        .order('numero_orden', { ascending: true });
 
       if (error || !data || data.length === 0) {
         document.getElementById('temaNumero').innerText = "";
         document.getElementById('temaAutor').innerText = "";
         document.getElementById('temaTitulo').innerText = "No hay módulos activos actualmente.";
-        document.getElementById('vistaTexto').innerText = "Suba un archivo PDF o Word en el panel inferior para consagrar la primera Plancha.";
+        document.getElementById('vistaTexto').innerText = "Suba un archivo en el panel inferior para consagrar la primera Plancha.";
         document.getElementById('contenedorTabs').classList.add('hidden');
         moduloActual = null;
         return;
       }
 
-      moduloActual = data[0];
+      listaModulos = data;
+      const selector = document.getElementById('selectorModulos');
+      selector.innerHTML = "";
+      data.forEach(m => {
+        selector.innerHTML += `<option value="${m.id}">Módulo ${m.numero_orden}: ${m.titulo}</option>`;
+      });
+
+      seleccionarModulo(data[0].id);
+    }
+
+    function seleccionarModulo(idModulo) {
+      moduloActual = listaModulos.find(m => m.id === idModulo);
+      if (!moduloActual) return;
+
       respuestasMarcadas = {};
 
       document.getElementById('temaNumero').innerText = "Módulo " + moduloActual.numero_orden;
@@ -866,11 +908,15 @@
         .eq('modulo_id', moduloActual.id)
         .limit(1);
 
+      const bloqueRef = document.getElementById('bloqueReflexion');
+      const txtRef = document.getElementById('textoReflexion');
+      const btnRef = document.getElementById('btnConsagrarReflexion');
+
       if (data && data.length > 0 && data[0].completado) {
-        document.getElementById('bloqueReflexion').classList.remove('hidden');
-        document.getElementById('textoReflexion').value = data[0].reflexion;
-        document.getElementById('textoReflexion').disabled = true;
-        document.getElementById('btnConsagrarReflexion').classList.add('hidden');
+        bloqueRef.classList.remove('hidden');
+        txtRef.value = data[0].reflexion;
+        txtRef.disabled = true;
+        btnRef.classList.add('hidden');
         
         if (moduloActual.preguntas_json && moduloActual.preguntas_json.preguntas) {
           moduloActual.preguntas_json.preguntas.forEach((p, idx) => {
@@ -884,6 +930,12 @@
         }
 
         cargarMuroReflexiones();
+      } else {
+        bloqueRef.classList.add('hidden');
+        txtRef.value = "";
+        txtRef.disabled = false;
+        btnRef.classList.remove('hidden');
+        document.getElementById('bloqueMuro').classList.add('hidden');
       }
     }
 
@@ -909,6 +961,32 @@
           `;
         });
       }
+    }
+
+    // --- TEMPORIZADOR DE CUENTA REGRESIVA PARA LÍMITE DE CUOTA ---
+    function iniciarCuentaRegresiva(segundosTotales) {
+      if (intervaloCuentaRegresiva) clearInterval(intervaloCuentaRegresiva);
+
+      let restante = Math.ceil(segundosTotales);
+      const btn = document.getElementById('btnGenerarModulo');
+      const status = document.getElementById('adminStatus');
+
+      btn.disabled = true;
+
+      intervaloCuentaRegresiva = setInterval(() => {
+        status.innerHTML = `
+          <div class="timer-badge">
+            ⏳ Cuota por minuto de Google alcanzada. Reintento disponible en: <strong>${restante}s</strong>
+          </div>
+        `;
+        restante--;
+
+        if (restante < 0) {
+          clearInterval(intervaloCuentaRegresiva);
+          btn.disabled = false;
+          status.innerHTML = `<span style="color: var(--success); font-weight: 600;">✓ Cuota restablecida. Ya puede procesar la Plancha.</span>`;
+        }
+      }, 1000);
     }
 
     async function generarModuloConIA() {
@@ -980,7 +1058,10 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
 
         if (data.error) {
           if (data.error.code === 429) {
-            status.innerText = "Límite de peticiones por minuto alcanzado. Espere 45 segundos antes de volver a presionar el botón.";
+            // Extraer segundos sugeridos por Google o usar 50 segundos por defecto
+            const matchSeg = data.error.message.match(/retry in ([\d\.]+)s/i);
+            const seg = matchSeg ? parseFloat(matchSeg[1]) : 50;
+            iniciarCuentaRegresiva(seg);
           } else {
             status.innerText = `Error Google API: ${data.error.message} (Código ${data.error.code})`;
           }
@@ -1012,7 +1093,7 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
           status.innerText = "Error al registrar en la base de datos: " + error.message;
         } else {
           status.innerText = "¡Plancha procesada, PDF persistido y consagrado con éxito en la Cámara!";
-          cargarModuloDocencia();
+          cargarTodosLosModulos();
         }
       } catch (err) {
         status.innerText = "Error durante el análisis con IA: " + err.message;
