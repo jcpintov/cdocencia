@@ -6,7 +6,7 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Docencia Masónica de Tercer Grado | Cámara del Medio</title>
   
-  <!-- Tipografía accesible de alta legibilidad -->
+  <!-- Tipografía accesible -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -57,7 +57,6 @@
       user-select: none;
     }
 
-    /* ENCABEZADO */
     header {
       background: var(--primary);
       color: #FFFFFF;
@@ -111,7 +110,6 @@
 
     .logout-btn:hover { background: rgba(153,120,57,0.2); }
 
-    /* LAYOUT DE DOS COLUMNAS */
     .templo-layout {
       display: grid;
       grid-template-columns: 320px 1fr;
@@ -124,12 +122,9 @@
     }
 
     @media (max-width: 960px) {
-      .templo-layout {
-        grid-template-columns: 1fr;
-      }
+      .templo-layout { grid-template-columns: 1fr; }
     }
 
-    /* BARRA LATERAL */
     .sidebar-templo {
       display: flex;
       flex-direction: column;
@@ -216,7 +211,6 @@
     .badge-ok { background: var(--success-light); color: var(--success); border: 1px solid #C3E6CB; }
     .badge-pen { background: #EDF0F2; color: var(--text-muted); border: 1px solid var(--border-color); }
 
-    /* CONTENEDORES Y TARJETAS */
     .card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -255,7 +249,6 @@
     h1 { font-size: 1.85rem; margin-bottom: 12px; }
     h2 { font-size: 1.45rem; }
 
-    /* PESTAÑAS Y ACCIÓN DE DESCARGA */
     .doc-actions-bar {
       display: flex;
       justify-content: space-between;
@@ -317,7 +310,6 @@
       margin-top: 12px;
     }
 
-    /* PREGUNTAS INTERACTIVAS */
     .pregunta-card {
       margin-bottom: 24px;
       padding: 22px;
@@ -376,7 +368,6 @@
       line-height: 1.6;
     }
 
-    /* BOTONES PRIMARIOS */
     .btn-primary {
       background-color: var(--primary);
       color: #FFFFFF;
@@ -401,7 +392,6 @@
       cursor: not-allowed;
     }
 
-    /* BOTONES DEL PANEL SUPERADMIN */
     .admin-link-btn {
       display: inline-flex;
       align-items: center;
@@ -416,6 +406,7 @@
       padding: 6px 12px;
       border-radius: 6px;
       transition: all 0.2s;
+      cursor: pointer;
     }
 
     .admin-link-btn:hover {
@@ -423,7 +414,6 @@
       border-color: var(--accent-gold-dark);
     }
 
-    /* REFLEXIONES Y MURO */
     .reflexion-item {
       background: #FAFAF8;
       border-left: 3px solid var(--primary);
@@ -440,9 +430,8 @@
       margin-bottom: 6px;
     }
 
-    /* PANEL ADMINISTRADOR */
     .admin-container {
-      max-width: 1020px;
+      max-width: 1080px;
       margin: 32px auto;
       padding: 0 20px;
     }
@@ -478,6 +467,34 @@
       font-weight: 700;
       margin-top: 10px;
       font-family: var(--font-ui);
+    }
+
+    /* ESTILOS DE LA TABLA DE MÉTRICAS */
+    .metricas-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--font-ui);
+      font-size: 0.92rem;
+      margin-top: 16px;
+      background: #FFFFFF;
+    }
+
+    .metricas-table th {
+      background: var(--primary);
+      color: #FFFFFF;
+      padding: 12px 14px;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    .metricas-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
+    }
+
+    .metricas-table tr:hover {
+      background: #FDFCF9;
     }
 
     .modal-overlay {
@@ -600,10 +617,8 @@
           </a>
         </div>
 
-        <!-- Vista 1: Lectura Adaptada en Alta Tipografía -->
         <article id="vistaTexto" class="protected-text" style="white-space: pre-line; text-align: justify;"></article>
 
-        <!-- Vista 2: Documento Original en Pantalla Completa Embebida -->
         <div id="vistaPdf" class="hidden">
           <iframe id="framePdf" class="pdf-viewer-frame" src=""></iframe>
         </div>
@@ -624,7 +639,6 @@
 
       <!-- FASE III: APORTE FRATERNO Y MURO (OCULTO HASTA COMPLETAR PREGUNTAS) -->
       <section id="bloqueFaseTres" class="hidden">
-        <!-- Tarjeta de Reflexión Personal -->
         <div class="card" style="border-top: 4px solid var(--primary);">
           <div class="card-fase-header">
             <span class="fase-badge" style="background: var(--accent-gold);">FASE III</span>
@@ -647,7 +661,6 @@
           </button>
         </div>
 
-        <!-- Muro Fraterno de Reflexiones -->
         <div id="bloqueMuro" class="card">
           <div class="card-fase-header">
             <span class="fase-badge" style="background: var(--success);">MURO</span>
@@ -664,10 +677,50 @@
 
   <!-- PANTALLA 3: PANEL ADMINISTRADOR Y GESTIÓN DE PLANCHAS -->
   <main id="seccionAdmin" class="admin-container hidden">
+    
+    <!-- SUBMENÚ EXCLUSIVO DEL SUPERADMIN: MÉTRICAS Y CONTROL DOCENTE -->
+    <div class="card" style="border-top: 4px solid var(--accent-gold); background: #FCFCFA; margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.35rem;">📊 Matriz de Avance Docente (Superadmin)</h2>
+          <p style="color: var(--text-muted); font-size: 0.88rem; font-family: var(--font-ui); margin: 0;">
+            Seguimiento de visitas, lecturas, intentos de evaluación y reflexiones consagradas.
+          </p>
+        </div>
+        
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <label for="selectMetricasModulo" style="font-family: var(--font-ui); font-size: 0.88rem; font-weight: 600;">Plancha:</label>
+          <select id="selectMetricasModulo" onchange="cargarMetricasAvance(this.value)" style="padding: 6px 10px; font-size: 0.9rem; font-family: var(--font-ui); border: 1px solid var(--border-color); border-radius: 6px;"></select>
+          <button class="admin-link-btn" onclick="recargarMetricasActuales()">🔄 Actualizar</button>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="metricas-table">
+          <thead>
+            <tr>
+              <th>Hermano</th>
+              <th>Correo</th>
+              <th>Lectura</th>
+              <th>Examen Simbólico</th>
+              <th>Consagración</th>
+              <th>Fecha Consagración</th>
+            </tr>
+          </thead>
+          <tbody id="tablaMetricasBody">
+            <tr>
+              <td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic;">Cargando matriz de avance...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TARJETA DE CARGA DE NUEVOS TRAZADOS -->
     <div class="card" style="border-top: 4px solid var(--primary); background: #FAFBFD;">
       <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 14px; margin-bottom: 22px;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
-          <h2 style="margin: 0;">Panel de Docencia: Consagrar Nueva Plancha</h2>
+          <h2 style="margin: 0;">Consagrar Nueva Plancha</h2>
           <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <a href="https://github.com/jcpintov/cdocencia/blob/main/index.html" target="_blank" class="admin-link-btn" title="Editar index.html en GitHub">
               <span>🐙</span>
@@ -684,7 +737,6 @@
         </p>
       </div>
 
-      <!-- Zona de carga de archivos -->
       <div class="upload-box">
         <label for="archivoDoc" style="font-weight: 700; color: var(--primary); cursor: pointer; display: block; margin-bottom: 8px;">
           📄 Cargar Plancha desde Archivo (PDF o Word .docx)
@@ -743,14 +795,12 @@
     let pdfBase64Cargado = null;
     let intervaloCuentaRegresiva = null;
 
-    // --- FORMATEADOR CANÓNICO DEL APELATIVO MASÓNICO ---
     function formatearAutorMasonico(nombreCrudo) {
       if (!nombreCrudo) return 'Cámara del Medio';
       let nombreLimpio = nombreCrudo.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
       return `Q.·.H.·. ${nombreLimpio}`;
     }
 
-    // --- DEPURADOR INTELIGENTE DE TEXTO ---
     function depurarTextoPlancha(textoBruto) {
       if (!textoBruto) return "";
       let t = textoBruto.normalize("NFC");
@@ -816,7 +866,6 @@
       }
     }
 
-    // --- LECTURA DE ARCHIVOS DOCX Y PDF ---
     async function leerArchivoPlancha(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -880,7 +929,6 @@
       }
     }
 
-    // --- AUTENTICACIÓN Y SESIÓN ---
     async function iniciarSesion() {
       const email = document.getElementById('inputEmail').value.trim().toLowerCase();
       const clave = document.getElementById('inputClave').value.trim();
@@ -927,7 +975,6 @@
       document.getElementById('seccionLogin').classList.remove('hidden');
     }
 
-    // --- CARGA DE MÓDULOS Y NAVEGACIÓN ---
     async function cargarTodosLosModulos() {
       document.getElementById('seccionDocencia').classList.remove('hidden');
 
@@ -949,9 +996,20 @@
       listaModulos = data;
       document.getElementById('contadorModulos').innerText = `${listaModulos.length} temas`;
 
+      // Poblar el selector de métricas del Superadmin
+      if (usuarioActual && usuarioActual.es_admin) {
+        const selectMetricas = document.getElementById('selectMetricasModulo');
+        selectMetricas.innerHTML = "";
+        listaModulos.forEach(m => {
+          selectMetricas.innerHTML += `<option value="${m.id}">Módulo ${m.numero_orden}: ${m.titulo}</option>`;
+        });
+        cargarMetricasAvance(listaModulos[0].id);
+      }
+
+      // Cargar progresos del usuario actual
       const { data: dataProgreso } = await sbApp
         .from('progreso_maestro')
-        .select('modulo_id, completado, reflexion')
+        .select('modulo_id, completado, reflexion, respuestas_evaluacion, leido')
         .eq('usuario_id', usuarioActual.id);
 
       misProgresos = {};
@@ -987,7 +1045,7 @@
       });
     }
 
-    function seleccionarModulo(idModulo) {
+    async function seleccionarModulo(idModulo) {
       moduloActual = listaModulos.find(m => m.id === idModulo);
       if (!moduloActual) return;
 
@@ -1001,6 +1059,9 @@
       document.getElementById('temaTitulo').innerText = moduloActual.titulo;
       document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
       document.getElementById('vistaTexto').innerText = moduloActual.contenido_trazado;
+
+      // REGISTRO SILENCIOSO DE MÉTRICA DE LECTURA / VISITA
+      registrarLecturaSilenciosa(moduloActual.id);
 
       const tabPdf = document.getElementById('tabPdf');
       const framePdf = document.getElementById('framePdf');
@@ -1021,6 +1082,20 @@
       renderizarPreguntasInteractivas(moduloActual.preguntas_json.preguntas || []);
       verificarProgresoExistente();
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // --- REGISTRADOR DE MÉTRICAS EN SEGUNDO PLANO ---
+    async function registrarLecturaSilenciosa(moduloId) {
+      if (!usuarioActual) return;
+      try {
+        await sbApp.from('progreso_maestro').upsert({
+          usuario_id: usuarioActual.id,
+          modulo_id: moduloId,
+          leido: true
+        }, { onConflict: 'usuario_id,modulo_id', ignoreDuplicates: false });
+      } catch (e) {
+        console.warn("Métrica lectura en segundo plano:", e);
+      }
     }
 
     // --- EVALUACIÓN INTERACTIVA INMEDIATA ---
@@ -1054,7 +1129,7 @@
       });
     }
 
-    function evaluarRespuestaInmediata(idxPregunta, letraSeleccionada, letraCorrecta) {
+    async function evaluarRespuestaInmediata(idxPregunta, letraSeleccionada, letraCorrecta) {
       if (respuestasMarcadas[idxPregunta]) return;
 
       respuestasMarcadas[idxPregunta] = letraSeleccionada;
@@ -1077,6 +1152,18 @@
       }
 
       feedbackBox.style.display = "block";
+
+      // Actualizar conteo de intentos / respuestas en la base de datos
+      try {
+        await sbApp.from('progreso_maestro').upsert({
+          usuario_id: usuarioActual.id,
+          modulo_id: moduloActual.id,
+          respuestas_evaluacion: respuestasMarcadas,
+          intentos_preguntas: Object.keys(respuestasMarcadas).length
+        }, { onConflict: 'usuario_id,modulo_id' });
+      } catch (e) {
+        console.warn("Métrica intento evaluación:", e);
+      }
 
       const totalPreguntas = moduloActual.preguntas_json.preguntas ? moduloActual.preguntas_json.preguntas.length : 6;
       if (Object.keys(respuestasMarcadas).length === totalPreguntas) {
@@ -1192,7 +1279,86 @@
       }
     }
 
-    // --- TEMPORIZADOR DE CUENTA REGRESIVA PARA LÍMITE DE CUOTA ---
+    // --- PANEL DE MÉTRICAS DEL SUPERADMIN ---
+    async function cargarMetricasAvance(moduloId) {
+      const tbody = document.getElementById('tablaMetricasBody');
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic;">Consultando registros de la Cámara...</td></tr>`;
+
+      // 1. Obtener todos los usuarios del padrón
+      const { data: usuarios, error: errU } = await sbApp
+        .from('usuarios')
+        .select('id, nombre, email')
+        .order('nombre', { ascending: true });
+
+      // 2. Obtener los progresos para este módulo
+      const { data: progresos, error: errP } = await sbApp
+        .from('progreso_maestro')
+        .select('*')
+        .eq('modulo_id', moduloId);
+
+      if (errU || !usuarios) {
+        tbody.innerHTML = `<tr><td colspan="6" style="color: var(--error); text-align: center;">Error al cargar usuarios.</td></tr>`;
+        return;
+      }
+
+      const mapProg = {};
+      if (progresos) {
+        progresos.forEach(p => { mapProg[p.usuario_id] = p; });
+      }
+
+      tbody.innerHTML = "";
+
+      usuarios.forEach(u => {
+        const prog = mapProg[u.id];
+
+        // Estado Lectura
+        const leidoHtml = prog && prog.leido
+          ? `<span style="color: var(--success); font-weight: 600;">✓ Sí leyó</span>`
+          : `<span style="color: var(--text-muted);">— Pendiente</span>`;
+
+        // Estado Evaluación
+        let evalHtml = `<span style="color: var(--text-muted);">Sin intentos</span>`;
+        if (prog) {
+          const respondidas = prog.respuestas_evaluacion ? Object.keys(prog.respuestas_evaluacion).length : (prog.intentos_preguntas || 0);
+          if (respondidas >= 6) {
+            evalHtml = `<span style="color: var(--success); font-weight: 600;">✓ 6/6 Respondidas</span>`;
+          } else if (respondidas > 0) {
+            evalHtml = `<span style="color: #B27B10; font-weight: 600;">En curso (${respondidas}/6)</span>`;
+          }
+        }
+
+        // Estado Consagración
+        let consagradoHtml = `<span style="color: var(--text-muted);">Pendiente</span>`;
+        let fechaHtml = `<span style="color: var(--text-muted);">—</span>`;
+
+        if (prog && prog.completado) {
+          consagradoHtml = `<span style="color: var(--success); font-weight: 700;">✓ Consagrado</span>`;
+          if (prog.completado_en) {
+            const d = new Date(prog.completado_en);
+            fechaHtml = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+          }
+        }
+
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>${u.nombre || "Hermano"}</strong></td>
+            <td style="font-family: monospace; font-size: 0.85rem;">${u.email}</td>
+            <td>${leidoHtml}</td>
+            <td>${evalHtml}</td>
+            <td>${consagradoHtml}</td>
+            <td>${fechaHtml}</td>
+          </tr>
+        `;
+      });
+    }
+
+    function recargarMetricasActuales() {
+      const select = document.getElementById('selectMetricasModulo');
+      if (select && select.value) {
+        cargarMetricasAvance(select.value);
+      }
+    }
+
     function iniciarCuentaRegresiva(segundosTotales) {
       if (intervaloCuentaRegresiva) clearInterval(intervaloCuentaRegresiva);
 
@@ -1218,7 +1384,6 @@
       }, 1000);
     }
 
-    // --- PROCESAMIENTO DOCENTE CON GEMINI API ---
     async function generarModuloConIA() {
       const titulo = document.getElementById('adminTitulo').value.trim();
       const autorInput = document.getElementById('adminAutor').value.trim();
