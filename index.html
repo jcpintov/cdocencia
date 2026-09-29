@@ -11,559 +11,67 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- Librerías de soporte -->
+  <!-- Hojas de estilo -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Librerías externas -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-
-  <style>
-    :root {
-      --bg-color: #F8F7F4;
-      --card-bg: #FFFFFF;
-      --text-main: #182026;
-      --text-muted: #536171;
-      --primary: #152433;
-      --primary-hover: #0C1620;
-      --accent-gold: #997839;
-      --accent-gold-dark: #785C25;
-      --gold-light: #F7F3E9;
-      --border-color: #DCE1E7;
-      --success: #1B5E35;
-      --success-light: #EBF7EE;
-      --error: #8C1C13;
-      --error-light: #FDF2F2;
-      --font-reading: 'Literata', Georgia, serif;
-      --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
-      --base-font-size: 19px;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      font-family: var(--font-reading);
-      font-size: var(--base-font-size);
-      line-height: 1.85;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .protected-text {
-      -webkit-user-select: none;
-      -moz-user-select: none;
-      -ms-user-select: none;
-      user-select: none;
-    }
-
-    header {
-      background: var(--primary);
-      color: #FFFFFF;
-      padding: 16px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 3px solid var(--accent-gold);
-      font-family: var(--font-ui);
-    }
-
-    .brand-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .header-controls {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .font-btn {
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.3);
-      color: #fff;
-      width: 40px;
-      height: 40px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 1.15rem;
-      font-weight: bold;
-    }
-
-    .font-btn:hover { background: rgba(255,255,255,0.22); }
-
-    .logout-btn {
-      background: transparent;
-      border: 1px solid var(--accent-gold);
-      color: #FFFFFF;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
-
-    .logout-btn:hover { background: rgba(153,120,57,0.2); }
-
-    .templo-layout {
-      display: grid;
-      grid-template-columns: 320px 1fr;
-      gap: 28px;
-      max-width: 1300px;
-      width: 100%;
-      margin: 28px auto;
-      padding: 0 20px;
-      flex: 1;
-    }
-
-    @media (max-width: 960px) {
-      .templo-layout { grid-template-columns: 1fr; }
-    }
-
-    .sidebar-templo {
-      display: flex;
-      flex-direction: column;
-      gap: 18px;
-    }
-
-    .sidebar-box {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 22px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
-    }
-
-    .sidebar-title {
-      font-family: var(--font-ui);
-      font-size: 0.9rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--primary);
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 2px solid var(--accent-gold);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .modulo-nav-item {
-      display: block;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      background: #FAFAFA;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-family: var(--font-ui);
-      text-decoration: none;
-      color: var(--text-main);
-    }
-
-    .modulo-nav-item:hover {
-      border-color: var(--accent-gold);
-      background: var(--gold-light);
-    }
-
-    .modulo-nav-item.active {
-      border-color: var(--accent-gold);
-      border-left: 5px solid var(--accent-gold);
-      background: #FFFFFF;
-      box-shadow: 0 2px 10px rgba(153,120,57,0.15);
-    }
-
-    .nav-item-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 4px;
-    }
-
-    .nav-item-num {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--accent-gold-dark);
-      text-transform: uppercase;
-    }
-
-    .nav-item-title {
-      font-size: 0.95rem;
-      font-weight: 600;
-      line-height: 1.4;
-      color: var(--primary);
-    }
-
-    .badge-estado {
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 3px 7px;
-      border-radius: 4px;
-      text-transform: uppercase;
-    }
-    .badge-ok { background: var(--success-light); color: var(--success); border: 1px solid #C3E6CB; }
-    .badge-pen { background: #EDF0F2; color: var(--text-muted); border: 1px solid var(--border-color); }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 36px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.04);
-      margin-bottom: 28px;
-    }
-
-    .card-fase-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 18px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .fase-badge {
-      background: var(--primary);
-      color: #FFFFFF;
-      font-family: var(--font-ui);
-      font-size: 0.8rem;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 20px;
-      letter-spacing: 0.5px;
-    }
-
-    h1, h2, h3 {
-      font-family: var(--font-reading);
-      color: var(--primary);
-      line-height: 1.3;
-    }
-
-    h1 { font-size: 1.85rem; margin-bottom: 12px; }
-    h2 { font-size: 1.45rem; }
-
-    .doc-actions-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin: 20px 0 24px 0;
-      border-bottom: 2px solid var(--border-color);
-      padding-bottom: 8px;
-    }
-
-    .tabs-container {
-      display: flex;
-      gap: 8px;
-      font-family: var(--font-ui);
-    }
-
-    .tab-btn {
-      background: transparent;
-      border: none;
-      border-bottom: 3px solid transparent;
-      padding: 10px 16px;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      cursor: pointer;
-      margin-bottom: -10px;
-    }
-
-    .tab-btn.active {
-      color: var(--primary);
-      border-bottom-color: var(--accent-gold);
-    }
-
-    .btn-descargar {
-      background: var(--gold-light);
-      border: 2px solid var(--accent-gold);
-      color: var(--primary);
-      font-family: var(--font-ui);
-      font-size: 0.9rem;
-      font-weight: 600;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-      transition: all 0.2s;
-    }
-
-    .btn-descargar:hover { background: #EFE6D2; }
-
-    .pdf-viewer-frame {
-      width: 100%;
-      height: 680px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      margin-top: 12px;
-    }
-
-    .pregunta-card {
-      margin-bottom: 24px;
-      padding: 22px;
-      border-left: 4px solid var(--accent-gold);
-      background: #FAFAFA;
-      border-radius: 0 8px 8px 0;
-    }
-
-    .opcion-label {
-      display: flex;
-      align-items: center;
-      padding: 14px 18px;
-      margin-bottom: 10px;
-      border: 2px solid var(--border-color);
-      border-radius: 6px;
-      background: #FFFFFF;
-      cursor: pointer;
-      font-family: var(--font-ui);
-      font-size: 1.05rem;
-      transition: all 0.2s ease;
-    }
-
-    .opcion-label:hover {
-      border-color: var(--accent-gold);
-      background: #FCFCFA;
-    }
-
-    .opcion-label input {
-      margin-right: 14px;
-      transform: scale(1.3);
-      cursor: pointer;
-    }
-
-    .opcion-correcta {
-      background-color: var(--success-light) !important;
-      border-color: var(--success) !important;
-      color: var(--success) !important;
-      font-weight: 600;
-    }
-
-    .opcion-erronea {
-      background-color: var(--error-light) !important;
-      border-color: var(--error) !important;
-      color: var(--error) !important;
-    }
-
-    .feedback-box {
-      margin-top: 14px;
-      padding: 16px;
-      background: var(--gold-light);
-      border-left: 4px solid var(--accent-gold);
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-family: var(--font-ui);
-      display: none;
-      line-height: 1.6;
-    }
-
-    .btn-primary {
-      background-color: var(--primary);
-      color: #FFFFFF;
-      font-family: var(--font-ui);
-      font-size: 1.1rem;
-      font-weight: 600;
-      padding: 16px 24px;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      display: block;
-      width: 100%;
-      text-align: center;
-      transition: background 0.2s;
-    }
-
-    .btn-primary:hover:not(:disabled) { background-color: var(--primary-hover); }
-
-    .btn-primary:disabled {
-      background-color: var(--border-color);
-      color: var(--text-muted);
-      cursor: not-allowed;
-    }
-
-    .admin-link-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--gold-light);
-      border: 1px solid var(--accent-gold);
-      color: var(--primary);
-      text-decoration: none;
-      font-family: var(--font-ui);
-      font-size: 0.85rem;
-      font-weight: 600;
-      padding: 6px 12px;
-      border-radius: 6px;
-      transition: all 0.2s;
-      cursor: pointer;
-    }
-
-    .admin-link-btn:hover {
-      background: #EFE6D2;
-      border-color: var(--accent-gold-dark);
-    }
-
-    .reflexion-item {
-      background: #FAFAF8;
-      border-left: 3px solid var(--primary);
-      padding: 18px 22px;
-      margin-bottom: 16px;
-      border-radius: 0 6px 6px 0;
-    }
-
-    .reflexion-autor {
-      font-size: 0.9rem;
-      font-family: var(--font-ui);
-      font-weight: 700;
-      color: var(--accent-gold-dark);
-      margin-bottom: 6px;
-    }
-
-    .admin-container {
-      max-width: 1080px;
-      margin: 32px auto;
-      padding: 0 20px;
-    }
-
-    .admin-grid {
-      display: grid;
-      grid-template-columns: 140px 1.4fr 1.2fr;
-      gap: 16px;
-      margin-bottom: 8px;
-    }
-
-    @media (max-width: 768px) {
-      .admin-grid { grid-template-columns: 1fr; }
-    }
-
-    .upload-box {
-      background: #F4F6F9;
-      border: 2px dashed var(--accent-gold);
-      border-radius: 8px;
-      padding: 22px;
-      text-align: center;
-      margin-bottom: 22px;
-      font-family: var(--font-ui);
-    }
-
-    .timer-badge {
-      display: inline-block;
-      padding: 8px 14px;
-      background: #FFF3CD;
-      border: 1px solid #FFEEBA;
-      color: #856404;
-      border-radius: 6px;
-      font-weight: 700;
-      margin-top: 10px;
-      font-family: var(--font-ui);
-    }
-
-    /* ESTILOS DE LA TABLA DE MÉTRICAS */
-    .metricas-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-family: var(--font-ui);
-      font-size: 0.92rem;
-      margin-top: 16px;
-      background: #FFFFFF;
-    }
-
-    .metricas-table th {
-      background: var(--primary);
-      color: #FFFFFF;
-      padding: 12px 14px;
-      text-align: left;
-      font-weight: 600;
-    }
-
-    .metricas-table td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border-color);
-      color: var(--text-main);
-    }
-
-    .metricas-table tr:hover {
-      background: #FDFCF9;
-    }
-
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(10, 16, 22, 0.78);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-      padding: 20px;
-    }
-
-    .modal-content {
-      background: #FFFFFF;
-      border-top: 5px solid var(--accent-gold);
-      border-radius: 8px;
-      max-width: 620px;
-      width: 100%;
-      padding: 34px;
-      text-align: center;
-    }
-
-    .hidden { display: none !important; }
-  </style>
+  <!-- Generador PDF de Certificados -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body oncontextmenu="return false;">
 
-  <!-- ENCABEZADO OFICIAL -->
+  <!-- ENCABEZADO SUPERIOR -->
   <header>
     <div class="brand-title">
-      <span>🏛️</span>
+      <span class="temple-icon">🏛️</span>
       <span>DOCENCIA MASÓNICA DE TERCER GRADO</span>
     </div>
+    
     <div class="header-controls">
+      <!-- Selector de Luminosidad -->
+      <button class="icon-btn" onclick="alternarTemaLuminosidad()" id="btnTema" title="Cambiar Luminosidad (Día / Sepia / Nocturno)">☀️</button>
+      
+      <!-- Controles de Fuente -->
       <button class="font-btn" onclick="cambiarTamanoFuente(1)" title="Aumentar tamaño de letra">A+</button>
       <button class="font-btn" onclick="cambiarTamanoFuente(-1)" title="Disminuir tamaño de letra">A-</button>
+      
+      <!-- Botón Superadmin (Visible solo para administradores) -->
+      <button id="btnToggleAdmin" class="nav-admin-btn hidden" onclick="conmutarVistaAdmin()">⚙️ Panel Superadmin</button>
+      
+      <!-- Salida -->
       <button id="btnSalir" class="logout-btn hidden" onclick="cerrarSesion()">Cerrar Cámara</button>
     </div>
   </header>
 
   <!-- PANTALLA 1: ACCESO AL TEMPLO VIRTUAL -->
-  <main id="seccionLogin" style="max-width: 480px; margin: 50px auto; padding: 0 20px;">
-    <div class="card" style="border-top: 4px solid var(--accent-gold);">
-      <h2 style="text-align: center; margin-bottom: 8px;">Cámara del Medio</h2>
-      <p style="text-align: center; color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui); font-size: 0.95rem;">
-        Espacio docente reservado para Maestros Masones.
-      </p>
+  <main id="seccionLogin" class="login-wrapper">
+    <div class="card card-login">
+      <h2>Cámara del Medio</h2>
+      <p class="login-sub">Espacio docente reservado para Maestros Masones.</p>
       
-      <div style="margin-bottom: 18px;">
-        <label for="inputEmail" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; display: block; margin-bottom: 6px;">Correo Electrónico Registrado:</label>
-        <input type="email" id="inputEmail" placeholder="su.correo@ejemplo.com" style="width: 100%; padding: 12px; font-size: 1.05rem; border: 2px solid var(--border-color); border-radius: 6px; font-family: var(--font-ui);">
+      <div class="form-group">
+        <label for="inputEmail">Correo Electrónico Registrado:</label>
+        <input type="email" id="inputEmail" placeholder="su.correo@ejemplo.com">
       </div>
 
-      <div style="margin-bottom: 22px;">
-        <label for="inputClave" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; display: block; margin-bottom: 6px;">Palabra de Paso de la Cámara:</label>
-        <input type="password" id="inputClave" placeholder="••••••••" style="width: 100%; padding: 12px; font-size: 1.05rem; border: 2px solid var(--border-color); border-radius: 6px; font-family: var(--font-ui);">
+      <div class="form-group">
+        <label for="inputClave">Palabra de Paso de la Cámara:</label>
+        <input type="password" id="inputClave" placeholder="••••••••">
       </div>
 
       <button class="btn-primary" onclick="iniciarSesion()">Acceder a la Cámara</button>
-      <p id="errorLogin" style="color: var(--error); margin-top: 14px; text-align: center; font-size: 0.95rem; font-family: var(--font-ui); font-weight: 500;"></p>
+      <p id="errorLogin" class="error-msg"></p>
     </div>
   </main>
 
   <!-- MODAL: DECLARACIÓN DE SIGILO -->
   <div id="modalSigilo" class="modal-overlay hidden">
     <div class="modal-content">
-      <h2 style="color: var(--accent-gold); margin-bottom: 16px;">Compromiso Solemne de Sigilo</h2>
-      <p style="font-size: 1.05rem; margin-bottom: 24px; text-align: justify; line-height: 1.75;">
+      <h2>Compromiso Solemne de Sigilo</h2>
+      <p>
         Al ingresar a esta Cámara del Medio, reafirmo mi compromiso de mantener estricta reserva y sigilo sobre los contenidos, 
         trazados, símbolos y reflexiones personales de mis Hermanos aquí vertidos. Reconozco que este espacio pertenece al ámbito exclusivo 
         del Tercer Grado, quedando estrictamente prohibida su difusión profana o copia no autorizada bajo los preceptos del honor masónico.
@@ -572,927 +80,261 @@
     </div>
   </div>
 
-  <!-- PANTALLA 2: ESPACIO DOCENTE EN 2 COLUMNAS (SIDEBAR + ÁREA DE ESTUDIO) -->
+  <!-- PANTALLA 2: ENTORNO DOCENTE DE LOS HERMANOS -->
   <div id="seccionDocencia" class="templo-layout hidden">
     
-    <!-- BARRA LATERAL (ÍNDICE DE PLANCHAS Y ESTADO DOCENTE) -->
+    <!-- Barra Lateral -->
     <aside class="sidebar-templo">
       <div class="sidebar-box">
         <div class="sidebar-title">
           <span>Planchas de la Cámara</span>
-          <span id="contadorModulos" style="font-size: 0.8rem; color: var(--accent-gold-dark);"></span>
+          <span id="contadorModulos"></span>
         </div>
         <div id="listaModulosNav"></div>
       </div>
 
-      <div class="sidebar-box" style="background: var(--gold-light); border-color: #E2D7BE;">
-        <h4 style="font-family: var(--font-ui); font-size: 0.9rem; color: var(--accent-gold-dark); margin-bottom: 6px;">Metodología de Trabajo:</h4>
-        <p style="font-size: 0.85rem; line-height: 1.5; color: var(--text-muted); font-family: var(--font-ui);">
-          Para desbloquear la reflexión y acceder al Muro Fraterno de cada plancha, debe completar primero las 6 interrogantes del Examen Simbólico.
-        </p>
+      <div class="sidebar-box sidebar-info">
+        <h4>Metodología de Trabajo</h4>
+        <p>Para desbloquear la reflexión y acceder al Muro Fraterno, debe completar primero las 6 interrogantes del Examen Simbólico.</p>
       </div>
     </aside>
 
-    <!-- ÁREA PRINCIPAL: FASE I, FASE II Y FASE III -->
+    <!-- Área Principal de Estudio -->
     <main>
-      <!-- FASE I: RECEPCIÓN Y LECTURA DEL TRAZADO -->
-      <section class="card" style="border-top: 4px solid var(--accent-gold);">
+      <!-- FASE I: Lectura de la Plancha -->
+      <section class="card card-trazado">
         <div class="card-fase-header">
           <span class="fase-badge">FASE I</span>
-          <span id="temaNumero" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 700; color: var(--accent-gold-dark); text-transform: uppercase; letter-spacing: 0.8px;"></span>
+          <span id="temaNumero"></span>
         </div>
         
-        <h1 id="temaTitulo">Cargando tema de instrucción...</h1>
-        <p id="temaAutor" style="font-family: var(--font-ui); font-size: 1rem; color: var(--text-muted); font-style: italic; margin-bottom: 16px;"></p>
+        <h1 id="temaTitulo">Cargando tema...</h1>
+        <p id="temaAutor"></p>
 
-        <!-- Barra de Visualización y Descarga Directa -->
+        <!-- Barra de Visualización y Descarga -->
         <div class="doc-actions-bar">
           <div id="contenedorTabs" class="tabs-container">
             <button id="tabTexto" class="tab-btn active" onclick="cambiarVistaDocencia('texto')">📖 Lectura Adaptada</button>
             <button id="tabPdf" class="tab-btn hidden" onclick="cambiarVistaDocencia('pdf')">📜 Documento Original (PDF)</button>
           </div>
 
-          <a id="btnDescargarTrazado" href="#" target="_blank" class="btn-descargar hidden">
-            📥 Descargar Plancha (PDF)
-          </a>
+          <div class="action-buttons-group">
+            <a id="btnDescargarTrazado" href="#" target="_blank" class="btn-descargar hidden">
+              📥 Descargar Plancha (PDF)
+            </a>
+            <!-- Botón de Certificado (Visible solo si el tema fue completado) -->
+            <button id="btnVerCertificado" class="btn-certificado hidden" onclick="abrirModalCertificado()">
+              📜 Obtener Certificado Oficial
+            </button>
+          </div>
         </div>
 
-        <article id="vistaTexto" class="protected-text" style="white-space: pre-line; text-align: justify;"></article>
+        <article id="vistaTexto" class="protected-text"></article>
 
         <div id="vistaPdf" class="hidden">
           <iframe id="framePdf" class="pdf-viewer-frame" src=""></iframe>
         </div>
       </section>
 
-      <!-- FASE II: EXAMEN DE COMPRENSIÓN SIMBÓLICA -->
-      <section class="card">
+      <!-- FASE II: Examen Simbólico (Se oculta si el tema ya fue completado, salvo que el usuario pida rectificar) -->
+      <section id="bloqueFaseDos" class="card">
         <div class="card-fase-header">
           <span class="fase-badge">FASE II</span>
-          <h2 style="margin: 0;">Examen de Comprensión Simbólica</h2>
+          <h2>Examen de Comprensión Simbólica</h2>
         </div>
-        <p style="color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui); font-size: 0.95rem;">
-          Haga clic sobre la alternativa que considere correcta. El sistema evaluará su respuesta en el acto y le ofrecerá la fundamentación docente.
+        <p class="text-instruccion">
+          Haga clic sobre la alternativa que considere correcta. El sistema evaluará su respuesta en el acto y fundamentará la enseñanza.
         </p>
-        
         <div id="contenedorPreguntas"></div>
       </section>
 
-      <!-- FASE III: APORTE FRATERNO Y MURO (OCULTO HASTA COMPLETAR PREGUNTAS) -->
+      <!-- FASE III: Reflexión y Muro Fraterno -->
       <section id="bloqueFaseTres" class="hidden">
-        <div class="card" style="border-top: 4px solid var(--primary);">
+        <!-- Tarjeta de Reflexión Personal -->
+        <div class="card card-reflexion">
           <div class="card-fase-header">
-            <span class="fase-badge" style="background: var(--accent-gold);">FASE III</span>
-            <h2 style="margin: 0;">Aporte Personal a la Cámara</h2>
+            <span class="fase-badge badge-fase3">FASE III</span>
+            <h2 id="tituloFaseTres">Aporte Personal a la Cámara</h2>
           </div>
-          <p style="color: var(--text-muted); margin-bottom: 14px; font-family: var(--font-ui); font-size: 0.95rem;">
-            Habiendo examinado los contenidos, consagre su reflexión personal (máximo 200 palabras) para concluir el módulo y desbloquear las reflexiones de sus Hermanos.
+          <p id="descFaseTres" class="text-instruccion">
+            Consagre su reflexión personal (máximo 200 palabras) para concluir el módulo y desbloquear las reflexiones de sus Hermanos.
           </p>
 
-          <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión fraternal..." style="width: 100%; padding: 14px; font-size: 1.05rem; border: 2px solid var(--border-color); border-radius: 6px; font-family: var(--font-ui); margin-bottom: 8px;"></textarea>
+          <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión fraternal..."></textarea>
           
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
-            <span id="contadorPalabras" style="font-family: var(--font-ui); font-size: 0.9rem; color: var(--text-muted);">
-              Palabras: 0 / 200
-            </span>
+          <div class="reflexion-footer">
+            <span id="contadorPalabras">Palabras: 0 / 200</span>
+            <button id="btnEditarReflexion" class="btn-secondary hidden" onclick="habilitarEdicionReflexion()">✏️ Editar mi Reflexión</button>
           </div>
 
           <button id="btnConsagrarReflexion" class="btn-primary" onclick="guardarReflexionYCompletar()">
-            Consagrar Reflexión y Habilitar Muro Fraterno
+            Consagrar Reflexión y Desbloquear Muro
           </button>
         </div>
 
+        <!-- Muro Fraterno -->
         <div id="bloqueMuro" class="card">
           <div class="card-fase-header">
-            <span class="fase-badge" style="background: var(--success);">MURO</span>
-            <h2 style="margin: 0;">Reflexiones de los Hermanos Maestros</h2>
+            <span class="fase-badge badge-muro">MURO</span>
+            <h2>Reflexiones de los Hermanos Maestros</h2>
           </div>
-          <p style="color: var(--text-muted); margin-bottom: 20px; font-family: var(--font-ui); font-size: 0.95rem;">
-            Aportes consagrados por los miembros de la Cámara en este trazado:
-          </p>
+          <p class="text-instruccion">Aportes consagrados por los miembros de la Cámara en este trazado:</p>
           <div id="contenedorMuro"></div>
         </div>
       </section>
     </main>
   </div>
 
-  <!-- PANTALLA 3: PANEL ADMINISTRADOR Y GESTIÓN DE PLANCHAS -->
+  <!-- PANTALLA 3: PANEL EXCLUSIVO DEL SUPERADMIN -->
   <main id="seccionAdmin" class="admin-container hidden">
     
-    <!-- SUBMENÚ EXCLUSIVO DEL SUPERADMIN: MÉTRICAS Y CONTROL DOCENTE -->
-    <div class="card" style="border-top: 4px solid var(--accent-gold); background: #FCFCFA; margin-bottom: 24px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 2px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+    <!-- SUBMENÚ SUPERADMIN 1: DASHBOARD Y MÉTRICAS DOCENTES -->
+    <div class="card card-admin-metricas">
+      <div class="admin-card-header">
         <div>
-          <h2 style="margin: 0; font-size: 1.35rem;">📊 Matriz de Avance Docente (Superadmin)</h2>
-          <p style="color: var(--text-muted); font-size: 0.88rem; font-family: var(--font-ui); margin: 0;">
-            Seguimiento de visitas, lecturas, intentos de evaluación y reflexiones consagradas.
-          </p>
+          <h2>📊 Matriz de Avance Docente</h2>
+          <p class="text-instruccion">Seguimiento de visitas, lecturas, progreso de examen y reflexiones consagradas.</p>
         </div>
         
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <label for="selectMetricasModulo" style="font-family: var(--font-ui); font-size: 0.88rem; font-weight: 600;">Plancha:</label>
-          <select id="selectMetricasModulo" onchange="cargarMetricasAvance(this.value)" style="padding: 6px 10px; font-size: 0.9rem; font-family: var(--font-ui); border: 1px solid var(--border-color); border-radius: 6px;"></select>
+        <div class="admin-header-actions">
+          <label for="selectMetricasModulo">Plancha:</label>
+          <select id="selectMetricasModulo" onchange="cargarMetricasAvance(this.value)"></select>
           <button class="admin-link-btn" onclick="recargarMetricasActuales()">🔄 Actualizar</button>
+          <button class="admin-link-btn" onclick="exportarRespaldoCompletoJSON()">💾 Respaldar Datos (JSON)</button>
         </div>
       </div>
 
-      <div style="overflow-x: auto;">
+      <div class="table-responsive">
         <table class="metricas-table">
           <thead>
             <tr>
               <th>Hermano</th>
               <th>Correo</th>
               <th>Lectura</th>
-              <th>Examen Simbólico</th>
+              <th>Examen</th>
               <th>Consagración</th>
               <th>Fecha Consagración</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody id="tablaMetricasBody">
             <tr>
-              <td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic;">Cargando matriz de avance...</td>
+              <td colspan="7" class="td-loading">Consultando registros...</td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- TARJETA DE CARGA DE NUEVOS TRAZADOS -->
-    <div class="card" style="border-top: 4px solid var(--primary); background: #FAFBFD;">
-      <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 14px; margin-bottom: 22px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
-          <h2 style="margin: 0;">Consagrar Nueva Plancha</h2>
-          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="https://github.com/jcpintov/cdocencia/blob/main/index.html" target="_blank" class="admin-link-btn" title="Editar index.html en GitHub">
-              <span>🐙</span>
-              <span>Editar Código en GitHub</span>
-            </a>
-            <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq/sql/02eaddd7-b53a-430e-8fad-7ed8249b9440" target="_blank" class="admin-link-btn" title="Abrir consola SQL en Supabase">
-              <span>⚡</span>
-              <span>Consola SQL Supabase</span>
-            </a>
-          </div>
+    <!-- SUBMENÚ SUPERADMIN 2: CARGA Y CONSAGRACIÓN DE PLANCHAS CON IA -->
+    <div class="card card-admin-carga">
+      <div class="admin-card-header">
+        <div>
+          <h2>🏛️ Consagrar Nueva Plancha</h2>
+          <p class="text-instruccion">Suba un PDF o Word. El sistema depurará el texto y estructurará el cuestionario pedagógico.</p>
         </div>
-        <p style="color: var(--text-muted); font-family: var(--font-ui); font-size: 0.95rem;">
-          Suba un archivo PDF o Word (.docx). El sistema limpiará ligaduras dañadas, eliminará encabezados y notas al pie, normalizará tildes y formulará las 6 preguntas pedagógicas con IA.
-        </p>
+        <div class="admin-header-actions">
+          <a href="https://github.com/jcpintov/cdocencia/blob/main/index.html" target="_blank" class="admin-link-btn">🐙 GitHub</a>
+          <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq/sql/02eaddd7-b53a-430e-8fad-7ed8249b9440" target="_blank" class="admin-link-btn">⚡ SQL Supabase</a>
+        </div>
       </div>
 
       <div class="upload-box">
-        <label for="archivoDoc" style="font-weight: 700; color: var(--primary); cursor: pointer; display: block; margin-bottom: 8px;">
-          📄 Cargar Plancha desde Archivo (PDF o Word .docx)
-        </label>
-        <input type="file" id="archivoDoc" accept=".docx, .pdf" onchange="leerArchivoPlancha(event)" style="font-size: 0.95rem;">
-        <p id="archivoStatus" style="font-size: 0.85rem; color: var(--accent-gold-dark); margin-top: 8px; font-weight: 600;"></p>
+        <label for="archivoDoc">📄 Cargar Archivo de Plancha (PDF o Word .docx)</label>
+        <input type="file" id="archivoDoc" accept=".docx, .pdf" onchange="leerArchivoPlancha(event)">
+        <p id="archivoStatus"></p>
       </div>
 
       <div class="admin-grid">
-        <div>
-          <label for="adminOrden" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; display: block; margin-bottom: 6px;">N° Módulo:</label>
-          <input type="number" id="adminOrden" value="4" style="width: 100%; padding: 12px; font-size: 1.05rem; border: 2px solid var(--border-color); border-radius: 6px; font-family: var(--font-ui);">
+        <div class="form-group">
+          <label for="adminOrden">N° Módulo:</label>
+          <input type="number" id="adminOrden" value="4">
         </div>
-        <div>
-          <label for="adminTitulo" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; display: block; margin-bottom: 6px;">Título de la Plancha:</label>
-          <input type="text" id="adminTitulo" placeholder="Ej: Las Obligaciones del Juramento" style="width: 100%; padding: 12px; font-size: 1.05rem; border: 2px solid var(--border-color); border-radius: 6px; font-family: var(--font-ui);">
+        <div class="form-group">
+          <label for="adminTitulo">Título de la Plancha:</label>
+          <input type="text" id="adminTitulo" placeholder="Ej: Los Cinco Puntos del Maestro">
         </div>
-        <div>
-          <label for="adminAutor" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; display: block; margin-bottom: 6px;">Nombre del Autor (Solo Nombre):</label>
-          <input type="text" id="adminAutor" placeholder="Ej: Ricardo Pérez G. 3º" style="width: 100%; padding: 12px; font-size: 1.05rem; border: 2px solid var(--border-color); border-radius: 6px; font-family: var(--font-ui);">
+        <div class="form-group">
+          <label for="adminAutor">Autor (Solo Nombre):</label>
+          <input type="text" id="adminAutor" placeholder="Ej: Juan Pérez 3º">
         </div>
       </div>
 
-      <div style="margin-top: 18px; margin-bottom: 20px;">
-        <label for="adminTexto" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 600; display: block; margin-bottom: 6px;">
-          Texto Normalizado para la IA (Sin encabezados repetidos ni pies de página):
-        </label>
-        <textarea id="adminTexto" rows="11" placeholder="El texto normalizado aparecerá aquí para su revisión..." style="width: 100%; padding: 12px; font-size: 1rem; border: 2px solid var(--border-color); border-radius: 6px; font-family: var(--font-ui);"></textarea>
+      <div class="form-group">
+        <label for="adminTexto">Texto Normalizado para IA:</label>
+        <textarea id="adminTexto" rows="10" placeholder="El texto limpio aparecerá aquí..."></textarea>
       </div>
 
       <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">
-        ⚙️ Procesar con Gemini y Consagrar Plancha en la Cámara
+        ⚙️ Procesar con Gemini y Consagrar Plancha
       </button>
       
-      <div id="adminStatus" style="margin-top: 18px; font-family: var(--font-ui); font-size: 1rem; text-align: center; color: var(--primary); font-weight: 600;"></div>
+      <div id="adminStatus"></div>
     </div>
   </main>
 
-  <script>
-    if (window.pdfjsLib) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-    }
+  <!-- MODAL: CERTIFICADO DE APROBACIÓN CON TIMBRE OFICIAL -->
+  <div id="modalCertificado" class="modal-overlay hidden">
+    <div class="modal-certificado-wrapper">
+      <div class="modal-cert-actions">
+        <button class="btn-primary" onclick="descargarCertificadoPDF()">📥 Descargar en PDF</button>
+        <button class="btn-secondary" onclick="cerrarModalCertificado()">Cerrar</button>
+      </div>
 
-    const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
-    const GEMINI_API_KEY = "AQ.Ab8RN6KkSJ4RhmWB_KIloRGdf33nk4gdN_onygONXcjPP1rOTQ";    
+      <!-- Contenedor del Diploma A4 que se imprime -->
+      <div id="documentoCertificado" class="certificado-a4">
+        <div class="cert-borde-exterior">
+          <div class="cert-borde-interior">
+            
+            <p class="cert-lema">A.·.L.·.G.·.D.·.G.·.A.·.D.·.U.·.</p>
+            <h2 class="cert-logia">R.·. L.·. ORESTES FRÖDDEN LORENZEN Nº 146</h2>
+            <p class="cert-valle">Valle de Talagante</p>
+            <p class="cert-camara">CÁMARA DEL MEDIO — TERCER GRADO</p>
 
-    const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            <div class="cert-divider">✦ ✦ ✦</div>
 
-    let usuarioActual = null;
-    let listaModulos = [];
-    let moduloActual = null;
-    let misProgresos = {};
-    let tamanoBase = 19;
-    let respuestasMarcadas = {};
-    let pdfBase64Cargado = null;
-    let intervaloCuentaRegresiva = null;
+            <p class="cert-cuerpo">
+              Se certifica que el Respetable Hermano
+            </p>
+            <h3 id="certNombreHermano" class="cert-nombre">Q.·.H.·. NOMBRE DEL HERMANO</h3>
+            
+            <p class="cert-cuerpo">
+              Ha culminado satisfactoriamente el estudio doctrinal, examen simbólico y consagración de reflexiones correspondientes al trazado de docencia:
+            </p>
 
-    function formatearAutorMasonico(nombreCrudo) {
-      if (!nombreCrudo) return 'Cámara del Medio';
-      let nombreLimpio = nombreCrudo.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-      return `Q.·.H.·. ${nombreLimpio}`;
-    }
+            <h4 id="certTituloPlancha" class="cert-plancha">"TÍTULO DE LA PLANCHA"</h4>
+            <p id="certAutorPlancha" class="cert-autor">Autor: Q.·.H.·. Autor</p>
 
-    function depurarTextoPlancha(textoBruto) {
-      if (!textoBruto) return "";
-      let t = textoBruto.normalize("NFC");
-
-      t = t.replace(/é%ca/gi, "ética")
-           .replace(/colec%vas/gi, "colectivas")
-           .replace(/en%dad/gi, "entidad")
-           .replace(/É%ca/gi, "Ética")
-           .replace(/puni%vos/gi, "punitivos")
-           .replace(/fana%zantes/gi, "fanatizantes")
-           .replace(/é%cos/gi, "éticos")
-           .replace(/ins%tución/gi, "institución")
-           .replace(/iniciá%ca/gi, "iniciática")
-           .replace(/prác%ca/gi, "práctica")
-           .replace(/gra%ficante/gi, "gratificante")
-           .replace(/par%cipación/gi, "participación")
-           .replace(/au%éntico/gi, "auténtico")
-           .replace(/ac%tud/gi, "actitud")
-           .replace(/sa%sfacción/gi, "satisfacción")
-           .replace(/sen%do/gi, "sentido")
-           .replace(/q\s*ue\b/gi, "que");
-
-      let lineas = t.split(/\r?\n/);
-      let lineasFiltradas = [];
-
-      for (let linea of lineas) {
-        let l = linea.trim();
-        if (/^[-–—]?\s*(p[aá]g\.?|p[aá]gina)?\s*\d+\s*[-–—]?$/i.test(l)) continue;
-        if (/^(https?:\/\/|www\.)\S+$/i.test(l)) continue;
-        if (/^\d+\s+(ib[ií]d|op\.\s*cit|ob\.\s*cit|cfr|ver)\b/i.test(l)) continue;
-
-        let lineaLimpia = linea.replace(/\.\s*\d+\s+([A-ZÁÉÍÓÚ])/g, '. $1')
-                               .replace(/([a-záéíóú])\s+\d+\s+([a-záéíóú])/gi, '$1 $2')
-                               .replace(/Masónica\s+\d+\s+/g, 'Masónica ');
-
-        lineasFiltradas.push(lineaLimpia);
-      }
-
-      return lineasFiltradas.join("\n").replace(/\n{3,}/g, "\n\n").trim();
-    }
-
-    function cambiarTamanoFuente(delta) {
-      tamanoBase = Math.min(Math.max(tamanoBase + delta, 16), 28);
-      document.body.style.fontSize = tamanoBase + 'px';
-    }
-
-    function cambiarVistaDocencia(tipo) {
-      const tabTexto = document.getElementById('tabTexto');
-      const tabPdf = document.getElementById('tabPdf');
-      const vistaTexto = document.getElementById('vistaTexto');
-      const vistaPdf = document.getElementById('vistaPdf');
-
-      if (tipo === 'pdf') {
-        tabTexto.classList.remove('active');
-        tabPdf.classList.add('active');
-        vistaTexto.classList.add('hidden');
-        vistaPdf.classList.remove('hidden');
-      } else {
-        tabPdf.classList.remove('active');
-        tabTexto.classList.add('active');
-        vistaPdf.classList.add('hidden');
-        vistaTexto.classList.remove('hidden');
-      }
-    }
-
-    async function leerArchivoPlancha(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const status = document.getElementById('archivoStatus');
-      status.innerText = "Extrayendo y depurando texto...";
-
-      const inputTitulo = document.getElementById('adminTitulo');
-      if (!inputTitulo.value) {
-        inputTitulo.value = file.name.replace(/\.[^/.]+$/, "");
-      }
-
-      if (file.type === "application/pdf" || file.name.endsWith('.pdf')) {
-        const b64Reader = new FileReader();
-        b64Reader.onload = function(e) {
-          pdfBase64Cargado = e.target.result;
-        };
-        b64Reader.readAsDataURL(file);
-      } else {
-        pdfBase64Cargado = null;
-      }
-
-      const reader = new FileReader();
-
-      if (file.name.endsWith('.docx')) {
-        reader.onload = function(e) {
-          mammoth.extractRawText({ arrayBuffer: e.target.result })
-            .then(function(result) {
-              const textoLimpio = depurarTextoPlancha(result.value);
-              document.getElementById('adminTexto').value = textoLimpio;
-              status.innerText = "Word depurado: ligaduras corregidas y encabezados filtrados.";
-            })
-            .catch(function(err) {
-              status.innerText = "Error al leer Word: " + err.message;
-            });
-        };
-        reader.readAsArrayBuffer(file);
-      } 
-      else if (file.name.endsWith('.pdf')) {
-        reader.onload = async function(e) {
-          try {
-            const typedarray = new Uint8Array(e.target.result);
-            const pdf = await pdfjsLib.getDocument(typedarray).promise;
-            let fullText = "";
-
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-              const page = await pdf.getPage(pageNum);
-              const textContent = await page.getTextContent();
-              const pageText = textContent.items.map(item => item.str).join(' ');
-              fullText += pageText + "\n\n";
-            }
-
-            const textoLimpio = depurarTextoPlancha(fullText);
-            document.getElementById('adminTexto').value = textoLimpio;
-            status.innerText = `PDF depurado con éxito (${pdf.numPages} págs). Caracteres '%' corregidos.`;
-          } catch (err) {
-            status.innerText = "Error al procesar PDF: " + err.message;
-          }
-        };
-        reader.readAsArrayBuffer(file);
-      }
-    }
-
-    async function iniciarSesion() {
-      const email = document.getElementById('inputEmail').value.trim().toLowerCase();
-      const clave = document.getElementById('inputClave').value.trim();
-      const err = document.getElementById('errorLogin');
-
-      if (clave !== "OFL.146!") {
-        err.innerText = "Credencial de paso no válida.";
-        return;
-      }
-
-      err.innerText = "Verificando en padrón...";
-
-      const { data, error } = await sbApp
-        .from('usuarios')
-        .select('*')
-        .eq('email', email)
-        .limit(1);
-
-      if (error || !data || data.length === 0) {
-        err.innerText = "El correo no figura en el padrón de la Cámara.";
-        return;
-      }
-
-      usuarioActual = data[0];
-      document.getElementById('seccionLogin').classList.add('hidden');
-      document.getElementById('btnSalir').classList.remove('hidden');
-      document.getElementById('modalSigilo').classList.remove('hidden');
-    }
-
-    function aceptarSigilo() {
-      document.getElementById('modalSigilo').classList.add('hidden');
-      if (usuarioActual.es_admin) {
-        document.getElementById('seccionAdmin').classList.remove('hidden');
-      }
-      cargarTodosLosModulos();
-    }
-
-    function cerrarSesion() {
-      usuarioActual = null;
-      document.getElementById('seccionDocencia').classList.add('hidden');
-      document.getElementById('seccionAdmin').classList.add('hidden');
-      document.getElementById('modalSigilo').classList.add('hidden');
-      document.getElementById('btnSalir').classList.add('hidden');
-      document.getElementById('seccionLogin').classList.remove('hidden');
-    }
-
-    async function cargarTodosLosModulos() {
-      document.getElementById('seccionDocencia').classList.remove('hidden');
-
-      const { data, error } = await sbApp
-        .from('modulos')
-        .select('*')
-        .eq('activo', true)
-        .order('numero_orden', { ascending: true });
-
-      if (error || !data || data.length === 0) {
-        document.getElementById('temaNumero').innerText = "";
-        document.getElementById('temaAutor').innerText = "";
-        document.getElementById('temaTitulo').innerText = "No hay planchas consagradas actualmente.";
-        document.getElementById('vistaTexto').innerText = "Suba un archivo en el panel inferior para consagrar la primera Plancha.";
-        moduloActual = null;
-        return;
-      }
-
-      listaModulos = data;
-      document.getElementById('contadorModulos').innerText = `${listaModulos.length} temas`;
-
-      // Poblar el selector de métricas del Superadmin
-      if (usuarioActual && usuarioActual.es_admin) {
-        const selectMetricas = document.getElementById('selectMetricasModulo');
-        selectMetricas.innerHTML = "";
-        listaModulos.forEach(m => {
-          selectMetricas.innerHTML += `<option value="${m.id}">Módulo ${m.numero_orden}: ${m.titulo}</option>`;
-        });
-        cargarMetricasAvance(listaModulos[0].id);
-      }
-
-      // Cargar progresos del usuario actual
-      const { data: dataProgreso } = await sbApp
-        .from('progreso_maestro')
-        .select('modulo_id, completado, reflexion, respuestas_evaluacion, leido')
-        .eq('usuario_id', usuarioActual.id);
-
-      misProgresos = {};
-      if (dataProgreso) {
-        dataProgreso.forEach(p => {
-          misProgresos[p.modulo_id] = p;
-        });
-      }
-
-      renderizarSidebar();
-      seleccionarModulo(data[0].id);
-    }
-
-    function renderizarSidebar() {
-      const contenedor = document.getElementById('listaModulosNav');
-      contenedor.innerHTML = "";
-
-      listaModulos.forEach(m => {
-        const estaCompletado = misProgresos[m.id] && misProgresos[m.id].completado;
-        const badgeHtml = estaCompletado
-          ? `<span class="badge-estado badge-ok">✓ Completado</span>`
-          : `<span class="badge-estado badge-pen">Pendiente</span>`;
-
-        contenedor.innerHTML += `
-          <div class="modulo-nav-item" id="nav_mod_${m.id}" onclick="seleccionarModulo('${m.id}')">
-            <div class="nav-item-header">
-              <span class="nav-item-num">Módulo ${m.numero_orden}</span>
-              ${badgeHtml}
+            <div class="cert-reflexion-box">
+              <p class="cert-reflexion-label">Aporte Consagrado por el Maestro:</p>
+              <p id="certTextoReflexion" class="cert-reflexion-cita">"..."</p>
             </div>
-            <div class="nav-item-title">${m.titulo}</div>
-          </div>
-        `;
-      });
-    }
 
-    async function seleccionarModulo(idModulo) {
-      moduloActual = listaModulos.find(m => m.id === idModulo);
-      if (!moduloActual) return;
+            <!-- Pie del Certificado con Timbre Oficial -->
+            <div class="cert-footer">
+              <div class="cert-firma">
+                <div class="linea-firma"></div>
+                <p>Cámara de Maestros</p>
+                <p id="certFechaEmision">Talagante, FECHA</p>
+              </div>
 
-      document.querySelectorAll('.modulo-nav-item').forEach(el => el.classList.remove('active'));
-      const activeNav = document.getElementById(`nav_mod_${idModulo}`);
-      if (activeNav) activeNav.classList.add('active');
+              <!-- TIMBRE OFICIAL ESTAMPADO CON MÁSCARA -->
+              <div class="timbre-estampa" title="Timbre Oficial R.·.L.·. Orestes Frödden Lorenzen N°146"></div>
 
-      respuestasMarcadas = {};
-
-      document.getElementById('temaNumero').innerText = "Módulo " + moduloActual.numero_orden;
-      document.getElementById('temaTitulo').innerText = moduloActual.titulo;
-      document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
-      document.getElementById('vistaTexto').innerText = moduloActual.contenido_trazado;
-
-      // REGISTRO SILENCIOSO DE MÉTRICA DE LECTURA / VISITA
-      registrarLecturaSilenciosa(moduloActual.id);
-
-      const tabPdf = document.getElementById('tabPdf');
-      const framePdf = document.getElementById('framePdf');
-      const btnDescargar = document.getElementById('btnDescargarTrazado');
-
-      if (moduloActual.archivo_pdf_base64) {
-        tabPdf.classList.remove('hidden');
-        framePdf.src = moduloActual.archivo_pdf_base64;
-        btnDescargar.href = moduloActual.archivo_pdf_base64;
-        btnDescargar.download = `${moduloActual.titulo}.pdf`;
-        btnDescargar.classList.remove('hidden');
-      } else {
-        tabPdf.classList.add('hidden');
-        btnDescargar.classList.add('hidden');
-        cambiarVistaDocencia('texto');
-      }
-
-      renderizarPreguntasInteractivas(moduloActual.preguntas_json.preguntas || []);
-      verificarProgresoExistente();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    // --- REGISTRADOR DE MÉTRICAS EN SEGUNDO PLANO ---
-    async function registrarLecturaSilenciosa(moduloId) {
-      if (!usuarioActual) return;
-      try {
-        await sbApp.from('progreso_maestro').upsert({
-          usuario_id: usuarioActual.id,
-          modulo_id: moduloId,
-          leido: true
-        }, { onConflict: 'usuario_id,modulo_id', ignoreDuplicates: false });
-      } catch (e) {
-        console.warn("Métrica lectura en segundo plano:", e);
-      }
-    }
-
-    // --- EVALUACIÓN INTERACTIVA INMEDIATA ---
-    function renderizarPreguntasInteractivas(preguntas) {
-      const cont = document.getElementById('contenedorPreguntas');
-      cont.innerHTML = "";
-
-      if (!preguntas || preguntas.length === 0) {
-        cont.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay interrogantes registradas para esta plancha.</p>";
-        return;
-      }
-
-      preguntas.forEach((p, idx) => {
-        let opcionesHtml = p.opciones.map(op => `
-          <label class="opcion-label" id="label_${idx}_${op.letra}" onclick="evaluarRespuestaInmediata(${idx}, '${op.letra}', '${p.respuesta_correcta}')">
-            <input type="radio" name="preg_${idx}" value="${op.letra}">
-            <span><strong>${op.letra})</strong> ${op.texto}</span>
-          </label>
-        `).join('');
-
-        cont.innerHTML += `
-          <div class="pregunta-card" id="card_preg_${idx}">
-            <p style="font-weight: 600; margin-bottom: 14px;">${idx + 1}. ${p.enunciado}</p>
-            ${opcionesHtml}
-            <div class="feedback-box" id="feedback_${idx}">
-              <div style="font-weight: 700; margin-bottom: 6px;" id="feedback_titulo_${idx}"></div>
-              <div id="feedback_texto_${idx}">${p.retroalimentacion}</div>
+              <div class="cert-firma">
+                <div class="linea-firma"></div>
+                <p>Docencia Masónica</p>
+                <p>Tercer Grado</p>
+              </div>
             </div>
+
           </div>
-        `;
-      });
-    }
+        </div>
+      </div>
+    </div>
+  </div>
 
-    async function evaluarRespuestaInmediata(idxPregunta, letraSeleccionada, letraCorrecta) {
-      if (respuestasMarcadas[idxPregunta]) return;
-
-      respuestasMarcadas[idxPregunta] = letraSeleccionada;
-
-      const radios = document.querySelectorAll(`input[name="preg_${idxPregunta}"]`);
-      radios.forEach(r => r.disabled = true);
-
-      const labelSeleccionado = document.getElementById(`label_${idxPregunta}_${letraSeleccionada}`);
-      const labelCorrecto = document.getElementById(`label_${idxPregunta}_${letraCorrecta}`);
-      const feedbackBox = document.getElementById(`feedback_${idxPregunta}`);
-      const feedbackTitulo = document.getElementById(`feedback_titulo_${idxPregunta}`);
-
-      if (letraSeleccionada === letraCorrecta) {
-        labelSeleccionado.classList.add('opcion-correcta');
-        feedbackTitulo.innerHTML = `<span style="color: var(--success);">✓ Respuesta Correcta</span>`;
-      } else {
-        labelSeleccionado.classList.add('opcion-erronea');
-        labelCorrecto.classList.add('opcion-correcta');
-        feedbackTitulo.innerHTML = `<span style="color: var(--error);">✗ Seleccionada: ${letraSeleccionada}</span> | Respuesta Correcta: <strong>${letraCorrecta}</strong>`;
-      }
-
-      feedbackBox.style.display = "block";
-
-      // Actualizar conteo de intentos / respuestas en la base de datos
-      try {
-        await sbApp.from('progreso_maestro').upsert({
-          usuario_id: usuarioActual.id,
-          modulo_id: moduloActual.id,
-          respuestas_evaluacion: respuestasMarcadas,
-          intentos_preguntas: Object.keys(respuestasMarcadas).length
-        }, { onConflict: 'usuario_id,modulo_id' });
-      } catch (e) {
-        console.warn("Métrica intento evaluación:", e);
-      }
-
-      const totalPreguntas = moduloActual.preguntas_json.preguntas ? moduloActual.preguntas_json.preguntas.length : 6;
-      if (Object.keys(respuestasMarcadas).length === totalPreguntas) {
-        const faseTres = document.getElementById('bloqueFaseTres');
-        faseTres.classList.remove('hidden');
-        faseTres.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-
-    function contarPalabras() {
-      const texto = document.getElementById('textoReflexion').value.trim();
-      const cant = texto === "" ? 0 : texto.split(/\s+/).length;
-      const el = document.getElementById('contadorPalabras');
-      el.innerText = `Palabras: ${cant} / 200`;
-      el.style.color = cant > 200 ? "var(--error)" : "var(--text-muted)";
-    }
-
-    async function guardarReflexionYCompletar() {
-      const texto = document.getElementById('textoReflexion').value.trim();
-      const cant = texto === "" ? 0 : texto.split(/\s+/).length;
-
-      if (cant === 0) {
-        alert("Por favor ingrese su reflexión antes de continuar.");
-        return;
-      }
-      if (cant > 200) {
-        alert("Su reflexión supera las 200 palabras reglamentarias.");
-        return;
-      }
-
-      const { error } = await sbApp.from('progreso_maestro').upsert({
-        usuario_id: usuarioActual.id,
-        modulo_id: moduloActual.id,
-        respuestas_evaluacion: respuestasMarcadas,
-        reflexion: texto,
-        completado: true,
-        completado_en: new Date().toISOString()
-      }, { onConflict: 'usuario_id,modulo_id' });
-
-      if (error) {
-        alert("Ocurrió un error al consagrar su reflexión.");
-        return;
-      }
-
-      alert("Módulo completado con éxito. Se ha consagrado su aporte en el Muro Fraterno.");
-      document.getElementById('textoReflexion').disabled = true;
-      document.getElementById('btnConsagrarReflexion').classList.add('hidden');
-      
-      misProgresos[moduloActual.id] = { completado: true, reflexion: texto };
-      renderizarSidebar();
-      cargarMuroReflexiones();
-    }
-
-    async function verificarProgresoExistente() {
-      const { data } = await sbApp
-        .from('progreso_maestro')
-        .select('*')
-        .eq('usuario_id', usuarioActual.id)
-        .eq('modulo_id', moduloActual.id)
-        .limit(1);
-
-      const faseTres = document.getElementById('bloqueFaseTres');
-      const txtRef = document.getElementById('textoReflexion');
-      const btnRef = document.getElementById('btnConsagrarReflexion');
-
-      if (data && data.length > 0 && data[0].completado) {
-        faseTres.classList.remove('hidden');
-        txtRef.value = data[0].reflexion;
-        txtRef.disabled = true;
-        btnRef.classList.add('hidden');
-        
-        if (moduloActual.preguntas_json && moduloActual.preguntas_json.preguntas) {
-          moduloActual.preguntas_json.preguntas.forEach((p, idx) => {
-            const fb = document.getElementById(`feedback_${idx}`);
-            const fbTit = document.getElementById(`feedback_titulo_${idx}`);
-            const labelCorr = document.getElementById(`label_${idx}_${p.respuesta_correcta}`);
-            if (labelCorr) labelCorr.classList.add('opcion-correcta');
-            if (fbTit) fbTit.innerHTML = `Respuesta Correcta: <strong>${p.respuesta_correcta}</strong>`;
-            if (fb) fb.style.display = "block";
-          });
-        }
-
-        cargarMuroReflexiones();
-      } else {
-        faseTres.classList.add('hidden');
-        txtRef.value = "";
-        txtRef.disabled = false;
-        btnRef.classList.remove('hidden');
-      }
-    }
-
-    async function cargarMuroReflexiones() {
-      const contenedor = document.getElementById('contenedorMuro');
-
-      const { data } = await sbApp
-        .from('progreso_maestro')
-        .select('reflexion, completado_en, usuarios(nombre)')
-        .eq('modulo_id', moduloActual.id)
-        .eq('completado', true);
-
-      contenedor.innerHTML = "";
-      if (data && data.length > 0) {
-        data.forEach(item => {
-          contenedor.innerHTML += `
-            <div class="reflexion-item">
-              <div class="reflexion-autor">${item.usuarios?.nombre || "Hermano Maestro"}</div>
-              <div>"${item.reflexion}"</div>
-            </div>
-          `;
-        });
-      } else {
-        contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Aún no hay reflexiones consagradas en esta plancha.</p>";
-      }
-    }
-
-    // --- PANEL DE MÉTRICAS DEL SUPERADMIN ---
-    async function cargarMetricasAvance(moduloId) {
-      const tbody = document.getElementById('tablaMetricasBody');
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic;">Consultando registros de la Cámara...</td></tr>`;
-
-      // 1. Obtener todos los usuarios del padrón
-      const { data: usuarios, error: errU } = await sbApp
-        .from('usuarios')
-        .select('id, nombre, email')
-        .order('nombre', { ascending: true });
-
-      // 2. Obtener los progresos para este módulo
-      const { data: progresos, error: errP } = await sbApp
-        .from('progreso_maestro')
-        .select('*')
-        .eq('modulo_id', moduloId);
-
-      if (errU || !usuarios) {
-        tbody.innerHTML = `<tr><td colspan="6" style="color: var(--error); text-align: center;">Error al cargar usuarios.</td></tr>`;
-        return;
-      }
-
-      const mapProg = {};
-      if (progresos) {
-        progresos.forEach(p => { mapProg[p.usuario_id] = p; });
-      }
-
-      tbody.innerHTML = "";
-
-      usuarios.forEach(u => {
-        const prog = mapProg[u.id];
-
-        // Estado Lectura
-        const leidoHtml = prog && prog.leido
-          ? `<span style="color: var(--success); font-weight: 600;">✓ Sí leyó</span>`
-          : `<span style="color: var(--text-muted);">— Pendiente</span>`;
-
-        // Estado Evaluación
-        let evalHtml = `<span style="color: var(--text-muted);">Sin intentos</span>`;
-        if (prog) {
-          const respondidas = prog.respuestas_evaluacion ? Object.keys(prog.respuestas_evaluacion).length : (prog.intentos_preguntas || 0);
-          if (respondidas >= 6) {
-            evalHtml = `<span style="color: var(--success); font-weight: 600;">✓ 6/6 Respondidas</span>`;
-          } else if (respondidas > 0) {
-            evalHtml = `<span style="color: #B27B10; font-weight: 600;">En curso (${respondidas}/6)</span>`;
-          }
-        }
-
-        // Estado Consagración
-        let consagradoHtml = `<span style="color: var(--text-muted);">Pendiente</span>`;
-        let fechaHtml = `<span style="color: var(--text-muted);">—</span>`;
-
-        if (prog && prog.completado) {
-          consagradoHtml = `<span style="color: var(--success); font-weight: 700;">✓ Consagrado</span>`;
-          if (prog.completado_en) {
-            const d = new Date(prog.completado_en);
-            fechaHtml = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-          }
-        }
-
-        tbody.innerHTML += `
-          <tr>
-            <td><strong>${u.nombre || "Hermano"}</strong></td>
-            <td style="font-family: monospace; font-size: 0.85rem;">${u.email}</td>
-            <td>${leidoHtml}</td>
-            <td>${evalHtml}</td>
-            <td>${consagradoHtml}</td>
-            <td>${fechaHtml}</td>
-          </tr>
-        `;
-      });
-    }
-
-    function recargarMetricasActuales() {
-      const select = document.getElementById('selectMetricasModulo');
-      if (select && select.value) {
-        cargarMetricasAvance(select.value);
-      }
-    }
-
-    function iniciarCuentaRegresiva(segundosTotales) {
-      if (intervaloCuentaRegresiva) clearInterval(intervaloCuentaRegresiva);
-
-      let restante = Math.ceil(segundosTotales);
-      const btn = document.getElementById('btnGenerarModulo');
-      const status = document.getElementById('adminStatus');
-
-      btn.disabled = true;
-
-      intervaloCuentaRegresiva = setInterval(() => {
-        status.innerHTML = `
-          <div class="timer-badge">
-            ⏳ Cuota por minuto de Google alcanzada. Reintento disponible en: <strong>${restante}s</strong>
-          </div>
-        `;
-        restante--;
-
-        if (restante < 0) {
-          clearInterval(intervaloCuentaRegresiva);
-          btn.disabled = false;
-          status.innerHTML = `<span style="color: var(--success); font-weight: 700;">✓ Cuota restablecida. Ya puede procesar la Plancha.</span>`;
-        }
-      }, 1000);
-    }
-
-    async function generarModuloConIA() {
-      const titulo = document.getElementById('adminTitulo').value.trim();
-      const autorInput = document.getElementById('adminAutor').value.trim();
-      const autorFinal = formatearAutorMasonico(autorInput);
-      const orden = parseInt(document.getElementById('adminOrden').value);
-      const texto = document.getElementById('adminTexto').value.trim();
-      const status = document.getElementById('adminStatus');
-
-      if (!titulo || !texto) {
-        alert("Por favor complete el título y el texto depurado del trazado.");
-        return;
-      }
-
-      status.innerHTML = "<em>Procesando trazado con Gemini (analizando simbolismo y formulando 6 interrogantes)...</em>";
-
-      const promptSistema = `
-Eres un pedagogo e instructor especializado en la Cámara del Medio (Tercer Grado de la Masonería).
-Analiza el siguiente trazado masónico depurado. Enfócate en el contenido ético, deberes, símbolos y virtudes del Tercer Grado.
-
-Genera exactamente:
-1. "resumen_formativo": Síntesis sobria de las ideas doctrinales centrales (máximo 150 palabras).
-2. "conclusion_enlace": Una reflexión armónica que enlace los deberes y virtudes expuestas (120-180 palabras).
-3. "preguntas": Arreglo de exactamente 6 preguntas pedagógicas de selección múltiple sobre los conceptos del trazado. Cada pregunta debe contener:
-   - "numero": (1 a 6)
-   - "enunciado": Texto claro y reflexivo.
-   - "opciones": 4 opciones con campos "letra" (A, B, C, D) y "texto".
-   - "respuesta_correcta": Letra de la opción verdadera.
-   - "retroalimentacion": Breve explicación fraterna y docente de por qué esa es la respuesta.
-
-REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto previo ni posterior, cumpliendo esta estructura:
-{
-  "resumen_formativo": "...",
-  "conclusion_enlace": "...",
-  "preguntas": [
-    {
-      "numero": 1,
-      "enunciado": "...",
-      "opciones": [
-        {"letra": "A", "texto": "..."},
-        {"letra": "B", "texto": "..."},
-        {"letra": "C", "texto": "..."},
-        {"letra": "D", "texto": "..."}
-      ],
-      "respuesta_correcta": "A",
-      "retroalimentacion": "..."
-    }
-  ]
-}
-`;
-
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent`;
-
-      try {
-        const respuesta = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'x-goog-api-key': GEMINI_API_KEY
-          },
-          body: JSON.stringify({
-            contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
-            generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
-          })
-        });
-
-        const data = await respuesta.json();
-
-        if (data.error) {
-          if (data.error.code === 429) {
-            const matchSeg = data.error.message.match(/retry in ([\d\.]+)s/i);
-            const seg = matchSeg ? parseFloat(matchSeg[1]) : 50;
-            iniciarCuentaRegresiva(seg);
-          } else {
-            status.innerText = `Error Google API: ${data.error.message} (Código ${data.error.code})`;
-          }
-          return;
-        }
-
-        if (!data.candidates || data.candidates.length === 0) {
-          status.innerText = "La IA no devolvió respuestas para este texto.";
-          return;
-        }
-
-        let contenidoTexto = data.candidates[0].content.parts[0].text;
-        contenidoTexto = contenidoTexto.replace(/```json/gi, '').replace(/```/gi, '').trim();
-        const jsonResultado = JSON.parse(contenidoTexto);
-
-        const { error } = await sbApp.from('modulos').insert({
-          numero_orden: orden,
-          titulo: titulo,
-          autor: autorFinal,
-          contenido_trazado: texto,
-          resumen_formativo: jsonResultado.resumen_formativo,
-          conclusion_enlace: jsonResultado.conclusion_enlace,
-          preguntas_json: jsonResultado,
-          archivo_pdf_base64: pdfBase64Cargado,
-          activo: true
-        });
-
-        if (error) {
-          status.innerText = "Error al registrar en la base de datos: " + error.message;
-        } else {
-          status.innerText = "¡Plancha procesada, PDF persistido y consagrado con éxito en la Cámara!";
-          cargarTodosLosModulos();
-        }
-      } catch (err) {
-        status.innerText = "Error durante el análisis con IA: " + err.message;
-      }
-    }
-  </script>
+  <!-- Script principal -->
+  <script src="app.js"></script>
 </body>
 </html>
