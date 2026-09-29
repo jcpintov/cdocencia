@@ -94,7 +94,7 @@ async function iniciarSesion() {
   document.getElementById('seccionLogin').classList.add('hidden');
   document.getElementById('btnSalir').classList.remove('hidden');
 
-  // SEGREGACIÓN ESTRICTA: Superadmin accede directo a su panel
+  // Segregación: Superadmin exclusivo para administración técnica y pedagógica
   if (usuarioActual.es_admin) {
     document.getElementById('seccionAdmin').classList.remove('hidden');
     document.getElementById('seccionDocencia').classList.add('hidden');
@@ -250,7 +250,7 @@ async function seleccionarModulo(idModulo) {
   document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
   document.getElementById('vistaTexto').innerText = moduloActual.contenido_trazado;
 
-  registrarLecturaSilenciosa(moduloActual.id);
+  await registrarLecturaSilenciosa(moduloActual.id);
 
   const tabPdf = document.getElementById('tabPdf');
   const framePdf = document.getElementById('framePdf');
@@ -292,22 +292,38 @@ function cambiarVistaDocencia(tipo) {
   }
 }
 
+/* ==========================================================================
+   PERSISTENCIA RESILIENTE (SIN UPSERT ON_CONFLICT -> CERO ERROR 400)
+   ========================================================================== */
 async function registrarLecturaSilenciosa(moduloId) {
   if (!usuarioActual) return;
   try {
-    await sbApp.from('progreso_maestro').upsert({
-      usuario_id: usuarioActual.id,
-      modulo_id: moduloId,
-      leido: true
-    }, { onConflict: 'usuario_id,modulo_id', ignoreDuplicates: false });
+    const { data: existente } = await sbApp
+      .from('progreso_maestro')
+      .select('id')
+      .eq('usuario_id', usuarioActual.id)
+      .eq('modulo_id', moduloId)
+      .maybeSingle();
+
+    if (existente) {
+      await sbApp
+        .from('progreso_maestro')
+        .update({ leido: true })
+        .eq('id', existente.id);
+    } else {
+      await sbApp
+        .from('progreso_maestro')
+        .insert({
+          usuario_id: usuarioActual.id,
+          modulo_id: moduloId,
+          leido: true
+        });
+    }
   } catch (e) {
     console.warn("Métrica lectura:", e);
   }
 }
 
-/* ==========================================================================
-   EVALUACIÓN Y MURO PROTEGIDO
-   ========================================================================== */
 function renderizarPreguntasInteractivas(preguntas) {
   const cont = document.getElementById('contenedorPreguntas');
   cont.innerHTML = "";
@@ -363,12 +379,27 @@ async function evaluarRespuestaInmediata(idxPregunta, letraSeleccionada, letraCo
   feedbackBox.style.display = "block";
 
   try {
-    await sbApp.from('progreso_maestro').upsert({
-      usuario_id: usuarioActual.id,
-      modulo_id: moduloActual.id,
+    const { data: existente } = await sbApp
+      .from('progreso_maestro')
+      .select('id')
+      .eq('usuario_id', usuarioActual.id)
+      .eq('modulo_id', moduloActual.id)
+      .maybeSingle();
+
+    const payload = {
       respuestas_evaluacion: respuestasMarcadas,
       intentos_preguntas: Object.keys(respuestasMarcadas).length
-    }, { onConflict: 'usuario_id,modulo_id' });
+    };
+
+    if (existente) {
+      await sbApp.from('progreso_maestro').update(payload).eq('id', existente.id);
+    } else {
+      await sbApp.from('progreso_maestro').insert({
+        usuario_id: usuarioActual.id,
+        modulo_id: moduloActual.id,
+        ...payload
+      });
+    }
   } catch (e) {
     console.warn("Intento examen:", e);
   }
@@ -402,17 +433,36 @@ async function guardarReflexionYCompletar() {
     return;
   }
 
-  const { error } = await sbApp.from('progreso_maestro').upsert({
-    usuario_id: usuarioActual.id,
-    modulo_id: moduloActual.id,
+  const { data: existente } = await sbApp
+    .from('progreso_maestro')
+    .select('id')
+    .eq('usuario_id', usuarioActual.id)
+    .eq('modulo_id', moduloActual.id)
+    .maybeSingle();
+
+  const payload = {
     respuestas_evaluacion: respuestasMarcadas,
     reflexion: texto,
     completado: true,
     completado_en: new Date().toISOString()
-  }, { onConflict: 'usuario_id,modulo_id' });
+  };
+
+  let error = null;
+
+  if (existente) {
+    const res = await sbApp.from('progreso_maestro').update(payload).eq('id', existente.id);
+    error = res.error;
+  } else {
+    const res = await sbApp.from('progreso_maestro').insert({
+      usuario_id: usuarioActual.id,
+      modulo_id: moduloActual.id,
+      ...payload
+    });
+    error = res.error;
+  }
 
   if (error) {
-    alert("Error al consagrar su reflexión.");
+    alert("Error al consagrar su reflexión: " + error.message);
     return;
   }
 
@@ -505,20 +555,21 @@ async function cargarMuroReflexiones() {
 }
 
 /* ==========================================================================
-   CERTIFICADO OFICIAL: "SE CERTIFICA QUE EL VENERABLE MAESTRO"
+   CERTIFICADO OFICIAL: TRATAMIENTO SOLEMNE Y TIMBRE SVG
    ========================================================================== */
 function abrirModalCertificado() {
   const modal = document.getElementById('modalCertificado');
   
-  // Garantizar carga del timbre desde el mismo origen actual del navegador
-  const elTimbre = document.getElementById('imgTimbreDiploma');
-  if (elTimbre) {
-    elTimbre.src = window.location.origin + "/timbre.png";
+  // Garantizar asignación de logo.svg relativo al mismo host
+  const imgTimbre = document.querySelector('.timbre-estampa');
+  if (imgTimbre && (!imgTimbre.getAttribute('src') || imgTimbre.getAttribute('src').includes('timbre.png'))) {
+    imgTimbre.src = "logo.svg";
   }
 
   const progActual = misProgresos[moduloActual.id];
   const reflexionExacta = (progActual && progActual.reflexion) ? progActual.reflexion : "";
 
+  // Venerable Maestro con nombre limpio sin duplicar tratamientos
   const nombreLimpio = (usuarioActual.nombre || "Maestro Masón").replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
   document.getElementById('certNombreHermano').innerText = nombreLimpio;
   
