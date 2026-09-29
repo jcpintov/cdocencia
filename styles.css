@@ -710,18 +710,19 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
   margin-bottom: 6px; 
 }
 
-/* Timbre Oficial */
+/* TIMBRE OFICIAL EN DIPLOMA */
 .timbre-estampa {
-  width: 170px;
-  height: 170px;
-  object-fit: contain;
-  /* Invierte el fondo negro a blanco y los trazos blancos a negro puro */
-  filter: invert(1) contrast(1.15);
-  /* Funde el fondo blanco haciéndolo 100% transparente sobre el papel */
-  mix-blend-mode: multiply;
-  opacity: 0.92;
+  width: 180px !important;
+  height: 180px !important;
+  min-width: 180px !important;
+  min-height: 180px !important;
+  display: block !important;
+  margin: 0 auto !important;
+  object-fit: contain !important;
   transform: rotate(-3deg);
-  display: inline-block;
+  opacity: 0.94;
+  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.25));
+  /* IMPORTANTE: No usar invert ni mix-blend-mode aquí porque logo.svg ya es negro con transparencia */
 }
 
 .login-wrapper { max-width: 480px; margin: 50px auto; padding: 0 20px; }
