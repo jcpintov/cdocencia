@@ -7,8 +7,6 @@ if (window.pdfjsLib) {
 
 const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
-
-// Nota: Se aísla para el Superadmin
 const GEMINI_API_KEY = "AQ.Ab8RN6KkSJ4RhmWB_KIloRGdf33nk4gdN_onygONXcjPP1rOTQ";    
 
 const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -24,7 +22,7 @@ let modoSuperadminActivo = false;
 let intervaloCuentaRegresiva = null;
 
 /* ==========================================================================
-   GESTIÓN DE LUMINOSIDAD (DÍA / SEPIA / NOCTURNO)
+   GESTIÓN DE LUMINOSIDAD
    ========================================================================== */
 function inicializarLuminosidad() {
   const temaGuardado = localStorage.getItem('camara_tema') || 'dia';
@@ -33,8 +31,6 @@ function inicializarLuminosidad() {
 
 function alternarTemaLuminosidad() {
   const body = document.body;
-  const btn = document.getElementById('btnTema');
-  
   if (body.classList.contains('theme-nocturno')) {
     aplicarTema('dia');
   } else if (body.classList.contains('theme-sepia')) {
@@ -71,7 +67,51 @@ function cambiarTamanoFuente(delta) {
 }
 
 /* ==========================================================================
-   AUTENTICACIÓN Y SESIÓN
+   NAVEGACIÓN SUPERADMIN: ENTORNO AISLADO
+   ========================================================================== */
+function conmutarVistaAdmin() {
+  modoSuperadminActivo = !modoSuperadminActivo;
+  const secDoc = document.getElementById('seccionDocencia');
+  const secAdm = document.getElementById('seccionAdmin');
+  const btn = document.getElementById('btnToggleAdmin');
+
+  if (modoSuperadminActivo) {
+    secDoc.classList.add('hidden');
+    secAdm.classList.remove('hidden');
+    btn.innerText = '📖 Volver a Docencia';
+    cambiarSubseccionAdmin('cargar'); // Abre por defecto en la carga limpia
+  } else {
+    secAdm.classList.add('hidden');
+    secDoc.classList.remove('hidden');
+    btn.innerText = '⚙️ Panel Superadmin';
+  }
+}
+
+function cambiarSubseccionAdmin(seccion) {
+  const tabCarga = document.getElementById('tabNavCargar');
+  const tabMetricas = document.getElementById('tabNavMetricas');
+  const secCarga = document.getElementById('adminSeccionCarga');
+  const secMetricas = document.getElementById('adminSeccionMetricas');
+
+  if (seccion === 'cargar') {
+    tabCarga.classList.add('active');
+    tabMetricas.classList.remove('active');
+    secCarga.classList.remove('hidden');
+    secMetricas.classList.add('hidden');
+  } else {
+    tabMetricas.classList.add('active');
+    tabCarga.classList.remove('active');
+    secMetricas.classList.remove('hidden');
+    secCarga.classList.add('hidden');
+    if (listaModulos.length > 0) {
+      const select = document.getElementById('selectMetricasModulo');
+      cargarMetricasAvance(select.value || listaModulos[0].id);
+    }
+  }
+}
+
+/* ==========================================================================
+   SESIÓN Y AUTENTICACIÓN
    ========================================================================== */
 async function iniciarSesion() {
   const email = document.getElementById('inputEmail').value.trim().toLowerCase();
@@ -122,24 +162,6 @@ function cerrarSesion() {
   document.getElementById('seccionLogin').classList.remove('hidden');
 }
 
-function conmutarVistaAdmin() {
-  modoSuperadminActivo = !modoSuperadminActivo;
-  const secDoc = document.getElementById('seccionDocencia');
-  const secAdm = document.getElementById('seccionAdmin');
-  const btn = document.getElementById('btnToggleAdmin');
-
-  if (modoSuperadminActivo) {
-    secDoc.classList.add('hidden');
-    secAdm.classList.remove('hidden');
-    btn.innerText = '📖 Volver a Docencia';
-    if (listaModulos.length > 0) cargarMetricasAvance(listaModulos[0].id);
-  } else {
-    secAdm.classList.add('hidden');
-    secDoc.classList.remove('hidden');
-    btn.innerText = '⚙️ Panel Superadmin';
-  }
-}
-
 /* ==========================================================================
    CARGA DE PLANCHAS Y NAVEGACIÓN
    ========================================================================== */
@@ -160,12 +182,18 @@ async function cargarTodosLosModulos() {
   listaModulos = data;
   document.getElementById('contadorModulos').innerText = `${listaModulos.length} temas`;
 
-  // Poblar select del Admin
+  // Selector en submenú de métricas
   const selectMetricas = document.getElementById('selectMetricasModulo');
   selectMetricas.innerHTML = "";
   listaModulos.forEach(m => {
     selectMetricas.innerHTML += `<option value="${m.id}">Módulo ${m.numero_orden}: ${m.titulo}</option>`;
   });
+
+  // Próximo número de orden automático para nueva plancha
+  const inputOrden = document.getElementById('adminOrden');
+  if (inputOrden) {
+    inputOrden.value = listaModulos.length + 1;
+  }
 
   // Cargar progresos del usuario actual
   const { data: dataProgreso } = await sbApp
@@ -219,10 +247,8 @@ async function seleccionarModulo(idModulo) {
   document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
   document.getElementById('vistaTexto').innerText = moduloActual.contenido_trazado;
 
-  // Registrar lectura silenciosa
   registrarLecturaSilenciosa(moduloActual.id);
 
-  // Visor PDF y descarga
   const tabPdf = document.getElementById('tabPdf');
   const framePdf = document.getElementById('framePdf');
   const btnDescargar = document.getElementById('btnDescargarTrazado');
@@ -277,7 +303,7 @@ async function registrarLecturaSilenciosa(moduloId) {
 }
 
 /* ==========================================================================
-   EVALUACIÓN INTERACTIVA Y MURO PROTEGIDO
+   EVALUACIÓN Y MURO PROTEGIDO
    ========================================================================== */
 function renderizarPreguntasInteractivas(preguntas) {
   const cont = document.getElementById('contenedorPreguntas');
@@ -333,7 +359,6 @@ async function evaluarRespuestaInmediata(idxPregunta, letraSeleccionada, letraCo
 
   feedbackBox.style.display = "block";
 
-  // Actualizar intentos en BD
   try {
     await sbApp.from('progreso_maestro').upsert({
       usuario_id: usuarioActual.id,
@@ -422,7 +447,6 @@ async function verificarProgresoExistente() {
   const btnCert = document.getElementById('btnVerCertificado');
 
   if (data && data.length > 0 && data[0].completado) {
-    // Si ya completó: Oculta las preguntas para lectura limpia, habilita certificado y muestra el muro
     bloqueFaseDos.classList.add('hidden');
     faseTres.classList.remove('hidden');
     btnCert.classList.remove('hidden');
@@ -437,7 +461,6 @@ async function verificarProgresoExistente() {
 
     cargarMuroReflexiones();
   } else {
-    // Pendiente
     bloqueFaseDos.classList.remove('hidden');
     faseTres.classList.add('hidden');
     btnCert.classList.add('hidden');
@@ -475,7 +498,7 @@ async function cargarMuroReflexiones() {
 }
 
 /* ==========================================================================
-   CERTIFICADO OFICIAL Y DESCARGA PDF
+   CERTIFICADO OFICIAL Y DESCARGA
    ========================================================================== */
 function abrirModalCertificado() {
   const modal = document.getElementById('modalCertificado');
@@ -509,7 +532,7 @@ function descargarCertificadoPDF() {
 }
 
 /* ==========================================================================
-   PANEL SUPERADMIN Y MÉTRICAS
+   PANEL SUPERADMIN: SUBSECCIÓN MÉTRICAS
    ========================================================================== */
 async function cargarMetricasAvance(moduloId) {
   const tbody = document.getElementById('tablaMetricasBody');
@@ -556,7 +579,7 @@ async function cargarMetricasAvance(moduloId) {
     }
 
     const accionVer = prog && prog.reflexion
-      ? `<button class="admin-link-btn" onclick="alert('Reflexión de ${u.nombre}:\\n\\n${prog.reflexion.replace(/'/g, "\\'")}')">Ver Reflexión</button>`
+      ? `<button class="admin-link-btn" onclick="alert('Reflexión de ${u.nombre}:\\n\\n${prog.reflexion.replace(/'/g, "\\'")}')">Ver Aporte</button>`
       : `<span style="color: var(--text-muted);">—</span>`;
 
     tbody.innerHTML += `
@@ -598,7 +621,7 @@ async function exportarRespaldoCompletoJSON() {
 }
 
 /* ==========================================================================
-   PROCESAMIENTO DE ARCHIVOS Y GEMINI IA
+   PANEL SUPERADMIN: SUBSECCIÓN CARGA PURA Y GEMINI IA
    ========================================================================== */
 function formatearAutorMasonico(nombreCrudo) {
   if (!nombreCrudo) return 'Cámara del Medio';
@@ -671,7 +694,7 @@ async function leerArchivoPlancha(event) {
       mammoth.extractRawText({ arrayBuffer: e.target.result })
         .then(function(result) {
           document.getElementById('adminTexto').value = depurarTextoPlancha(result.value);
-          status.innerText = "Word depurado con éxito.";
+          status.innerText = "Word depurado con éxito: texto normalizado.";
         });
     };
     reader.readAsArrayBuffer(file);
@@ -687,9 +710,9 @@ async function leerArchivoPlancha(event) {
           fullText += textContent.items.map(item => item.str).join(' ') + "\n\n";
         }
         document.getElementById('adminTexto').value = depurarTextoPlancha(fullText);
-        status.innerText = `PDF depurado con éxito (${pdf.numPages} págs).`;
+        status.innerText = `PDF depurado con éxito (${pdf.numPages} págs). Caracteres '%' corregidos.`;
       } catch (err) {
-        status.innerText = "Error PDF: " + err.message;
+        status.innerText = "Error al procesar PDF: " + err.message;
       }
     };
     reader.readAsArrayBuffer(file);
@@ -781,7 +804,7 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
     if (error) {
       status.innerText = "Error BD: " + error.message;
     } else {
-      status.innerText = "¡Plancha procesada y consagrada con éxito!";
+      status.innerText = "¡Plancha procesada y consagrada con éxito en la Cámara!";
       cargarTodosLosModulos();
     }
   } catch (err) {
@@ -789,7 +812,6 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
   }
 }
 
-// Inicialización de la aplicación al cargar
 document.addEventListener("DOMContentLoaded", () => {
   inicializarLuminosidad();
 });
