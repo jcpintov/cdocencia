@@ -1,8 +1,4 @@
-/* ==========================================================================
-   VARIABLES DE TEMA (LUMINOSIDAD: DÍA / SEPIA / NOCTURNO)
-   ========================================================================== */
 :root {
-  /* TEMA DÍA (Por defecto) */
   --bg-color: #F8F7F4;
   --card-bg: #FFFFFF;
   --text-main: #182026;
@@ -17,14 +13,13 @@
   --success-light: #EBF7EE;
   --error: #8C1C13;
   --error-light: #FDF2F2;
-  --timbre-color: #152433;
+  --timbre-color: #12161A;
 
   --font-reading: 'Literata', Georgia, serif;
   --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
   --base-font-size: 19px;
 }
 
-/* MODO SEPIA CÁLIDO */
 body.theme-sepia {
   --bg-color: #F4ECD8;
   --card-bg: #FCF8EE;
@@ -36,10 +31,9 @@ body.theme-sepia {
   --accent-gold-dark: #735114;
   --gold-light: #EFE4CA;
   --border-color: #DFD2B5;
-  --timbre-color: #5C3814;
+  --timbre-color: #382411;
 }
 
-/* MODO NOCTURNO (Corregido para máxima visibilidad en Cámara) */
 body.theme-nocturno {
   --bg-color: #0E1318;
   --card-bg: #161F28;
@@ -55,10 +49,9 @@ body.theme-nocturno {
   --success-light: #123020;
   --error: #E55353;
   --error-light: #3A1818;
-  --timbre-color: #D4AF37;
+  --timbre-color: #12161A;
 }
 
-/* RESET GENERAL */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -79,9 +72,6 @@ body {
   -moz-user-select: none;
 }
 
-/* ==========================================================================
-   ENCABEZADO
-   ========================================================================== */
 header {
   background: var(--primary);
   color: #FFFFFF;
@@ -121,19 +111,6 @@ header {
 }
 .font-btn:hover, .icon-btn:hover { background: rgba(255,255,255,0.22); }
 
-.nav-admin-btn {
-  background: var(--accent-gold);
-  border: none;
-  color: #FFFFFF;
-  padding: 8px 14px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 700;
-  font-family: var(--font-ui);
-}
-.nav-admin-btn:hover { background: var(--accent-gold-dark); }
-
 .logout-btn {
   background: transparent;
   border: 1px solid var(--accent-gold);
@@ -146,9 +123,6 @@ header {
 }
 .logout-btn:hover { background: rgba(153,120,57,0.2); }
 
-/* ==========================================================================
-   BARRA LATERAL Y CORRECCIÓN MODO NOCTURNO
-   ========================================================================== */
 .templo-layout {
   display: grid;
   grid-template-columns: 320px 1fr;
@@ -188,19 +162,14 @@ header {
   justify-content: space-between;
   align-items: center;
 }
-
-body.theme-nocturno .sidebar-title {
-  color: #FFFFFF;
-}
+body.theme-nocturno .sidebar-title { color: #FFFFFF; }
 
 #contadorModulos {
   color: var(--accent-gold-dark);
   font-size: 0.8rem;
   font-weight: 700;
 }
-body.theme-nocturno #contadorModulos {
-  color: var(--accent-gold);
-}
+body.theme-nocturno #contadorModulos { color: var(--accent-gold); }
 
 .sidebar-info {
   background: var(--gold-light);
@@ -250,9 +219,6 @@ body.theme-nocturno .nav-item-title { color: #FFFFFF; }
 .badge-pen { background: #EDF0F2; color: var(--text-muted); }
 body.theme-nocturno .badge-pen { background: #222E3A; color: #8C9CAE; }
 
-/* ==========================================================================
-   TARJETAS Y CONTENIDO
-   ========================================================================== */
 .card {
   background: var(--card-bg);
   border: 1px solid var(--border-color);
@@ -295,7 +261,6 @@ h1 { font-size: 1.85rem; margin-bottom: 12px; }
 h2 { font-size: 1.45rem; }
 .text-instruccion { color: var(--text-muted); font-family: var(--font-ui); font-size: 0.95rem; margin-bottom: 20px; }
 
-/* ACCIONES DE LECTURA */
 .doc-actions-bar {
   display: flex;
   justify-content: space-between;
@@ -362,7 +327,6 @@ body.theme-nocturno .btn-certificado { background: #1C2937; }
   margin-top: 12px;
 }
 
-/* PREGUNTAS */
 .pregunta-card {
   margin-bottom: 24px;
   padding: 22px;
@@ -412,7 +376,6 @@ body.theme-nocturno .pregunta-card { background: #111A22; }
   display: none;
 }
 
-/* FORMULARIOS Y BOTONES */
 .form-group { display: flex; flex-direction: column; margin-bottom: 18px; font-family: var(--font-ui); }
 .form-group label { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
 
@@ -478,12 +441,8 @@ body.theme-nocturno .reflexion-item { background: #131B23; border-left-color: va
 .reflexion-autor { font-size: 0.9rem; font-family: var(--font-ui); font-weight: 700; color: var(--accent-gold-dark); margin-bottom: 6px; }
 body.theme-nocturno .reflexion-autor { color: var(--accent-gold); }
 
-/* ==========================================================================
-   ENTORNO PURO DE ADMINISTRACIÓN
-   ========================================================================== */
 .admin-container { max-width: 1050px; margin: 32px auto; padding: 0 20px; }
 
-/* Pestañas de Navegación del Superadmin */
 .admin-subnav {
   display: flex;
   gap: 12px;
@@ -562,9 +521,6 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   font-family: var(--font-ui);
 }
 
-/* ==========================================================================
-   MODAL Y DIPLOMA
-   ========================================================================== */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -604,9 +560,12 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   max-width: 800px;
 }
 
+/* ==========================================================================
+   DIPLOMA A4: TIPOGRAFÍA EN TONOS OSCUROS/CARBÓN (SIN BLANCOS)
+   ========================================================================== */
 .certificado-a4 {
-  background: #FCFAF5;
-  color: #1A1A1A;
+  background: #FDFBF7;
+  color: #12161A;
   width: 800px;
   min-height: 1050px;
   padding: 40px;
@@ -615,13 +574,13 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
 }
 
 .cert-borde-exterior {
-  border: 3px double #997839;
+  border: 3px double #785C25;
   height: 100%;
   padding: 8px;
 }
 
 .cert-borde-interior {
-  border: 1px solid #C4A265;
+  border: 1px solid #A8833B;
   height: 100%;
   padding: 40px 30px;
   text-align: center;
@@ -630,29 +589,95 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   justify-content: space-between;
 }
 
-.cert-lema { font-size: 1rem; letter-spacing: 4px; font-weight: 700; color: #785C25; margin-bottom: 4px; }
-.cert-logia { font-size: 1.6rem; font-weight: 700; color: #152433; margin-bottom: 2px; }
-.cert-valle { font-size: 1.05rem; font-style: italic; color: #536171; }
-.cert-camara { font-size: 0.95rem; font-weight: 700; letter-spacing: 2px; color: #997839; margin-top: 4px; }
-.cert-divider { color: #997839; margin: 18px 0; font-size: 1.1rem; }
+.cert-lema { 
+  font-size: 1rem; 
+  letter-spacing: 4px; 
+  font-weight: 700; 
+  color: #4A3B1C; 
+  margin-bottom: 4px; 
+}
 
-.cert-cuerpo { font-size: 1.05rem; line-height: 1.7; margin: 12px auto; max-width: 640px; }
-.cert-nombre { font-size: 1.75rem; color: #152433; text-decoration: underline; text-decoration-color: #997839; margin: 10px 0; }
-.cert-plancha { font-size: 1.35rem; font-style: italic; color: #152433; margin-top: 6px; }
-.cert-autor { font-size: 0.95rem; color: #536171; margin-bottom: 16px; }
+.cert-logia { 
+  font-size: 1.65rem; 
+  font-weight: 700; 
+  color: #12161A; 
+  margin-bottom: 2px; 
+  letter-spacing: 0.5px;
+}
+
+.cert-valle { 
+  font-size: 1.05rem; 
+  font-style: italic; 
+  color: #3B4754; 
+}
+
+.cert-camara { 
+  font-size: 0.95rem; 
+  font-weight: 700; 
+  letter-spacing: 2px; 
+  color: #5C461A; 
+  margin-top: 4px; 
+}
+
+.cert-divider { 
+  color: #785C25; 
+  margin: 18px 0; 
+  font-size: 1.1rem; 
+}
+
+.cert-cuerpo { 
+  font-size: 1.05rem; 
+  line-height: 1.7; 
+  margin: 12px auto; 
+  max-width: 640px; 
+  color: #1B2126;
+}
+
+.cert-nombre { 
+  font-size: 1.8rem; 
+  color: #0A0D10; 
+  text-decoration: underline; 
+  text-decoration-color: #8C6F32; 
+  margin: 10px 0; 
+}
+
+.cert-plancha { 
+  font-size: 1.35rem; 
+  font-style: italic; 
+  color: #12161A; 
+  margin-top: 6px; 
+}
+
+.cert-autor { 
+  font-size: 0.95rem; 
+  color: #4A5663; 
+  margin-bottom: 16px; 
+}
 
 .cert-reflexion-box {
-  background: rgba(153,120,57,0.06);
-  border-left: 3px solid #997839;
-  border-right: 3px solid #997839;
+  background: rgba(120, 92, 37, 0.08);
+  border-left: 3px solid #785C25;
+  border-right: 3px solid #785C25;
   padding: 14px 20px;
   margin: 14px auto;
   max-width: 620px;
   font-size: 0.95rem;
   line-height: 1.6;
+  color: #151A1E;
 }
-.cert-reflexion-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #785C25; margin-bottom: 4px; }
-.cert-reflexion-cita { font-style: italic; }
+
+.cert-reflexion-label { 
+  font-size: 0.8rem; 
+  font-weight: 700; 
+  text-transform: uppercase; 
+  color: #4A3B1C; 
+  margin-bottom: 4px; 
+}
+
+.cert-reflexion-cita { 
+  font-style: italic; 
+  color: #12161A;
+}
 
 .cert-footer {
   display: flex;
@@ -662,8 +687,17 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   padding: 0 20px;
 }
 
-.cert-firma { width: 180px; font-family: var(--font-ui); font-size: 0.85rem; color: #444; }
-.linea-firma { border-top: 1px solid #777; margin-bottom: 6px; }
+.cert-firma { 
+  width: 180px; 
+  font-family: var(--font-ui); 
+  font-size: 0.85rem; 
+  color: #2A343D; 
+}
+
+.linea-firma { 
+  border-top: 1px solid #3B4754; 
+  margin-bottom: 6px; 
+}
 
 /* TIMBRE ESTAMPADO */
 .timbre-estampa {
@@ -679,9 +713,9 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
-  opacity: 0.88;
+  opacity: 0.92;
   transform: rotate(-3deg);
-  filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.15));
+  filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.25));
 }
 
 .login-wrapper { max-width: 480px; margin: 50px auto; padding: 0 20px; }
