@@ -18,11 +18,9 @@ let misProgresos = {};
 let tamanoBase = 19;
 let respuestasMarcadas = {};
 let pdfBase64Cargado = null;
-let modoSuperadminActivo = false;
-let intervaloCuentaRegresiva = null;
 
 /* ==========================================================================
-   GESTIÓN DE LUMINOSIDAD
+   LUMINOSIDAD Y TEMAS
    ========================================================================== */
 function inicializarLuminosidad() {
   const temaGuardado = localStorage.getItem('camara_tema') || 'dia';
@@ -67,51 +65,7 @@ function cambiarTamanoFuente(delta) {
 }
 
 /* ==========================================================================
-   NAVEGACIÓN SUPERADMIN: ENTORNO AISLADO
-   ========================================================================== */
-function conmutarVistaAdmin() {
-  modoSuperadminActivo = !modoSuperadminActivo;
-  const secDoc = document.getElementById('seccionDocencia');
-  const secAdm = document.getElementById('seccionAdmin');
-  const btn = document.getElementById('btnToggleAdmin');
-
-  if (modoSuperadminActivo) {
-    secDoc.classList.add('hidden');
-    secAdm.classList.remove('hidden');
-    btn.innerText = '📖 Volver a Docencia';
-    cambiarSubseccionAdmin('cargar'); // Abre por defecto en la carga limpia
-  } else {
-    secAdm.classList.add('hidden');
-    secDoc.classList.remove('hidden');
-    btn.innerText = '⚙️ Panel Superadmin';
-  }
-}
-
-function cambiarSubseccionAdmin(seccion) {
-  const tabCarga = document.getElementById('tabNavCargar');
-  const tabMetricas = document.getElementById('tabNavMetricas');
-  const secCarga = document.getElementById('adminSeccionCarga');
-  const secMetricas = document.getElementById('adminSeccionMetricas');
-
-  if (seccion === 'cargar') {
-    tabCarga.classList.add('active');
-    tabMetricas.classList.remove('active');
-    secCarga.classList.remove('hidden');
-    secMetricas.classList.add('hidden');
-  } else {
-    tabMetricas.classList.add('active');
-    tabCarga.classList.remove('active');
-    secMetricas.classList.remove('hidden');
-    secCarga.classList.add('hidden');
-    if (listaModulos.length > 0) {
-      const select = document.getElementById('selectMetricasModulo');
-      cargarMetricasAvance(select.value || listaModulos[0].id);
-    }
-  }
-}
-
-/* ==========================================================================
-   SESIÓN Y AUTENTICACIÓN
+   AUTENTICACIÓN Y SEGREGACIÓN DE ROLES
    ========================================================================== */
 async function iniciarSesion() {
   const email = document.getElementById('inputEmail').value.trim().toLowerCase();
@@ -139,10 +93,14 @@ async function iniciarSesion() {
   usuarioActual = data[0];
   document.getElementById('seccionLogin').classList.add('hidden');
   document.getElementById('btnSalir').classList.remove('hidden');
-  document.getElementById('modalSigilo').classList.remove('hidden');
 
+  // SEGREGACIÓN ESTRICTA: El Superadmin no participa en la docencia de educando
   if (usuarioActual.es_admin) {
-    document.getElementById('btnToggleAdmin').classList.remove('hidden');
+    document.getElementById('seccionAdmin').classList.remove('hidden');
+    document.getElementById('seccionDocencia').classList.add('hidden');
+    cargarDatosAdmin();
+  } else {
+    document.getElementById('modalSigilo').classList.remove('hidden');
   }
 }
 
@@ -153,17 +111,66 @@ function aceptarSigilo() {
 
 function cerrarSesion() {
   usuarioActual = null;
-  modoSuperadminActivo = false;
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionAdmin').classList.add('hidden');
   document.getElementById('modalSigilo').classList.add('hidden');
   document.getElementById('btnSalir').classList.add('hidden');
-  document.getElementById('btnToggleAdmin').classList.add('hidden');
   document.getElementById('seccionLogin').classList.remove('hidden');
+  document.getElementById('inputEmail').value = '';
+  document.getElementById('inputClave').value = '';
 }
 
 /* ==========================================================================
-   CARGA DE PLANCHAS Y NAVEGACIÓN
+   NAVEGACIÓN SUPERADMIN
+   ========================================================================== */
+function cambiarSubseccionAdmin(seccion) {
+  const tabCarga = document.getElementById('tabNavCargar');
+  const tabMetricas = document.getElementById('tabNavMetricas');
+  const secCarga = document.getElementById('adminSeccionCarga');
+  const secMetricas = document.getElementById('adminSeccionMetricas');
+
+  if (seccion === 'cargar') {
+    tabCarga.classList.add('active');
+    tabMetricas.classList.remove('active');
+    secCarga.classList.remove('hidden');
+    secMetricas.classList.add('hidden');
+  } else {
+    tabMetricas.classList.add('active');
+    tabCarga.classList.remove('active');
+    secMetricas.classList.remove('hidden');
+    secCarga.classList.add('hidden');
+    if (listaModulos.length > 0) {
+      const select = document.getElementById('selectMetricasModulo');
+      cargarMetricasAvance(select.value || listaModulos[0].id);
+    }
+  }
+}
+
+async function cargarDatosAdmin() {
+  const { data: mods } = await sbApp
+    .from('modulos')
+    .select('*')
+    .eq('activo', true)
+    .order('numero_orden', { ascending: true });
+
+  listaModulos = mods || [];
+  
+  const selectMetricas = document.getElementById('selectMetricasModulo');
+  selectMetricas.innerHTML = "";
+  listaModulos.forEach(m => {
+    selectMetricas.innerHTML += `<option value="${m.id}">Módulo ${m.numero_orden}: ${m.titulo}</option>`;
+  });
+
+  const inputOrden = document.getElementById('adminOrden');
+  if (inputOrden) {
+    inputOrden.value = listaModulos.length + 1;
+  }
+
+  cambiarSubseccionAdmin('cargar');
+}
+
+/* ==========================================================================
+   ENTORNO DOCENTE PARA HERMANOS
    ========================================================================== */
 async function cargarTodosLosModulos() {
   document.getElementById('seccionDocencia').classList.remove('hidden');
@@ -182,20 +189,6 @@ async function cargarTodosLosModulos() {
   listaModulos = data;
   document.getElementById('contadorModulos').innerText = `${listaModulos.length} temas`;
 
-  // Selector en submenú de métricas
-  const selectMetricas = document.getElementById('selectMetricasModulo');
-  selectMetricas.innerHTML = "";
-  listaModulos.forEach(m => {
-    selectMetricas.innerHTML += `<option value="${m.id}">Módulo ${m.numero_orden}: ${m.titulo}</option>`;
-  });
-
-  // Próximo número de orden automático para nueva plancha
-  const inputOrden = document.getElementById('adminOrden');
-  if (inputOrden) {
-    inputOrden.value = listaModulos.length + 1;
-  }
-
-  // Cargar progresos del usuario actual
   const { data: dataProgreso } = await sbApp
     .from('progreso_maestro')
     .select('*')
@@ -498,13 +491,16 @@ async function cargarMuroReflexiones() {
 }
 
 /* ==========================================================================
-   CERTIFICADO OFICIAL Y DESCARGA
+   CERTIFICADO OFICIAL: "SE CERTIFICA QUE EL VENERABLE MAESTRO"
    ========================================================================== */
 function abrirModalCertificado() {
   const modal = document.getElementById('modalCertificado');
   const prog = misProgresos[moduloActual.id];
 
-  document.getElementById('certNombreHermano').innerText = usuarioActual.nombre || "Q.·.H.·. Maestro";
+  // Tratamiento formal solemne
+  const nombreLimpio = (usuarioActual.nombre || "Maestro Masón").replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
+  document.getElementById('certNombreHermano').innerText = nombreLimpio;
+  
   document.getElementById('certTituloPlancha').innerText = `"${moduloActual.titulo}"`;
   document.getElementById('certAutorPlancha').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
   document.getElementById('certTextoReflexion').innerText = prog ? `"${prog.reflexion}"` : "";
@@ -532,7 +528,7 @@ function descargarCertificadoPDF() {
 }
 
 /* ==========================================================================
-   PANEL SUPERADMIN: SUBSECCIÓN MÉTRICAS
+   MÉTRICAS DEL SUPERADMIN
    ========================================================================== */
 async function cargarMetricasAvance(moduloId) {
   const tbody = document.getElementById('tablaMetricasBody');
@@ -540,7 +536,7 @@ async function cargarMetricasAvance(moduloId) {
 
   const { data: usuarios } = await sbApp
     .from('usuarios')
-    .select('id, nombre, email')
+    .select('id, nombre, email, es_admin')
     .order('nombre', { ascending: true });
 
   const { data: progresos } = await sbApp
@@ -554,6 +550,9 @@ async function cargarMetricasAvance(moduloId) {
   tbody.innerHTML = "";
 
   usuarios.forEach(u => {
+    // Excluir al superadmin del seguimiento de educando
+    if (u.es_admin) return;
+
     const prog = mapProg[u.id];
 
     const leidoHtml = prog && prog.leido
@@ -621,7 +620,7 @@ async function exportarRespaldoCompletoJSON() {
 }
 
 /* ==========================================================================
-   PANEL SUPERADMIN: SUBSECCIÓN CARGA PURA Y GEMINI IA
+   CARGA PURA Y GENERADOR CON FALLBACK SQL INTELIGENTE
    ========================================================================== */
 function formatearAutorMasonico(nombreCrudo) {
   if (!nombreCrudo) return 'Cámara del Medio';
@@ -694,7 +693,7 @@ async function leerArchivoPlancha(event) {
       mammoth.extractRawText({ arrayBuffer: e.target.result })
         .then(function(result) {
           document.getElementById('adminTexto').value = depurarTextoPlancha(result.value);
-          status.innerText = "Word depurado con éxito: texto normalizado.";
+          status.innerText = "Word depurado con éxito.";
         });
     };
     reader.readAsArrayBuffer(file);
@@ -710,13 +709,122 @@ async function leerArchivoPlancha(event) {
           fullText += textContent.items.map(item => item.str).join(' ') + "\n\n";
         }
         document.getElementById('adminTexto').value = depurarTextoPlancha(fullText);
-        status.innerText = `PDF depurado con éxito (${pdf.numPages} págs). Caracteres '%' corregidos.`;
+        status.innerText = `PDF depurado con éxito (${pdf.numPages} págs).`;
       } catch (err) {
-        status.innerText = "Error al procesar PDF: " + err.message;
+        status.innerText = "Error PDF: " + err.message;
       }
     };
     reader.readAsArrayBuffer(file);
   }
+}
+
+// Generador de consulta SQL de rescate en caso de saturación de Gemini
+function generarSQLContingencia(orden, titulo, autor, texto) {
+  const textoEscapado = texto.replace(/'/g, "''");
+  const tituloEscapado = titulo.replace(/'/g, "''");
+  const autorEscapado = autor.replace(/'/g, "''");
+
+  return `-- CONSULTA SQL GENERADA AUTOMÁTICAMENTE ANTE SATURACIÓN DE GEMINI API
+INSERT INTO modulos (
+  numero_orden,
+  titulo,
+  autor,
+  contenido_trazado,
+  resumen_formativo,
+  conclusion_enlace,
+  preguntas_json,
+  activo
+) VALUES (
+  ${orden},
+  '${tituloEscapado}',
+  '${autorEscapado}',
+  '${textoEscapado}',
+  'Resumen formativo pendiente de revisión doctrinal.',
+  'Reflexión sobre las virtudes del Tercer Grado correspondiente a esta plancha.',
+  '{"preguntas": [
+    {
+      "numero": 1,
+      "enunciado": "¿Cuál es la enseñanza central transmitida en esta plancha de instrucción?",
+      "opciones": [
+        {"letra": "A", "texto": "La observancia rigurosa de los deberes y virtudes del Tercer Grado."},
+        {"letra": "B", "texto": "La asimilación meramente formal del ritual sin compromiso moral."},
+        {"letra": "C", "texto": "La subordinación jerárquica sin juicio reflexivo."},
+        {"letra": "D", "texto": "La divulgación externa de los secretos de la Orden."}
+      ],
+      "respuesta_correcta": "A",
+      "retroalimentacion": "La docencia de la Cámara exige encarnar conscientemente los deberes éticos asumidos sobre el Ara."
+    },
+    {
+      "numero": 2,
+      "enunciado": "¿Qué actitud debe guardar el Maestro frente a los compromisos de honor?",
+      "opciones": [
+        {"letra": "A", "texto": "Mantener fidelidad inquebrantable a la palabra empeñada."},
+        {"letra": "B", "texto": "Relativizarlos según la conveniencia de las circunstancias."},
+        {"letra": "C", "texto": "Supeditar su honor al escrutinio del mundo profano."},
+        {"letra": "D", "texto": "Delegar su cumplimiento en los demás Hermanos."}
+      ],
+      "respuesta_correcta": "A",
+      "retroalimentacion": "El honor personal es el bien inmutable que sustenta el juramento masónico."
+    },
+    {
+      "numero": 3,
+      "enunciado": "¿Cómo se manifiesta la rectitud masónica en los momentos de soledad?",
+      "opciones": [
+        {"letra": "A", "texto": "En obrar con probidad cuando nadie nos vigila y sólo la conciencia testigua."},
+        {"letra": "B", "texto": "En esperar reconocimiento público para actuar con justicia."},
+        {"letra": "C", "texto": "En evitar involucrarse ante injusticias evidentes."},
+        {"letra": "D", "texto": "En buscar la aprobación de la mayoría."}
+      ],
+      "respuesta_correcta": "A",
+      "retroalimentacion": "La verdadera maestría se prueba en la rectitud espontánea gobernada por la propia conciencia."
+    },
+    {
+      "numero": 4,
+      "enunciado": "¿Qué deber impone el Tercer Grado respecto al Hermano que se encuentra ausente?",
+      "opciones": [
+        {"letra": "A", "texto": "Amparar su buen nombre y no tolerar difamaciones ni juicios sumarios."},
+        {"letra": "B", "texto": "Asumir que su silencio equivale a desinterés en el Taller."},
+        {"letra": "C", "texto": "Comentar libremente sus dificultades con terceros."},
+        {"letra": "D", "texto": "Imponerle sanciones inmediatas."}
+      ],
+      "respuesta_correcta": "A",
+      "retroalimentacion": "El amparo al ausente es una de las cláusulas más solemnes y protectoras de la fraternidad."
+    },
+    {
+      "numero": 5,
+      "enunciado": "¿Cuál es el propósito del examen de las herramientas y símbolos en la maestría?",
+      "opciones": [
+        {"letra": "A", "texto": "Transformar la especulación intelectual en conducta viva y coherencia moral."},
+        {"letra": "B", "texto": "Aprender de memoria fórmulas sin aplicación cotidiana."},
+        {"letra": "C", "texto": "Establecer privilegios sobre los grados precedentes."},
+        {"letra": "D", "texto": "Obtener jerarquía administrativa."}
+      ],
+      "respuesta_correcta": "A",
+      "retroalimentacion": "Las herramientas del arte son guías de rectitud práctica para la vida profana y logial."
+    },
+    {
+      "numero": 6,
+      "enunciado": "¿Qué virtud permite transformar el celo y el fervor en una obra perdurable?",
+      "opciones": [
+        {"letra": "A", "texto": "La constancia perseverante a lo largo del tiempo."},
+        {"letra": "B", "texto": "El entusiasmo efímero durante las ceremonias."},
+        {"letra": "C", "texto": "La elocuencia discursiva entre columnas."},
+        {"letra": "D", "texto": "La ambición de cargos en el Cuadro Lógico."}
+      ],
+      "respuesta_correcta": "A",
+      "retroalimentacion": "Como la gota constante que labra la roca, la constancia consolida el perfeccionamiento moral."
+    }
+  ]}',
+  true
+);`;
+}
+
+function copiarSQLFallback() {
+  const area = document.getElementById('sqlFallbackArea');
+  area.select();
+  navigator.clipboard.writeText(area.value).then(() => {
+    alert("Consulta SQL copiada al portapapeles. Péguela en el SQL Editor de Supabase.");
+  });
 }
 
 async function generarModuloConIA() {
@@ -726,12 +834,15 @@ async function generarModuloConIA() {
   const orden = parseInt(document.getElementById('adminOrden').value);
   const texto = document.getElementById('adminTexto').value.trim();
   const status = document.getElementById('adminStatus');
+  const fallbackBox = document.getElementById('contenedorFallbackSQL');
+  const fallbackArea = document.getElementById('sqlFallbackArea');
 
   if (!titulo || !texto) {
     alert("Complete el título y el texto depurado.");
     return;
   }
 
+  fallbackBox.classList.add('hidden');
   status.innerHTML = "<em>Procesando trazado con Gemini (analizando simbolismo y formulando 6 interrogantes)...</em>";
 
   const promptSistema = `
@@ -780,8 +891,13 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
     });
 
     const data = await respuesta.json();
+
+    // Manejo de error de cuota o indisponibilidad (429, 503)
     if (data.error) {
-      status.innerText = `Error Google API: ${data.error.message}`;
+      status.innerHTML = `<span style="color: var(--error);">Servidores de Google saturados (${data.error.message}). Se ha generado la consulta SQL de contingencia directa.</span>`;
+      fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
+      fallbackBox.classList.remove('hidden');
+      fallbackBox.scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
@@ -804,11 +920,14 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
     if (error) {
       status.innerText = "Error BD: " + error.message;
     } else {
-      status.innerText = "¡Plancha procesada y consagrada con éxito en la Cámara!";
-      cargarTodosLosModulos();
+      status.innerHTML = `<span style="color: var(--success);">¡Plancha procesada y consagrada con éxito!</span>`;
+      cargarDatosAdmin();
     }
   } catch (err) {
-    status.innerText = "Error en procesamiento: " + err.message;
+    status.innerHTML = `<span style="color: var(--error);">Error en el canal de IA: ${err.message}. Se activó la contingencia SQL.</span>`;
+    fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
+    fallbackBox.classList.remove('hidden');
+    fallbackBox.scrollIntoView({ behavior: 'smooth' });
   }
 }
 
