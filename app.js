@@ -94,6 +94,7 @@ async function iniciarSesion() {
   document.getElementById('seccionLogin').classList.add('hidden');
   document.getElementById('btnSalir').classList.remove('hidden');
 
+  // SEGREGACIÓN ESTRICTA: Superadmin accede directo a su panel
   if (usuarioActual.es_admin) {
     document.getElementById('seccionAdmin').classList.remove('hidden');
     document.getElementById('seccionDocencia').classList.add('hidden');
@@ -236,7 +237,6 @@ async function seleccionarModulo(idModulo) {
   moduloActual = listaModulos.find(m => m.id === idModulo);
   if (!moduloActual) return;
 
-  // Reset visual estricto para evitar cruces entre temas
   document.querySelectorAll('.modulo-nav-item').forEach(el => el.classList.remove('active'));
   const activeNav = document.getElementById(`nav_mod_${idModulo}`);
   if (activeNav) activeNav.classList.add('active');
@@ -449,7 +449,6 @@ async function verificarProgresoExistente() {
   const btnEditar = document.getElementById('btnEditarReflexion');
   const btnCert = document.getElementById('btnVerCertificado');
 
-  // Validación estricta para asegurar que el registro corresponda al módulo activo
   if (data && data.length > 0 && data[0].completado && data[0].modulo_id === moduloActual.id) {
     bloqueFaseDos.classList.add('hidden');
     faseTres.classList.remove('hidden');
@@ -481,7 +480,6 @@ async function cargarMuroReflexiones() {
   const contenedor = document.getElementById('contenedorMuro');
   contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Cargando aportes de la Cámara...</p>";
 
-  // Filtro estricto: solo reflexiones completadas que pertenezcan a ESTE módulo
   const { data, error } = await sbApp
     .from('progreso_maestro')
     .select('reflexion, completado_en, modulo_id, usuarios(nombre)')
@@ -512,11 +510,15 @@ async function cargarMuroReflexiones() {
 function abrirModalCertificado() {
   const modal = document.getElementById('modalCertificado');
   
-  // Extraer la reflexión exacta del módulo actual
+  // Garantizar carga del timbre desde el mismo origen actual del navegador
+  const elTimbre = document.getElementById('imgTimbreDiploma');
+  if (elTimbre) {
+    elTimbre.src = window.location.origin + "/timbre.png";
+  }
+
   const progActual = misProgresos[moduloActual.id];
   const reflexionExacta = (progActual && progActual.reflexion) ? progActual.reflexion : "";
 
-  // Tratamiento formal solemne
   const nombreLimpio = (usuarioActual.nombre || "Maestro Masón").replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
   document.getElementById('certNombreHermano').innerText = nombreLimpio;
   
