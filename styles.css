@@ -1,3 +1,6 @@
+/* ==========================================================================
+   VARIABLES DE TEMA (LUMINOSIDAD: DÍA / SEPIA / NOCTURNO)
+   ========================================================================== */
 :root {
   --bg-color: #F8F7F4;
   --card-bg: #FFFFFF;
@@ -254,8 +257,11 @@ body.theme-nocturno .fase-badge { background: #263749; color: var(--accent-gold)
 .badge-fase3 { background: var(--accent-gold); }
 .badge-muro { background: var(--success); }
 
+/* Encabezados normales de la app */
 h1, h2, h3, h4 { font-family: var(--font-reading); color: var(--primary); line-height: 1.3; }
-body.theme-nocturno h1, body.theme-nocturno h2, body.theme-nocturno h3 { color: #FFFFFF; }
+body.theme-nocturno main h1, 
+body.theme-nocturno main h2, 
+body.theme-nocturno main h3 { color: #FFFFFF; }
 
 h1 { font-size: 1.85rem; margin-bottom: 12px; }
 h2 { font-size: 1.45rem; }
@@ -316,7 +322,7 @@ body.theme-nocturno .btn-descargar { color: var(--text-main); }
   border: 2px solid var(--accent-gold);
   color: #FFFFFF;
 }
-body.theme-nocturno .btn-certificado { background: #1C2937; }
+body.theme-nocturno .btn-certificado { background: #1C2937; color: #FFFFFF; }
 .btn-certificado:hover { background: var(--primary-hover); }
 
 .pdf-viewer-frame {
@@ -561,26 +567,26 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
 }
 
 /* ==========================================================================
-   DIPLOMA A4: TIPOGRAFÍA EN TONOS OSCUROS/CARBÓN (SIN BLANCOS)
+   DIPLOMA A4: ESPECIFICIDAD ESTRICTA PARA EVITAR TEXTO BLANCO EN NOCTURNO
    ========================================================================== */
-.certificado-a4 {
-  background: #FDFBF7;
-  color: #12161A;
+#documentoCertificado.certificado-a4 {
+  background: #FDFBF7 !important;
+  color: #12161A !important;
   width: 800px;
   min-height: 1050px;
   padding: 40px;
   box-shadow: 0 0 20px rgba(0,0,0,0.4);
-  font-family: var(--font-reading);
+  font-family: var(--font-reading) !important;
 }
 
-.cert-borde-exterior {
-  border: 3px double #785C25;
+#documentoCertificado .cert-borde-exterior {
+  border: 3px double #785C25 !important;
   height: 100%;
   padding: 8px;
 }
 
-.cert-borde-interior {
-  border: 1px solid #A8833B;
+#documentoCertificado .cert-borde-interior {
+  border: 1px solid #A8833B !important;
   height: 100%;
   padding: 40px 30px;
   text-align: center;
@@ -589,97 +595,102 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   justify-content: space-between;
 }
 
-.cert-lema { 
+#documentoCertificado .cert-lema { 
   font-size: 1rem; 
   letter-spacing: 4px; 
   font-weight: 700; 
-  color: #4A3B1C; 
+  color: #4A3B1C !important; 
   margin-bottom: 4px; 
 }
 
-.cert-logia { 
-  font-size: 1.65rem; 
-  font-weight: 700; 
-  color: #12161A; 
-  margin-bottom: 2px; 
-  letter-spacing: 0.5px;
+/* Forzado estricto contra sobrescrituras de modo nocturno */
+#documentoCertificado h2.cert-logia,
+body.theme-nocturno #documentoCertificado h2.cert-logia { 
+  font-size: 1.65rem !important; 
+  font-weight: 700 !important; 
+  color: #12161A !important; 
+  margin-bottom: 2px !important; 
+  letter-spacing: 0.5px !important;
 }
 
-.cert-valle { 
+#documentoCertificado .cert-valle { 
   font-size: 1.05rem; 
   font-style: italic; 
-  color: #3B4754; 
+  color: #3B4754 !important; 
 }
 
-.cert-camara { 
+#documentoCertificado .cert-camara { 
   font-size: 0.95rem; 
   font-weight: 700; 
   letter-spacing: 2px; 
-  color: #5C461A; 
+  color: #5C461A !important; 
   margin-top: 4px; 
 }
 
-.cert-divider { 
-  color: #785C25; 
+#documentoCertificado .cert-divider { 
+  color: #785C25 !important; 
   margin: 18px 0; 
   font-size: 1.1rem; 
 }
 
-.cert-cuerpo { 
+#documentoCertificado .cert-cuerpo { 
   font-size: 1.05rem; 
   line-height: 1.7; 
   margin: 12px auto; 
   max-width: 640px; 
-  color: #1B2126;
+  color: #1B2126 !important;
 }
 
-.cert-nombre { 
-  font-size: 1.8rem; 
-  color: #0A0D10; 
-  text-decoration: underline; 
-  text-decoration-color: #8C6F32; 
-  margin: 10px 0; 
+/* Nombre del Hermano forzado en tono oscuro */
+#documentoCertificado h3.cert-nombre,
+body.theme-nocturno #documentoCertificado h3.cert-nombre { 
+  font-size: 1.8rem !important; 
+  color: #0A0D10 !important; 
+  text-decoration: underline !important; 
+  text-decoration-color: #8C6F32 !important; 
+  margin: 10px 0 !important; 
 }
 
-.cert-plancha { 
-  font-size: 1.35rem; 
-  font-style: italic; 
-  color: #12161A; 
-  margin-top: 6px; 
+#documentoCertificado h4.cert-plancha,
+body.theme-nocturno #documentoCertificado h4.cert-plancha { 
+  font-size: 1.35rem !important; 
+  font-style: italic !important; 
+  color: #12161A !important; 
+  margin-top: 6px !important; 
 }
 
-.cert-autor { 
+#documentoCertificado .cert-autor { 
   font-size: 0.95rem; 
-  color: #4A5663; 
+  color: #4A5663 !important; 
   margin-bottom: 16px; 
 }
 
-.cert-reflexion-box {
-  background: rgba(120, 92, 37, 0.08);
-  border-left: 3px solid #785C25;
-  border-right: 3px solid #785C25;
+#documentoCertificado .cert-reflexion-box {
+  background: rgba(120, 92, 37, 0.08) !important;
+  border-left: 3px solid #785C25 !important;
+  border-right: 3px solid #785C25 !important;
   padding: 14px 20px;
   margin: 14px auto;
   max-width: 620px;
   font-size: 0.95rem;
   line-height: 1.6;
-  color: #151A1E;
+  color: #151A1E !important;
 }
 
-.cert-reflexion-label { 
+#documentoCertificado .cert-reflexion-label { 
   font-size: 0.8rem; 
   font-weight: 700; 
   text-transform: uppercase; 
-  color: #4A3B1C; 
+  color: #4A3B1C !important; 
   margin-bottom: 4px; 
 }
 
-.cert-reflexion-cita { 
+#documentoCertificado .cert-reflexion-cita { 
   font-style: italic; 
-  color: #12161A;
+  color: #12161A !important;
 }
 
-.cert-footer {
+#documentoCertificado .cert-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -687,24 +698,24 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   padding: 0 20px;
 }
 
-.cert-firma { 
+#documentoCertificado .cert-firma { 
   width: 180px; 
-  font-family: var(--font-ui); 
+  font-family: var(--font-ui) !important; 
   font-size: 0.85rem; 
-  color: #2A343D; 
+  color: #2A343D !important; 
 }
 
-.linea-firma { 
-  border-top: 1px solid #3B4754; 
+#documentoCertificado .linea-firma { 
+  border-top: 1px solid #3B4754 !important; 
   margin-bottom: 6px; 
 }
 
-/* TIMBRE ESTAMPADO */
+/* Timbre Oficial */
 .timbre-estampa {
   width: 170px;
   height: 170px;
   display: inline-block;
-  background-color: var(--timbre-color);
+  background-color: #12161A !important;
   -webkit-mask-image: url('timbre.png');
   mask-image: url('timbre.png');
   -webkit-mask-size: contain;
@@ -713,7 +724,7 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   mask-repeat: no-repeat;
   -webkit-mask-position: center;
   mask-position: center;
-  opacity: 0.92;
+  opacity: 0.94;
   transform: rotate(-3deg);
   filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.25));
 }
