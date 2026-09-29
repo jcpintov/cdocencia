@@ -6,50 +6,39 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Docencia Masónica de Tercer Grado | Cámara del Medio</title>
   
-  <!-- Tipografía accesible -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- Hojas de estilo -->
   <link rel="stylesheet" href="styles.css">
 
-  <!-- Librerías externas -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <!-- Generador PDF de Certificados -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body oncontextmenu="return false;">
 
-  <!-- ENCABEZADO SUPERIOR -->
+  <!-- ENCABEZADO -->
   <header>
     <div class="brand-title">
-      <span class="temple-icon">🏛️</span>
+      <span>🏛️</span>
       <span>DOCENCIA MASÓNICA DE TERCER GRADO</span>
     </div>
     
     <div class="header-controls">
-      <!-- Selector de Luminosidad -->
-      <button class="icon-btn" onclick="alternarTemaLuminosidad()" id="btnTema" title="Cambiar Luminosidad (Día / Sepia / Nocturno)">☀️</button>
-      
-      <!-- Controles de Fuente -->
-      <button class="font-btn" onclick="cambiarTamanoFuente(1)" title="Aumentar tamaño de letra">A+</button>
-      <button class="font-btn" onclick="cambiarTamanoFuente(-1)" title="Disminuir tamaño de letra">A-</button>
-      
-      <!-- Botón Superadmin (Visible solo para administradores) -->
+      <button class="icon-btn" onclick="alternarTemaLuminosidad()" id="btnTema" title="Cambiar Luminosidad">☀️</button>
+      <button class="font-btn" onclick="cambiarTamanoFuente(1)" title="Aumentar letra">A+</button>
+      <button class="font-btn" onclick="cambiarTamanoFuente(-1)" title="Disminuir letra">A-</button>
       <button id="btnToggleAdmin" class="nav-admin-btn hidden" onclick="conmutarVistaAdmin()">⚙️ Panel Superadmin</button>
-      
-      <!-- Salida -->
       <button id="btnSalir" class="logout-btn hidden" onclick="cerrarSesion()">Cerrar Cámara</button>
     </div>
   </header>
 
-  <!-- PANTALLA 1: ACCESO AL TEMPLO VIRTUAL -->
+  <!-- PANTALLA 1: ACCESO -->
   <main id="seccionLogin" class="login-wrapper">
-    <div class="card card-login">
-      <h2>Cámara del Medio</h2>
+    <div class="card card-trazado">
+      <h2 style="text-align: center; margin-bottom: 6px;">Cámara del Medio</h2>
       <p class="login-sub">Espacio docente reservado para Maestros Masones.</p>
       
       <div class="form-group">
@@ -67,11 +56,11 @@
     </div>
   </main>
 
-  <!-- MODAL: DECLARACIÓN DE SIGILO -->
+  <!-- MODAL SIGILO -->
   <div id="modalSigilo" class="modal-overlay hidden">
     <div class="modal-content">
-      <h2>Compromiso Solemne de Sigilo</h2>
-      <p>
+      <h2 style="color: var(--accent-gold); margin-bottom: 14px;">Compromiso Solemne de Sigilo</h2>
+      <p style="text-align: justify; line-height: 1.75; margin-bottom: 22px;">
         Al ingresar a esta Cámara del Medio, reafirmo mi compromiso de mantener estricta reserva y sigilo sobre los contenidos, 
         trazados, símbolos y reflexiones personales de mis Hermanos aquí vertidos. Reconozco que este espacio pertenece al ámbito exclusivo 
         del Tercer Grado, quedando estrictamente prohibida su difusión profana o copia no autorizada bajo los preceptos del honor masónico.
@@ -80,10 +69,9 @@
     </div>
   </div>
 
-  <!-- PANTALLA 2: ENTORNO DOCENTE DE LOS HERMANOS -->
+  <!-- PANTALLA 2: ENTORNO DOCENTE -->
   <div id="seccionDocencia" class="templo-layout hidden">
     
-    <!-- Barra Lateral -->
     <aside class="sidebar-templo">
       <div class="sidebar-box">
         <div class="sidebar-title">
@@ -99,19 +87,17 @@
       </div>
     </aside>
 
-    <!-- Área Principal de Estudio -->
     <main>
-      <!-- FASE I: Lectura de la Plancha -->
+      <!-- FASE I: Trazado -->
       <section class="card card-trazado">
         <div class="card-fase-header">
           <span class="fase-badge">FASE I</span>
-          <span id="temaNumero"></span>
+          <span id="temaNumero" style="font-family: var(--font-ui); font-size: 0.95rem; font-weight: 700;"></span>
         </div>
         
         <h1 id="temaTitulo">Cargando tema...</h1>
-        <p id="temaAutor"></p>
+        <p id="temaAutor" style="font-family: var(--font-ui); font-size: 1rem; color: var(--text-muted); font-style: italic; margin-bottom: 16px;"></p>
 
-        <!-- Barra de Visualización y Descarga -->
         <div class="doc-actions-bar">
           <div id="contenedorTabs" class="tabs-container">
             <button id="tabTexto" class="tab-btn active" onclick="cambiarVistaDocencia('texto')">📖 Lectura Adaptada</button>
@@ -122,21 +108,20 @@
             <a id="btnDescargarTrazado" href="#" target="_blank" class="btn-descargar hidden">
               📥 Descargar Plancha (PDF)
             </a>
-            <!-- Botón de Certificado (Visible solo si el tema fue completado) -->
             <button id="btnVerCertificado" class="btn-certificado hidden" onclick="abrirModalCertificado()">
               📜 Obtener Certificado Oficial
             </button>
           </div>
         </div>
 
-        <article id="vistaTexto" class="protected-text"></article>
+        <article id="vistaTexto" class="protected-text" style="white-space: pre-line; text-align: justify;"></article>
 
         <div id="vistaPdf" class="hidden">
           <iframe id="framePdf" class="pdf-viewer-frame" src=""></iframe>
         </div>
       </section>
 
-      <!-- FASE II: Examen Simbólico (Se oculta si el tema ya fue completado, salvo que el usuario pida rectificar) -->
+      <!-- FASE II: Examen Simbólico -->
       <section id="bloqueFaseDos" class="card">
         <div class="card-fase-header">
           <span class="fase-badge">FASE II</span>
@@ -148,9 +133,8 @@
         <div id="contenedorPreguntas"></div>
       </section>
 
-      <!-- FASE III: Reflexión y Muro Fraterno -->
+      <!-- FASE III: Reflexión y Muro -->
       <section id="bloqueFaseTres" class="hidden">
-        <!-- Tarjeta de Reflexión Personal -->
         <div class="card card-reflexion">
           <div class="card-fase-header">
             <span class="fase-badge badge-fase3">FASE III</span>
@@ -172,7 +156,6 @@
           </button>
         </div>
 
-        <!-- Muro Fraterno -->
         <div id="bloqueMuro" class="card">
           <div class="card-fase-header">
             <span class="fase-badge badge-muro">MURO</span>
@@ -185,22 +168,80 @@
     </main>
   </div>
 
-  <!-- PANTALLA 3: PANEL EXCLUSIVO DEL SUPERADMIN -->
+  <!-- PANTALLA 3: ENTORNO EXCLUSIVO SUPERADMIN (SUBMENÚS INDIVIDUALES) -->
   <main id="seccionAdmin" class="admin-container hidden">
     
-    <!-- SUBMENÚ SUPERADMIN 1: DASHBOARD Y MÉTRICAS DOCENTES -->
-    <div class="card card-admin-metricas">
+    <!-- SUBMENÚ DE SECCIONES PURAS -->
+    <nav class="admin-subnav">
+      <button id="tabNavCargar" class="admin-nav-tab active" onclick="cambiarSubseccionAdmin('cargar')">
+        🏛️ Consagrar Nueva Plancha (Carga Pura)
+      </button>
+      <button id="tabNavMetricas" class="admin-nav-tab" onclick="cambiarSubseccionAdmin('metricas')">
+        📊 Matriz de Avance & Métricas
+      </button>
+    </nav>
+
+    <!-- SECCIÓN 1: CARGA DE PLANCHAS AISLADA (SIN INTERFERENCIAS) -->
+    <section id="adminSeccionCarga" class="card card-trazado">
       <div class="admin-card-header">
         <div>
-          <h2>📊 Matriz de Avance Docente</h2>
-          <p class="text-instruccion">Seguimiento de visitas, lecturas, progreso de examen y reflexiones consagradas.</p>
+          <h2>Consagración de Plancha</h2>
+          <p class="text-instruccion" style="margin: 0;">Suba un archivo PDF o Word. La IA depurará el texto y estructurará el cuestionario pedagógico.</p>
+        </div>
+        <div class="admin-header-actions">
+          <a href="https://github.com/jcpintov/cdocencia/blob/main/index.html" target="_blank" class="admin-link-btn">🐙 GitHub</a>
+          <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq/sql/02eaddd7-b53a-430e-8fad-7ed8249b9440" target="_blank" class="admin-link-btn">⚡ SQL Supabase</a>
+        </div>
+      </div>
+
+      <div class="upload-box">
+        <label for="archivoDoc" style="font-weight: 700; color: var(--text-main); cursor: pointer; display: block; margin-bottom: 8px;">
+          📄 Seleccionar Trazado (PDF o Word .docx)
+        </label>
+        <input type="file" id="archivoDoc" accept=".docx, .pdf" onchange="leerArchivoPlancha(event)">
+        <p id="archivoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 8px; font-weight: 600;"></p>
+      </div>
+
+      <div class="admin-grid">
+        <div class="form-group">
+          <label for="adminOrden">N° Módulo:</label>
+          <input type="number" id="adminOrden" value="4">
+        </div>
+        <div class="form-group">
+          <label for="adminTitulo">Título de la Plancha:</label>
+          <input type="text" id="adminTitulo" placeholder="Ej: Los Cinco Puntos del Maestro">
+        </div>
+        <div class="form-group">
+          <label for="adminAutor">Autor (Solo Nombre):</label>
+          <input type="text" id="adminAutor" placeholder="Ej: Ricardo Pérez G. 3º">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="adminTexto">Texto Normalizado para IA (Depurado de encabezados y pies):</label>
+        <textarea id="adminTexto" rows="12" placeholder="El texto depurado aparecerá aquí..."></textarea>
+      </div>
+
+      <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">
+        ⚙️ Procesar con Gemini y Consagrar Plancha
+      </button>
+      
+      <div id="adminStatus" style="margin-top: 14px; text-align: center; font-family: var(--font-ui); font-weight: 600;"></div>
+    </section>
+
+    <!-- SECCIÓN 2: MÉTRICAS Y DASHBOARD AISLADO -->
+    <section id="adminSeccionMetricas" class="card card-reflexion hidden">
+      <div class="admin-card-header">
+        <div>
+          <h2>Matriz de Avance Docente</h2>
+          <p class="text-instruccion" style="margin: 0;">Seguimiento individual de lecturas, avance de cuestionarios y aportes de la Cámara.</p>
         </div>
         
         <div class="admin-header-actions">
           <label for="selectMetricasModulo">Plancha:</label>
           <select id="selectMetricasModulo" onchange="cargarMetricasAvance(this.value)"></select>
           <button class="admin-link-btn" onclick="recargarMetricasActuales()">🔄 Actualizar</button>
-          <button class="admin-link-btn" onclick="exportarRespaldoCompletoJSON()">💾 Respaldar Datos (JSON)</button>
+          <button class="admin-link-btn" onclick="exportarRespaldoCompletoJSON()">💾 Respaldar JSON</button>
         </div>
       </div>
 
@@ -224,56 +265,10 @@
           </tbody>
         </table>
       </div>
-    </div>
-
-    <!-- SUBMENÚ SUPERADMIN 2: CARGA Y CONSAGRACIÓN DE PLANCHAS CON IA -->
-    <div class="card card-admin-carga">
-      <div class="admin-card-header">
-        <div>
-          <h2>🏛️ Consagrar Nueva Plancha</h2>
-          <p class="text-instruccion">Suba un PDF o Word. El sistema depurará el texto y estructurará el cuestionario pedagógico.</p>
-        </div>
-        <div class="admin-header-actions">
-          <a href="https://github.com/jcpintov/cdocencia/blob/main/index.html" target="_blank" class="admin-link-btn">🐙 GitHub</a>
-          <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq/sql/02eaddd7-b53a-430e-8fad-7ed8249b9440" target="_blank" class="admin-link-btn">⚡ SQL Supabase</a>
-        </div>
-      </div>
-
-      <div class="upload-box">
-        <label for="archivoDoc">📄 Cargar Archivo de Plancha (PDF o Word .docx)</label>
-        <input type="file" id="archivoDoc" accept=".docx, .pdf" onchange="leerArchivoPlancha(event)">
-        <p id="archivoStatus"></p>
-      </div>
-
-      <div class="admin-grid">
-        <div class="form-group">
-          <label for="adminOrden">N° Módulo:</label>
-          <input type="number" id="adminOrden" value="4">
-        </div>
-        <div class="form-group">
-          <label for="adminTitulo">Título de la Plancha:</label>
-          <input type="text" id="adminTitulo" placeholder="Ej: Los Cinco Puntos del Maestro">
-        </div>
-        <div class="form-group">
-          <label for="adminAutor">Autor (Solo Nombre):</label>
-          <input type="text" id="adminAutor" placeholder="Ej: Juan Pérez 3º">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="adminTexto">Texto Normalizado para IA:</label>
-        <textarea id="adminTexto" rows="10" placeholder="El texto limpio aparecerá aquí..."></textarea>
-      </div>
-
-      <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">
-        ⚙️ Procesar con Gemini y Consagrar Plancha
-      </button>
-      
-      <div id="adminStatus"></div>
-    </div>
+    </section>
   </main>
 
-  <!-- MODAL: CERTIFICADO DE APROBACIÓN CON TIMBRE OFICIAL -->
+  <!-- MODAL: CERTIFICADO CON TIMBRE -->
   <div id="modalCertificado" class="modal-overlay hidden">
     <div class="modal-certificado-wrapper">
       <div class="modal-cert-actions">
@@ -281,7 +276,6 @@
         <button class="btn-secondary" onclick="cerrarModalCertificado()">Cerrar</button>
       </div>
 
-      <!-- Contenedor del Diploma A4 que se imprime -->
       <div id="documentoCertificado" class="certificado-a4">
         <div class="cert-borde-exterior">
           <div class="cert-borde-interior">
@@ -293,9 +287,7 @@
 
             <div class="cert-divider">✦ ✦ ✦</div>
 
-            <p class="cert-cuerpo">
-              Se certifica que el Respetable Hermano
-            </p>
+            <p class="cert-cuerpo">Se certifica que el Respetable Hermano</p>
             <h3 id="certNombreHermano" class="cert-nombre">Q.·.H.·. NOMBRE DEL HERMANO</h3>
             
             <p class="cert-cuerpo">
@@ -310,12 +302,11 @@
               <p id="certTextoReflexion" class="cert-reflexion-cita">"..."</p>
             </div>
 
-            <!-- Pie del Certificado con Timbre Oficial -->
             <div class="cert-footer">
               <div class="cert-firma">
                 <div class="linea-firma"></div>
                 <p>Cámara de Maestros</p>
-                <p id="certFechaEmision">Talagante, FECHA</p>
+                <p id="certFechaEmision">Talagante</p>
               </div>
 
               <!-- TIMBRE OFICIAL ESTAMPADO CON MÁSCARA -->
@@ -334,7 +325,6 @@
     </div>
   </div>
 
-  <!-- Script principal -->
   <script src="app.js"></script>
 </body>
 </html>
