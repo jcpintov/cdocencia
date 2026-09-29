@@ -30,7 +30,6 @@
       <button class="icon-btn" onclick="alternarTemaLuminosidad()" id="btnTema" title="Cambiar Luminosidad">☀️</button>
       <button class="font-btn" onclick="cambiarTamanoFuente(1)" title="Aumentar letra">A+</button>
       <button class="font-btn" onclick="cambiarTamanoFuente(-1)" title="Disminuir letra">A-</button>
-      <button id="btnToggleAdmin" class="nav-admin-btn hidden" onclick="conmutarVistaAdmin()">⚙️ Panel Superadmin</button>
       <button id="btnSalir" class="logout-btn hidden" onclick="cerrarSesion()">Cerrar Cámara</button>
     </div>
   </header>
@@ -69,9 +68,8 @@
     </div>
   </div>
 
-  <!-- PANTALLA 2: ENTORNO DOCENTE -->
+  <!-- PANTALLA 2: ENTORNO EXCLUSIVO DE DOCENCIA (PARA HERMANOS REGULARES) -->
   <div id="seccionDocencia" class="templo-layout hidden">
-    
     <aside class="sidebar-templo">
       <div class="sidebar-box">
         <div class="sidebar-title">
@@ -168,10 +166,9 @@
     </main>
   </div>
 
-  <!-- PANTALLA 3: ENTORNO EXCLUSIVO SUPERADMIN (SUBMENÚS INDIVIDUALES) -->
+  <!-- PANTALLA 3: ENTORNO EXCLUSIVO DEL SUPERADMIN -->
   <main id="seccionAdmin" class="admin-container hidden">
     
-    <!-- SUBMENÚ DE SECCIONES PURAS -->
     <nav class="admin-subnav">
       <button id="tabNavCargar" class="admin-nav-tab active" onclick="cambiarSubseccionAdmin('cargar')">
         🏛️ Consagrar Nueva Plancha (Carga Pura)
@@ -181,7 +178,7 @@
       </button>
     </nav>
 
-    <!-- SECCIÓN 1: CARGA DE PLANCHAS AISLADA (SIN INTERFERENCIAS) -->
+    <!-- SECCIÓN 1: CARGA DE PLANCHAS CON FALLBACK SQL INTELIGENTE -->
     <section id="adminSeccionCarga" class="card card-trazado">
       <div class="admin-card-header">
         <div>
@@ -227,6 +224,16 @@
       </button>
       
       <div id="adminStatus" style="margin-top: 14px; text-align: center; font-family: var(--font-ui); font-weight: 600;"></div>
+
+      <!-- CONTENEDOR DE CONTINGENCIA SQL (SI GEMINI REPORTA SATURACIÓN) -->
+      <div id="contenedorFallbackSQL" class="hidden" style="margin-top: 24px; padding: 20px; background: var(--card-bg); border: 2px dashed var(--accent-gold); border-radius: 8px;">
+        <h4 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">⚡ Contingencia por Saturación de API: Inserción Directa</h4>
+        <p style="font-size: 0.88rem; color: var(--text-muted); font-family: var(--font-ui); margin-bottom: 12px;">
+          Copie la siguiente consulta e insértela directamente en el Editor SQL de Supabase para consagrar la plancha sin consumir la API:
+        </p>
+        <textarea id="sqlFallbackArea" rows="10" readonly style="font-family: monospace; font-size: 0.82rem; background: #0A0E13; color: #4AF626; border-radius: 6px; padding: 12px;"></textarea>
+        <button class="btn-secondary" style="margin-top: 10px;" onclick="copiarSQLFallback()">📋 Copiar Consulta SQL al Portapapeles</button>
+      </div>
     </section>
 
     <!-- SECCIÓN 2: MÉTRICAS Y DASHBOARD AISLADO -->
@@ -268,7 +275,7 @@
     </section>
   </main>
 
-  <!-- MODAL: CERTIFICADO CON TIMBRE -->
+  <!-- MODAL: CERTIFICADO DE APROBACIÓN CON TONOS OSCUROS Y TEXTO SOLEMNE -->
   <div id="modalCertificado" class="modal-overlay hidden">
     <div class="modal-certificado-wrapper">
       <div class="modal-cert-actions">
@@ -287,7 +294,7 @@
 
             <div class="cert-divider">✦ ✦ ✦</div>
 
-            <p class="cert-cuerpo">Se certifica que el Respetable Hermano</p>
+            <p class="cert-cuerpo">Se certifica que el Venerable Maestro</p>
             <h3 id="certNombreHermano" class="cert-nombre">Q.·.H.·. NOMBRE DEL HERMANO</h3>
             
             <p class="cert-cuerpo">
@@ -298,7 +305,7 @@
             <p id="certAutorPlancha" class="cert-autor">Autor: Q.·.H.·. Autor</p>
 
             <div class="cert-reflexion-box">
-              <p class="cert-reflexion-label">Aporte Consagrado por el Maestro:</p>
+              <p class="cert-reflexion-label">Aporte Consagrado en la Cámara:</p>
               <p id="certTextoReflexion" class="cert-reflexion-cita">"..."</p>
             </div>
 
