@@ -714,19 +714,14 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
 .timbre-estampa {
   width: 170px;
   height: 170px;
-  display: inline-block;
-  background-color: #12161A !important;
-  -webkit-mask-image: url('timbre.png');
-  mask-image: url('timbre.png');
-  -webkit-mask-size: contain;
-  mask-size: contain;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-position: center;
-  opacity: 0.94;
+  object-fit: contain;
+  /* Invierte el fondo negro a blanco y los trazos blancos a negro puro */
+  filter: invert(1) contrast(1.15);
+  /* Funde el fondo blanco haciéndolo 100% transparente sobre el papel */
+  mix-blend-mode: multiply;
+  opacity: 0.92;
   transform: rotate(-3deg);
-  filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.25));
+  display: inline-block;
 }
 
 .login-wrapper { max-width: 480px; margin: 50px auto; padding: 0 20px; }
