@@ -94,7 +94,6 @@ async function iniciarSesion() {
   document.getElementById('seccionLogin').classList.add('hidden');
   document.getElementById('btnSalir').classList.remove('hidden');
 
-  // SEGREGACIÓN ESTRICTA: El Superadmin no participa en la docencia de educando
   if (usuarioActual.es_admin) {
     document.getElementById('seccionAdmin').classList.remove('hidden');
     document.getElementById('seccionDocencia').classList.add('hidden');
@@ -111,6 +110,9 @@ function aceptarSigilo() {
 
 function cerrarSesion() {
   usuarioActual = null;
+  moduloActual = null;
+  misProgresos = {};
+  respuestasMarcadas = {};
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionAdmin').classList.add('hidden');
   document.getElementById('modalSigilo').classList.add('hidden');
@@ -175,20 +177,26 @@ async function cargarDatosAdmin() {
 async function cargarTodosLosModulos() {
   document.getElementById('seccionDocencia').classList.remove('hidden');
 
-  const { data, error } = await sbApp
+  const { data: dataModulos, error } = await sbApp
     .from('modulos')
     .select('*')
     .eq('activo', true)
     .order('numero_orden', { ascending: true });
 
-  if (error || !data || data.length === 0) {
+  if (error || !dataModulos || dataModulos.length === 0) {
     document.getElementById('temaTitulo').innerText = "No hay planchas consagradas actualmente.";
     return;
   }
 
-  listaModulos = data;
+  listaModulos = dataModulos;
   document.getElementById('contadorModulos').innerText = `${listaModulos.length} temas`;
 
+  await refrescarProgresosUsuario();
+  renderizarSidebar();
+  seleccionarModulo(listaModulos[0].id);
+}
+
+async function refrescarProgresosUsuario() {
   const { data: dataProgreso } = await sbApp
     .from('progreso_maestro')
     .select('*')
@@ -196,11 +204,10 @@ async function cargarTodosLosModulos() {
 
   misProgresos = {};
   if (dataProgreso) {
-    dataProgreso.forEach(p => { misProgresos[p.modulo_id] = p; });
+    dataProgreso.forEach(p => { 
+      misProgresos[p.modulo_id] = p; 
+    });
   }
-
-  renderizarSidebar();
-  seleccionarModulo(data[0].id);
 }
 
 function renderizarSidebar() {
@@ -229,11 +236,14 @@ async function seleccionarModulo(idModulo) {
   moduloActual = listaModulos.find(m => m.id === idModulo);
   if (!moduloActual) return;
 
+  // Reset visual estricto para evitar cruces entre temas
   document.querySelectorAll('.modulo-nav-item').forEach(el => el.classList.remove('active'));
   const activeNav = document.getElementById(`nav_mod_${idModulo}`);
   if (activeNav) activeNav.classList.add('active');
 
   respuestasMarcadas = {};
+  document.getElementById('textoReflexion').value = "";
+  document.getElementById('contenedorMuro').innerHTML = "";
 
   document.getElementById('temaNumero').innerText = "Módulo " + moduloActual.numero_orden;
   document.getElementById('temaTitulo').innerText = moduloActual.titulo;
@@ -259,7 +269,7 @@ async function seleccionarModulo(idModulo) {
   }
 
   renderizarPreguntasInteractivas(moduloActual.preguntas_json.preguntas || []);
-  verificarProgresoExistente();
+  await verificarProgresoExistente();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -407,9 +417,9 @@ async function guardarReflexionYCompletar() {
   }
 
   alert("Módulo completado con éxito. Se ha desbloqueado el Muro Fraterno y su Certificado.");
-  misProgresos[moduloActual.id] = { completado: true, reflexion: texto };
+  await refrescarProgresosUsuario();
   renderizarSidebar();
-  verificarProgresoExistente();
+  await verificarProgresoExistente();
 }
 
 function habilitarEdicionReflexion() {
@@ -439,12 +449,13 @@ async function verificarProgresoExistente() {
   const btnEditar = document.getElementById('btnEditarReflexion');
   const btnCert = document.getElementById('btnVerCertificado');
 
-  if (data && data.length > 0 && data[0].completado) {
+  // Validación estricta para asegurar que el registro corresponda al módulo activo
+  if (data && data.length > 0 && data[0].completado && data[0].modulo_id === moduloActual.id) {
     bloqueFaseDos.classList.add('hidden');
     faseTres.classList.remove('hidden');
     btnCert.classList.remove('hidden');
 
-    txtRef.value = data[0].reflexion;
+    txtRef.value = data[0].reflexion || "";
     txtRef.disabled = true;
     btnConsagrar.classList.add('hidden');
     btnEditar.classList.remove('hidden');
@@ -452,7 +463,7 @@ async function verificarProgresoExistente() {
     document.getElementById('tituloFaseTres').innerText = "Mi Reflexión Consagrada";
     document.getElementById('descFaseTres').innerText = "Usted ya consagró su aporte docente en este trazado:";
 
-    cargarMuroReflexiones();
+    await cargarMuroReflexiones();
   } else {
     bloqueFaseDos.classList.remove('hidden');
     faseTres.classList.add('hidden');
@@ -468,22 +479,27 @@ async function verificarProgresoExistente() {
 
 async function cargarMuroReflexiones() {
   const contenedor = document.getElementById('contenedorMuro');
+  contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Cargando aportes de la Cámara...</p>";
 
-  const { data } = await sbApp
+  // Filtro estricto: solo reflexiones completadas que pertenezcan a ESTE módulo
+  const { data, error } = await sbApp
     .from('progreso_maestro')
-    .select('reflexion, completado_en, usuarios(nombre)')
+    .select('reflexion, completado_en, modulo_id, usuarios(nombre)')
     .eq('modulo_id', moduloActual.id)
-    .eq('completado', true);
+    .eq('completado', true)
+    .not('reflexion', 'is', null);
 
   contenedor.innerHTML = "";
-  if (data && data.length > 0) {
+  if (!error && data && data.length > 0) {
     data.forEach(item => {
-      contenedor.innerHTML += `
-        <div class="reflexion-item">
-          <div class="reflexion-autor">${item.usuarios?.nombre || "Hermano Maestro"}</div>
-          <div>"${item.reflexion}"</div>
-        </div>
-      `;
+      if (item.reflexion && item.reflexion.trim() !== "" && item.modulo_id === moduloActual.id) {
+        contenedor.innerHTML += `
+          <div class="reflexion-item">
+            <div class="reflexion-autor">${item.usuarios?.nombre || "Hermano Maestro"}</div>
+            <div>"${item.reflexion}"</div>
+          </div>
+        `;
+      }
     });
   } else {
     contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Aún no hay reflexiones consagradas en esta plancha.</p>";
@@ -495,7 +511,10 @@ async function cargarMuroReflexiones() {
    ========================================================================== */
 function abrirModalCertificado() {
   const modal = document.getElementById('modalCertificado');
-  const prog = misProgresos[moduloActual.id];
+  
+  // Extraer la reflexión exacta del módulo actual
+  const progActual = misProgresos[moduloActual.id];
+  const reflexionExacta = (progActual && progActual.reflexion) ? progActual.reflexion : "";
 
   // Tratamiento formal solemne
   const nombreLimpio = (usuarioActual.nombre || "Maestro Masón").replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
@@ -503,7 +522,7 @@ function abrirModalCertificado() {
   
   document.getElementById('certTituloPlancha').innerText = `"${moduloActual.titulo}"`;
   document.getElementById('certAutorPlancha').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
-  document.getElementById('certTextoReflexion').innerText = prog ? `"${prog.reflexion}"` : "";
+  document.getElementById('certTextoReflexion').innerText = `"${reflexionExacta}"`;
 
   const d = new Date();
   document.getElementById('certFechaEmision').innerText = `Talagante, ${d.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
@@ -550,7 +569,6 @@ async function cargarMetricasAvance(moduloId) {
   tbody.innerHTML = "";
 
   usuarios.forEach(u => {
-    // Excluir al superadmin del seguimiento de educando
     if (u.es_admin) return;
 
     const prog = mapProg[u.id];
@@ -718,7 +736,6 @@ async function leerArchivoPlancha(event) {
   }
 }
 
-// Generador de consulta SQL de rescate en caso de saturación de Gemini
 function generarSQLContingencia(orden, titulo, autor, texto) {
   const textoEscapado = texto.replace(/'/g, "''");
   const tituloEscapado = titulo.replace(/'/g, "''");
@@ -892,7 +909,6 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
 
     const data = await respuesta.json();
 
-    // Manejo de error de cuota o indisponibilidad (429, 503)
     if (data.error) {
       status.innerHTML = `<span style="color: var(--error);">Servidores de Google saturados (${data.error.message}). Se ha generado la consulta SQL de contingencia directa.</span>`;
       fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
