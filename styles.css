@@ -257,7 +257,6 @@ body.theme-nocturno .fase-badge { background: #263749; color: var(--accent-gold)
 .badge-fase3 { background: var(--accent-gold); }
 .badge-muro { background: var(--success); }
 
-/* Encabezados normales de la app */
 h1, h2, h3, h4 { font-family: var(--font-reading); color: var(--primary); line-height: 1.3; }
 body.theme-nocturno main h1, 
 body.theme-nocturno main h2, 
@@ -558,16 +557,67 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   align-items: center;
 }
 
+/* ==========================================================================
+   BARRA DE ACCIONES Y BOTONES DEL MODAL CERTIFICADO
+   ========================================================================== */
 .modal-cert-actions {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 16px;
-  width: 100%;
-  max-width: 800px;
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  gap: 14px !important;
+  width: 100% !important;
+  max-width: 800px !important;
+  margin-bottom: 16px !important;
+  padding: 0 4px !important;
+}
+
+.btn-cert-descargar {
+  background: var(--accent-gold) !important;
+  color: #12161A !important;
+  font-family: var(--font-ui) !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  padding: 10px 22px !important;
+  border: 1px solid #E8C86A !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+.btn-cert-descargar:hover {
+  background: #E8C86A !important;
+  transform: translateY(-1px) !important;
+}
+
+.btn-cert-cerrar {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+  font-family: var(--font-ui) !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  padding: 10px 20px !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  backdrop-filter: blur(4px) !important;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3) !important;
+  transition: all 0.2s ease !important;
+}
+.btn-cert-cerrar:hover {
+  background: rgba(229, 83, 83, 0.85) !important;
+  border-color: #E55353 !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px) !important;
 }
 
 /* ==========================================================================
-   DIPLOMA A4: ESPECIFICIDAD ESTRICTA PARA EVITAR TEXTO BLANCO EN NOCTURNO
+   DIPLOMA A4: ESPECIFICIDAD ESTRICTA (TIPOGRAFÍA CARBÓN OSCURO)
    ========================================================================== */
 #documentoCertificado.certificado-a4 {
   background: #FDFBF7 !important;
@@ -603,7 +653,6 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   margin-bottom: 4px; 
 }
 
-/* Forzado estricto contra sobrescrituras de modo nocturno */
 #documentoCertificado h2.cert-logia,
 body.theme-nocturno #documentoCertificado h2.cert-logia { 
   font-size: 1.65rem !important; 
@@ -641,7 +690,6 @@ body.theme-nocturno #documentoCertificado h2.cert-logia {
   color: #1B2126 !important;
 }
 
-/* Nombre del Hermano forzado en tono oscuro */
 #documentoCertificado h3.cert-nombre,
 body.theme-nocturno #documentoCertificado h3.cert-nombre { 
   font-size: 1.8rem !important; 
@@ -690,39 +738,50 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
   color: #12161A !important;
 }
 
+/* ==========================================================================
+   PIE DEL DIPLOMA EN 3 COLUMNAS EQUILIBRADAS
+   ========================================================================== */
 #documentoCertificado .cert-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 30px;
-  padding: 0 20px;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-end !important;
+  margin-top: 28px !important;
+  padding: 0 10px !important;
 }
 
 #documentoCertificado .cert-firma { 
-  width: 180px; 
+  width: 200px !important; 
   font-family: var(--font-ui) !important; 
-  font-size: 0.85rem; 
-  color: #2A343D !important; 
+  font-size: 0.85rem !important; 
+  color: #2A343D !important;
+  text-align: center !important;
 }
 
 #documentoCertificado .linea-firma { 
   border-top: 1px solid #3B4754 !important; 
-  margin-bottom: 6px; 
+  margin-bottom: 8px !important; 
 }
 
-/* TIMBRE OFICIAL EN DIPLOMA */
+.cert-timbre-col {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  flex: 1 !important;
+}
+
 .timbre-estampa {
-  width: 180px !important;
-  height: 180px !important;
-  min-width: 180px !important;
-  min-height: 180px !important;
+  width: 175px !important;
+  height: 175px !important;
+  min-width: 175px !important;
+  min-height: 175px !important;
+  max-width: 175px !important;
+  max-height: 175px !important;
   display: block !important;
   margin: 0 auto !important;
   object-fit: contain !important;
-  transform: rotate(-3deg);
-  opacity: 0.94;
-  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.25));
-  /* IMPORTANTE: No usar invert ni mix-blend-mode aquí porque logo.svg ya es negro con transparencia */
+  transform: rotate(-2deg);
+  opacity: 0.95;
+  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.2));
 }
 
 .login-wrapper { max-width: 480px; margin: 50px auto; padding: 0 20px; }
