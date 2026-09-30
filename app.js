@@ -94,7 +94,6 @@ async function iniciarSesion() {
   document.getElementById('seccionLogin').classList.add('hidden');
   document.getElementById('btnSalir').classList.remove('hidden');
 
-  // Segregación: Superadmin exclusivo para administración técnica y pedagógica
   if (usuarioActual.es_admin) {
     document.getElementById('seccionAdmin').classList.remove('hidden');
     document.getElementById('seccionDocencia').classList.add('hidden');
@@ -293,7 +292,7 @@ function cambiarVistaDocencia(tipo) {
 }
 
 /* ==========================================================================
-   PERSISTENCIA RESILIENTE (SIN UPSERT ON_CONFLICT -> CERO ERROR 400)
+   PERSISTENCIA RESILIENTE (SELECT -> INSERT/UPDATE SIN ERROR 400)
    ========================================================================== */
 async function registrarLecturaSilenciosa(moduloId) {
   if (!usuarioActual) return;
@@ -555,21 +554,14 @@ async function cargarMuroReflexiones() {
 }
 
 /* ==========================================================================
-   CERTIFICADO OFICIAL: TRATAMIENTO SOLEMNE Y TIMBRE SVG
+   CERTIFICADO OFICIAL: "SE CERTIFICA QUE EL VENERABLE MAESTRO"
    ========================================================================== */
 function abrirModalCertificado() {
   const modal = document.getElementById('modalCertificado');
   
-  // Garantizar asignación de logo.svg relativo al mismo host
-  const imgTimbre = document.querySelector('.timbre-estampa');
-  if (imgTimbre && (!imgTimbre.getAttribute('src') || imgTimbre.getAttribute('src').includes('timbre.png'))) {
-    imgTimbre.src = "logo.svg";
-  }
-
   const progActual = misProgresos[moduloActual.id];
   const reflexionExacta = (progActual && progActual.reflexion) ? progActual.reflexion : "";
 
-  // Venerable Maestro con nombre limpio sin duplicar tratamientos
   const nombreLimpio = (usuarioActual.nombre || "Maestro Masón").replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
   document.getElementById('certNombreHermano').innerText = nombreLimpio;
   
@@ -586,6 +578,21 @@ function abrirModalCertificado() {
 function cerrarModalCertificado() {
   document.getElementById('modalCertificado').classList.add('hidden');
 }
+
+function cerrarModalPorFondo(event) {
+  if (event.target.id === 'modalCertificado') {
+    cerrarModalCertificado();
+  }
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const modal = document.getElementById('modalCertificado');
+    if (modal && !modal.classList.contains('hidden')) {
+      cerrarModalCertificado();
+    }
+  }
+});
 
 function descargarCertificadoPDF() {
   const elemento = document.getElementById('documentoCertificado');
