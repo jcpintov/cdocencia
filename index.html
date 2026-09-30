@@ -276,11 +276,17 @@
   </main>
 
   <!-- MODAL: CERTIFICADO DE APROBACIÓN CON TIMBRE OFICIAL -->
-  <div id="modalCertificado" class="modal-overlay hidden">
+  <div id="modalCertificado" class="modal-overlay hidden" onclick="cerrarModalPorFondo(event)">
     <div class="modal-certificado-wrapper">
+      
+      <!-- Barra Superior de Acciones Mejorada -->
       <div class="modal-cert-actions">
-        <button class="btn-primary" onclick="descargarCertificadoPDF()">📥 Descargar en PDF</button>
-        <button class="btn-secondary" onclick="cerrarModalCertificado()">Cerrar</button>
+        <button class="btn-cert-descargar" onclick="descargarCertificadoPDF()">
+          📥 Descargar en PDF
+        </button>
+        <button class="btn-cert-cerrar" onclick="cerrarModalCertificado()">
+          ✕ Cerrar
+        </button>
       </div>
 
       <div id="documentoCertificado" class="certificado-a4">
@@ -309,7 +315,7 @@
               <p id="certTextoReflexion" class="cert-reflexion-cita">"..."</p>
             </div>
 
-            <!-- Pie del Certificado con Timbre Oficial -->
+            <!-- Pie del Certificado con Timbre Oficial (3 Columnas Equilibradas) -->
             <div class="cert-footer">
               <div class="cert-firma">
                 <div class="linea-firma"></div>
@@ -327,7 +333,6 @@
                 <p>Tercer Grado</p>
               </div>
             </div>
-
 
           </div>
         </div>
