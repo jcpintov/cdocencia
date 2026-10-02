@@ -1,6 +1,3 @@
-<!-- ==========================================================================
-     1. index.html
-     ========================================================================== -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -58,7 +55,7 @@
     </div>
   </main>
 
-  <!-- MODAL SIGILO (TÍTULO CENTRADO) -->
+  <!-- MODAL SIGILO -->
   <div id="modalSigilo" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalSigilo')">
     <div class="modal-content">
       <h2 style="color: var(--accent-gold); margin-bottom: 14px; text-align: center;">Advertencia y Condiciones de Uso</h2>
@@ -71,33 +68,49 @@
     </div>
   </div>
 
-  <!-- PANTALLA INTERMEDIA: BIENVENIDA Y CUADRÍCULA DE TRABAJOS -->
-  <main id="seccionBienvenida" class="bienvenida-container hidden">
-    <div class="bienvenida-hero card card-trazado">
+  <!-- PANTALLA 2: BIENVENIDA LIMPIA Y SOBRIA (SOLO SALUDO Y BOTÓN) -->
+  <main id="seccionBienvenida" class="login-wrapper hidden">
+    <div class="card card-trazado" style="text-align: center; padding: 44px 30px;">
       <div class="insignia-centro-wrapper">
         <img src="https://cmaestros.ofl.cl/imgs/escuadra.png" class="img-escuadra-discreta" alt="Escuadra y Compás">
       </div>
-      <h1 id="bienvenidaNombreQH" class="bienvenida-titulo">Bienvenido, Q.·.H.·.</h1>
-      <p class="login-sub" style="margin-bottom: 24px;">
-        Trabajos doctrinales consagrados en la Cámara del Medio.
-      </p>
-      <button class="btn-primary btn-ir-docencia-directo" onclick="entrarDirectoAlUltimoTrabajo()">
-        🏛️ Ir a Docencia
+      <h1 id="bienvenidaNombreQH" style="font-size: 1.75rem; color: var(--primary); margin: 12px 0 24px 0; font-family: var(--font-reading);">
+        Bienvenido, Q.·.H.·.
+      </h1>
+      <button class="btn-primary" style="max-width: 260px; margin: 0 auto; font-size: 1.05rem;" onclick="irACatalogoDocencia()">
+        Ir a Docencia
       </button>
     </div>
+  </main>
 
+  <!-- PANTALLA 3: DESTINO DOCENCIA - CUADRÍCULA DE TRABAJOS -->
+  <main id="seccionCatalogoTrabajos" class="bienvenida-container hidden">
     <div class="seccion-trabajos-header">
-      <h3>Trabajos Disponibles de la Cámara</h3>
-      <span id="bienvenidaContadorModulos" class="badge-contador-temas"></span>
+      <div>
+        <h2 style="font-family: var(--font-reading); color: var(--primary); margin-bottom: 4px;">Trabajos Disponibles de la Cámara</h2>
+        <p style="font-size: 0.9rem; color: var(--text-muted); font-family: var(--font-ui); margin: 0;">Seleccione un trabajo para iniciar o continuar su estudio.</p>
+      </div>
+      <div style="display: flex; gap: 12px; align-items: center;">
+        <span id="catalogoContadorModulos" class="badge-contador-temas"></span>
+        <button class="btn-mis-avances" style="width: auto; padding: 8px 14px;" onclick="abrirModalMisAvances()">
+          📊 Mis Avances
+        </button>
+      </div>
     </div>
 
     <div id="gridTrabajosBienvenida" class="trabajos-grid"></div>
   </main>
 
-  <!-- PANTALLA 2: ENTORNO EXCLUSIVO DE DOCENCIA (PARA HERMANOS REGULARES) -->
+  <!-- PANTALLA 4: ENTORNO DE LECTURA Y EVALUACIÓN DE UN TRABAJO -->
   <div id="seccionDocencia" class="templo-layout hidden">
     <aside class="sidebar-templo">
       <div class="sidebar-box sidebar-avances-box">
+        <button class="btn-mis-avances" onclick="volverACatalogo()">
+          ⬅ Volver a Cuadrícula
+        </button>
+      </div>
+
+      <div class="sidebar-box sidebar-avances-box" style="margin-top: -6px;">
         <button class="btn-mis-avances" onclick="abrirModalMisAvances()">
           📊 Mis Avances y Reportes
         </button>
@@ -226,9 +239,8 @@
     </main>
   </div>
 
-  <!-- PANTALLA 3: ENTORNO EXCLUSIVO DEL SUPERADMIN -->
+  <!-- PANTALLA 5: CONSOLA DEL SUPERADMIN -->
   <div id="seccionAdmin" class="admin-layout hidden">
-    
     <aside class="sidebar-admin">
       <div class="admin-brand">
         <span style="font-size: 1.4rem;">🏛️</span>
@@ -269,7 +281,6 @@
     </aside>
 
     <main class="admin-main-content">
-      
       <!-- SUBSECCIÓN 1: CARGA DE TRABAJOS CON IA -->
       <section id="adminSeccionCarga" class="card card-trazado">
         <div class="admin-card-header">
@@ -313,7 +324,6 @@
         
         <div id="adminStatus" style="margin-top: 14px; text-align: center; font-family: var(--font-ui); font-weight: 600;"></div>
 
-        <!-- CONTINGENCIA SQL INTELIGENTE (8 PREGUNTAS) -->
         <div id="contenedorFallbackSQL" class="hidden" style="margin-top: 24px; padding: 20px; background: var(--card-bg); border: 2px dashed var(--accent-gold); border-radius: 8px;">
           <h4 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">⚡ Contingencia SQL: Inserción Directa</h4>
           <p style="font-size: 0.88rem; color: var(--text-muted); font-family: var(--font-ui); margin-bottom: 12px;">
@@ -324,7 +334,7 @@
         </div>
       </section>
 
-      <!-- SUBSECCIÓN 2: MURO GENERAL DE LA CÁMARA -->
+      <!-- SUBSECCIÓN 2: MURO GENERAL -->
       <section id="adminSeccionMuroGeneral" class="card card-reflexion hidden">
         <div class="admin-card-header">
           <div>
@@ -341,7 +351,7 @@
         </div>
       </section>
 
-      <!-- SUBSECCIÓN 3: MATRIZ DE AVANCE DOCENTE -->
+      <!-- SUBSECCIÓN 3: MATRIZ DE AVANCE -->
       <section id="adminSeccionMetricas" class="card card-reflexion hidden">
         <div class="admin-card-header">
           <div>
@@ -378,7 +388,6 @@
           </table>
         </div>
       </section>
-
     </main>
   </div>
 
@@ -401,7 +410,7 @@
     </div>
   </div>
 
-  <!-- MODAL: AUDITORÍA Y EDICIÓN DE MÓDULOS (SUPERADMIN) -->
+  <!-- MODAL: AUDITORÍA Y EDICIÓN DE MÓDULOS -->
   <div id="modalAuditoriaModulo" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAuditoriaModulo')">
     <div class="modal-content" style="max-width: 820px; max-height: 90vh; overflow-y: auto; text-align: left;">
       <h3 style="color: var(--accent-gold); margin-bottom: 12px; font-family: var(--font-ui);">
@@ -436,7 +445,7 @@
     </div>
   </div>
 
-  <!-- MODAL: GESTIÓN DE MÓDULOS (ELIMINACIÓN CORRELATIVA) -->
+  <!-- MODAL: GESTIÓN DE MÓDULOS -->
   <div id="modalGestionModulos" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalGestionModulos')">
     <div class="modal-content" style="max-width: 720px; text-align: left;">
       <h3 style="color: var(--accent-gold); margin-bottom: 12px; font-family: var(--font-ui);">
@@ -450,7 +459,7 @@
     </div>
   </div>
 
-  <!-- MODAL: MIS AVANCES / FICHA EJECUTIVA EN PDF (CARTA, SOBRIO) -->
+  <!-- MODAL: MIS AVANCES / FICHA EJECUTIVA EN PDF (CARTA LIMPIO) -->
   <div id="modalMisAvances" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalMisAvances')">
     <div class="modal-certificado-wrapper">
       
@@ -463,7 +472,9 @@
         </button>
       </div>
 
+      <!-- CONTENEDOR OPTIMIZADO PARA EXPORTACIÓN IMPRESA Y EN PANTALLA -->
       <div id="documentoInformeAvance" class="informe-carta">
+        
         <div class="informe-header-box">
           <div class="informe-brand">
             <p><strong>PLATAFORMA DE DOCENCIA PARA MAESTROS</strong></p>
@@ -471,7 +482,7 @@
             <p>TALAGANTE</p>
           </div>
           <div class="informe-emblema-wrapper">
-            <img src="https://cmaestros.ofl.cl/imgs/emblema.png" class="img-emblema-discreto" alt="Emblema Oficial OFL 146">
+            <img src="https://cmaestros.ofl.cl/imgs/emblema.png" class="img-emblema-discreto" alt="Emblema OFL 146">
           </div>
           <div class="informe-meta-header">
             <p>INFORME DE PARTICIPACIÓN DOCENTE</p>
@@ -485,22 +496,23 @@
           Se deja constancia que a la fecha, el Q.·.H.·. <strong id="informeNombreHermano">NOMBRE</strong> registra el siguiente avance en los trabajos de la Cámara del Medio:
         </p>
 
-        <div class="informe-kpis-grid">
-          <div class="kpi-card">
+        <!-- KPI Box con Flexbox (evita rotura de layout en html2pdf) -->
+        <div class="informe-kpis-flex">
+          <div class="kpi-card-flex">
             <div class="kpi-valor" id="kpiLecturaPct">0%</div>
             <div class="kpi-label">Lecturas Confirmadas</div>
           </div>
-          <div class="kpi-card">
+          <div class="kpi-card-flex">
             <div class="kpi-valor" id="kpiExamenesAprob">0 / 0</div>
             <div class="kpi-label">Cuestionarios Finalizados</div>
           </div>
-          <div class="kpi-card">
+          <div class="kpi-card-flex">
             <div class="kpi-valor" id="kpiAportesConsag">0</div>
             <div class="kpi-label">Reflexiones Consagradas</div>
           </div>
         </div>
 
-        <h4 style="font-family: var(--font-ui); font-size: 1rem; color: #152433; margin: 20px 0 10px 0;">
+        <h4 style="font-family: var(--font-ui); font-size: 0.95rem; color: #152433; margin: 18px 0 10px 0; text-transform: uppercase; letter-spacing: 0.5px;">
           Detalle de Trabajos y Aportes
         </h4>
         <table class="informe-table">
@@ -515,6 +527,7 @@
           <tbody id="informeDetalleCuerpo"></tbody>
         </table>
 
+        <!-- Certificados Disponibles (Se ocultan al generar el PDF para no ensuciar la hoja) -->
         <div id="seccionCertificadosDisponibles" class="certificados-lista-inline no-print">
           <h4 style="font-family: var(--font-ui); font-size: 0.95rem; margin-bottom: 8px;">
             📜 Certificados Oficiales Disponibles:
@@ -531,10 +544,9 @@
     </div>
   </div>
 
-  <!-- MODAL: CERTIFICADO DE APROBACIÓN CON TIMBRE OFICIAL -->
+  <!-- MODAL: CERTIFICADO OFICIAL A4 -->
   <div id="modalCertificado" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalCertificado')">
     <div class="modal-certificado-wrapper">
-      
       <div class="modal-cert-actions">
         <button class="btn-cert-descargar" onclick="descargarCertificadoPDF()">
           📥 Descargar en PDF
@@ -547,47 +559,37 @@
       <div id="documentoCertificado" class="certificado-a4">
         <div class="cert-borde-exterior">
           <div class="cert-borde-interior">
-            
             <p class="cert-lema">A.·.L.·.G.·.D.·.G.·.A.·.D.·.U.·.</p>
             <h2 class="cert-logia">R.·. L.·. ORESTES FRÖDDEN LORENZEN Nº 146</h2>
             <p class="cert-valle">Valle de Talagante</p>
             <p class="cert-camara">CÁMARA DEL MEDIO — TERCER GRADO</p>
-
             <div class="cert-divider">✦ ✦ ✦</div>
-
             <p class="cert-cuerpo">Se certifica que el Venerable Maestro</p>
             <h3 id="certNombreHermano" class="cert-nombre">Q.·.H.·. NOMBRE DEL HERMANO</h3>
-            
             <p class="cert-cuerpo">
               Ha culminado satisfactoriamente el estudio doctrinal, examen simbólico y consagración de reflexiones correspondientes al trabajo de docencia:
             </p>
-
             <h4 id="certTituloPlancha" class="cert-plancha">"TÍTULO DEL TRABAJO"</h4>
             <p id="certAutorPlancha" class="cert-autor">Autor: Q.·.H.·. Autor</p>
-
             <div class="cert-reflexion-box">
               <p class="cert-reflexion-label">Aporte consagrado en la Cámara:</p>
               <p id="certTextoReflexion" class="cert-reflexion-cita">"..."</p>
             </div>
-
             <div class="cert-footer">
               <div class="cert-firma">
                 <div class="linea-firma"></div>
                 <p>Cámara de Maestros</p>
                 <p id="certFechaEmision">Talagante</p>
               </div>
-
               <div class="cert-timbre-col">
                 <img src="logo.svg" class="timbre-estampa" alt="Timbre R.·.L.·. Orestes Frödden Lorenzen N°146">
               </div>
-
               <div class="cert-firma">
                 <div class="linea-firma"></div>
                 <p>Docencia Masónica</p>
                 <p>Tercer Grado</p>
               </div>
             </div>
-
           </div>
         </div>
       </div>
