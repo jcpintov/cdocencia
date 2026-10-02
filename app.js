@@ -1,6 +1,6 @@
 /* ==========================================================================
-   CONFIGURACIÓN Y VARIABLES GLOBALES
-   ========================================================================== */
+     3. app.js
+     ========================================================================== */
 if (window.pdfjsLib) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 }
@@ -20,14 +20,12 @@ let tamanoBase = 19;
 let indicePreguntaActiva = 0;
 let respuestasMarcadas = {};
 let pdfBase64Cargado = null;
+let moduloAuditando = null;
 
 // Temporizador de inactividad estricto (5 minutos = 300,000 ms)
 let temporizadorInactividad = null;
 const TIEMPO_INACTIVIDAD_MS = 5 * 60 * 1000;
 
-/* ==========================================================================
-   GESTIÓN DE INACTIVIDAD (5 MINUTOS) Y PERSISTENCIA DE SESIÓN
-   ========================================================================== */
 function reiniciarTemporizadorInactividad() {
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
   if (usuarioActual) {
@@ -138,15 +136,101 @@ function configurarEntornoUsuario() {
   if (usuarioActual.es_admin) {
     document.getElementById('seccionAdmin').classList.remove('hidden');
     document.getElementById('seccionDocencia').classList.add('hidden');
+    document.getElementById('seccionBienvenida').classList.add('hidden');
     cargarDatosAdmin();
   } else {
     document.getElementById('modalSigilo').classList.remove('hidden');
   }
 }
 
-function aceptarSigilo() {
+async function aceptarSigilo() {
   document.getElementById('modalSigilo').classList.add('hidden');
-  cargarTodosLosModulos();
+  await renderizarPantallaBienvenida();
+}
+
+async function renderizarPantallaBienvenida() {
+  const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
+  document.getElementById('bienvenidaNombreQH').innerText = `Bienvenido, Q.·.H.·. ${nombreLimpio}`;
+
+  const { data: dataModulos, error } = await sbApp
+    .from('modulos')
+    .select('*')
+    .eq('activo', true)
+    .order('numero_orden', { ascending: false });
+
+  if (error || !dataModulos) return;
+
+  await refrescarProgresosUsuario();
+
+  // Partición: No leídos más nuevos primero; leídos concluyendo en el más antiguo
+  const noLeidos = [];
+  const leidos = [];
+
+  dataModulos.forEach(m => {
+    const prog = misProgresos[m.id];
+    if (prog && prog.leido) {
+      leidos.push(m);
+    } else {
+      noLeidos.push(m);
+    }
+  });
+
+  leidos.sort((a, b) => a.numero_orden - b.numero_orden);
+  listaModulos = [...noLeidos, ...leidos];
+
+  document.getElementById('bienvenidaContadorModulos').innerText = `${listaModulos.length} temas disponibles`;
+
+  const grid = document.getElementById('gridTrabajosBienvenida');
+  grid.innerHTML = "";
+
+  listaModulos.forEach(m => {
+    const prog = misProgresos[m.id];
+    let badgeHtml = `<span class="badge-estado badge-pen">Pendiente</span>`;
+    if (prog && prog.completado) {
+      badgeHtml = `<span class="badge-estado badge-ok">✓ Completado</span>`;
+    } else if (prog && prog.leido) {
+      badgeHtml = `<span class="badge-estado" style="background:#FEF3C7;color:#92400E;">En Curso</span>`;
+    }
+
+    const fechaCreacion = m.creado_en 
+      ? new Date(m.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      : "Consagrado";
+
+    grid.innerHTML += `
+      <div class="card-trabajo-grid">
+        <div>
+          <div class="grid-card-meta">
+            <span class="grid-card-orden">Trabajo N° ${m.numero_orden}</span>
+            <span>📅 ${fechaCreacion}</span>
+          </div>
+          <h4 class="grid-card-titulo">${m.titulo}</h4>
+          <p class="grid-card-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara del Medio"}</p>
+        </div>
+        <div class="grid-card-footer">
+          ${badgeHtml}
+          <button class="btn-grid-ir" onclick="entrarADocenciaConModulo('${m.id}')">
+            Ir ➔
+          </button>
+        </div>
+      </div>
+    `;
+  });
+
+  document.getElementById('seccionBienvenida').classList.remove('hidden');
+}
+
+function entrarDirectoAlUltimoTrabajo() {
+  if (listaModulos.length > 0) {
+    entrarADocenciaConModulo(listaModulos[0].id);
+  }
+}
+
+function entrarADocenciaConModulo(idModulo) {
+  document.getElementById('seccionBienvenida').classList.add('hidden');
+  document.getElementById('seccionDocencia').classList.remove('hidden');
+  document.getElementById('contadorModulos').innerText = `${listaModulos.length} temas`;
+  renderizarSidebar();
+  seleccionarModulo(idModulo);
 }
 
 function cerrarSesion() {
@@ -158,11 +242,13 @@ function cerrarSesion() {
   sessionStorage.removeItem('camara_usuario_sesion');
 
   document.getElementById('seccionDocencia').classList.add('hidden');
+  document.getElementById('seccionBienvenida').classList.add('hidden');
   document.getElementById('seccionAdmin').classList.add('hidden');
   document.getElementById('modalSigilo').classList.add('hidden');
   document.getElementById('modalMisAvances').classList.add('hidden');
   document.getElementById('modalCertificado').classList.add('hidden');
   document.getElementById('modalVerReflexion').classList.add('hidden');
+  document.getElementById('modalAuditoriaModulo').classList.add('hidden');
   document.getElementById('btnSalir').classList.add('hidden');
   document.getElementById('seccionLogin').classList.remove('hidden');
   document.getElementById('inputEmail').value = '';
@@ -227,28 +313,6 @@ async function cargarDatosAdmin() {
 /* ==========================================================================
    ENTORNO DOCENTE PARA HERMANOS
    ========================================================================== */
-async function cargarTodosLosModulos() {
-  document.getElementById('seccionDocencia').classList.remove('hidden');
-
-  const { data: dataModulos, error } = await sbApp
-    .from('modulos')
-    .select('*')
-    .eq('activo', true)
-    .order('numero_orden', { ascending: true });
-
-  if (error || !dataModulos || dataModulos.length === 0) {
-    document.getElementById('temaTitulo').innerText = "No hay trabajos consagrados actualmente.";
-    return;
-  }
-
-  listaModulos = dataModulos;
-  document.getElementById('contadorModulos').innerText = `${listaModulos.length} temas`;
-
-  await refrescarProgresosUsuario();
-  renderizarSidebar();
-  seleccionarModulo(listaModulos[0].id);
-}
-
 async function refrescarProgresosUsuario() {
   const { data: dataProgreso } = await sbApp
     .from('progreso_maestro')
@@ -351,7 +415,7 @@ function cambiarVistaDocencia(tipo) {
 }
 
 /* ==========================================================================
-   FLUJO SECUENCIAL CON BOTONES EXPRESOS
+   FLUJO SECUENCIAL DE FASES CON BOTONES EXPRESOS
    ========================================================================== */
 async function evaluarEstadoFasesModulo() {
   const prog = misProgresos[moduloActual.id];
@@ -413,7 +477,9 @@ async function confirmarLecturaFaseUno() {
       await sbApp.from('progreso_maestro').insert({
         usuario_id: usuarioActual.id,
         modulo_id: moduloActual.id,
-        leido: true
+        leido: true,
+        reflexion: "",
+        completado: false
       });
     }
 
@@ -433,6 +499,9 @@ async function confirmarLecturaFaseUno() {
   }
 }
 
+/* ==========================================================================
+   FASE II: CUESTIONARIO PEDAGÓGICO DE 8 PREGUNTAS
+   ========================================================================== */
 function inicializarCuestionarioPasoAPaso() {
   respuestasMarcadas = {};
   indicePreguntaActiva = 0;
@@ -455,6 +524,7 @@ function renderizarPreguntaActual() {
 
   const p = preguntas[indicePreguntaActiva];
   const total = preguntas.length;
+  const esPreguntaEtica = (indicePreguntaActiva === total - 1);
 
   let opcionesHtml = p.opciones.map(op => `
     <label class="opcion-label" id="label_paso_${op.letra}" onclick="evaluarRespuestaPasoAPaso('${op.letra}', '${p.respuesta_correcta}')">
@@ -463,10 +533,14 @@ function renderizarPreguntaActual() {
     </label>
   `).join('');
 
+  const etiquetaPregunta = esPreguntaEtica 
+    ? `Pregunta 8 de ${total} — Dilema e Interrogante Ética`
+    : `Pregunta ${indicePreguntaActiva + 1} de ${total}`;
+
   cont.innerHTML = `
-    <div class="pregunta-paso-card">
+    <div class="pregunta-paso-card" style="${esPreguntaEtica ? 'border-left-color: var(--accent-gold); background: rgba(153,120,57,0.06);' : ''}">
       <p style="font-size: 0.85rem; font-weight: 700; color: var(--accent-gold-dark); text-transform: uppercase; margin-bottom: 6px;">
-        Pregunta ${indicePreguntaActiva + 1} de ${total}
+        ${etiquetaPregunta}
       </p>
       <p style="font-weight: 600; margin-bottom: 14px;">${p.enunciado}</p>
       ${opcionesHtml}
@@ -502,7 +576,7 @@ function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
 
   feedbackBox.style.display = "block";
 
-  const totalPreguntas = moduloActual.preguntas_json?.preguntas?.length || 6;
+  const totalPreguntas = moduloActual.preguntas_json?.preguntas?.length || 8;
   if (indicePreguntaActiva < totalPreguntas - 1) {
     document.getElementById('btnSiguientePregunta').classList.remove('hidden');
   } else {
@@ -516,6 +590,10 @@ function avanzarSiguientePregunta() {
 }
 
 async function finalizarCuestionarioFaseDos() {
+  const btnFinalizar = document.getElementById('btnFinalizarCuestionario');
+  btnFinalizar.disabled = true;
+  btnFinalizar.innerText = "Registrando respuestas...";
+
   try {
     const { data: existente } = await sbApp
       .from('progreso_maestro')
@@ -526,7 +604,8 @@ async function finalizarCuestionarioFaseDos() {
 
     const payload = {
       respuestas_evaluacion: respuestasMarcadas,
-      intentos_preguntas: Object.keys(respuestasMarcadas).length
+      intentos_preguntas: Object.keys(respuestasMarcadas).length,
+      leido: true
     };
 
     if (existente) {
@@ -535,18 +614,36 @@ async function finalizarCuestionarioFaseDos() {
       await sbApp.from('progreso_maestro').insert({
         usuario_id: usuarioActual.id,
         modulo_id: moduloActual.id,
-        leido: true,
+        reflexion: "",
+        completado: false,
         ...payload
       });
     }
-  } catch (e) {
-    console.warn("Registro respuestas:", e);
-  }
 
-  document.getElementById('bloqueFaseDos').classList.add('hidden');
-  const faseTres = document.getElementById('bloqueFaseTres');
-  faseTres.classList.remove('hidden');
-  faseTres.scrollIntoView({ behavior: 'smooth' });
+    await refrescarProgresosUsuario();
+    renderizarSidebar();
+
+    document.getElementById('bloqueFaseDos').classList.add('hidden');
+    
+    const faseTres = document.getElementById('bloqueFaseTres');
+    const bloqueMuro = document.getElementById('bloqueMuro');
+    const btnConsagrar = document.getElementById('btnConsagrarReflexion');
+    const txtReflexion = document.getElementById('textoReflexion');
+
+    faseTres.classList.remove('hidden');
+    bloqueMuro.classList.add('hidden');
+    btnConsagrar.classList.remove('hidden');
+    btnConsagrar.innerText = "Enviar Reflexión y Desbloquear Muro";
+    txtReflexion.disabled = false;
+    txtReflexion.value = "";
+
+    faseTres.scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    alert("Error al registrar respuestas: " + e.message);
+  } finally {
+    btnFinalizar.disabled = false;
+    btnFinalizar.innerText = "Finalizar";
+  }
 }
 
 /* ==========================================================================
@@ -565,7 +662,7 @@ async function guardarReflexionYCompletar() {
   const cant = texto === "" ? 0 : texto.split(/\s+/).length;
 
   if (cant < 15) {
-    alert("Q.H., favor expanda su reflexión.");
+    alert("Q.·.H.·., favor expanda su reflexión (mínimo 15 palabras).");
     return;
   }
   if (cant > 200) {
@@ -606,7 +703,7 @@ async function guardarReflexionYCompletar() {
     return;
   }
 
-  alert("Módulo completado con éxito. Se ha desbloqueado el Muro de Reflexiones y su Certificado.");
+  alert("Módulo completado con éxito. Se ha desbloqueado el Muro de Reflexiones y su Certificado Oficial.");
   await refrescarProgresosUsuario();
   renderizarSidebar();
   await evaluarEstadoFasesModulo();
@@ -652,9 +749,6 @@ async function cargarMuroReflexiones() {
   }
 }
 
-/* ==========================================================================
-   MODAL ELEGANTE DE LECTURA DE REFLEXIÓN (SUSTITUTO DE ALERT)
-   ========================================================================== */
 function abrirModalReflexionElegante(autor, texto) {
   document.getElementById('modalReflexionAutor').innerText = `Reflexión de ${autor}`;
   document.getElementById('modalReflexionTexto').innerText = `"${texto}"`;
@@ -662,7 +756,7 @@ function abrirModalReflexionElegante(autor, texto) {
 }
 
 /* ==========================================================================
-   SECCIÓN "MIS AVANCES" Y FICHA EJECUTIVA EN PDF (CARTA, SOBRIO)
+   MIS AVANCES Y REPORTES EN PDF
    ========================================================================== */
 async function abrirModalMisAvances(usuarioObjetivoId = null) {
   const idTarget = usuarioObjetivoId || usuarioActual.id;
@@ -714,7 +808,7 @@ async function abrirModalMisAvances(usuarioObjetivoId = null) {
   listaModulos.forEach(m => {
     const p = progMap[m.id];
     const leidoTxt = (p && p.leido) ? "✓ Confirmada" : "—";
-    const examenTxt = (p && p.completado) ? "✓ Finalizado" : (p && p.intentos_preguntas ? `${p.intentos_preguntas}/6` : "—");
+    const examenTxt = (p && p.completado) ? "✓ 8/8 Finalizado" : (p && p.intentos_preguntas ? `${p.intentos_preguntas}/8` : "—");
     const reflexTxt = (p && p.reflexion) ? `"${p.reflexion}"` : "<em>Sin aporte consagrado</em>";
 
     tablaCuerpo.innerHTML += `
@@ -760,7 +854,7 @@ function descargarInformeAvancePDF() {
 }
 
 /* ==========================================================================
-   CERTIFICADO OFICIAL A4 CON CIERRE SEGURO
+   CERTIFICADO OFICIAL A4
    ========================================================================== */
 async function abrirModalCertificado(moduloId = null, usuarioId = null) {
   const modTarget = moduloId ? listaModulos.find(m => m.id === moduloId) : moduloActual;
@@ -804,7 +898,7 @@ function cerrarModalUniversalDirecto(modalId) {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    ['modalCertificado', 'modalMisAvances', 'modalGestionModulos', 'modalSigilo', 'modalVerReflexion'].forEach(id => {
+    ['modalCertificado', 'modalMisAvances', 'modalGestionModulos', 'modalSigilo', 'modalVerReflexion', 'modalAuditoriaModulo'].forEach(id => {
       const el = document.getElementById(id);
       if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
     });
@@ -898,22 +992,15 @@ async function eliminarReflexionSuperadmin(progresoId) {
 
   const { error } = await sbApp
     .from('progreso_maestro')
-    .update({ 
-      reflexion: "", 
-      completado: false 
-    })
+    .update({ reflexion: "", completado: false })
     .eq('id', progresoId);
 
-  if (error) {
-    alert("Error al eliminar: " + error.message);
-  } else {
-    alert("Reflexión eliminada con éxito.");
-    cargarMuroGeneralAdmin();
-  }
+  if (error) alert("Error al eliminar: " + error.message);
+  else cargarMuroGeneralAdmin();
 }
 
 /* ==========================================================================
-   MATRIZ DE AVANCE
+   MATRIZ DE AVANCE DOCENTE (8 PREGUNTAS)
    ========================================================================== */
 async function cargarMetricasAvance(moduloId) {
   const tbody = document.getElementById('tablaMetricasBody');
@@ -946,8 +1033,8 @@ async function cargarMetricasAvance(moduloId) {
     let evalHtml = `<span style="color: var(--text-muted);">Sin intentos</span>`;
     if (prog) {
       const resp = prog.respuestas_evaluacion ? Object.keys(prog.respuestas_evaluacion).length : (prog.intentos_preguntas || 0);
-      if (resp >= 6) evalHtml = `<span style="color: var(--success); font-weight: 600;">✓ 6/6 Finalizado</span>`;
-      else if (resp > 0) evalHtml = `<span style="color: #B27B10; font-weight: 600;">En curso (${resp}/6)</span>`;
+      if (resp >= 8) evalHtml = `<span style="color: var(--success); font-weight: 600;">✓ 8/8 Finalizado</span>`;
+      else if (resp > 0) evalHtml = `<span style="color: #B27B10; font-weight: 600;">En curso (${resp}/8)</span>`;
     }
 
     let reflexHtml = `<span style="color: var(--text-muted);">Pendiente</span>`;
@@ -988,7 +1075,7 @@ function recargarMetricasActuales() {
 }
 
 /* ==========================================================================
-   GESTIÓN DE MÓDULOS (ELIMINACIÓN CORRELATIVA)
+   AUDITORÍA, EDICIÓN Y GESTIÓN DE MÓDULOS (SUPERADMIN)
    ========================================================================== */
 function abrirModalGestionModulos() {
   const cont = document.getElementById('listaGestionModulos');
@@ -996,11 +1083,15 @@ function abrirModalGestionModulos() {
 
   listaModulos.forEach(m => {
     cont.innerHTML += `
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color);">
-        <span><strong>N° ${m.numero_orden}:</strong> ${m.titulo}</span>
-        <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarModuloYReordenar('${m.id}')">
-          🗑️ Eliminar
-        </button>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border-color);">
+        <div style="flex: 1;">
+          <strong>N° ${m.numero_orden}:</strong> ${m.titulo}
+          <div style="font-size: 0.8rem; color: var(--text-muted);">${m.autor || "Cámara del Medio"}</div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="admin-link-btn" onclick="abrirAuditoriaModulo('${m.id}')">🔍 Auditar / Editar</button>
+          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarModuloYReordenar('${m.id}')">🗑️ Eliminar</button>
+        </div>
       </div>
     `;
   });
@@ -1010,6 +1101,64 @@ function abrirModalGestionModulos() {
 
 function cerrarModalGestionModulos() {
   document.getElementById('modalGestionModulos').classList.add('hidden');
+}
+
+function abrirAuditoriaModulo(moduloId) {
+  moduloAuditando = listaModulos.find(m => m.id === moduloId);
+  if (!moduloAuditando) return;
+
+  document.getElementById('editModTitulo').value = moduloAuditando.titulo;
+  document.getElementById('editModAutor').value = moduloAuditando.autor || "";
+  document.getElementById('editModTexto').value = moduloAuditando.contenido_trazado || "";
+
+  const contPreguntas = document.getElementById('cuerpoPreguntasAuditoria');
+  contPreguntas.innerHTML = "";
+
+  const preguntas = moduloAuditando.preguntas_json?.preguntas || [];
+  preguntas.forEach((p, idx) => {
+    const esEtica = (idx === preguntas.length - 1);
+    let opcionesTxt = p.opciones.map(o => `<div>• <strong>${o.letra})</strong> ${o.texto}</div>`).join('');
+    contPreguntas.innerHTML += `
+      <div style="padding: 12px; margin-bottom: 12px; background: rgba(0,0,0,0.03); border-left: 3px solid ${esEtica ? 'var(--accent-gold)' : 'var(--primary)'};">
+        <p><strong>${esEtica ? 'Pregunta 8 (Dilema Ético)' : `Pregunta ${p.numero}`}:</strong> ${p.enunciado}</p>
+        <div style="margin: 8px 0;">${opcionesTxt}</div>
+        <p style="color: var(--success); font-weight: 600;">Respuesta Correcta: ${p.respuesta_correcta}</p>
+        <p style="font-style: italic; color: var(--text-muted);">Retroalimentación: ${p.retroalimentacion}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById('modalAuditoriaModulo').classList.remove('hidden');
+}
+
+async function guardarEdicionModuloAdmin() {
+  if (!moduloAuditando) return;
+
+  const nuevoTitulo = document.getElementById('editModTitulo').value.trim();
+  const nuevoAutor = document.getElementById('editModAutor').value.trim();
+  const nuevoTexto = document.getElementById('editModTexto').value.trim();
+
+  if (!nuevoTitulo || !nuevoTexto) {
+    alert("El título y el texto no pueden quedar vacíos.");
+    return;
+  }
+
+  const { error } = await sbApp
+    .from('modulos')
+    .update({
+      titulo: nuevoTitulo,
+      autor: nuevoAutor,
+      contenido_trazado: nuevoTexto
+    })
+    .eq('id', moduloAuditando.id);
+
+  if (error) {
+    alert("Error al actualizar trabajo: " + error.message);
+  } else {
+    alert("Trabajo actualizado con éxito en la Cámara.");
+    cerrarModalUniversalDirecto('modalAuditoriaModulo');
+    await cargarDatosAdmin();
+  }
 }
 
 async function eliminarModuloYReordenar(moduloId) {
@@ -1055,7 +1204,7 @@ async function exportarRespaldoCompletoJSON() {
 }
 
 /* ==========================================================================
-   CARGA PURA Y GENERADOR CON LLAVE BLINDADA Y FALLBACK SQL
+   CARGA PURA Y GENERADOR CON LLAVE BLINDADA Y CONTINGENCIA SQL (8 PREGUNTAS)
    ========================================================================== */
 function formatearAutorMasonico(nombreCrudo) {
   if (!nombreCrudo) return 'Cámara del Medio';
@@ -1158,7 +1307,7 @@ function generarSQLContingencia(orden, titulo, autor, texto) {
   const tituloEscapado = titulo.replace(/'/g, "''");
   const autorEscapado = autor.replace(/'/g, "''");
 
-  return `-- CONSULTA SQL DE INSERCIÓN DIRECTA
+  return `-- CONSULTA SQL DE INSERCIÓN DIRECTA (8 PREGUNTAS)
 INSERT INTO modulos (
   numero_orden,
   titulo,
@@ -1173,80 +1322,104 @@ INSERT INTO modulos (
   '${tituloEscapado}',
   '${autorEscapado}',
   '${textoEscapado}',
-  'Resumen formativo correspondiente a la instrucción del Tercer Grado.',
-  'Reflexión sobre las virtudes del Tercer Grado correspondiente a esta plancha.',
+  'Resumen formativo correspondiente a la instrucción del Tercer Grado según el programa de docencia.',
+  'Reflexión sobre las virtudes del Tercer Grado correspondiente a esta pieza de arquitectura.',
   '{"preguntas": [
     {
       "numero": 1,
-      "enunciado": "¿Cuál es la enseñanza central transmitida en esta plancha de instrucción?",
+      "enunciado": "¿Cuál es la enseñanza doctrinal central expuesta en este trazado de instrucción?",
       "opciones": [
-        {"letra": "A", "texto": "La observancia rigurosa de los deberes y virtudes del Tercer Grado."},
+        {"letra": "A", "texto": "La observancia rigurosa de los deberes, símbolos y virtudes del Tercer Grado."},
         {"letra": "B", "texto": "La asimilación meramente formal del ritual sin compromiso moral."},
-        {"letra": "C", "texto": "La subordinación jerárquica sin juicio reflexivo."},
-        {"letra": "D", "texto": "La divulgación externa de los secretos de la Orden."}
+        {"letra": "C", "texto": "La subordinación dogmática sin juicio reflexivo."},
+        {"letra": "D", "texto": "La divulgación externa de los secretos de la Maestría."}
       ],
       "respuesta_correcta": "A",
-      "retroalimentacion": "La docencia de la Cámara exige encarnar conscientemente los deberes éticos asumidos sobre el Ara."
+      "retroalimentacion": "La docencia de la Cámara exige encarnar conscientemente los principios asumidos sobre el Ara."
     },
     {
       "numero": 2,
-      "enunciado": "¿Qué actitud debe guardar el Maestro frente a los compromisos de honor?",
+      "enunciado": "¿Qué actitud debe guardar el Maestro frente a los compromisos de honor asumidos?",
       "opciones": [
-        {"letra": "A", "texto": "Mantener fidelidad inquebrantable a la palabra empeñada."},
-        {"letra": "B", "texto": "Relativizarlos según la conveniencia de las circunstancias."},
-        {"letra": "C", "texto": "Supeditar su honor al escrutinio del mundo profano."},
-        {"letra": "D", "texto": "Delegar su cumplimiento en los demás Hermanos."}
+        {"letra": "A", "texto": "Mantener fidelidad inquebrantable a la palabra empeñada en toda circunstancia."},
+        {"letra": "B", "texto": "Relativizarlos según la conveniencia de los momentos profanos."},
+        {"letra": "C", "texto": "Supeditar su honor al juicio de las mayorías externas."},
+        {"letra": "D", "texto": "Delegar su cumplimiento en los demás Hermanos del Taller."}
       ],
       "respuesta_correcta": "A",
-      "retroalimentacion": "El honor personal es el bien inmutable que sustenta el juramento masónico."
+      "retroalimentacion": "El honor personal es el fundamento moral inmutable del Maestro Masón."
     },
     {
       "numero": 3,
-      "enunciado": "¿Cómo se manifiesta la rectitud masónica en los momentos de soledad?",
+      "enunciado": "¿Cómo se manifiesta la rectitud masónica en el ejercicio del discernimiento interior?",
       "opciones": [
-        {"letra": "A", "texto": "En obrar con probidad cuando nadie nos vigila y sólo la conciencia testigua."},
-        {"letra": "B", "texto": "En esperar reconocimiento público para actuar con justicia."},
-        {"letra": "C", "texto": "En evitar involucrarse ante injusticias evidentes."},
-        {"letra": "D", "texto": "En buscar la aprobación de la mayoría."}
+        {"letra": "A", "texto": "En obrar con probidad cuando nadie nos observa y sólo la conciencia testigua."},
+        {"letra": "B", "texto": "En esperar reconocimiento público para actuar conforme a la justicia."},
+        {"letra": "C", "texto": "En abstenerse de emitir opinión ante injusticias manifiestas."},
+        {"letra": "D", "texto": "En buscar el aplauso y el prestigio profano."}
       ],
       "respuesta_correcta": "A",
-      "retroalimentacion": "La verdadera maestría se prueba en la rectitud espontánea gobernada por la propia conciencia."
+      "retroalimentacion": "La verdadera maestría radica en la rectitud gobernada por la luz de la propia conciencia."
     },
     {
       "numero": 4,
-      "enunciado": "¿Qué deber impone el Tercer Grado respecto al Hermano que se encuentra ausente?",
+      "enunciado": "¿Qué deber fundamental impone el Tercer Grado respecto al Hermano que se encuentra ausente?",
       "opciones": [
         {"letra": "A", "texto": "Amparar su buen nombre y no tolerar difamaciones ni juicios sumarios."},
-        {"letra": "B", "texto": "Asumir que su silencio equivale a desinterés en el Taller."},
-        {"letra": "C", "texto": "Comentar libremente sus dificultades con terceros."},
-        {"letra": "D", "texto": "Imponerle sanciones inmediatas."}
+        {"letra": "B", "texto": "Asumir que su ausencia equivale a desinterés institucional."},
+        {"letra": "C", "texto": "Comentar sus dificultades privadas con terceros profanos."},
+        {"letra": "D", "texto": "Imponerle sanciones inmediatas sin fraternal indagación."}
       ],
       "respuesta_correcta": "A",
-      "retroalimentacion": "El amparo al ausente es una de las cláusulas más solemnes y protectoras de la fraternidad."
+      "retroalimentacion": "El amparo al Hermano ausente es uno de los compromisos más solemnes de la fraternidad."
     },
     {
       "numero": 5,
-      "enunciado": "¿Cuál es el propósito del examen de las herramientas y símbolos en la maestría?",
+      "enunciado": "¿Cuál es el propósito del examen de las herramientas simbólicas en la Cámara del Medio?",
       "opciones": [
-        {"letra": "A", "texto": "Transformar la especulación intelectual en conducta viva y coherencia moral."},
-        {"letra": "B", "texto": "Aprender de memoria fórmulas sin aplicación cotidiana."},
-        {"letra": "C", "texto": "Establecer privilegios sobre los grados precedentes."},
-        {"letra": "D", "texto": "Obtener jerarquía administrativa."}
+        {"letra": "A", "texto": "Transformar la alegoría intelectual en conducta viva y coherencia moral cotidiana."},
+        {"letra": "B", "texto": "Aprender de memoria definiciones mecánicas sin aplicación real."},
+        {"letra": "C", "texto": "Establecer privilegios jerárquicos sobre los grados precedentes."},
+        {"letra": "D", "texto": "Obtener ventajas personales en las asambleas logiales."}
       ],
       "respuesta_correcta": "A",
-      "retroalimentacion": "Las herramientas del arte son guías de rectitud práctica para la vida profana y logial."
+      "retroalimentacion": "Los símbolos son herramientas activas de construcción moral para la vida entera."
     },
     {
       "numero": 6,
-      "enunciado": "¿Qué virtud permite transformar el celo y el fervor en una obra perdurable?",
+      "enunciado": "¿Qué virtud permite transformar el celo masónico en una obra sólida y perdurable?",
       "opciones": [
-        {"letra": "A", "texto": "La constancia perseverante a lo largo del tiempo."},
-        {"letra": "B", "texto": "El entusiasmo efímero durante las ceremonias."},
-        {"letra": "C", "texto": "La elocuencia discursiva entre columnas."},
-        {"letra": "D", "texto": "La ambición de cargos en el Cuadro Lógico."}
+        {"letra": "A", "texto": "La constancia perseverante frente a las adversidades del tiempo."},
+        {"letra": "B", "texto": "El entusiasmo efímero limitado únicamente a las tenidas."},
+        {"letra": "C", "texto": "La elocuencia discursiva desvinculada de la acción práctica."},
+        {"letra": "D", "texto": "La búsqueda acelerada de cargos administrativos."}
       ],
       "respuesta_correcta": "A",
-      "retroalimentacion": "Como la gota constante que labra la roca, la constancia consolida el perfeccionamiento moral."
+      "retroalimentacion": "La constancia serena es la fuerza constructora que labra y consolida la obra de la Maestría."
+    },
+    {
+      "numero": 7,
+      "enunciado": "¿Cómo contribuye el Maestro Masón al equilibrio y la armonía entre columnas?",
+      "opciones": [
+        {"letra": "A", "texto": "Aportando serenidad, espíritu de concordia y rectitud fraterna en los debates."},
+        {"letra": "B", "texto": "Fomentando discrepancias personales que fracturen los lazos de la Cámara."},
+        {"letra": "C", "texto": "Mostrando indiferencia frente a los conflictos entre Hermanos."},
+        {"letra": "D", "texto": "Imponiendo puntos de vista por la fuerza de la jerarquía."}
+      ],
+      "respuesta_correcta": "A",
+      "retroalimentacion": "El Maestro está llamado a ser centro de unión y pilar de concordia en el Taller."
+    },
+    {
+      "numero": 8,
+      "enunciado": "Interrogante Ética: Frente a un dilema donde la conveniencia personal o profana contradice el deber masónico jurado, ¿cuál es la conducta que consagra la verdadera Maestría?",
+      "opciones": [
+        {"letra": "A", "texto": "Sostener la verdad, la probidad y la rectitud moral, asumiendo las consecuencias éticas con templanza y lealtad."},
+        {"letra": "B", "texto": "Transigir moralmente para evitar controversias profanas o costos personales."},
+        {"letra": "C", "texto": "Delegar la decisión ética en el criterio de terceros sin escuchar la propia conciencia."},
+        {"letra": "D", "texto": "Justificar la transgresión bajo el pretexto de circunstancias excepcionales."}
+      ],
+      "respuesta_correcta": "A",
+      "retroalimentacion": "La Maestría Masónica se valida cuando el deber ético y el honor prevalecen sobre cualquier cálculo profano."
     }
   ]}',
   true
@@ -1257,7 +1430,7 @@ function copiarSQLFallback() {
   const area = document.getElementById('sqlFallbackArea');
   area.select();
   navigator.clipboard.writeText(area.value).then(() => {
-    alert("Consulta SQL copiada al portapapeles. Péguela en el SQL Editor de Supabase.");
+    alert("Consulta SQL de 8 preguntas copiada al portapapeles. Péguela en el SQL Editor de Supabase.");
   });
 }
 
@@ -1292,11 +1465,11 @@ async function generarModuloConIA() {
   }
 
   fallbackBox.classList.add('hidden');
-  status.innerHTML = "<em>Recuperando credencial protegida y procesando con Gemini...</em>";
+  status.innerHTML = "<em>Procesando trazado con Gemini (batería de 8 preguntas con dilema ético)...</em>";
 
   const apiKey = await obtenerGeminiKeySegura();
   if (!apiKey) {
-    status.innerHTML = `<span style="color: var(--error);">No se encontró la credencial protegida en la base de datos. Se activó la contingencia SQL.</span>`;
+    status.innerHTML = `<span style="color: var(--error);">No se encontró la credencial protegida en Supabase. Se activó la contingencia SQL.</span>`;
     fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
     fallbackBox.classList.remove('hidden');
     return;
@@ -1304,19 +1477,22 @@ async function generarModuloConIA() {
 
   const promptSistema = `
 Eres un pedagogo e instructor especializado en la Cámara del Medio (Tercer Grado de la Masonería).
-Analiza el siguiente trazado masónico depurado. Enfócate en el contenido ético, deberes, símbolos y virtudes del Tercer Grado.
+Analiza el siguiente trazado doctrinal depurado, teniendo en cuenta el programa de docencia, el cuaderno de instrucción y los deberes y virtudes del Tercer Grado.
 
 Genera exactamente:
-1. "resumen_formativo": Síntesis sobria de las ideas doctrinales centrales (máximo 150 palabras).
-2. "conclusion_enlace": Una reflexión armónica que enlace los deberes y virtudes expuestas (120-180 palabras).
-3. "preguntas": Arreglo de exactamente 6 preguntas pedagógicas de selección múltiple sobre los conceptos del trazado. Cada pregunta debe contener:
-   - "numero": (1 a 6)
+1. "resumen_formativo": Síntesis sobria de las enseñanzas doctrinales centrales (máximo 150 palabras).
+2. "conclusion_enlace": Reflexión que conecte las virtudes expuestas con la práctica de la Maestría (120-180 palabras).
+3. "preguntas": Arreglo de exactamente 8 preguntas pedagógicas de selección múltiple sobre los conceptos del trazado:
+   - Preguntas 1 a 7: Evaluación formativa de conceptos simbólicos, doctrinales y rituales del trabajo.
+   - Pregunta 8 (OBLIGATORIA): Una pregunta o dilema ético profundo que interpele directamente la conciencia del Maestro Masón, cuya respuesta correcta y retroalimentación sirvan de puente formativo para su reflexión personal.
+   Cada una de las 8 preguntas debe incluir:
+   - "numero": (1 a 8)
    - "enunciado": Texto claro y reflexivo.
-   - "opciones": 4 opciones con campos "letra" (A, B, C, D) y "texto".
+   - "opciones": 4 alternativas ("letra": "A","B","C","D" y "texto").
    - "respuesta_correcta": Letra de la opción verdadera.
-   - "retroalimentacion": Breve explicación fraterna y docente de por qué esa es la respuesta.
+   - "retroalimentacion": Justificación fraterna, ética y docente.
 
-REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto previo ni posterior, cumpliendo esta estructura:
+REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto adicional:
 {
   "resumen_formativo": "...",
   "conclusion_enlace": "...",
@@ -1353,7 +1529,7 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
     const data = await respuesta.json();
 
     if (data.error) {
-      status.innerHTML = `<span style="color: var(--error);">Error de API (${data.error.message}). Se generó la contingencia SQL directa.</span>`;
+      status.innerHTML = `<span style="color: var(--error);">Error API: ${data.error.message}. Se generó la consulta SQL de respaldo.</span>`;
       fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
       fallbackBox.classList.remove('hidden');
       return;
@@ -1378,11 +1554,11 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
     if (error) {
       status.innerText = "Error BD: " + error.message;
     } else {
-      status.innerHTML = `<span style="color: var(--success);">¡Trabajo procesado y consagrado con éxito!</span>`;
+      status.innerHTML = `<span style="color: var(--success);">¡Trabajo consagrado con éxito con su batería de 8 preguntas!</span>`;
       cargarDatosAdmin();
     }
   } catch (err) {
-    status.innerHTML = `<span style="color: var(--error);">Error en el canal de IA: ${err.message}. Se activó la contingencia SQL.</span>`;
+    status.innerHTML = `<span style="color: var(--error);">Error en procesamiento: ${err.message}. Se activó la contingencia SQL.</span>`;
     fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
     fallbackBox.classList.remove('hidden');
   }
