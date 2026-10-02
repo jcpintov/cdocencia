@@ -69,6 +69,28 @@ body {
   -moz-user-select: none;
 }
 
+/* FORMATO JERÁRQUICO DE LECTURA Y PÁRRAFOS */
+.trazado-parrafo {
+  margin-bottom: 1.4em;
+  text-align: justify;
+  line-height: 1.85;
+}
+
+.trazado-subtitulo {
+  font-family: var(--font-reading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--accent-gold-dark);
+  margin-top: 1.8em;
+  margin-bottom: 0.8em;
+  line-height: 1.4;
+  border-bottom: 1px dashed var(--accent-gold);
+  padding-bottom: 4px;
+}
+body.theme-nocturno .trazado-subtitulo {
+  color: var(--accent-gold);
+}
+
 header {
   background: var(--primary);
   color: #FFFFFF;
@@ -939,6 +961,164 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   font-family: var(--font-ui);
 }
 
+/* ==========================================================================
+   CÁMARA INTERACTIVA PRESENCIAL: ESTILOS Y TABLERO DE PUNTOS
+   ========================================================================== */
+.presencial-config-panel {
+  background: rgba(0,0,0,0.02);
+  border: 1px solid var(--border-color);
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.presencial-asistentes-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  padding: 10px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.asistente-check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  font-family: var(--font-ui);
+  cursor: pointer;
+}
+
+.dinamica-envivo-box {
+  margin-top: 24px;
+}
+
+.dinamica-titulo-card {
+  background: var(--primary);
+  color: #FFFFFF;
+  padding: 14px 20px;
+  border-radius: 8px 8px 0 0;
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 1.15rem;
+  border-bottom: 3px solid var(--accent-gold);
+}
+
+.dinamica-dilema-card {
+  background: var(--gold-light);
+  border-left: 4px solid var(--accent-gold);
+  border-right: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: 22px;
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text-main);
+  margin-bottom: 22px;
+}
+
+.mesas-trabajo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.mesa-card {
+  background: var(--card-bg);
+  border: 2px solid var(--border-color);
+  border-top: 5px solid var(--accent-gold);
+  border-radius: 8px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+.mesa-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.mesa-puntos-box {
+  background: var(--primary);
+  color: #FFFFFF;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+body.theme-nocturno .mesa-puntos-box {
+  background: #1E293B;
+  color: var(--accent-gold);
+  border: 1px solid var(--accent-gold);
+}
+
+.mesa-asistentes-lista {
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  min-height: 60px;
+}
+
+.mesa-acciones-puntos {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px dashed var(--border-color);
+  padding-top: 12px;
+}
+
+.btn-puntos-fila {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-pt-bono {
+  flex: 1;
+  background: var(--success-light);
+  border: 1px solid var(--success);
+  color: var(--success);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-pt-sancion {
+  flex: 1;
+  background: var(--error-light);
+  border: 1px solid var(--error);
+  color: var(--error);
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 5px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cierre-reglas-fraternales {
+  background: rgba(153, 120, 57, 0.08);
+  border: 1px solid var(--accent-gold);
+  border-radius: 8px;
+  padding: 16px 20px;
+  font-family: var(--font-ui);
+}
+
 /* GESTIÓN DE BLOQUES DE DOCTRINA */
 .bloque-doctrina-card {
   background: var(--card-bg);
@@ -1177,7 +1357,9 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   margin-top: 14px;
 }
 
-/* DIPLOMA A4 */
+/* ==========================================================================
+   DIPLOMA A4: SIMETRÍA EXACTA EN PIE DE FIRMA
+   ========================================================================== */
 #documentoCertificado.certificado-a4 {
   background: #FDFBF7 !important;
   color: #12161A !important;
@@ -1296,25 +1478,41 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
   color: #12161A !important;
 }
 
+/* PIE DE FIRMA: ALINEACIÓN SUPERIOR Y SIMETRÍA */
 #documentoCertificado .cert-footer {
   display: flex !important;
   justify-content: space-between !important;
-  align-items: flex-end !important;
+  align-items: flex-start !important;
   margin-top: 28px !important;
   padding: 0 10px !important;
 }
 
 #documentoCertificado .cert-firma { 
-  width: 200px !important; 
+  width: 240px !important; 
   font-family: var(--font-ui) !important; 
   font-size: 0.85rem !important; 
   color: #2A343D !important;
   text-align: center !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
 }
 
 #documentoCertificado .linea-firma { 
+  width: 100% !important;
   border-top: 1px solid #3B4754 !important; 
   margin-bottom: 8px !important; 
+}
+
+#documentoCertificado .cert-cargo-linea {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+}
+
+#documentoCertificado .cert-fecha-linea {
+  margin: 0 !important;
+  line-height: 1.4 !important;
+  white-space: nowrap !important;
 }
 
 .cert-timbre-col {
@@ -1322,6 +1520,7 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
   justify-content: center !important;
   align-items: center !important;
   flex: 1 !important;
+  margin-top: -10px !important;
 }
 
 .timbre-estampa {
