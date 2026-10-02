@@ -16,7 +16,6 @@
   --success-light: #EBF7EE;
   --error: #8C1C13;
   --error-light: #FDF2F2;
-  --timbre-color: #12161A;
 
   --font-reading: 'Literata', Georgia, serif;
   --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
@@ -34,7 +33,6 @@ body.theme-sepia {
   --accent-gold-dark: #735114;
   --gold-light: #EFE4CA;
   --border-color: #DFD2B5;
-  --timbre-color: #382411;
 }
 
 body.theme-nocturno {
@@ -52,7 +50,6 @@ body.theme-nocturno {
   --success-light: #123020;
   --error: #E55353;
   --error-light: #3A1818;
-  --timbre-color: #12161A;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -126,6 +123,7 @@ header {
 }
 .logout-btn:hover { background: rgba(153,120,57,0.2); }
 
+/* LAYOUT DE DOCENCIA REGULAR */
 .templo-layout {
   display: grid;
   grid-template-columns: 320px 1fr;
@@ -149,6 +147,34 @@ header {
   border-radius: 10px;
   padding: 22px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+}
+
+.sidebar-avances-box {
+  padding: 12px !important;
+  border-color: var(--accent-gold);
+}
+
+.btn-mis-avances {
+  width: 100%;
+  padding: 12px 14px;
+  background: var(--gold-light);
+  border: 2px solid var(--accent-gold);
+  color: var(--accent-gold-dark);
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+}
+body.theme-nocturno .btn-mis-avances { color: var(--accent-gold); }
+.btn-mis-avances:hover {
+  background: var(--accent-gold);
+  color: #FFFFFF;
 }
 
 .sidebar-title {
@@ -179,6 +205,7 @@ body.theme-nocturno #contadorModulos { color: var(--accent-gold); }
   border-color: var(--accent-gold);
   font-family: var(--font-ui);
   font-size: 0.85rem;
+  line-height: 1.6;
 }
 .sidebar-info h4 { color: var(--accent-gold-dark); margin-bottom: 6px; }
 body.theme-nocturno .sidebar-info h4 { color: var(--accent-gold); }
@@ -229,11 +256,27 @@ body.theme-nocturno .badge-pen { background: #222E3A; color: #8C9CAE; }
   padding: 36px;
   box-shadow: 0 4px 14px rgba(0,0,0,0.04);
   margin-bottom: 28px;
+  position: relative;
 }
 
 .card-trazado { border-top: 4px solid var(--accent-gold); }
 .card-reflexion { border-top: 4px solid var(--primary); }
 body.theme-nocturno .card-reflexion { border-top-color: var(--accent-gold); }
+
+/* INSIGNIA ESCUADRA DISCRETA EN MURO Y FASE III */
+.insignia-centro-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.img-escuadra-discreta {
+  height: 65px;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.92;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.25));
+}
 
 .card-fase-header {
   display: flex;
@@ -265,6 +308,13 @@ body.theme-nocturno main h3 { color: #FFFFFF; }
 h1 { font-size: 1.85rem; margin-bottom: 12px; }
 h2 { font-size: 1.45rem; }
 .text-instruccion { color: var(--text-muted); font-family: var(--font-ui); font-size: 0.95rem; margin-bottom: 20px; }
+
+.fase-action-wrapper {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 2px solid var(--border-color);
+  text-align: center;
+}
 
 .doc-actions-bar {
   display: flex;
@@ -332,14 +382,22 @@ body.theme-nocturno .btn-certificado { background: #1C2937; color: #FFFFFF; }
   margin-top: 12px;
 }
 
-.pregunta-card {
-  margin-bottom: 24px;
+/* FLUJO DE PREGUNTAS PASO A PASO */
+.pregunta-paso-card {
   padding: 22px;
   border-left: 4px solid var(--accent-gold);
   background: rgba(0,0,0,0.02);
   border-radius: 0 8px 8px 0;
+  margin-bottom: 20px;
 }
-body.theme-nocturno .pregunta-card { background: #111A22; }
+body.theme-nocturno .pregunta-paso-card { background: #111A22; }
+
+.pregunta-nav-bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 16px;
+}
 
 .opcion-label {
   display: flex;
@@ -400,9 +458,9 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
   background-color: var(--primary);
   color: #FFFFFF;
   font-family: var(--font-ui);
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  padding: 15px 24px;
+  padding: 14px 24px;
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -412,14 +470,13 @@ input:focus, textarea:focus, select:focus { outline: none; border-color: var(--a
 }
 body.theme-nocturno .btn-primary { background-color: var(--accent-gold); color: #0E1318; font-weight: 700; }
 .btn-primary:hover:not(:disabled) { opacity: 0.9; }
-.btn-primary:disabled { background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; }
 
 .btn-secondary {
   background: transparent;
   border: 1px solid var(--accent-gold);
   color: var(--text-main);
   font-family: var(--font-ui);
-  padding: 8px 16px;
+  padding: 10px 18px;
   border-radius: 6px;
   cursor: pointer;
   font-weight: 600;
@@ -446,35 +503,85 @@ body.theme-nocturno .reflexion-item { background: #131B23; border-left-color: va
 .reflexion-autor { font-size: 0.9rem; font-family: var(--font-ui); font-weight: 700; color: var(--accent-gold-dark); margin-bottom: 6px; }
 body.theme-nocturno .reflexion-autor { color: var(--accent-gold); }
 
-.admin-container { max-width: 1050px; margin: 32px auto; padding: 0 20px; }
-
-.admin-subnav {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-  border-bottom: 2px solid var(--border-color);
-  padding-bottom: 12px;
+/* ==========================================================================
+   PANEL SUPERADMIN
+   ========================================================================== */
+.admin-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  min-height: calc(100vh - 75px);
+  width: 100%;
+}
+@media (max-width: 960px) {
+  .admin-layout { grid-template-columns: 1fr; }
 }
 
-.admin-nav-tab {
-  background: var(--card-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
+.sidebar-admin {
+  background: #0D1620;
+  color: #E2E8F0;
+  padding: 24px 18px;
+  display: flex;
+  flex-direction: column;
+  border-right: 3px solid var(--accent-gold);
   font-family: var(--font-ui);
-  font-size: 1rem;
+}
+
+.admin-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.admin-brand h3 { color: #FFFFFF; font-size: 1.1rem; }
+
+.admin-links-top { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.admin-nav-link-ext {
+  display: block;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: #D4AF37;
+  text-decoration: none;
+  font-size: 0.85rem;
   font-weight: 600;
-  padding: 10px 20px;
-  border-radius: 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.admin-nav-link-ext:hover { background: rgba(212,175,55,0.18); border-color: #D4AF37; }
+
+.admin-divider { border: 0; height: 1px; background: rgba(255,255,255,0.15); margin: 12px 0 18px 0; }
+
+.admin-menu-list { display: flex; flex-direction: column; gap: 10px; flex: 1; }
+
+.admin-side-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #A0AEC0;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-align: left;
   cursor: pointer;
   transition: all 0.2s;
 }
-
-.admin-nav-tab.active {
+.admin-side-btn:hover { background: rgba(255,255,255,0.08); color: #FFFFFF; }
+.admin-side-btn.active {
   background: var(--accent-gold);
-  color: #FFFFFF;
-  border-color: var(--accent-gold);
+  color: #0E1318;
+  font-weight: 700;
 }
-body.theme-nocturno .admin-nav-tab.active { color: #0E1318; }
+
+.admin-side-footer { margin-top: auto; padding-top: 20px; }
+
+.admin-main-content {
+  padding: 30px;
+  background: var(--bg-color);
+  overflow-y: auto;
+}
 
 .admin-card-header {
   display: flex;
@@ -526,6 +633,9 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   font-family: var(--font-ui);
 }
 
+/* ==========================================================================
+   MODALES UNIVERSALES
+   ========================================================================== */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -544,22 +654,46 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   max-width: 620px;
   width: 100%;
   padding: 34px;
-  text-align: center;
+}
+
+/* Modal Elegante de Lectura de Reflexión */
+.modal-reflexion-vista {
+  max-width: 680px !important;
+  text-align: left !important;
+}
+
+.modal-reflexion-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+}
+
+.modal-reflexion-cuerpo {
+  font-family: var(--font-reading);
+  font-size: 1.15rem;
+  line-height: 1.8;
+  color: var(--text-main);
+  background: rgba(153, 120, 57, 0.08);
+  border-left: 4px solid var(--accent-gold);
+  padding: 20px 24px;
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  white-space: pre-line;
 }
 
 .modal-certificado-wrapper {
   max-width: 850px;
   width: 100%;
-  max-height: 90vh;
+  max-height: 92vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* ==========================================================================
-   BARRA DE ACCIONES Y BOTONES DEL MODAL CERTIFICADO
-   ========================================================================== */
 .modal-cert-actions {
   display: flex !important;
   justify-content: flex-end !important;
@@ -617,7 +751,137 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
 }
 
 /* ==========================================================================
-   DIPLOMA A4: ESPECIFICIDAD ESTRICTA (TIPOGRAFÍA CARBÓN OSCURO)
+   INFORME EJECUTIVO DE AVANCE (CARTA CON EMBLEMA A LA DERECHA)
+   ========================================================================== */
+.informe-carta {
+  background: #FFFFFF !important;
+  color: #1A202C !important;
+  width: 800px;
+  min-height: 1000px;
+  padding: 44px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  font-family: var(--font-ui) !important;
+}
+
+.informe-header-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.informe-brand p {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: #152433;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.informe-emblema-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.img-emblema-discreto {
+  height: 64px;
+  width: auto;
+  object-fit: contain;
+  opacity: 0.82;
+  mix-blend-mode: multiply;
+  filter: contrast(0.92) brightness(0.98);
+  transition: opacity 0.2s ease;
+}
+
+.informe-meta-header {
+  text-align: right;
+  font-size: 0.85rem;
+  color: #718096;
+}
+
+.informe-hr {
+  border: 0;
+  height: 2px;
+  background: #152433;
+  margin: 14px 0 20px 0;
+}
+
+.informe-constancia {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #2D3748;
+  margin-bottom: 24px;
+}
+
+.informe-kpis-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.kpi-card {
+  background: #F7FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 18px;
+  text-align: center;
+}
+
+.kpi-valor {
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #152433;
+}
+
+.kpi-label {
+  font-size: 0.82rem;
+  color: #718096;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.informe-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  margin-bottom: 24px;
+}
+.informe-table th {
+  background: #EDF2F7;
+  color: #2D3748;
+  padding: 10px;
+  border: 1px solid #CBD5E0;
+  text-align: left;
+}
+.informe-table td {
+  padding: 10px;
+  border: 1px solid #E2E8F0;
+  vertical-align: top;
+}
+
+.informe-pie-doc {
+  margin-top: 36px;
+  border-top: 1px solid #E2E8F0;
+  padding-top: 14px;
+  font-size: 0.8rem;
+  color: #A0AEC0;
+  display: flex;
+  justify-content: space-between;
+}
+
+.certificados-lista-inline {
+  background: #F7FAFC;
+  border: 1px dashed #CBD5E0;
+  padding: 14px;
+  border-radius: 6px;
+  margin-top: 16px;
+}
+
+/* ==========================================================================
+   DIPLOMA A4
    ========================================================================== */
 #documentoCertificado.certificado-a4 {
   background: #FDFBF7 !important;
@@ -738,9 +1002,6 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
   color: #12161A !important;
 }
 
-/* ==========================================================================
-   PIE DEL DIPLOMA EN 3 COLUMNAS EQUILIBRADAS
-   ========================================================================== */
 #documentoCertificado .cert-footer {
   display: flex !important;
   justify-content: space-between !important;
