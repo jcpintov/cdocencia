@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Docencia Masónica de Tercer Grado | Cámara del Medio</title>
+  <title>Docencia Masónica de Tercer Grado</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,7 +46,7 @@
       </div>
 
       <div class="form-group">
-        <label for="inputClave">Palabra de Paso de la Cámara:</label>
+        <label for="inputClave">Palabra de Paso para la Cámara:</label>
         <input type="password" id="inputClave" placeholder="••••••••">
       </div>
 
@@ -58,11 +58,11 @@
   <!-- MODAL SIGILO -->
   <div id="modalSigilo" class="modal-overlay hidden">
     <div class="modal-content">
-      <h2 style="color: var(--accent-gold); margin-bottom: 14px;">Compromiso Solemne de Sigilo</h2>
+      <h2 style="color: var(--accent-gold); margin-bottom: 14px;">Advertencia y condiciones de Uso</h2>
       <p style="text-align: justify; line-height: 1.75; margin-bottom: 22px;">
-        Al ingresar a esta Cámara del Medio, reafirmo mi compromiso de mantener estricta reserva y sigilo sobre los contenidos, 
-        trazados, símbolos y reflexiones personales de mis Hermanos aquí vertidos. Reconozco que este espacio pertenece al ámbito exclusivo 
-        del Tercer Grado, quedando estrictamente prohibida su difusión profana o copia no autorizada bajo los preceptos del honor masónico.
+        Al ingresar a esta Cámara del Medio, reafirmo mi compromiso de mantener estricta reserva sobre los contenidos, 
+        trazados, símbolos y reflexiones personales aquí vertidos. Reconozco que este espacio pertenece al ámbito exclusivo 
+        del Tercer Grado, quedando estrictamente prohibida su difusión profana o copia no autorizada bajo los preceptos del honor y el cumoplimiento del Deber Masónico.
       </p>
       <button class="btn-primary" onclick="aceptarSigilo()">Reafirmo mi Juramento e Ingreso</button>
     </div>
@@ -73,7 +73,7 @@
     <aside class="sidebar-templo">
       <div class="sidebar-box">
         <div class="sidebar-title">
-          <span>Planchas de la Cámara</span>
+          <span>TYrabajos de la Cámara</span>
           <span id="contadorModulos"></span>
         </div>
         <div id="listaModulosNav"></div>
@@ -81,7 +81,7 @@
 
       <div class="sidebar-box sidebar-info">
         <h4>Metodología de Trabajo</h4>
-        <p>Para desbloquear la reflexión y acceder al Muro Fraterno, debe completar primero las 6 interrogantes del Examen Simbólico.</p>
+        <p>Para desbloquear el muro de reflexiones, tras la lectura del trabajo, debe completar primero 6 preguntas relacionadas con el tema expuesto.</p>
       </div>
     </aside>
 
@@ -104,7 +104,7 @@
 
           <div class="action-buttons-group">
             <a id="btnDescargarTrazado" href="#" target="_blank" class="btn-descargar hidden">
-              📥 Descargar Plancha (PDF)
+              📥 Descargar trabajo (PDF)
             </a>
             <button id="btnVerCertificado" class="btn-certificado hidden" onclick="abrirModalCertificado()">
               📜 Obtener Certificado Oficial
@@ -123,10 +123,10 @@
       <section id="bloqueFaseDos" class="card">
         <div class="card-fase-header">
           <span class="fase-badge">FASE II</span>
-          <h2>Examen de Comprensión Simbólica</h2>
+          <h2>Examen de Comprensión</h2>
         </div>
         <p class="text-instruccion">
-          Haga clic sobre la alternativa que considere correcta. El sistema evaluará su respuesta en el acto y fundamentará la enseñanza.
+          Haga clic sobre la alternativa que considere correcta.
         </p>
         <div id="contenedorPreguntas"></div>
       </section>
@@ -139,10 +139,10 @@
             <h2 id="tituloFaseTres">Aporte Personal a la Cámara</h2>
           </div>
           <p id="descFaseTres" class="text-instruccion">
-            Consagre su reflexión personal (máximo 200 palabras) para concluir el módulo y desbloquear las reflexiones de sus Hermanos.
+            Ingrese su reflexión personal (máximo 200 palabras) para concluir el módulo y desbloquear las reflexiones de sus Hermanos.
           </p>
 
-          <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión fraternal..."></textarea>
+          <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión acderca del tema tratado..."></textarea>
           
           <div class="reflexion-footer">
             <span id="contadorPalabras">Palabras: 0 / 200</span>
@@ -150,7 +150,7 @@
           </div>
 
           <button id="btnConsagrarReflexion" class="btn-primary" onclick="guardarReflexionYCompletar()">
-            Consagrar Reflexión y Desbloquear Muro
+            Enviar Reflexión y Desbloquear Muro
           </button>
         </div>
 
@@ -159,7 +159,7 @@
             <span class="fase-badge badge-muro">MURO</span>
             <h2>Reflexiones de los Hermanos Maestros</h2>
           </div>
-          <p class="text-instruccion">Aportes consagrados por los miembros de la Cámara en este trazado:</p>
+          <p class="text-instruccion">Aportes para este trazado:</p>
           <div id="contenedorMuro"></div>
         </div>
       </section>
@@ -171,10 +171,10 @@
     
     <nav class="admin-subnav">
       <button id="tabNavCargar" class="admin-nav-tab active" onclick="cambiarSubseccionAdmin('cargar')">
-        🏛️ Consagrar Nueva Plancha (Carga Pura)
+        🏛️ Cargar Nuevo Trabajo
       </button>
       <button id="tabNavMetricas" class="admin-nav-tab" onclick="cambiarSubseccionAdmin('metricas')">
-        📊 Matriz de Avance & Métricas
+        📊 Matriz de Avance
       </button>
     </nav>
 
@@ -182,8 +182,8 @@
     <section id="adminSeccionCarga" class="card card-trazado">
       <div class="admin-card-header">
         <div>
-          <h2>Consagración de Plancha</h2>
-          <p class="text-instruccion" style="margin: 0;">Suba un archivo PDF o Word. La IA depurará el texto y estructurará el cuestionario pedagógico.</p>
+          <h2>Carga de Trabajos</h2>
+          <p class="text-instruccion" style="margin: 0;">Suba un archivo PDF o Word.</p>
         </div>
         <div class="admin-header-actions">
           <a href="https://github.com/jcpintov/cdocencia/blob/main/index.html" target="_blank" class="admin-link-btn">🐙 GitHub</a>
@@ -193,7 +193,7 @@
 
       <div class="upload-box">
         <label for="archivoDoc" style="font-weight: 700; color: var(--text-main); cursor: pointer; display: block; margin-bottom: 8px;">
-          📄 Seleccionar Trazado (PDF o Word .docx)
+          📄 Seleccionar Trabajo (PDF o Word .docx)
         </label>
         <input type="file" id="archivoDoc" accept=".docx, .pdf" onchange="leerArchivoPlancha(event)">
         <p id="archivoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 8px; font-weight: 600;"></p>
@@ -205,22 +205,22 @@
           <input type="number" id="adminOrden" value="4">
         </div>
         <div class="form-group">
-          <label for="adminTitulo">Título de la Plancha:</label>
+          <label for="adminTitulo">Título:</label>
           <input type="text" id="adminTitulo" placeholder="Ej: Los Cinco Puntos del Maestro">
         </div>
         <div class="form-group">
-          <label for="adminAutor">Autor (Solo Nombre):</label>
+          <label for="adminAutor">Autor:</label>
           <input type="text" id="adminAutor" placeholder="Ej: Ricardo Pérez G. 3º">
         </div>
       </div>
 
       <div class="form-group">
-        <label for="adminTexto">Texto Normalizado para IA (Depurado de encabezados y pies):</label>
+        <label for="adminTexto">Texto Normalizado:</label>
         <textarea id="adminTexto" rows="12" placeholder="El texto depurado aparecerá aquí..."></textarea>
       </div>
 
       <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">
-        ⚙️ Procesar con Gemini y Consagrar Plancha
+        ⚙️ Procesar
       </button>
       
       <div id="adminStatus" style="margin-top: 14px; text-align: center; font-family: var(--font-ui); font-weight: 600;"></div>
@@ -229,7 +229,7 @@
       <div id="contenedorFallbackSQL" class="hidden" style="margin-top: 24px; padding: 20px; background: var(--card-bg); border: 2px dashed var(--accent-gold); border-radius: 8px;">
         <h4 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">⚡ Contingencia por Saturación de API: Inserción Directa</h4>
         <p style="font-size: 0.88rem; color: var(--text-muted); font-family: var(--font-ui); margin-bottom: 12px;">
-          Copie la siguiente consulta e insértela directamente en el Editor SQL de Supabase para consagrar la plancha sin consumir la API:
+          Copie la siguiente consulta e insértela directamente en el Editor SQL de Supabase:
         </p>
         <textarea id="sqlFallbackArea" rows="10" readonly style="font-family: monospace; font-size: 0.82rem; background: #0A0E13; color: #4AF626; border-radius: 6px; padding: 12px;"></textarea>
         <button class="btn-secondary" style="margin-top: 10px;" onclick="copiarSQLFallback()">📋 Copiar Consulta SQL al Portapapeles</button>
@@ -241,11 +241,11 @@
       <div class="admin-card-header">
         <div>
           <h2>Matriz de Avance Docente</h2>
-          <p class="text-instruccion" style="margin: 0;">Seguimiento individual de lecturas, avance de cuestionarios y aportes de la Cámara.</p>
+          <p class="text-instruccion" style="margin: 0;">Seguimiento individual de lecturas, avance y aportes de la Cámara.</p>
         </div>
         
         <div class="admin-header-actions">
-          <label for="selectMetricasModulo">Plancha:</label>
+          <label for="selectMetricasModulo">Trabajo:</label>
           <select id="selectMetricasModulo" onchange="cargarMetricasAvance(this.value)"></select>
           <button class="admin-link-btn" onclick="recargarMetricasActuales()">🔄 Actualizar</button>
           <button class="admin-link-btn" onclick="exportarRespaldoCompletoJSON()">💾 Respaldar JSON</button>
@@ -260,8 +260,8 @@
               <th>Correo</th>
               <th>Lectura</th>
               <th>Examen</th>
-              <th>Consagración</th>
-              <th>Fecha Consagración</th>
+              <th>Reflexiones</th>
+              <th>Fecha</th>
               <th>Acciones</th>
             </tr>
           </thead>
@@ -304,14 +304,14 @@
             <h3 id="certNombreHermano" class="cert-nombre">Q.·.H.·. NOMBRE DEL HERMANO</h3>
             
             <p class="cert-cuerpo">
-              Ha culminado satisfactoriamente el estudio doctrinal, examen simbólico y consagración de reflexiones correspondientes al trazado de docencia:
+              Ha culminado satisfactoriamente el estudio doctrinal, examen simbólico y reflexiones correspondientes al trabajo de docencia:
             </p>
 
-            <h4 id="certTituloPlancha" class="cert-plancha">"TÍTULO DE LA PLANCHA"</h4>
+            <h4 id="certTituloPlancha" class="cert-plancha">"TÍTULO DEL TRABAJO"</h4>
             <p id="certAutorPlancha" class="cert-autor">Autor: Q.·.H.·. Autor</p>
 
             <div class="cert-reflexion-box">
-              <p class="cert-reflexion-label">Aporte Consagrado en la Cámara:</p>
+              <p class="cert-reflexion-label">Aporte al trabajo en la Cámara:</p>
               <p id="certTextoReflexion" class="cert-reflexion-cita">"..."</p>
             </div>
 
