@@ -7,7 +7,6 @@ if (window.pdfjsLib) {
 
 const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
-const GEMINI_API_KEY = "AQ.Ab8RN6KkSJ4RhmWB_KIloRGdf33nk4gdN_onygONXcjPP1rOTQ";    
 
 const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -16,8 +15,32 @@ let listaModulos = [];
 let moduloActual = null;
 let misProgresos = {};
 let tamanoBase = 19;
+
+// Control de preguntas paso a paso
+let indicePreguntaActiva = 0;
 let respuestasMarcadas = {};
 let pdfBase64Cargado = null;
+
+// Temporizador de inactividad estricto (5 minutos = 300,000 ms)
+let temporizadorInactividad = null;
+const TIEMPO_INACTIVIDAD_MS = 5 * 60 * 1000;
+
+/* ==========================================================================
+   GESTIÓN DE INACTIVIDAD (5 MINUTOS) Y PERSISTENCIA DE SESIÓN
+   ========================================================================== */
+function reiniciarTemporizadorInactividad() {
+  if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
+  if (usuarioActual) {
+    temporizadorInactividad = setTimeout(() => {
+      alert("Por motivos de seguridad y sigilo masónico, la sesión se ha cerrado tras 5 minutos de inactividad.");
+      cerrarSesion();
+    }, TIEMPO_INACTIVIDAD_MS);
+  }
+}
+
+['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart'].forEach(evt => {
+  window.addEventListener(evt, reiniciarTemporizadorInactividad, { passive: true });
+});
 
 /* ==========================================================================
    LUMINOSIDAD Y TEMAS
@@ -65,7 +88,7 @@ function cambiarTamanoFuente(delta) {
 }
 
 /* ==========================================================================
-   AUTENTICACIÓN Y SEGREGACIÓN DE ROLES
+   AUTENTICACIÓN, BLINDAJE Y PERSISTENCIA (F5)
    ========================================================================== */
 async function iniciarSesion() {
   const email = document.getElementById('inputEmail').value.trim().toLowerCase();
@@ -91,6 +114,24 @@ async function iniciarSesion() {
   }
 
   usuarioActual = data[0];
+  sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
+  configurarEntornoUsuario();
+}
+
+function recuperarSesionGuardada() {
+  const guardada = sessionStorage.getItem('camara_usuario_sesion');
+  if (guardada) {
+    try {
+      usuarioActual = JSON.parse(guardada);
+      configurarEntornoUsuario();
+    } catch (e) {
+      sessionStorage.removeItem('camara_usuario_sesion');
+    }
+  }
+}
+
+function configurarEntornoUsuario() {
+  reiniciarTemporizadorInactividad();
   document.getElementById('seccionLogin').classList.add('hidden');
   document.getElementById('btnSalir').classList.remove('hidden');
 
@@ -109,13 +150,19 @@ function aceptarSigilo() {
 }
 
 function cerrarSesion() {
+  if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
   usuarioActual = null;
   moduloActual = null;
   misProgresos = {};
   respuestasMarcadas = {};
+  sessionStorage.removeItem('camara_usuario_sesion');
+
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionAdmin').classList.add('hidden');
   document.getElementById('modalSigilo').classList.add('hidden');
+  document.getElementById('modalMisAvances').classList.add('hidden');
+  document.getElementById('modalCertificado').classList.add('hidden');
+  document.getElementById('modalVerReflexion').classList.add('hidden');
   document.getElementById('btnSalir').classList.add('hidden');
   document.getElementById('seccionLogin').classList.remove('hidden');
   document.getElementById('inputEmail').value = '';
@@ -126,21 +173,27 @@ function cerrarSesion() {
    NAVEGACIÓN SUPERADMIN
    ========================================================================== */
 function cambiarSubseccionAdmin(seccion) {
-  const tabCarga = document.getElementById('tabNavCargar');
-  const tabMetricas = document.getElementById('tabNavMetricas');
+  const btnCargar = document.getElementById('tabNavCargar');
+  const btnMuroGen = document.getElementById('tabNavMuroGeneral');
+  const btnMetricas = document.getElementById('tabNavMetricas');
+
   const secCarga = document.getElementById('adminSeccionCarga');
+  const secMuroGen = document.getElementById('adminSeccionMuroGeneral');
   const secMetricas = document.getElementById('adminSeccionMetricas');
 
+  [btnCargar, btnMuroGen, btnMetricas].forEach(b => b?.classList.remove('active'));
+  [secCarga, secMuroGen, secMetricas].forEach(s => s?.classList.add('hidden'));
+
   if (seccion === 'cargar') {
-    tabCarga.classList.add('active');
-    tabMetricas.classList.remove('active');
+    btnCargar.classList.add('active');
     secCarga.classList.remove('hidden');
-    secMetricas.classList.add('hidden');
+  } else if (seccion === 'muro_general') {
+    btnMuroGen.classList.add('active');
+    secMuroGen.classList.remove('hidden');
+    cargarMuroGeneralAdmin();
   } else {
-    tabMetricas.classList.add('active');
-    tabCarga.classList.remove('active');
+    btnMetricas.classList.add('active');
     secMetricas.classList.remove('hidden');
-    secCarga.classList.add('hidden');
     if (listaModulos.length > 0) {
       const select = document.getElementById('selectMetricasModulo');
       cargarMetricasAvance(select.value || listaModulos[0].id);
@@ -160,7 +213,7 @@ async function cargarDatosAdmin() {
   const selectMetricas = document.getElementById('selectMetricasModulo');
   selectMetricas.innerHTML = "";
   listaModulos.forEach(m => {
-    selectMetricas.innerHTML += `<option value="${m.id}">Módulo ${m.numero_orden}: ${m.titulo}</option>`;
+    selectMetricas.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
   });
 
   const inputOrden = document.getElementById('adminOrden');
@@ -184,7 +237,7 @@ async function cargarTodosLosModulos() {
     .order('numero_orden', { ascending: true });
 
   if (error || !dataModulos || dataModulos.length === 0) {
-    document.getElementById('temaTitulo').innerText = "No hay planchas consagradas actualmente.";
+    document.getElementById('temaTitulo').innerText = "No hay trabajos consagrados actualmente.";
     return;
   }
 
@@ -215,15 +268,18 @@ function renderizarSidebar() {
   contenedor.innerHTML = "";
 
   listaModulos.forEach(m => {
-    const estaCompletado = misProgresos[m.id] && misProgresos[m.id].completado;
-    const badgeHtml = estaCompletado
-      ? `<span class="badge-estado badge-ok">✓ Completado</span>`
-      : `<span class="badge-estado badge-pen">Pendiente</span>`;
+    const prog = misProgresos[m.id];
+    let badgeHtml = `<span class="badge-estado badge-pen">Pendiente</span>`;
+    if (prog && prog.completado) {
+      badgeHtml = `<span class="badge-estado badge-ok">✓ Completado</span>`;
+    } else if (prog && prog.leido) {
+      badgeHtml = `<span class="badge-estado" style="background:#FEF3C7;color:#92400E;">En Curso</span>`;
+    }
 
     contenedor.innerHTML += `
       <div class="modulo-nav-item" id="nav_mod_${m.id}" onclick="seleccionarModulo('${m.id}')">
         <div class="nav-item-header">
-          <span class="nav-item-num">Módulo ${m.numero_orden}</span>
+          <span class="nav-item-num">Trabajo ${m.numero_orden}</span>
           ${badgeHtml}
         </div>
         <div class="nav-item-title">${m.titulo}</div>
@@ -241,25 +297,29 @@ async function seleccionarModulo(idModulo) {
   if (activeNav) activeNav.classList.add('active');
 
   respuestasMarcadas = {};
+  indicePreguntaActiva = 0;
   document.getElementById('textoReflexion').value = "";
   document.getElementById('contenedorMuro').innerHTML = "";
 
-  document.getElementById('temaNumero').innerText = "Módulo " + moduloActual.numero_orden;
+  document.getElementById('temaNumero').innerText = "Trabajo " + moduloActual.numero_orden;
   document.getElementById('temaTitulo').innerText = moduloActual.titulo;
   document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
   document.getElementById('vistaTexto').innerText = moduloActual.contenido_trazado;
-
-  await registrarLecturaSilenciosa(moduloActual.id);
 
   const tabPdf = document.getElementById('tabPdf');
   const framePdf = document.getElementById('framePdf');
   const btnDescargar = document.getElementById('btnDescargarTrazado');
 
-  if (moduloActual.archivo_pdf_base64) {
+  let rutaPdf = moduloActual.archivo_pdf_base64;
+  if (!rutaPdf && moduloActual.archivo_url) {
+    rutaPdf = moduloActual.archivo_url;
+  }
+
+  if (rutaPdf) {
     tabPdf.classList.remove('hidden');
-    framePdf.src = moduloActual.archivo_pdf_base64;
-    btnDescargar.href = moduloActual.archivo_pdf_base64;
-    btnDescargar.download = `${moduloActual.titulo}.pdf`;
+    framePdf.src = rutaPdf;
+    btnDescargar.href = rutaPdf;
+    btnDescargar.target = "_blank";
     btnDescargar.classList.remove('hidden');
   } else {
     tabPdf.classList.add('hidden');
@@ -267,8 +327,7 @@ async function seleccionarModulo(idModulo) {
     cambiarVistaDocencia('texto');
   }
 
-  renderizarPreguntasInteractivas(moduloActual.preguntas_json.preguntas || []);
-  await verificarProgresoExistente();
+  await evaluarEstadoFasesModulo();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -292,91 +351,171 @@ function cambiarVistaDocencia(tipo) {
 }
 
 /* ==========================================================================
-   PERSISTENCIA RESILIENTE (SELECT -> INSERT/UPDATE SIN ERROR 400)
+   FLUJO SECUENCIAL CON BOTONES EXPRESOS
    ========================================================================== */
-async function registrarLecturaSilenciosa(moduloId) {
-  if (!usuarioActual) return;
+async function evaluarEstadoFasesModulo() {
+  const prog = misProgresos[moduloActual.id];
+  const contConfLectura = document.getElementById('contenedorConfirmarLectura');
+  const bloqueFaseDos = document.getElementById('bloqueFaseDos');
+  const bloqueFaseTres = document.getElementById('bloqueFaseTres');
+  const btnCert = document.getElementById('btnVerCertificado');
+  const txtRef = document.getElementById('textoReflexion');
+  const btnConsagrar = document.getElementById('btnConsagrarReflexion');
+  const btnEditar = document.getElementById('btnEditarReflexion');
+
+  if (prog && prog.completado) {
+    contConfLectura.classList.add('hidden');
+    bloqueFaseDos.classList.add('hidden');
+    bloqueFaseTres.classList.remove('hidden');
+    btnCert.classList.remove('hidden');
+
+    txtRef.value = prog.reflexion || "";
+    txtRef.disabled = true;
+    btnConsagrar.classList.add('hidden');
+    btnEditar.classList.remove('hidden');
+    document.getElementById('tituloFaseTres').innerText = "Mi Reflexión Consagrada";
+
+    await cargarMuroReflexiones();
+    return;
+  }
+
+  if (prog && prog.leido) {
+    contConfLectura.classList.add('hidden');
+    bloqueFaseDos.classList.remove('hidden');
+    bloqueFaseTres.classList.add('hidden');
+    btnCert.classList.add('hidden');
+    inicializarCuestionarioPasoAPaso();
+    return;
+  }
+
+  contConfLectura.classList.remove('hidden');
+  bloqueFaseDos.classList.add('hidden');
+  bloqueFaseTres.classList.add('hidden');
+  btnCert.classList.add('hidden');
+}
+
+async function confirmarLecturaFaseUno() {
+  const btn = document.getElementById('btnConfirmarLectura');
+  btn.disabled = true;
+  btn.innerText = "Registrando lectura...";
+
   try {
     const { data: existente } = await sbApp
       .from('progreso_maestro')
       .select('id')
       .eq('usuario_id', usuarioActual.id)
-      .eq('modulo_id', moduloId)
+      .eq('modulo_id', moduloActual.id)
       .maybeSingle();
 
     if (existente) {
-      await sbApp
-        .from('progreso_maestro')
-        .update({ leido: true })
-        .eq('id', existente.id);
+      await sbApp.from('progreso_maestro').update({ leido: true }).eq('id', existente.id);
     } else {
-      await sbApp
-        .from('progreso_maestro')
-        .insert({
-          usuario_id: usuarioActual.id,
-          modulo_id: moduloId,
-          leido: true
-        });
+      await sbApp.from('progreso_maestro').insert({
+        usuario_id: usuarioActual.id,
+        modulo_id: moduloActual.id,
+        leido: true
+      });
     }
+
+    await refrescarProgresosUsuario();
+    renderizarSidebar();
+
+    document.getElementById('contenedorConfirmarLectura').classList.add('hidden');
+    const bloqueFaseDos = document.getElementById('bloqueFaseDos');
+    bloqueFaseDos.classList.remove('hidden');
+    inicializarCuestionarioPasoAPaso();
+    bloqueFaseDos.scrollIntoView({ behavior: 'smooth' });
   } catch (e) {
-    console.warn("Métrica lectura:", e);
+    alert("Error al confirmar lectura: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "Confirmo lectura";
   }
 }
 
-function renderizarPreguntasInteractivas(preguntas) {
-  const cont = document.getElementById('contenedorPreguntas');
-  cont.innerHTML = "";
+function inicializarCuestionarioPasoAPaso() {
+  respuestasMarcadas = {};
+  indicePreguntaActiva = 0;
+  renderizarPreguntaActual();
+}
 
-  if (!preguntas || preguntas.length === 0) {
-    cont.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay interrogantes registradas para esta plancha.</p>";
+function renderizarPreguntaActual() {
+  const cont = document.getElementById('contenedorPreguntaPaso');
+  const btnSiguiente = document.getElementById('btnSiguientePregunta');
+  const btnFinalizar = document.getElementById('btnFinalizarCuestionario');
+  btnSiguiente.classList.add('hidden');
+  btnFinalizar.classList.add('hidden');
+
+  const preguntas = moduloActual.preguntas_json?.preguntas || [];
+  if (preguntas.length === 0) {
+    cont.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay interrogantes formuladas para este trabajo.</p>";
+    btnFinalizar.classList.remove('hidden');
     return;
   }
 
-  preguntas.forEach((p, idx) => {
-    let opcionesHtml = p.opciones.map(op => `
-      <label class="opcion-label" id="label_${idx}_${op.letra}" onclick="evaluarRespuestaInmediata(${idx}, '${op.letra}', '${p.respuesta_correcta}')">
-        <input type="radio" name="preg_${idx}" value="${op.letra}">
-        <span><strong>${op.letra})</strong> ${op.texto}</span>
-      </label>
-    `).join('');
+  const p = preguntas[indicePreguntaActiva];
+  const total = preguntas.length;
 
-    cont.innerHTML += `
-      <div class="pregunta-card" id="card_preg_${idx}">
-        <p style="font-weight: 600; margin-bottom: 14px;">${idx + 1}. ${p.enunciado}</p>
-        ${opcionesHtml}
-        <div class="feedback-box" id="feedback_${idx}">
-          <div style="font-weight: 700; margin-bottom: 6px;" id="feedback_titulo_${idx}"></div>
-          <div id="feedback_texto_${idx}">${p.retroalimentacion}</div>
-        </div>
+  let opcionesHtml = p.opciones.map(op => `
+    <label class="opcion-label" id="label_paso_${op.letra}" onclick="evaluarRespuestaPasoAPaso('${op.letra}', '${p.respuesta_correcta}')">
+      <input type="radio" name="preg_paso_radio" value="${op.letra}">
+      <span><strong>${op.letra})</strong> ${op.texto}</span>
+    </label>
+  `).join('');
+
+  cont.innerHTML = `
+    <div class="pregunta-paso-card">
+      <p style="font-size: 0.85rem; font-weight: 700; color: var(--accent-gold-dark); text-transform: uppercase; margin-bottom: 6px;">
+        Pregunta ${indicePreguntaActiva + 1} de ${total}
+      </p>
+      <p style="font-weight: 600; margin-bottom: 14px;">${p.enunciado}</p>
+      ${opcionesHtml}
+      <div class="feedback-box" id="feedback_paso_box">
+        <div style="font-weight: 700; margin-bottom: 6px;" id="feedback_paso_titulo"></div>
+        <div id="feedback_paso_texto">${p.retroalimentacion}</div>
       </div>
-    `;
-  });
+    </div>
+  `;
 }
 
-async function evaluarRespuestaInmediata(idxPregunta, letraSeleccionada, letraCorrecta) {
-  if (respuestasMarcadas[idxPregunta]) return;
+function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
+  if (respuestasMarcadas[indicePreguntaActiva]) return;
 
-  respuestasMarcadas[idxPregunta] = letraSeleccionada;
+  respuestasMarcadas[indicePreguntaActiva] = letraSeleccionada;
 
-  const radios = document.querySelectorAll(`input[name="preg_${idxPregunta}"]`);
+  const radios = document.querySelectorAll(`input[name="preg_paso_radio"]`);
   radios.forEach(r => r.disabled = true);
 
-  const labelSeleccionado = document.getElementById(`label_${idxPregunta}_${letraSeleccionada}`);
-  const labelCorrecto = document.getElementById(`label_${idxPregunta}_${letraCorrecta}`);
-  const feedbackBox = document.getElementById(`feedback_${idxPregunta}`);
-  const feedbackTitulo = document.getElementById(`feedback_titulo_${idxPregunta}`);
+  const labelSeleccionado = document.getElementById(`label_paso_${letraSeleccionada}`);
+  const labelCorrecto = document.getElementById(`label_paso_${letraCorrecta}`);
+  const feedbackBox = document.getElementById(`feedback_paso_box`);
+  const feedbackTitulo = document.getElementById(`feedback_paso_titulo`);
 
   if (letraSeleccionada === letraCorrecta) {
     labelSeleccionado.classList.add('opcion-correcta');
     feedbackTitulo.innerHTML = `<span style="color: var(--success);">✓ Respuesta Correcta</span>`;
   } else {
     labelSeleccionado.classList.add('opcion-erronea');
-    labelCorrecto.classList.add('opcion-correcta');
-    feedbackTitulo.innerHTML = `<span style="color: var(--error);">✗ Seleccionada: ${letraSeleccionada}</span> | Respuesta Correcta: <strong>${letraCorrecta}</strong>`;
+    labelCorrecto?.classList.add('opcion-correcta');
+    feedbackTitulo.innerHTML = `<span style="color: var(--error);">✗ Seleccionada: ${letraSeleccionada}</span> | Correcta: <strong>${letraCorrecta}</strong>`;
   }
 
   feedbackBox.style.display = "block";
 
+  const totalPreguntas = moduloActual.preguntas_json?.preguntas?.length || 6;
+  if (indicePreguntaActiva < totalPreguntas - 1) {
+    document.getElementById('btnSiguientePregunta').classList.remove('hidden');
+  } else {
+    document.getElementById('btnFinalizarCuestionario').classList.remove('hidden');
+  }
+}
+
+function avanzarSiguientePregunta() {
+  indicePreguntaActiva++;
+  renderizarPreguntaActual();
+}
+
+async function finalizarCuestionarioFaseDos() {
   try {
     const { data: existente } = await sbApp
       .from('progreso_maestro')
@@ -396,21 +535,23 @@ async function evaluarRespuestaInmediata(idxPregunta, letraSeleccionada, letraCo
       await sbApp.from('progreso_maestro').insert({
         usuario_id: usuarioActual.id,
         modulo_id: moduloActual.id,
+        leido: true,
         ...payload
       });
     }
   } catch (e) {
-    console.warn("Intento examen:", e);
+    console.warn("Registro respuestas:", e);
   }
 
-  const totalPreguntas = moduloActual.preguntas_json.preguntas ? moduloActual.preguntas_json.preguntas.length : 6;
-  if (Object.keys(respuestasMarcadas).length === totalPreguntas) {
-    const faseTres = document.getElementById('bloqueFaseTres');
-    faseTres.classList.remove('hidden');
-    faseTres.scrollIntoView({ behavior: 'smooth' });
-  }
+  document.getElementById('bloqueFaseDos').classList.add('hidden');
+  const faseTres = document.getElementById('bloqueFaseTres');
+  faseTres.classList.remove('hidden');
+  faseTres.scrollIntoView({ behavior: 'smooth' });
 }
 
+/* ==========================================================================
+   FASE III: REFLEXIÓN Y MURO DE REFLEXIONES
+   ========================================================================== */
 function contarPalabras() {
   const texto = document.getElementById('textoReflexion').value.trim();
   const cant = texto === "" ? 0 : texto.split(/\s+/).length;
@@ -423,8 +564,8 @@ async function guardarReflexionYCompletar() {
   const texto = document.getElementById('textoReflexion').value.trim();
   const cant = texto === "" ? 0 : texto.split(/\s+/).length;
 
-  if (cant === 0) {
-    alert("Por favor ingrese su reflexión antes de continuar.");
+  if (cant < 15) {
+    alert("Q.H., favor expanda su reflexión.");
     return;
   }
   if (cant > 200) {
@@ -447,7 +588,6 @@ async function guardarReflexionYCompletar() {
   };
 
   let error = null;
-
   if (existente) {
     const res = await sbApp.from('progreso_maestro').update(payload).eq('id', existente.id);
     error = res.error;
@@ -455,20 +595,21 @@ async function guardarReflexionYCompletar() {
     const res = await sbApp.from('progreso_maestro').insert({
       usuario_id: usuarioActual.id,
       modulo_id: moduloActual.id,
+      leido: true,
       ...payload
     });
     error = res.error;
   }
 
   if (error) {
-    alert("Error al consagrar su reflexión: " + error.message);
+    alert("Error al guardar reflexión: " + error.message);
     return;
   }
 
-  alert("Módulo completado con éxito. Se ha desbloqueado el Muro Fraterno y su Certificado.");
+  alert("Módulo completado con éxito. Se ha desbloqueado el Muro de Reflexiones y su Certificado.");
   await refrescarProgresosUsuario();
   renderizarSidebar();
-  await verificarProgresoExistente();
+  await evaluarEstadoFasesModulo();
 }
 
 function habilitarEdicionReflexion() {
@@ -481,48 +622,6 @@ function habilitarEdicionReflexion() {
   btnConsagrar.classList.remove('hidden');
   btnConsagrar.innerText = "Guardar Modificación de Reflexión";
   btnEditar.classList.add('hidden');
-}
-
-async function verificarProgresoExistente() {
-  const { data } = await sbApp
-    .from('progreso_maestro')
-    .select('*')
-    .eq('usuario_id', usuarioActual.id)
-    .eq('modulo_id', moduloActual.id)
-    .limit(1);
-
-  const bloqueFaseDos = document.getElementById('bloqueFaseDos');
-  const faseTres = document.getElementById('bloqueFaseTres');
-  const txtRef = document.getElementById('textoReflexion');
-  const btnConsagrar = document.getElementById('btnConsagrarReflexion');
-  const btnEditar = document.getElementById('btnEditarReflexion');
-  const btnCert = document.getElementById('btnVerCertificado');
-
-  if (data && data.length > 0 && data[0].completado && data[0].modulo_id === moduloActual.id) {
-    bloqueFaseDos.classList.add('hidden');
-    faseTres.classList.remove('hidden');
-    btnCert.classList.remove('hidden');
-
-    txtRef.value = data[0].reflexion || "";
-    txtRef.disabled = true;
-    btnConsagrar.classList.add('hidden');
-    btnEditar.classList.remove('hidden');
-
-    document.getElementById('tituloFaseTres').innerText = "Mi Reflexión Consagrada";
-    document.getElementById('descFaseTres').innerText = "Usted ya consagró su aporte docente en este trazado:";
-
-    await cargarMuroReflexiones();
-  } else {
-    bloqueFaseDos.classList.remove('hidden');
-    faseTres.classList.add('hidden');
-    btnCert.classList.add('hidden');
-    txtRef.value = "";
-    txtRef.disabled = false;
-    btnConsagrar.classList.remove('hidden');
-    btnConsagrar.innerText = "Consagrar Reflexión y Desbloquear Muro";
-    btnEditar.classList.add('hidden');
-    document.getElementById('tituloFaseTres').innerText = "Aporte Personal a la Cámara";
-  }
 }
 
 async function cargarMuroReflexiones() {
@@ -541,7 +640,7 @@ async function cargarMuroReflexiones() {
     data.forEach(item => {
       if (item.reflexion && item.reflexion.trim() !== "" && item.modulo_id === moduloActual.id) {
         contenedor.innerHTML += `
-          <div class="reflexion-item">
+          <div class="reflexion-item" style="cursor: pointer;" onclick="abrirModalReflexionElegante('${(item.usuarios?.nombre || "Hermano Maestro").replace(/'/g, "\\'")}', '${item.reflexion.replace(/'/g, "\\'")}')">
             <div class="reflexion-autor">${item.usuarios?.nombre || "Hermano Maestro"}</div>
             <div>"${item.reflexion}"</div>
           </div>
@@ -549,48 +648,166 @@ async function cargarMuroReflexiones() {
       }
     });
   } else {
-    contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Aún no hay reflexiones consagradas en esta plancha.</p>";
+    contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Aún no hay reflexiones consagradas en este trabajo.</p>";
   }
 }
 
 /* ==========================================================================
-   CERTIFICADO OFICIAL: "SE CERTIFICA QUE EL VENERABLE MAESTRO"
+   MODAL ELEGANTE DE LECTURA DE REFLEXIÓN (SUSTITUTO DE ALERT)
    ========================================================================== */
-function abrirModalCertificado() {
-  const modal = document.getElementById('modalCertificado');
-  
-  const progActual = misProgresos[moduloActual.id];
-  const reflexionExacta = (progActual && progActual.reflexion) ? progActual.reflexion : "";
+function abrirModalReflexionElegante(autor, texto) {
+  document.getElementById('modalReflexionAutor').innerText = `Reflexión de ${autor}`;
+  document.getElementById('modalReflexionTexto').innerText = `"${texto}"`;
+  document.getElementById('modalVerReflexion').classList.remove('hidden');
+}
 
-  const nombreLimpio = (usuarioActual.nombre || "Maestro Masón").replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-  document.getElementById('certNombreHermano').innerText = nombreLimpio;
+/* ==========================================================================
+   SECCIÓN "MIS AVANCES" Y FICHA EJECUTIVA EN PDF (CARTA, SOBRIO)
+   ========================================================================== */
+async function abrirModalMisAvances(usuarioObjetivoId = null) {
+  const idTarget = usuarioObjetivoId || usuarioActual.id;
   
-  document.getElementById('certTituloPlancha').innerText = `"${moduloActual.titulo}"`;
-  document.getElementById('certAutorPlancha').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
+  const { data: usuarioData } = await sbApp
+    .from('usuarios')
+    .select('*')
+    .eq('id', idTarget)
+    .single();
+
+  if (!usuarioData) return;
+
+  const { data: progresos } = await sbApp
+    .from('progreso_maestro')
+    .select('*, modulos(numero_orden, titulo)')
+    .eq('usuario_id', idTarget);
+
+  const progMap = {};
+  if (progresos) progresos.forEach(p => { progMap[p.modulo_id] = p; });
+
+  const totalModulos = listaModulos.length || 1;
+  let totalLeidos = 0;
+  let totalCompletados = 0;
+
+  listaModulos.forEach(m => {
+    const p = progMap[m.id];
+    if (p && p.leido) totalLeidos++;
+    if (p && p.completado) totalCompletados++;
+  });
+
+  const pctLectura = Math.round((totalLeidos / totalModulos) * 100);
+
+  const d = new Date();
+  document.getElementById('informeFechaHoraEmision').innerText = `EMISIÓN: ${d.toLocaleDateString('es-CL')} ${d.toLocaleTimeString('es-CL')}`;
+  
+  const nombreLimpio = usuarioData.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
+  document.getElementById('informeNombreHermano').innerText = nombreLimpio;
+
+  document.getElementById('kpiLecturaPct').innerText = `${pctLectura}%`;
+  document.getElementById('kpiExamenesAprob').innerText = `${totalCompletados} / ${totalModulos}`;
+  document.getElementById('kpiAportesConsag').innerText = `${totalCompletados}`;
+
+  const tablaCuerpo = document.getElementById('informeDetalleCuerpo');
+  tablaCuerpo.innerHTML = "";
+
+  const contCerts = document.getElementById('contenedorBotonesCertificados');
+  contCerts.innerHTML = "";
+
+  listaModulos.forEach(m => {
+    const p = progMap[m.id];
+    const leidoTxt = (p && p.leido) ? "✓ Confirmada" : "—";
+    const examenTxt = (p && p.completado) ? "✓ Finalizado" : (p && p.intentos_preguntas ? `${p.intentos_preguntas}/6` : "—");
+    const reflexTxt = (p && p.reflexion) ? `"${p.reflexion}"` : "<em>Sin aporte consagrado</em>";
+
+    tablaCuerpo.innerHTML += `
+      <tr>
+        <td><strong>Trabajo ${m.numero_orden}:</strong> ${m.titulo}</td>
+        <td>${leidoTxt}</td>
+        <td>${examenTxt}</td>
+        <td style="font-size: 0.85rem;">${reflexTxt}</td>
+      </tr>
+    `;
+
+    if (p && p.completado) {
+      contCerts.innerHTML += `
+        <button class="btn-cert-descargar" style="font-size: 0.8rem; padding: 6px 12px;" onclick="cerrarModalMisAvances(); abrirModalCertificado('${m.id}', '${idTarget}')">
+          📜 Certificado Trabajo ${m.numero_orden}
+        </button>
+      `;
+    }
+  });
+
+  if (contCerts.innerHTML === "") {
+    contCerts.innerHTML = "<span style='font-size: 0.85rem; color: #718096;'>Aún no ha obtenido certificados oficiales.</span>";
+  }
+
+  document.getElementById('informeCodigoVerif').innerText = `ID REGISTRO: ${usuarioData.id.slice(0, 8)}-${Date.now().toString().slice(-6)}`;
+  document.getElementById('modalMisAvances').classList.remove('hidden');
+}
+
+function cerrarModalMisAvances() {
+  document.getElementById('modalMisAvances').classList.add('hidden');
+}
+
+function descargarInformeAvancePDF() {
+  const elemento = document.getElementById('documentoInformeAvance');
+  const opciones = {
+    margin: 0,
+    filename: `Informe_Docente_${document.getElementById('informeNombreHermano').innerText.replace(/\s+/g, '_')}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+  };
+  html2pdf().set(opciones).from(elemento).save();
+}
+
+/* ==========================================================================
+   CERTIFICADO OFICIAL A4 CON CIERRE SEGURO
+   ========================================================================== */
+async function abrirModalCertificado(moduloId = null, usuarioId = null) {
+  const modTarget = moduloId ? listaModulos.find(m => m.id === moduloId) : moduloActual;
+  const userTarget = usuarioId ? (await sbApp.from('usuarios').select('*').eq('id', usuarioId).single()).data : usuarioActual;
+
+  const { data: prog } = await sbApp
+    .from('progreso_maestro')
+    .select('*')
+    .eq('usuario_id', userTarget.id)
+    .eq('modulo_id', modTarget.id)
+    .maybeSingle();
+
+  const reflexionExacta = prog?.reflexion || "";
+  const nombreLimpio = userTarget.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
+
+  document.getElementById('certNombreHermano').innerText = nombreLimpio;
+  document.getElementById('certTituloPlancha').innerText = `"${modTarget.titulo}"`;
+  document.getElementById('certAutorPlancha').innerText = modTarget.autor ? "Autor: " + formatearAutorMasonico(modTarget.autor) : "";
   document.getElementById('certTextoReflexion').innerText = `"${reflexionExacta}"`;
 
   const d = new Date();
   document.getElementById('certFechaEmision').innerText = `Talagante, ${d.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })}`;
 
-  modal.classList.remove('hidden');
+  document.getElementById('modalCertificado').classList.remove('hidden');
 }
 
 function cerrarModalCertificado() {
   document.getElementById('modalCertificado').classList.add('hidden');
 }
 
-function cerrarModalPorFondo(event) {
-  if (event.target.id === 'modalCertificado') {
-    cerrarModalCertificado();
+function cerrarModalUniversal(event, modalId) {
+  if (event.target.id === modalId) {
+    document.getElementById(modalId).classList.add('hidden');
   }
+}
+
+function cerrarModalUniversalDirecto(modalId) {
+  const el = document.getElementById(modalId);
+  if (el) el.classList.add('hidden');
 }
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    const modal = document.getElementById('modalCertificado');
-    if (modal && !modal.classList.contains('hidden')) {
-      cerrarModalCertificado();
-    }
+    ['modalCertificado', 'modalMisAvances', 'modalGestionModulos', 'modalSigilo', 'modalVerReflexion'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
+    });
   }
 });
 
@@ -598,7 +815,7 @@ function descargarCertificadoPDF() {
   const elemento = document.getElementById('documentoCertificado');
   const opciones = {
     margin: 0,
-    filename: `Certificado_${moduloActual.titulo.replace(/\s+/g, '_')}.pdf`,
+    filename: `Certificado_${moduloActual?.titulo?.replace(/\s+/g, '_') || 'Docencia'}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
     html2canvas: { scale: 2, useCORS: true },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -607,15 +824,97 @@ function descargarCertificadoPDF() {
 }
 
 /* ==========================================================================
-   MÉTRICAS DEL SUPERADMIN
+   MURO GENERAL Y MODERACIÓN SUPERADMIN
+   ========================================================================== */
+async function cargarMuroGeneralAdmin() {
+  const contenedor = document.getElementById('contenedorMuroGeneralAdmin');
+  contenedor.innerHTML = "<p class='td-loading'>Consultando todas las reflexiones...</p>";
+
+  const { data: aportes, error } = await sbApp
+    .from('progreso_maestro')
+    .select('id, reflexion, completado_en, modulo_id, usuarios(nombre), modulos(numero_orden, titulo)')
+    .eq('completado', true)
+    .not('reflexion', 'is', null)
+    .order('modulo_id');
+
+  contenedor.innerHTML = "";
+
+  if (error || !aportes || aportes.length === 0) {
+    contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay reflexiones consagradas en la Cámara.</p>";
+    return;
+  }
+
+  const grupos = {};
+  aportes.forEach(a => {
+    const modKey = `Trabajo ${a.modulos?.numero_orden || '?'}: ${a.modulos?.titulo || 'Sin título'}`;
+    if (!grupos[modKey]) grupos[modKey] = [];
+    grupos[modKey].push(a);
+  });
+
+  for (const [tituloModulo, items] of Object.entries(grupos)) {
+    let itemsHtml = items.map(it => `
+      <div class="reflexion-item" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;">
+        <div style="flex: 1; cursor: pointer;" onclick="abrirModalReflexionElegante('${(it.usuarios?.nombre || "Hermano").replace(/'/g, "\\'")}', '${it.reflexion.replace(/'/g, "\\'")}')">
+          <div class="reflexion-autor">${it.usuarios?.nombre || "Hermano"}</div>
+          <div style="font-size: 0.95rem;">"${it.reflexion}"</div>
+        </div>
+        <div style="display: flex; gap: 6px;">
+          <button class="admin-link-btn" onclick="editarReflexionSuperadmin('${it.id}', '${it.reflexion.replace(/'/g, "\\'")}')">✏️ Editar</button>
+          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarReflexionSuperadmin('${it.id}')">🗑️ Eliminar</button>
+        </div>
+      </div>
+    `).join('');
+
+    contenedor.innerHTML += `
+      <div style="margin-bottom: 28px;">
+        <h3 style="font-size: 1.15rem; color: var(--accent-gold-dark); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+          ${tituloModulo}
+        </h3>
+        ${itemsHtml}
+      </div>
+    `;
+  }
+}
+
+async function editarReflexionSuperadmin(progresoId, textoActual) {
+  const nuevo = prompt("Modificar la reflexión consagrada:", textoActual);
+  if (nuevo === null) return;
+  if (nuevo.trim() === "") {
+    alert("El texto no puede quedar vacío.");
+    return;
+  }
+
+  const { error } = await sbApp
+    .from('progreso_maestro')
+    .update({ reflexion: nuevo.trim() })
+    .eq('id', progresoId);
+
+  if (error) alert("Error al editar: " + error.message);
+  else cargarMuroGeneralAdmin();
+}
+
+async function eliminarReflexionSuperadmin(progresoId) {
+  if (!confirm("¿Está seguro de eliminar esta reflexión? El estado del Hermano pasará a incompleto para que pueda consagrarla nuevamente.")) return;
+
+  const { error } = await sbApp
+    .from('progreso_maestro')
+    .update({ reflexion: null, completado: false })
+    .eq('id', progresoId);
+
+  if (error) alert("Error al eliminar: " + error.message);
+  else cargarMuroGeneralAdmin();
+}
+
+/* ==========================================================================
+   MATRIZ DE AVANCE
    ========================================================================== */
 async function cargarMetricasAvance(moduloId) {
   const tbody = document.getElementById('tablaMetricasBody');
-  tbody.innerHTML = `<tr><td colspan="7" class="td-loading">Consultando registros...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="6" class="td-loading">Consultando registros...</td></tr>`;
 
   const { data: usuarios } = await sbApp
     .from('usuarios')
-    .select('id, nombre, email, es_admin')
+    .select('id, nombre, es_admin')
     .order('nombre', { ascending: true });
 
   const { data: progresos } = await sbApp
@@ -640,15 +939,15 @@ async function cargarMetricasAvance(moduloId) {
     let evalHtml = `<span style="color: var(--text-muted);">Sin intentos</span>`;
     if (prog) {
       const resp = prog.respuestas_evaluacion ? Object.keys(prog.respuestas_evaluacion).length : (prog.intentos_preguntas || 0);
-      if (resp >= 6) evalHtml = `<span style="color: var(--success); font-weight: 600;">✓ 6/6 Respondidas</span>`;
+      if (resp >= 6) evalHtml = `<span style="color: var(--success); font-weight: 600;">✓ 6/6 Finalizado</span>`;
       else if (resp > 0) evalHtml = `<span style="color: #B27B10; font-weight: 600;">En curso (${resp}/6)</span>`;
     }
 
-    let consagradoHtml = `<span style="color: var(--text-muted);">Pendiente</span>`;
+    let reflexHtml = `<span style="color: var(--text-muted);">Pendiente</span>`;
     let fechaHtml = `<span style="color: var(--text-muted);">—</span>`;
 
     if (prog && prog.completado) {
-      consagradoHtml = `<span style="color: var(--success); font-weight: 700;">✓ Consagrado</span>`;
+      reflexHtml = `<span style="color: var(--success); font-weight: 700;">✓ Consagrado</span>`;
       if (prog.completado_en) {
         const d = new Date(prog.completado_en);
         fechaHtml = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -656,16 +955,19 @@ async function cargarMetricasAvance(moduloId) {
     }
 
     const accionVer = prog && prog.reflexion
-      ? `<button class="admin-link-btn" onclick="alert('Reflexión de ${u.nombre}:\\n\\n${prog.reflexion.replace(/'/g, "\\'")}')">Ver Aporte</button>`
-      : `<span style="color: var(--text-muted);">—</span>`;
+      ? `<button class="admin-link-btn" onclick="abrirModalReflexionElegante('${(u.nombre || "Hermano").replace(/'/g, "\\'")}', '${prog.reflexion.replace(/'/g, "\\'")}')">👁️ Ver Aporte</button>`
+      : `<button class="admin-link-btn" onclick="abrirModalMisAvances('${u.id}')">📄 Ficha</button>`;
 
     tbody.innerHTML += `
       <tr>
-        <td><strong>${u.nombre || "Hermano"}</strong></td>
-        <td style="font-family: monospace; font-size: 0.85rem;">${u.email}</td>
+        <td>
+          <a href="javascript:void(0)" onclick="abrirModalMisAvances('${u.id}')" style="color: var(--primary); font-weight: 700; text-decoration: underline;" title="Ver Ficha Ejecutiva del Hermano">
+            ${u.nombre || "Hermano"}
+          </a>
+        </td>
         <td>${leidoHtml}</td>
         <td>${evalHtml}</td>
-        <td>${consagradoHtml}</td>
+        <td>${reflexHtml}</td>
         <td>${fechaHtml}</td>
         <td>${accionVer}</td>
       </tr>
@@ -676,6 +978,54 @@ async function cargarMetricasAvance(moduloId) {
 function recargarMetricasActuales() {
   const select = document.getElementById('selectMetricasModulo');
   if (select && select.value) cargarMetricasAvance(select.value);
+}
+
+/* ==========================================================================
+   GESTIÓN DE MÓDULOS (ELIMINACIÓN CORRELATIVA)
+   ========================================================================== */
+function abrirModalGestionModulos() {
+  const cont = document.getElementById('listaGestionModulos');
+  cont.innerHTML = "";
+
+  listaModulos.forEach(m => {
+    cont.innerHTML += `
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color);">
+        <span><strong>N° ${m.numero_orden}:</strong> ${m.titulo}</span>
+        <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarModuloYReordenar('${m.id}')">
+          🗑️ Eliminar
+        </button>
+      </div>
+    `;
+  });
+
+  document.getElementById('modalGestionModulos').classList.remove('hidden');
+}
+
+function cerrarModalGestionModulos() {
+  document.getElementById('modalGestionModulos').classList.add('hidden');
+}
+
+async function eliminarModuloYReordenar(moduloId) {
+  if (!confirm("¿Está seguro de eliminar este trabajo? Los trabajos restantes se renumerarán automáticamente de forma correlativa (1, 2, 3...).")) return;
+
+  await sbApp.from('progreso_maestro').delete().eq('modulo_id', moduloId);
+  await sbApp.from('modulos').delete().eq('id', moduloId);
+
+  const { data: restantes } = await sbApp
+    .from('modulos')
+    .select('id')
+    .eq('activo', true)
+    .order('numero_orden', { ascending: true });
+
+  if (restantes) {
+    for (let i = 0; i < restantes.length; i++) {
+      await sbApp.from('modulos').update({ numero_orden: i + 1 }).eq('id', restantes[i].id);
+    }
+  }
+
+  alert("Trabajo eliminado y correlativo reestructurado con éxito.");
+  cerrarModalGestionModulos();
+  await cargarDatosAdmin();
 }
 
 async function exportarRespaldoCompletoJSON() {
@@ -698,7 +1048,7 @@ async function exportarRespaldoCompletoJSON() {
 }
 
 /* ==========================================================================
-   CARGA PURA Y GENERADOR CON FALLBACK SQL INTELIGENTE
+   CARGA PURA Y GENERADOR CON LLAVE BLINDADA Y FALLBACK SQL
    ========================================================================== */
 function formatearAutorMasonico(nombreCrudo) {
   if (!nombreCrudo) return 'Cámara del Medio';
@@ -801,7 +1151,7 @@ function generarSQLContingencia(orden, titulo, autor, texto) {
   const tituloEscapado = titulo.replace(/'/g, "''");
   const autorEscapado = autor.replace(/'/g, "''");
 
-  return `-- CONSULTA SQL GENERADA AUTOMÁTICAMENTE ANTE SATURACIÓN DE GEMINI API
+  return `-- CONSULTA SQL DE INSERCIÓN DIRECTA
 INSERT INTO modulos (
   numero_orden,
   titulo,
@@ -816,7 +1166,7 @@ INSERT INTO modulos (
   '${tituloEscapado}',
   '${autorEscapado}',
   '${textoEscapado}',
-  'Resumen formativo pendiente de revisión doctrinal.',
+  'Resumen formativo correspondiente a la instrucción del Tercer Grado.',
   'Reflexión sobre las virtudes del Tercer Grado correspondiente a esta plancha.',
   '{"preguntas": [
     {
@@ -904,6 +1254,21 @@ function copiarSQLFallback() {
   });
 }
 
+async function obtenerGeminiKeySegura() {
+  try {
+    const { data, error } = await sbApp
+      .from('config_segura')
+      .select('valor')
+      .eq('clave', 'gemini_api_key')
+      .single();
+
+    if (!error && data) return data.valor;
+  } catch (e) {
+    console.warn("No se pudo obtener la clave protegida:", e);
+  }
+  return null;
+}
+
 async function generarModuloConIA() {
   const titulo = document.getElementById('adminTitulo').value.trim();
   const autorInput = document.getElementById('adminAutor').value.trim();
@@ -920,7 +1285,15 @@ async function generarModuloConIA() {
   }
 
   fallbackBox.classList.add('hidden');
-  status.innerHTML = "<em>Procesando trazado con Gemini (analizando simbolismo y formulando 6 interrogantes)...</em>";
+  status.innerHTML = "<em>Recuperando credencial protegida y procesando con Gemini...</em>";
+
+  const apiKey = await obtenerGeminiKeySegura();
+  if (!apiKey) {
+    status.innerHTML = `<span style="color: var(--error);">No se encontró la credencial protegida en la base de datos. Se activó la contingencia SQL.</span>`;
+    fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
+    fallbackBox.classList.remove('hidden');
+    return;
+  }
 
   const promptSistema = `
 Eres un pedagogo e instructor especializado en la Cámara del Medio (Tercer Grado de la Masonería).
@@ -960,7 +1333,10 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
   try {
     const respuesta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': GEMINI_API_KEY },
+      headers: { 
+        'Content-Type': 'application/json', 
+        'x-goog-api-key': apiKey 
+      },
       body: JSON.stringify({
         contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
         generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
@@ -970,10 +1346,9 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
     const data = await respuesta.json();
 
     if (data.error) {
-      status.innerHTML = `<span style="color: var(--error);">Servidores de Google saturados (${data.error.message}). Se ha generado la consulta SQL de contingencia directa.</span>`;
+      status.innerHTML = `<span style="color: var(--error);">Error de API (${data.error.message}). Se generó la contingencia SQL directa.</span>`;
       fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
       fallbackBox.classList.remove('hidden');
-      fallbackBox.scrollIntoView({ behavior: 'smooth' });
       return;
     }
 
@@ -996,17 +1371,20 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto p
     if (error) {
       status.innerText = "Error BD: " + error.message;
     } else {
-      status.innerHTML = `<span style="color: var(--success);">¡Plancha procesada y consagrada con éxito!</span>`;
+      status.innerHTML = `<span style="color: var(--success);">¡Trabajo procesado y consagrado con éxito!</span>`;
       cargarDatosAdmin();
     }
   } catch (err) {
     status.innerHTML = `<span style="color: var(--error);">Error en el canal de IA: ${err.message}. Se activó la contingencia SQL.</span>`;
     fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
     fallbackBox.classList.remove('hidden');
-    fallbackBox.scrollIntoView({ behavior: 'smooth' });
   }
 }
 
+/* ==========================================================================
+   INICIALIZACIÓN AL CARGAR EL DOM
+   ========================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
   inicializarLuminosidad();
+  recuperarSesionGuardada();
 });
