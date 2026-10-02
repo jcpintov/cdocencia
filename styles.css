@@ -120,11 +120,47 @@ header {
 }
 .logout-btn:hover { background: rgba(153,120,57,0.2); }
 
-/* PANTALLA DESTINO: CATÁLOGO DE TRABAJOS */
+/* PANTALLA BIENVENIDA CENTRADA EN VERTICAL */
+.bienvenida-centrada-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  min-height: calc(100vh - 80px);
+}
+
+.bienvenida-tarjeta-limpia {
+  max-width: 460px;
+  width: 100%;
+  text-align: center;
+  padding: 44px 32px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
+
+.bienvenida-nombre-texto {
+  font-size: 1.75rem;
+  color: var(--primary);
+  margin: 14px 0 28px 0;
+  font-family: var(--font-reading);
+}
+body.theme-nocturno .bienvenida-nombre-texto {
+  color: var(--accent-gold);
+}
+
+.btn-ir-docencia-accion {
+  max-width: 240px;
+  margin: 0 auto;
+  font-size: 1.05rem;
+  padding: 14px 20px;
+}
+
+/* CATÁLOGO DE TRABAJOS */
 .bienvenida-container {
   max-width: 1200px;
   width: 100%;
-  margin: 30px auto;
+  margin: 28px auto;
   padding: 0 20px 40px 20px;
 }
 
@@ -138,6 +174,13 @@ header {
   font-family: var(--font-ui);
   flex-wrap: wrap;
   gap: 14px;
+}
+
+.catalogo-botones-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .badge-contador-temas {
@@ -168,7 +211,6 @@ body.theme-nocturno .badge-contador-temas {
   box-shadow: 0 4px 12px rgba(0,0,0,0.03);
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
-
 .card-trabajo-grid:hover {
   transform: translateY(-2px);
   border-color: var(--accent-gold);
@@ -239,6 +281,43 @@ body.theme-nocturno .btn-grid-ir {
 .btn-grid-ir:hover {
   background: var(--accent-gold);
   color: #FFFFFF;
+}
+
+/* SECCIÓN INSTITUCIONAL */
+.institucional-wrapper {
+  padding: 40px;
+  border-radius: 10px;
+}
+
+.institucional-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 16px;
+  margin-bottom: 26px;
+}
+
+.institucional-body {
+  font-family: var(--font-reading);
+  line-height: 1.9;
+}
+
+.institucional-bloque {
+  margin-bottom: 28px;
+}
+.institucional-bloque h2 {
+  font-size: 1.6rem;
+  color: var(--accent-gold);
+  margin-bottom: 6px;
+}
+.institucional-bloque h3 {
+  font-size: 1.25rem;
+  color: var(--primary);
+  margin-bottom: 12px;
+}
+body.theme-nocturno .institucional-bloque h3 {
+  color: #E2E8F0;
 }
 
 /* LAYOUT DE DOCENCIA REGULAR */
@@ -381,7 +460,6 @@ body.theme-nocturno .badge-pen { background: #222E3A; color: #8C9CAE; }
 .card-reflexion { border-top: 4px solid var(--primary); }
 body.theme-nocturno .card-reflexion { border-top-color: var(--accent-gold); }
 
-/* INSIGNIA ESCUADRA */
 .insignia-centro-wrapper {
   display: flex;
   justify-content: center;
@@ -500,7 +578,7 @@ body.theme-nocturno .btn-certificado { background: #1C2937; color: #FFFFFF; }
   margin-top: 12px;
 }
 
-/* FLUJO DE PREGUNTAS PASO A PASO */
+/* FLUJO DE PREGUNTAS */
 .pregunta-paso-card {
   padding: 22px;
   border-left: 4px solid var(--accent-gold);
@@ -560,7 +638,7 @@ body.theme-nocturno .pregunta-paso-card { background: #111A22; }
 .form-group { display: flex; flex-direction: column; margin-bottom: 18px; font-family: var(--font-ui); }
 .form-group label { font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
 
-input[type="text"], input[type="email"], input[type="password"], input[type="number"], textarea, select {
+input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="datetime-local"], textarea, select {
   width: 100%;
   padding: 12px 14px;
   font-size: 1.05rem;
@@ -734,7 +812,6 @@ body.theme-nocturno .admin-link-btn { color: var(--text-main); }
 body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accent-gold); }
 .metricas-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-color); }
 .metricas-table tr:hover { background: rgba(153,120,57,0.06); }
-.td-loading { text-align: center; color: var(--text-muted); font-style: italic; }
 
 .admin-grid { display: grid; grid-template-columns: 140px 1.4fr 1.2fr; gap: 16px; }
 @media (max-width: 768px) { .admin-grid { grid-template-columns: 1fr; } }
@@ -749,7 +826,23 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   font-family: var(--font-ui);
 }
 
-/* MODALES UNIVERSALES */
+/* GESTIÓN DE BLOQUES DE DOCTRINA */
+.bloque-doctrina-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-left: 4px solid var(--accent-gold);
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 18px;
+}
+.bloque-doctrina-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* MODALES */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -853,23 +946,15 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   align-items: center !important;
   gap: 6px !important;
   backdrop-filter: blur(4px) !important;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3) !important;
-  transition: all 0.2s ease !important;
-}
-.btn-cert-cerrar:hover {
-  background: rgba(229, 83, 83, 0.85) !important;
-  border-color: #E55353 !important;
-  color: #FFFFFF !important;
-  transform: translateY(-1px) !important;
 }
 
 /* ==========================================================================
-   INFORME EJECUTIVO DE AVANCE (DIAGRAMACIÓN CARTA ESTRICTA Y LIMPIA)
+   INFORME EJECUTIVO DE AVANCE (ESTÁNDAR CARTA EXACTO)
    ========================================================================== */
 .informe-carta {
   background: #FFFFFF !important;
   color: #1A202C !important;
-  width: 794px; /* Ancho exacto estándar Carta a escala 1:1 */
+  width: 794px;
   padding: 36px 40px;
   box-sizing: border-box;
   font-family: var(--font-ui) !important;
@@ -902,9 +987,7 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   height: 56px;
   width: auto;
   object-fit: contain;
-  opacity: 0.82;
-  mix-blend-mode: multiply;
-  filter: contrast(0.92) brightness(0.98);
+  opacity: 0.85;
 }
 
 .informe-meta-header {
@@ -927,7 +1010,6 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   margin-bottom: 18px;
 }
 
-/* KPIS MEDIANTE FLEXBOX EN LUGAR DE GRID (BLINDAJE HTML2PDF) */
 .informe-kpis-flex {
   display: flex;
   justify-content: space-between;
@@ -1037,7 +1119,6 @@ body.theme-nocturno #documentoCertificado h2.cert-logia {
   font-weight: 700 !important; 
   color: #12161A !important; 
   margin-bottom: 2px !important; 
-  letter-spacing: 0.5px !important;
 }
 
 #documentoCertificado .cert-valle { 
@@ -1147,16 +1228,11 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
 .timbre-estampa {
   width: 175px !important;
   height: 175px !important;
-  min-width: 175px !important;
-  min-height: 175px !important;
-  max-width: 175px !important;
-  max-height: 175px !important;
   display: block !important;
   margin: 0 auto !important;
   object-fit: contain !important;
   transform: rotate(-2deg);
   opacity: 0.95;
-  filter: drop-shadow(1px 1px 1px rgba(0, 0, 0, 0.2));
 }
 
 .login-wrapper { max-width: 480px; margin: 50px auto; padding: 0 20px; }
