@@ -2020,13 +2020,12 @@ async function leerArchivoPlancha(event) {
   const inputTitulo = document.getElementById('adminTitulo');
   if (!inputTitulo.value) inputTitulo.value = file.name.replace(/\.[^/.]+$/, "");
 
-  if (file.type === "application/pdf" || file.name.endsWith('.pdf')) {
-    const b64Reader = new FileReader();
-    b64Reader.onload = function(e) { pdfBase64Cargado = e.target.result; };
-    b64Reader.readAsDataURL(file);
-  } else {
-    pdfBase64Cargado = null;
-  }
+  // RESPALDO BINARIO EN BASE64 (APLICA A PDF Y A WORD .DOCX)
+  const b64Reader = new FileReader();
+  b64Reader.onload = function(e) { 
+    pdfBase64Cargado = e.target.result; 
+  };
+  b64Reader.readAsDataURL(file);
 
   const reader = new FileReader();
 
