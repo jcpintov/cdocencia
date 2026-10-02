@@ -120,6 +120,36 @@ header {
 }
 .logout-btn:hover { background: rgba(153,120,57,0.2); }
 
+/* MODAL DE SIGILO Y COMPROMISO */
+.modal-sigilo-box {
+  max-width: 660px !important;
+  padding: 24px 34px 30px 34px !important;
+  text-align: center;
+}
+
+.modal-sigilo-titulo {
+  color: var(--accent-gold);
+  margin-top: 0 !important;
+  margin-bottom: 12px !important;
+  font-size: 1.5rem;
+  font-family: var(--font-reading);
+}
+
+.modal-sigilo-texto {
+  text-align: justify;
+  line-height: 1.75;
+  margin-bottom: 28px !important;
+  font-size: 1rem;
+  color: var(--text-main);
+}
+
+.btn-sigilo-accion {
+  padding: 14px 20px !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px;
+}
+
 /* PANTALLA BIENVENIDA CENTRADA EN VERTICAL */
 .bienvenida-centrada-wrapper {
   flex: 1;
@@ -131,7 +161,7 @@ header {
 }
 
 .bienvenida-tarjeta-limpia {
-  max-width: 460px;
+  max-width: 480px;
   width: 100%;
   text-align: center;
   padding: 44px 32px;
@@ -139,14 +169,31 @@ header {
   box-shadow: 0 8px 24px rgba(0,0,0,0.06);
 }
 
-.bienvenida-nombre-texto {
-  font-size: 1.75rem;
-  color: var(--primary);
+.bienvenida-lineas-contenedor {
   margin: 14px 0 28px 0;
-  font-family: var(--font-reading);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-body.theme-nocturno .bienvenida-nombre-texto {
+
+.bienvenida-subtitulo-linea {
+  font-size: 1.35rem;
+  color: var(--accent-gold-dark);
+  font-family: var(--font-reading);
+  font-weight: 600;
+}
+body.theme-nocturno .bienvenida-subtitulo-linea {
   color: var(--accent-gold);
+}
+
+.bienvenida-nombre-linea {
+  font-size: 1.85rem;
+  color: var(--primary);
+  font-family: var(--font-reading);
+  margin: 0;
+}
+body.theme-nocturno .bienvenida-nombre-linea {
+  color: #FFFFFF;
 }
 
 .btn-ir-docencia-accion {
@@ -176,11 +223,70 @@ body.theme-nocturno .bienvenida-nombre-texto {
   gap: 14px;
 }
 
+.titulo-catalogo-temas {
+  font-family: var(--font-reading);
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+body.theme-nocturno .titulo-catalogo-temas {
+  color: #FFFFFF !important;
+}
+
 .catalogo-botones-top {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   flex-wrap: wrap;
+}
+
+/* BOTONES GEMELOS HORIZONTALES (MISMO TAMAÑO Y ALINEACIÓN) */
+.botones-gemelos-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-gemelo {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 10px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+  height: 42px;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.btn-gemelo-secundario {
+  background: transparent;
+  border: 2px solid var(--accent-gold);
+  color: var(--text-main);
+}
+body.theme-nocturno .btn-gemelo-secundario {
+  color: #FFFFFF;
+}
+.btn-gemelo-secundario:hover {
+  background: var(--gold-light);
+}
+
+.btn-gemelo-primario {
+  background: var(--gold-light);
+  border: 2px solid var(--accent-gold);
+  color: var(--accent-gold-dark);
+}
+body.theme-nocturno .btn-gemelo-primario {
+  background: #1C2733;
+  color: var(--accent-gold);
+}
+.btn-gemelo-primario:hover {
+  background: var(--accent-gold);
+  color: #FFFFFF;
 }
 
 .badge-contador-temas {
@@ -374,12 +480,13 @@ body.theme-nocturno .btn-mis-avances { color: var(--accent-gold); }
   color: #FFFFFF;
 }
 
+/* CONTENEDOR EN UNA SOLA LÍNEA SIN CORTE */
 .sidebar-title {
   font-family: var(--font-ui);
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   color: var(--text-main);
   margin-bottom: 16px;
   padding-bottom: 8px;
@@ -387,15 +494,21 @@ body.theme-nocturno .btn-mis-avances { color: var(--accent-gold); }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 8px;
 }
 body.theme-nocturno .sidebar-title { color: #FFFFFF; }
 
-#contadorModulos {
+.sidebar-title-label {
+  white-space: nowrap;
+}
+
+.sidebar-title-contador {
   color: var(--accent-gold-dark);
   font-size: 0.8rem;
   font-weight: 700;
+  white-space: nowrap;
 }
-body.theme-nocturno #contadorModulos { color: var(--accent-gold); }
+body.theme-nocturno .sidebar-title-contador { color: var(--accent-gold); }
 
 .sidebar-info {
   background: var(--gold-light);
@@ -841,6 +954,11 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   align-items: center;
   margin-bottom: 12px;
 }
+.bloque-doctrina-acciones {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 
 /* MODALES */
 .modal-overlay {
@@ -861,33 +979,6 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   max-width: 620px;
   width: 100%;
   padding: 34px;
-}
-
-.modal-reflexion-vista {
-  max-width: 680px !important;
-  text-align: left !important;
-}
-
-.modal-reflexion-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 12px;
-}
-
-.modal-reflexion-cuerpo {
-  font-family: var(--font-reading);
-  font-size: 1.15rem;
-  line-height: 1.8;
-  color: var(--text-main);
-  background: rgba(153, 120, 57, 0.08);
-  border-left: 4px solid var(--accent-gold);
-  padding: 20px 24px;
-  border-radius: 0 8px 8px 0;
-  font-style: italic;
-  white-space: pre-line;
 }
 
 .modal-certificado-wrapper {
@@ -949,7 +1040,7 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
 }
 
 /* ==========================================================================
-   INFORME EJECUTIVO DE AVANCE (ESTÁNDAR CARTA EXACTO)
+   INFORME EJECUTIVO DE AVANCE Y ENCABEZADOS DE ALTA DEFINICIÓN
    ========================================================================== */
 .informe-carta {
   background: #FFFFFF !important;
@@ -966,6 +1057,14 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+}
+
+.informe-header-muro {
+  padding: 14px 20px;
+  background: #F7FAFC;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin-bottom: 14px;
 }
 
 .informe-brand p {
