@@ -19,7 +19,10 @@ let respuestasMarcadas = {};
 let pdfBase64Cargado = null;
 let moduloAuditando = null;
 
-// Temporizador de inactividad estricto (5 minutos = 300,000 ms)
+// Temporizador silencioso de lectura (120 segundos)
+let temporizadorLecturaId = null;
+
+// Temporizador de inactividad estricto (5 minutos)
 let temporizadorInactividad = null;
 const TIEMPO_INACTIVIDAD_MS = 5 * 60 * 1000;
 
@@ -135,13 +138,13 @@ function configurarEntornoUsuario() {
     document.getElementById('seccionDocencia').classList.add('hidden');
     document.getElementById('seccionBienvenida').classList.add('hidden');
     document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
+    document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
     cargarDatosAdmin();
   } else {
     document.getElementById('modalSigilo').classList.remove('hidden');
   }
 }
 
-// 1. ACEPTAR SIGILO -> PANTALLA LIMPIA DE BIENVENIDA
 function aceptarSigilo() {
   document.getElementById('modalSigilo').classList.add('hidden');
   const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
@@ -149,9 +152,9 @@ function aceptarSigilo() {
   document.getElementById('seccionBienvenida').classList.remove('hidden');
 }
 
-// 2. BOTÓN "IR A DOCENCIA" -> DESPLIEGA EL DESTINO (CATÁLOGO / CUADRÍCULA)
 async function irACatalogoDocencia() {
   document.getElementById('seccionBienvenida').classList.add('hidden');
+  document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   await renderizarCatalogoTrabajos();
 }
 
@@ -166,7 +169,6 @@ async function renderizarCatalogoTrabajos() {
 
   await refrescarProgresosUsuario();
 
-  // Partición: No leídos más nuevos primero; leídos concluyendo en el más antiguo
   const noLeidos = [];
   const leidos = [];
 
@@ -223,23 +225,25 @@ async function renderizarCatalogoTrabajos() {
   document.getElementById('seccionCatalogoTrabajos').classList.remove('hidden');
 }
 
-// 3. ENTRAR AL MÓDULO DE LECTURA DESDE LA CUADRÍCULA
 function entrarADocenciaConModulo(idModulo) {
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
+  document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   document.getElementById('seccionDocencia').classList.remove('hidden');
   document.getElementById('contadorModulos').innerText = `${listaModulos.length} temas`;
   renderizarSidebar();
   seleccionarModulo(idModulo);
 }
 
-// 4. VOLVER A LA CUADRÍCULA DESDE LA LECTURA
 function volverACatalogo() {
+  if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
   document.getElementById('seccionDocencia').classList.add('hidden');
+  document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   renderizarCatalogoTrabajos();
 }
 
 function cerrarSesion() {
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
+  if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
   usuarioActual = null;
   moduloActual = null;
   misProgresos = {};
@@ -249,12 +253,14 @@ function cerrarSesion() {
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionBienvenida').classList.add('hidden');
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
+  document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   document.getElementById('seccionAdmin').classList.add('hidden');
   document.getElementById('modalSigilo').classList.add('hidden');
   document.getElementById('modalMisAvances').classList.add('hidden');
   document.getElementById('modalCertificado').classList.add('hidden');
   document.getElementById('modalVerReflexion').classList.add('hidden');
   document.getElementById('modalAuditoriaModulo').classList.add('hidden');
+  document.getElementById('modalParametrosHermano').classList.add('hidden');
   document.getElementById('btnSalir').classList.add('hidden');
   document.getElementById('seccionLogin').classList.remove('hidden');
   document.getElementById('inputEmail').value = '';
@@ -262,62 +268,70 @@ function cerrarSesion() {
 }
 
 /* ==========================================================================
-   NAVEGACIÓN SUPERADMIN
+   SECCIÓN INSTITUCIONAL: DOCENCIA PARA MAESTROS
    ========================================================================== */
-function cambiarSubseccionAdmin(seccion) {
-  const btnCargar = document.getElementById('tabNavCargar');
-  const btnMuroGen = document.getElementById('tabNavMuroGeneral');
-  const btnMetricas = document.getElementById('tabNavMetricas');
-
-  const secCarga = document.getElementById('adminSeccionCarga');
-  const secMuroGen = document.getElementById('adminSeccionMuroGeneral');
-  const secMetricas = document.getElementById('adminSeccionMetricas');
-
-  [btnCargar, btnMuroGen, btnMetricas].forEach(b => b?.classList.remove('active'));
-  [secCarga, secMuroGen, secMetricas].forEach(s => s?.classList.add('hidden'));
-
-  if (seccion === 'cargar') {
-    btnCargar.classList.add('active');
-    secCarga.classList.remove('hidden');
-  } else if (seccion === 'muro_general') {
-    btnMuroGen.classList.add('active');
-    secMuroGen.classList.remove('hidden');
-    cargarMuroGeneralAdmin();
-  } else {
-    btnMetricas.classList.add('active');
-    secMetricas.classList.remove('hidden');
-    if (listaModulos.length > 0) {
-      const select = document.getElementById('selectMetricasModulo');
-      cargarMetricasAvance(select.value || listaModulos[0].id);
-    }
+const DOCTRINA_DEFAULT = [
+  {
+    titulo: "1. Descripción General",
+    subtitulo: "La Cámara del Medio como Escuela de Formación Activa",
+    texto: "La Plataforma de Docencia para la Cámara del Medio es un espacio reservado para los Maestros Masones de la R.·.L.·. Orestes Frödden Lorenzen N° 146. Está concebida como un entorno asíncrono para el análisis conceptual y moral de los trazados de instrucción previa a cada Tenida."
+  },
+  {
+    titulo: "2. Objetivos Principales",
+    subtitulo: "Compromiso Moral y Coherencia Doctrinal",
+    texto: "Fomentar el estudio riguroso de la docencia del Tercer Grado, verificar la asimilación conceptual de los símbolos y deberes éticos, y consolidar un repositorio de reflexiones fraternas que fortalezca la vida interior del taller."
+  },
+  {
+    titulo: "3. Metodología Docente en Tres Fases",
+    subtitulo: "Lectura, Diagnóstico Simbólico y Consagración",
+    texto: "Fase I: Lectura atenta con tiempo mínimo de análisis reflexivo.\nFase II: Examen formativo de 8 preguntas que culmina en un dilema ético profundo.\nFase III: Consagración de la reflexión personal y acceso al Muro fraterno."
+  },
+  {
+    titulo: "4. Importancia de la Maestría",
+    subtitulo: "El Deber Masónico en la Vida Profana y Logial",
+    texto: "Ser Maestro no es ostentar un rango, sino encarnar la rectitud moral, el amparo al Hermano ausente y la fidelidad inquebrantable a la palabra empeñada sobre el Ara."
   }
+];
+
+async function obtenerDoctrinaBD() {
+  try {
+    const { data } = await sbApp
+      .from('config_segura')
+      .select('valor')
+      .eq('clave', 'doctrina_docencia_maestros')
+      .maybeSingle();
+
+    if (data && data.valor) {
+      return JSON.parse(data.valor);
+    }
+  } catch (e) {
+    console.warn("Usando doctrina local:", e);
+  }
+  return DOCTRINA_DEFAULT;
 }
 
-async function cargarDatosAdmin() {
-  const { data: mods } = await sbApp
-    .from('modulos')
-    .select('*')
-    .eq('activo', true)
-    .order('numero_orden', { ascending: true });
+async function mostrarDocenciaParaMaestros() {
+  document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
+  const cont = document.getElementById('contenidoInstitucionalDocencia');
+  cont.innerHTML = "<p class='td-loading'>Consultando fundamentos doctrinales...</p>";
+  document.getElementById('seccionDocenciaInstitucional').classList.remove('hidden');
 
-  listaModulos = mods || [];
-  
-  const selectMetricas = document.getElementById('selectMetricasModulo');
-  selectMetricas.innerHTML = "";
-  listaModulos.forEach(m => {
-    selectMetricas.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
+  const bloques = await obtenerDoctrinaBD();
+  cont.innerHTML = "";
+
+  bloques.forEach(b => {
+    cont.innerHTML += `
+      <div class="institucional-bloque">
+        <h2>${b.titulo}</h2>
+        <h3>${b.subtitulo}</h3>
+        <p style="white-space: pre-line;">${b.texto}</p>
+      </div>
+    `;
   });
-
-  const inputOrden = document.getElementById('adminOrden');
-  if (inputOrden) {
-    inputOrden.value = listaModulos.length + 1;
-  }
-
-  cambiarSubseccionAdmin('cargar');
 }
 
 /* ==========================================================================
-   ENTORNO DOCENTE PARA HERMANOS
+   ENTORNO DOCENTE Y LECTURA CON TEMPORIZADOR SILENCIOSO (2 MINUTOS)
    ========================================================================== */
 async function refrescarProgresosUsuario() {
   const { data: dataProgreso } = await sbApp
@@ -359,6 +373,8 @@ function renderizarSidebar() {
 }
 
 async function seleccionarModulo(idModulo) {
+  if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
+
   moduloActual = listaModulos.find(m => m.id === idModulo);
   if (!moduloActual) return;
 
@@ -380,10 +396,7 @@ async function seleccionarModulo(idModulo) {
   const framePdf = document.getElementById('framePdf');
   const btnDescargar = document.getElementById('btnDescargarTrazado');
 
-  let rutaPdf = moduloActual.archivo_pdf_base64;
-  if (!rutaPdf && moduloActual.archivo_url) {
-    rutaPdf = moduloActual.archivo_url;
-  }
+  let rutaPdf = moduloActual.archivo_pdf_base64 || moduloActual.archivo_url;
 
   if (rutaPdf) {
     tabPdf.classList.remove('hidden');
@@ -420,12 +433,10 @@ function cambiarVistaDocencia(tipo) {
   }
 }
 
-/* ==========================================================================
-   FLUJO SECUENCIAL DE FASES CON BOTONES EXPRESOS
-   ========================================================================== */
 async function evaluarEstadoFasesModulo() {
   const prog = misProgresos[moduloActual.id];
   const contConfLectura = document.getElementById('contenedorConfirmarLectura');
+  const btnConfLectura = document.getElementById('btnConfirmarLectura');
   const bloqueFaseDos = document.getElementById('bloqueFaseDos');
   const bloqueFaseTres = document.getElementById('bloqueFaseTres');
   const btnCert = document.getElementById('btnVerCertificado');
@@ -458,10 +469,23 @@ async function evaluarEstadoFasesModulo() {
     return;
   }
 
+  // PRIMERA VEZ: BLOQUEO SILENCIOSO DE 2 MINUTOS (120 SEGUNDOS)
   contConfLectura.classList.remove('hidden');
   bloqueFaseDos.classList.add('hidden');
   bloqueFaseTres.classList.add('hidden');
   btnCert.classList.add('hidden');
+
+  btnConfLectura.disabled = true;
+  btnConfLectura.innerText = "Lectura atenta en curso...";
+  btnConfLectura.style.opacity = "0.6";
+  btnConfLectura.style.cursor = "not-allowed";
+
+  temporizadorLecturaId = setTimeout(() => {
+    btnConfLectura.disabled = false;
+    btnConfLectura.innerText = "Confirmo lectura";
+    btnConfLectura.style.opacity = "1";
+    btnConfLectura.style.cursor = "pointer";
+  }, 120000); // 2 minutos exactos
 }
 
 async function confirmarLecturaFaseUno() {
@@ -558,8 +582,14 @@ function renderizarPreguntaActual() {
   `;
 }
 
-function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
+async function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
   if (respuestasMarcadas[indicePreguntaActiva]) return;
+
+  // REGLA: Si responde preguntas, es porque leyó el trabajo
+  sbApp.from('progreso_maestro')
+    .update({ leido: true })
+    .eq('usuario_id', usuarioActual.id)
+    .eq('modulo_id', moduloActual.id);
 
   respuestasMarcadas[indicePreguntaActiva] = letraSeleccionada;
 
@@ -686,6 +716,7 @@ async function guardarReflexionYCompletar() {
   const payload = {
     respuestas_evaluacion: respuestasMarcadas,
     reflexion: texto,
+    leido: true,
     completado: true,
     completado_en: new Date().toISOString()
   };
@@ -698,7 +729,6 @@ async function guardarReflexionYCompletar() {
     const res = await sbApp.from('progreso_maestro').insert({
       usuario_id: usuarioActual.id,
       modulo_id: moduloActual.id,
-      leido: true,
       ...payload
     });
     error = res.error;
@@ -762,7 +792,7 @@ function abrirModalReflexionElegante(autor, texto) {
 }
 
 /* ==========================================================================
-   MIS AVANCES Y GENERACIÓN DE INFORME PDF LIMPIO (SIN DESFASES)
+   MIS AVANCES E IMPRESIÓN LIMPIA DE INFORME PDF (300 DPI, SIN CORTES)
    ========================================================================== */
 async function abrirModalMisAvances(usuarioObjetivoId = null) {
   const idTarget = usuarioObjetivoId || usuarioActual.id;
@@ -847,57 +877,138 @@ function cerrarModalMisAvances() {
   document.getElementById('modalMisAvances').classList.add('hidden');
 }
 
-/* GENERACIÓN BLINDADA DEL PDF CARTA (ELIMINA PÁGINAS EN BLANCO Y CORTES) */
-function descargarInformeAvancePDF() {
+/* MOTOR DE IMPRESIÓN NATIVO EN FORMATO CARTA (SOLUCIÓN DEFINITIVA A CORTES) */
+function imprimirInformeAvanceNativo() {
   const original = document.getElementById('documentoInformeAvance');
-  const btnAccion = document.querySelector('.btn-cert-descargar');
-  btnAccion.innerText = "Generando PDF...";
-  btnAccion.disabled = true;
-
-  // Clonar el documento fuera del modal para aislarlo de scrollbars y márgenes
-  const clon = original.cloneNode(true);
-  
-  // Ocultar sección de botones de certificados en el PDF
-  const certsEnClon = clon.querySelector('#seccionCertificadosDisponibles');
-  if (certsEnClon) certsEnClon.style.display = 'none';
-
-  // Contenedor temporal aislado en el body
-  const contenedorTemp = document.createElement('div');
-  contenedorTemp.style.position = 'fixed';
-  contenedorTemp.style.top = '0';
-  contenedorTemp.style.left = '-9999px';
-  contenedorTemp.style.width = '794px';
-  contenedorTemp.style.background = '#FFFFFF';
-  contenedorTemp.appendChild(clon);
-  document.body.appendChild(contenedorTemp);
-
   const nombreLimpio = document.getElementById('informeNombreHermano').innerText.replace(/\s+/g, '_');
 
-  const opciones = {
-    margin: [10, 10, 10, 10],
-    filename: `Informe_Docente_${nombreLimpio}.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: {
-      scale: 2,
-      useCORS: true,
-      scrollY: 0,
-      scrollX: 0,
-      windowWidth: 1024
-    },
-    jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
-    pagebreak: { mode: ['avoid-all', 'css'] }
-  };
-
-  html2pdf().set(opciones).from(clon).save().then(() => {
-    document.body.removeChild(contenedorTemp);
-    btnAccion.innerText = "📥 Descargar Informe en PDF";
-    btnAccion.disabled = false;
-  }).catch((err) => {
-    console.error("Error al generar PDF:", err);
-    document.body.removeChild(contenedorTemp);
-    btnAccion.innerText = "📥 Descargar Informe en PDF";
-    btnAccion.disabled = false;
-  });
+  const ventanaPrint = window.open('', '_blank', 'width=850,height=1100');
+  ventanaPrint.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <title>Informe_Docente_${nombreLimpio}</title>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+      <style>
+        @page {
+          size: letter portrait;
+          margin: 12mm 15mm;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+          font-family: 'Inter', system-ui, sans-serif;
+          color: #1A202C;
+          background: #FFFFFF;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        .informe-carta {
+          width: 100%;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+        .informe-header-box {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 8px;
+        }
+        .informe-brand p {
+          font-size: 8.5pt;
+          line-height: 1.35;
+          margin: 0;
+          font-weight: 700;
+          color: #152433;
+        }
+        .img-emblema-discreto {
+          height: 52px;
+          object-fit: contain;
+        }
+        .informe-meta-header {
+          text-align: right;
+          font-size: 8pt;
+          color: #718096;
+        }
+        .informe-hr {
+          border: 0;
+          height: 2px;
+          background: #152433;
+          margin: 8px 0 14px 0;
+        }
+        .informe-constancia {
+          font-size: 9.5pt;
+          line-height: 1.5;
+          margin-bottom: 16px;
+        }
+        .informe-kpis-flex {
+          display: flex;
+          gap: 12px;
+          margin-bottom: 18px;
+        }
+        .kpi-card-flex {
+          flex: 1;
+          background: #F7FAFC;
+          border: 1px solid #CBD5E0;
+          border-radius: 4px;
+          padding: 8px;
+          text-align: center;
+        }
+        .kpi-valor {
+          font-size: 15pt;
+          font-weight: 700;
+          color: #152433;
+        }
+        .kpi-label {
+          font-size: 7.5pt;
+          color: #718096;
+          text-transform: uppercase;
+        }
+        .informe-table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 8.5pt;
+          margin-bottom: 16px;
+        }
+        .informe-table th {
+          background: #EDF2F7;
+          border: 1px solid #CBD5E0;
+          padding: 6px 8px;
+          text-align: left;
+        }
+        .informe-table td {
+          border: 1px solid #E2E8F0;
+          padding: 6px 8px;
+          vertical-align: top;
+        }
+        .informe-pie-doc {
+          border-top: 1px solid #CBD5E0;
+          padding-top: 8px;
+          font-size: 7.5pt;
+          color: #A0AEC0;
+          display: flex;
+          justify-content: space-between;
+        }
+        .no-print {
+          display: none !important;
+        }
+      </style>
+    </head>
+    <body>
+      ${original.outerHTML}
+      <script>
+        window.onload = function() {
+          const noprint = document.querySelector('.no-print');
+          if (noprint) noprint.style.display = 'none';
+          window.print();
+          setTimeout(() => window.close(), 1000);
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+  ventanaPrint.document.close();
 }
 
 /* ==========================================================================
@@ -945,7 +1056,7 @@ function cerrarModalUniversalDirecto(modalId) {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    ['modalCertificado', 'modalMisAvances', 'modalGestionModulos', 'modalSigilo', 'modalVerReflexion', 'modalAuditoriaModulo'].forEach(id => {
+    ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano', 'modalSigilo', 'modalVerReflexion'].forEach(id => {
       const el = document.getElementById(id);
       if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
     });
@@ -954,7 +1065,6 @@ document.addEventListener('keydown', (e) => {
 
 function descargarCertificadoPDF() {
   const original = document.getElementById('documentoCertificado');
-  
   const clon = original.cloneNode(true);
   const contenedorTemp = document.createElement('div');
   contenedorTemp.style.position = 'fixed';
@@ -975,6 +1085,391 @@ function descargarCertificadoPDF() {
   html2pdf().set(opciones).from(clon).save().then(() => {
     document.body.removeChild(contenedorTemp);
   });
+}
+
+/* ==========================================================================
+   CONSOLA SUPERADMIN: GESTIÓN DE TRABAJOS Y AUDITORÍA
+   ========================================================================== */
+async function cargarDatosAdmin() {
+  const { data: mods } = await sbApp
+    .from('modulos')
+    .select('*')
+    .eq('activo', true)
+    .order('numero_orden', { ascending: true });
+
+  listaModulos = mods || [];
+  
+  const selectMetricas = document.getElementById('selectMetricasModulo');
+  selectMetricas.innerHTML = "";
+  listaModulos.forEach(m => {
+    selectMetricas.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
+  });
+
+  const inputOrden = document.getElementById('adminOrden');
+  if (inputOrden) {
+    inputOrden.value = listaModulos.length + 1;
+  }
+
+  cambiarSubseccionAdmin('cargar');
+}
+
+function cambiarSubseccionAdmin(seccion) {
+  const btns = ['tabNavCargar', 'tabNavGestionTrabajos', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina'];
+  const secs = ['adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina'];
+
+  btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
+  secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
+
+  if (seccion === 'cargar') {
+    document.getElementById('tabNavCargar').classList.add('active');
+    document.getElementById('adminSeccionCarga').classList.remove('hidden');
+  } else if (seccion === 'gestion_trabajos') {
+    document.getElementById('tabNavGestionTrabajos').classList.add('active');
+    document.getElementById('adminSeccionGestionTrabajos').classList.remove('hidden');
+    cargarGestionTrabajosAdmin();
+  } else if (seccion === 'muro_general') {
+    document.getElementById('tabNavMuroGeneral').classList.add('active');
+    document.getElementById('adminSeccionMuroGeneral').classList.remove('hidden');
+    cargarMuroGeneralAdmin();
+  } else if (seccion === 'editor_doctrina') {
+    document.getElementById('tabNavEditorDoctrina').classList.add('active');
+    document.getElementById('adminSeccionEditorDoctrina').classList.remove('hidden');
+    cargarEditorDoctrinaAdmin();
+  } else {
+    document.getElementById('tabNavMetricas').classList.add('active');
+    document.getElementById('adminSeccionMetricas').classList.remove('hidden');
+    if (listaModulos.length > 0) {
+      const select = document.getElementById('selectMetricasModulo');
+      cargarMetricasAvance(select.value || listaModulos[0].id);
+    }
+  }
+}
+
+async function cargarGestionTrabajosAdmin() {
+  const cont = document.getElementById('listaGestionTrabajosAdmin');
+  cont.innerHTML = "<p class='td-loading'>Cargando trabajos...</p>";
+
+  const { data: mods } = await sbApp
+    .from('modulos')
+    .select('*')
+    .eq('activo', true)
+    .order('numero_orden', { ascending: true });
+
+  listaModulos = mods || [];
+  cont.innerHTML = "";
+
+  listaModulos.forEach(m => {
+    cont.innerHTML += `
+      <div class="card" style="padding: 18px 24px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: gap: 12px;">
+        <div>
+          <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent-gold-dark);">TRABAJO N° ${m.numero_orden}</span>
+          <h4 style="margin: 4px 0;">${m.titulo}</h4>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">${m.autor || "Cámara del Medio"}</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="admin-link-btn" onclick="abrirAuditoriaModulo('${m.id}')">🔍 Auditar / Editar 8 Preguntas</button>
+          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarModuloYReordenar('${m.id}')">🗑️️ Eliminar</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function abrirAuditoriaModulo(moduloId) {
+  moduloAuditando = listaModulos.find(m => m.id === moduloId);
+  if (!moduloAuditando) return;
+
+  document.getElementById('editModOrden').value = moduloAuditando.numero_orden;
+  document.getElementById('editModTitulo').value = moduloAuditando.titulo;
+  document.getElementById('editModAutor').value = moduloAuditando.autor || "";
+  document.getElementById('editModTexto').value = moduloAuditando.contenido_trazado || "";
+
+  const contPreguntas = document.getElementById('cuerpoPreguntasAuditoria');
+  contPreguntas.innerHTML = "";
+
+  const preguntas = moduloAuditando.preguntas_json?.preguntas || [];
+  preguntas.forEach((p, idx) => {
+    const esEtica = (idx === preguntas.length - 1);
+    let opcionesTxt = p.opciones.map(o => `<div>• <strong>${o.letra})</strong> ${o.texto}</div>`).join('');
+    contPreguntas.innerHTML += `
+      <div style="padding: 14px; margin-bottom: 12px; background: rgba(0,0,0,0.03); border-left: 3px solid ${esEtica ? 'var(--accent-gold)' : 'var(--primary)'}; border-radius: 4px;">
+        <p><strong>${esEtica ? 'Pregunta 8 (Dilema Ético)' : `Pregunta ${p.numero}`}:</strong> ${p.enunciado}</p>
+        <div style="margin: 8px 0; font-size: 0.9rem;">${opcionesTxt}</div>
+        <p style="color: var(--success); font-weight: 600; font-size: 0.85rem;">Respuesta Correcta: ${p.respuesta_correcta}</p>
+        <p style="font-style: italic; color: var(--text-muted); font-size: 0.85rem;">Retroalimentación: ${p.retroalimentacion}</p>
+      </div>
+    `;
+  });
+
+  document.getElementById('modalAuditoriaModulo').classList.remove('hidden');
+}
+
+async function guardarEdicionModuloAdmin() {
+  if (!moduloAuditando) return;
+
+  const nuevoOrden = parseInt(document.getElementById('editModOrden').value);
+  const nuevoTitulo = document.getElementById('editModTitulo').value.trim();
+  const nuevoAutor = document.getElementById('editModAutor').value.trim();
+  const nuevoTexto = document.getElementById('editModTexto').value.trim();
+
+  if (!nuevoTitulo || !nuevoTexto) {
+    alert("El título y el texto no pueden quedar vacíos.");
+    return;
+  }
+
+  const { error } = await sbApp
+    .from('modulos')
+    .update({
+      numero_orden: nuevoOrden,
+      titulo: nuevoTitulo,
+      autor: nuevoAutor,
+      contenido_trazado: nuevoTexto
+    })
+    .eq('id', moduloAuditando.id);
+
+  if (error) {
+    alert("Error al actualizar: " + error.message);
+  } else {
+    alert("Trabajo actualizado con éxito.");
+    cerrarModalUniversalDirecto('modalAuditoriaModulo');
+    await cargarDatosAdmin();
+    cargarGestionTrabajosAdmin();
+  }
+}
+
+async function eliminarModuloYReordenar(moduloId) {
+  if (!confirm("¿Está seguro de eliminar este trabajo? Los trabajos restantes se renumerarán automáticamente (1, 2, 3...).")) return;
+
+  await sbApp.from('progreso_maestro').delete().eq('modulo_id', moduloId);
+  await sbApp.from('modulos').delete().eq('id', moduloId);
+
+  const { data: restantes } = await sbApp
+    .from('modulos')
+    .select('id')
+    .eq('activo', true)
+    .order('numero_orden', { ascending: true });
+
+  if (restantes) {
+    for (let i = 0; i < restantes.length; i++) {
+      await sbApp.from('modulos').update({ numero_orden: i + 1 }).eq('id', restantes[i].id);
+    }
+  }
+
+  alert("Trabajo eliminado y correlativo reestructurado.");
+  await cargarDatosAdmin();
+  cargarGestionTrabajosAdmin();
+}
+
+/* ==========================================================================
+   MATRIZ DE AVANCE Y EDITOR DE PARÁMETROS DEL HERMANO (SUPERADMIN)
+   ========================================================================== */
+async function cargarMetricasAvance(moduloId) {
+  const tbody = document.getElementById('tablaMetricasBody');
+  tbody.innerHTML = `<tr><td colspan="6" class="td-loading">Consultando registros...</td></tr>`;
+
+  const { data: usuarios } = await sbApp
+    .from('usuarios')
+    .select('id, nombre, es_admin')
+    .order('nombre', { ascending: true });
+
+  const { data: progresos } = await sbApp
+    .from('progreso_maestro')
+    .select('*')
+    .eq('modulo_id', moduloId);
+
+  const mapProg = {};
+  if (progresos) progresos.forEach(p => { mapProg[p.usuario_id] = p; });
+
+  tbody.innerHTML = "";
+
+  usuarios.forEach(u => {
+    if (u.es_admin) return;
+
+    const prog = mapProg[u.id];
+
+    const leidoHtml = prog && prog.leido
+      ? `<span style="color: var(--success); font-weight: 600;">✓ Sí leyó</span>`
+      : `<span style="color: var(--text-muted);">— Pendiente</span>`;
+
+    let evalHtml = `<span style="color: var(--text-muted);">Sin intentos</span>`;
+    if (prog) {
+      const resp = prog.respuestas_evaluacion ? Object.keys(prog.respuestas_evaluacion).length : (prog.intentos_preguntas || 0);
+      if (resp >= 8) evalHtml = `<span style="color: var(--success); font-weight: 600;">✓ 8/8 Finalizado</span>`;
+      else if (resp > 0) evalHtml = `<span style="color: #B27B10; font-weight: 600;">En curso (${resp}/8)</span>`;
+    }
+
+    let reflexHtml = `<span style="color: var(--text-muted);">Pendiente</span>`;
+    let fechaHtml = `<span style="color: var(--text-muted);">—</span>`;
+
+    if (prog && prog.completado) {
+      reflexHtml = `<span style="color: var(--success); font-weight: 700;">✓ Consagrado</span>`;
+      if (prog.completado_en) {
+        const d = new Date(prog.completado_en);
+        fechaHtml = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      }
+    }
+
+    tbody.innerHTML += `
+      <tr>
+        <td>
+          <a href="javascript:void(0)" onclick="abrirModalMisAvances('${u.id}')" style="color: var(--primary); font-weight: 700; text-decoration: underline;">
+            ${u.nombre || "Hermano"}
+          </a>
+        </td>
+        <td>${leidoHtml}</td>
+        <td>${evalHtml}</td>
+        <td>${reflexHtml}</td>
+        <td>${fechaHtml}</td>
+        <td>
+          <div style="display: flex; gap: 6px;">
+            <button class="admin-link-btn" onclick="abrirEditorParametrosHermano('${u.id}', '${moduloId}', '${(u.nombre || '').replace(/'/g, "\\'")}')">⚙️ Parámetros</button>
+            <button class="admin-link-btn" onclick="abrirModalMisAvances('${u.id}')">📄 Ficha</button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function recargarMetricasActuales() {
+  const select = document.getElementById('selectMetricasModulo');
+  if (select && select.value) cargarMetricasAvance(select.value);
+}
+
+async function abrirEditorParametrosHermano(usuarioId, moduloId, nombreHermano) {
+  document.getElementById('subParamHermano').innerText = `Hermano: ${nombreHermano}`;
+  document.getElementById('paramUsuarioId').value = usuarioId;
+  document.getElementById('paramModuloId').value = moduloId;
+
+  const { data: prog } = await sbApp
+    .from('progreso_maestro')
+    .select('*')
+    .eq('usuario_id', usuarioId)
+    .eq('modulo_id', moduloId)
+    .maybeSingle();
+
+  document.getElementById('paramProgresoId').value = prog ? prog.id : "";
+  document.getElementById('paramLeido').value = (prog && prog.leido) ? "true" : "false";
+  
+  if (prog && prog.completado_en) {
+    const d = new Date(prog.completado_en);
+    const tzOffset = d.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(d.getTime() - tzOffset)).toISOString().slice(0, 16);
+    document.getElementById('paramFecha').value = localISOTime;
+  } else {
+    document.getElementById('paramFecha').value = "";
+  }
+
+  document.getElementById('paramIntentos').value = prog ? (prog.intentos_preguntas || 0) : 0;
+  document.getElementById('paramReflexion').value = prog ? (prog.reflexion || "") : "";
+
+  document.getElementById('modalParametrosHermano').classList.remove('hidden');
+}
+
+async function guardarParametrosHermanoBD() {
+  const progresoId = document.getElementById('paramProgresoId').value;
+  const usuarioId = document.getElementById('paramUsuarioId').value;
+  const moduloId = document.getElementById('paramModuloId').value;
+  const leido = document.getElementById('paramLeido').value === "true";
+  const fechaVal = document.getElementById('paramFecha').value;
+  const intentos = parseInt(document.getElementById('paramIntentos').value) || 0;
+  const reflexion = document.getElementById('paramReflexion').value.trim();
+
+  const completado = reflexion.length >= 15;
+  const completado_en = fechaVal ? new Date(fechaVal).toISOString() : (completado ? new Date().toISOString() : null);
+
+  const payload = {
+    usuario_id: usuarioId,
+    modulo_id: moduloId,
+    leido: leido,
+    intentos_preguntas: intentos,
+    reflexion: reflexion,
+    completado: completado,
+    completado_en: completado_en
+  };
+
+  let error = null;
+  if (progresoId) {
+    const res = await sbApp.from('progreso_maestro').update(payload).eq('id', progresoId);
+    error = res.error;
+  } else {
+    const res = await sbApp.from('progreso_maestro').insert(payload);
+    error = res.error;
+  }
+
+  if (error) {
+    alert("Error al actualizar parámetros: " + error.message);
+  } else {
+    alert("Parámetros actualizados con éxito.");
+    cerrarModalUniversalDirecto('modalParametrosHermano');
+    recargarMetricasActuales();
+  }
+}
+
+/* ==========================================================================
+   EDITOR GRANULAR DE DOCTRINA INSTITUCIONAL (SUPERADMIN)
+   ========================================================================== */
+let bloquesDoctrinaAdmin = [];
+
+async function cargarEditorDoctrinaAdmin() {
+  bloquesDoctrinaAdmin = await obtenerDoctrinaBD();
+  renderizarFormularioDoctrinaAdmin();
+}
+
+function renderizarFormularioDoctrinaAdmin() {
+  const cont = document.getElementById('contenedorEditorDoctrinaAdmin');
+  cont.innerHTML = "";
+
+  bloquesDoctrinaAdmin.forEach((b, idx) => {
+    cont.innerHTML += `
+      <div class="bloque-doctrina-card">
+        <div class="bloque-doctrina-header">
+          <strong style="color: var(--accent-gold-dark);">Bloque ${idx + 1}</strong>
+          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarBloqueDoctrinaAdmin(${idx})">🗑️ Eliminar Bloque</button>
+        </div>
+        <div class="form-group">
+          <label>Título:</label>
+          <input type="text" value="${b.titulo.replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].titulo = this.value">
+        </div>
+        <div class="form-group">
+          <label>Subtítulo:</label>
+          <input type="text" value="${b.subtitulo.replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].subtitulo = this.value">
+        </div>
+        <div class="form-group">
+          <label>Texto Doctrinal:</label>
+          <textarea rows="4" oninput="bloquesDoctrinaAdmin[${idx}].texto = this.value">${b.texto}</textarea>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function agregarBloqueDoctrinaAdmin() {
+  bloquesDoctrinaAdmin.push({
+    titulo: `Nuevo Título ${bloquesDoctrinaAdmin.length + 1}`,
+    subtitulo: "Subtítulo descriptivo",
+    texto: "Ingrese aquí el contenido doctrinal correspondiente."
+  });
+  renderizarFormularioDoctrinaAdmin();
+}
+
+function eliminarBloqueDoctrinaAdmin(idx) {
+  if (!confirm("¿Está seguro de eliminar este bloque doctrinal?")) return;
+  bloquesDoctrinaAdmin.splice(idx, 1);
+  renderizarFormularioDoctrinaAdmin();
+}
+
+async function guardarDoctrinaAdmin() {
+  const jsonStr = JSON.stringify(bloquesDoctrinaAdmin);
+  const { error } = await sbApp
+    .from('config_segura')
+    .upsert({ clave: 'doctrina_docencia_maestros', valor: jsonStr });
+
+  if (error) {
+    alert("Error al guardar: " + error.message);
+  } else {
+    alert("Contenidos de 'Docencia para Maestros' guardados exitosamente.");
+  }
 }
 
 /* ==========================================================================
@@ -1059,191 +1554,6 @@ async function eliminarReflexionSuperadmin(progresoId) {
   else cargarMuroGeneralAdmin();
 }
 
-/* ==========================================================================
-   MATRIZ DE AVANCE DOCENTE (8 PREGUNTAS)
-   ========================================================================== */
-async function cargarMetricasAvance(moduloId) {
-  const tbody = document.getElementById('tablaMetricasBody');
-  tbody.innerHTML = `<tr><td colspan="6" class="td-loading">Consultando registros...</td></tr>`;
-
-  const { data: usuarios } = await sbApp
-    .from('usuarios')
-    .select('id, nombre, es_admin')
-    .order('nombre', { ascending: true });
-
-  const { data: progresos } = await sbApp
-    .from('progreso_maestro')
-    .select('*')
-    .eq('modulo_id', moduloId);
-
-  const mapProg = {};
-  if (progresos) progresos.forEach(p => { mapProg[p.usuario_id] = p; });
-
-  tbody.innerHTML = "";
-
-  usuarios.forEach(u => {
-    if (u.es_admin) return;
-
-    const prog = mapProg[u.id];
-
-    const leidoHtml = prog && prog.leido
-      ? `<span style="color: var(--success); font-weight: 600;">✓ Sí leyó</span>`
-      : `<span style="color: var(--text-muted);">— Pendiente</span>`;
-
-    let evalHtml = `<span style="color: var(--text-muted);">Sin intentos</span>`;
-    if (prog) {
-      const resp = prog.respuestas_evaluacion ? Object.keys(prog.respuestas_evaluacion).length : (prog.intentos_preguntas || 0);
-      if (resp >= 8) evalHtml = `<span style="color: var(--success); font-weight: 600;">✓ 8/8 Finalizado</span>`;
-      else if (resp > 0) evalHtml = `<span style="color: #B27B10; font-weight: 600;">En curso (${resp}/8)</span>`;
-    }
-
-    let reflexHtml = `<span style="color: var(--text-muted);">Pendiente</span>`;
-    let fechaHtml = `<span style="color: var(--text-muted);">—</span>`;
-
-    if (prog && prog.completado) {
-      reflexHtml = `<span style="color: var(--success); font-weight: 700;">✓ Consagrado</span>`;
-      if (prog.completado_en) {
-        const d = new Date(prog.completado_en);
-        fechaHtml = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-      }
-    }
-
-    const accionVer = prog && prog.reflexion
-      ? `<button class="admin-link-btn" onclick="abrirModalReflexionElegante('${(u.nombre || "Hermano").replace(/'/g, "\\'")}', '${prog.reflexion.replace(/'/g, "\\'")}')">👁️ Ver Aporte</button>`
-      : `<button class="admin-link-btn" onclick="abrirModalMisAvances('${u.id}')">📄 Ficha</button>`;
-
-    tbody.innerHTML += `
-      <tr>
-        <td>
-          <a href="javascript:void(0)" onclick="abrirModalMisAvances('${u.id}')" style="color: var(--primary); font-weight: 700; text-decoration: underline;" title="Ver Ficha Ejecutiva del Hermano">
-            ${u.nombre || "Hermano"}
-          </a>
-        </td>
-        <td>${leidoHtml}</td>
-        <td>${evalHtml}</td>
-        <td>${reflexHtml}</td>
-        <td>${fechaHtml}</td>
-        <td>${accionVer}</td>
-      </tr>
-    `;
-  });
-}
-
-function recargarMetricasActuales() {
-  const select = document.getElementById('selectMetricasModulo');
-  if (select && select.value) cargarMetricasAvance(select.value);
-}
-
-/* ==========================================================================
-   AUDITORÍA, EDICIÓN Y GESTIÓN DE MÓDULOS (SUPERADMIN)
-   ========================================================================== */
-function abrirModalGestionModulos() {
-  const cont = document.getElementById('listaGestionModulos');
-  cont.innerHTML = "";
-
-  listaModulos.forEach(m => {
-    cont.innerHTML += `
-      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid var(--border-color);">
-        <div style="flex: 1;">
-          <strong>N° ${m.numero_orden}:</strong> ${m.titulo}
-          <div style="font-size: 0.8rem; color: var(--text-muted);">${m.autor || "Cámara del Medio"}</div>
-        </div>
-        <div style="display: flex; gap: 8px;">
-          <button class="admin-link-btn" onclick="abrirAuditoriaModulo('${m.id}')">🔍 Auditar / Editar</button>
-          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarModuloYReordenar('${m.id}')">🗑️ Eliminar</button>
-        </div>
-      </div>
-    `;
-  });
-
-  document.getElementById('modalGestionModulos').classList.remove('hidden');
-}
-
-function cerrarModalGestionModulos() {
-  document.getElementById('modalGestionModulos').classList.add('hidden');
-}
-
-function abrirAuditoriaModulo(moduloId) {
-  moduloAuditando = listaModulos.find(m => m.id === moduloId);
-  if (!moduloAuditando) return;
-
-  document.getElementById('editModTitulo').value = moduloAuditando.titulo;
-  document.getElementById('editModAutor').value = moduloAuditando.autor || "";
-  document.getElementById('editModTexto').value = moduloAuditando.contenido_trazado || "";
-
-  const contPreguntas = document.getElementById('cuerpoPreguntasAuditoria');
-  contPreguntas.innerHTML = "";
-
-  const preguntas = moduloAuditando.preguntas_json?.preguntas || [];
-  preguntas.forEach((p, idx) => {
-    const esEtica = (idx === preguntas.length - 1);
-    let opcionesTxt = p.opciones.map(o => `<div>• <strong>${o.letra})</strong> ${o.texto}</div>`).join('');
-    contPreguntas.innerHTML += `
-      <div style="padding: 12px; margin-bottom: 12px; background: rgba(0,0,0,0.03); border-left: 3px solid ${esEtica ? 'var(--accent-gold)' : 'var(--primary)'};">
-        <p><strong>${esEtica ? 'Pregunta 8 (Dilema Ético)' : `Pregunta ${p.numero}`}:</strong> ${p.enunciado}</p>
-        <div style="margin: 8px 0;">${opcionesTxt}</div>
-        <p style="color: var(--success); font-weight: 600;">Respuesta Correcta: ${p.respuesta_correcta}</p>
-        <p style="font-style: italic; color: var(--text-muted);">Retroalimentación: ${p.retroalimentacion}</p>
-      </div>
-    `;
-  });
-
-  document.getElementById('modalAuditoriaModulo').classList.remove('hidden');
-}
-
-async function guardarEdicionModuloAdmin() {
-  if (!moduloAuditando) return;
-
-  const nuevoTitulo = document.getElementById('editModTitulo').value.trim();
-  const nuevoAutor = document.getElementById('editModAutor').value.trim();
-  const nuevoTexto = document.getElementById('editModTexto').value.trim();
-
-  if (!nuevoTitulo || !nuevoTexto) {
-    alert("El título y el texto no pueden quedar vacíos.");
-    return;
-  }
-
-  const { error } = await sbApp
-    .from('modulos')
-    .update({
-      titulo: nuevoTitulo,
-      autor: nuevoAutor,
-      contenido_trazado: nuevoTexto
-    })
-    .eq('id', moduloAuditando.id);
-
-  if (error) {
-    alert("Error al actualizar trabajo: " + error.message);
-  } else {
-    alert("Trabajo actualizado con éxito en la Cámara.");
-    cerrarModalUniversalDirecto('modalAuditoriaModulo');
-    await cargarDatosAdmin();
-  }
-}
-
-async function eliminarModuloYReordenar(moduloId) {
-  if (!confirm("¿Está seguro de eliminar este trabajo? Los trabajos restantes se renumerarán automáticamente de forma correlativa (1, 2, 3...).")) return;
-
-  await sbApp.from('progreso_maestro').delete().eq('modulo_id', moduloId);
-  await sbApp.from('modulos').delete().eq('id', moduloId);
-
-  const { data: restantes } = await sbApp
-    .from('modulos')
-    .select('id')
-    .eq('activo', true)
-    .order('numero_orden', { ascending: true });
-
-  if (restantes) {
-    for (let i = 0; i < restantes.length; i++) {
-      await sbApp.from('modulos').update({ numero_orden: i + 1 }).eq('id', restantes[i].id);
-    }
-  }
-
-  alert("Trabajo eliminado y correlativo reestructurado con éxito.");
-  cerrarModalGestionModulos();
-  await cargarDatosAdmin();
-}
-
 async function exportarRespaldoCompletoJSON() {
   const { data: mods } = await sbApp.from('modulos').select('*');
   const { data: progs } = await sbApp.from('progreso_maestro').select('*');
@@ -1264,7 +1574,7 @@ async function exportarRespaldoCompletoJSON() {
 }
 
 /* ==========================================================================
-   CARGA PURA Y GENERADOR CON LLAVE BLINDADA Y CONTINGENCIA SQL (8 PREGUNTAS)
+   CARGA PURA Y PROCESAMIENTO CON GEMINI
    ========================================================================== */
 function formatearAutorMasonico(nombreCrudo) {
   if (!nombreCrudo) return 'Cámara del Medio';
@@ -1362,138 +1672,6 @@ async function leerArchivoPlancha(event) {
   }
 }
 
-function generarSQLContingencia(orden, titulo, autor, texto) {
-  const textoEscapado = texto.replace(/'/g, "''");
-  const tituloEscapado = titulo.replace(/'/g, "''");
-  const autorEscapado = autor.replace(/'/g, "''");
-
-  return `-- CONSULTA SQL DE INSERCIÓN DIRECTA (8 PREGUNTAS)
-INSERT INTO modulos (
-  numero_orden,
-  titulo,
-  autor,
-  contenido_trazado,
-  resumen_formativo,
-  conclusion_enlace,
-  preguntas_json,
-  activo
-) VALUES (
-  ${orden},
-  '${tituloEscapado}',
-  '${autorEscapado}',
-  '${textoEscapado}',
-  'Resumen formativo correspondiente a la instrucción del Tercer Grado según el programa de docencia.',
-  'Reflexión sobre las virtudes del Tercer Grado correspondiente a esta pieza de arquitectura.',
-  '{"preguntas": [
-    {
-      "numero": 1,
-      "enunciado": "¿Cuál es la enseñanza doctrinal central expuesta en este trazado de instrucción?",
-      "opciones": [
-        {"letra": "A", "texto": "La observancia rigurosa de los deberes, símbolos y virtudes del Tercer Grado."},
-        {"letra": "B", "texto": "La asimilación meramente formal del ritual sin compromiso moral."},
-        {"letra": "C", "texto": "La subordinación dogmática sin juicio reflexivo."},
-        {"letra": "D", "texto": "La divulgación externa de los secretos de la Maestría."}
-      ],
-      "respuesta_correcta": "A",
-      "retroalimentacion": "La docencia de la Cámara exige encarnar conscientemente los principios asumidos sobre el Ara."
-    },
-    {
-      "numero": 2,
-      "enunciado": "¿Qué actitud debe guardar el Maestro frente a los compromisos de honor asumidos?",
-      "opciones": [
-        {"letra": "A", "texto": "Mantener fidelidad inquebrantable a la palabra empeñada en toda circunstancia."},
-        {"letra": "B", "texto": "Relativizarlos según la conveniencia de los momentos profanos."},
-        {"letra": "C", "texto": "Supeditar su honor al juicio de las mayorías externas."},
-        {"letra": "D", "texto": "Delegar su cumplimiento en los demás Hermanos del Taller."}
-      ],
-      "respuesta_correcta": "A",
-      "retroalimentacion": "El honor personal es el fundamento moral inmutable del Maestro Masón."
-    },
-    {
-      "numero": 3,
-      "enunciado": "¿Cómo se manifiesta la rectitud masónica en el ejercicio del discernimiento interior?",
-      "opciones": [
-        {"letra": "A", "texto": "En obrar con probidad cuando nadie nos observa y sólo la conciencia testigua."},
-        {"letra": "B", "texto": "En esperar reconocimiento público para actuar conforme a la justicia."},
-        {"letra": "C", "texto": "En abstenerse de emitir opinión ante injusticias manifiestas."},
-        {"letra": "D", "texto": "En buscar el aplauso y el prestigio profano."}
-      ],
-      "respuesta_correcta": "A",
-      "retroalimentacion": "La verdadera maestría radica en la rectitud gobernada por la luz de la propia conciencia."
-    },
-    {
-      "numero": 4,
-      "enunciado": "¿Qué deber fundamental impone el Tercer Grado respecto al Hermano que se encuentra ausente?",
-      "opciones": [
-        {"letra": "A", "texto": "Amparar su buen nombre y no tolerar difamaciones ni juicios sumarios."},
-        {"letra": "B", "texto": "Asumir que su ausencia equivale a desinterés institucional."},
-        {"letra": "C", "texto": "Comentar sus dificultades privadas con terceros profanos."},
-        {"letra": "D", "texto": "Imponerle sanciones inmediatas sin fraternal indagación."}
-      ],
-      "respuesta_correcta": "A",
-      "retroalimentacion": "El amparo al Hermano ausente es uno de los compromisos más solemnes de la fraternidad."
-    },
-    {
-      "numero": 5,
-      "enunciado": "¿Cuál es el propósito del examen de las herramientas simbólicas en la Cámara del Medio?",
-      "opciones": [
-        {"letra": "A", "texto": "Transformar la alegoría intelectual en conducta viva y coherencia moral cotidiana."},
-        {"letra": "B", "texto": "Aprender de memoria definiciones mecánicas sin aplicación real."},
-        {"letra": "C", "texto": "Establecer privilegios jerárquicos sobre los grados precedentes."},
-        {"letra": "D", "texto": "Obtener ventajas personales en las asambleas logiales."}
-      ],
-      "respuesta_correcta": "A",
-      "retroalimentacion": "Los símbolos son herramientas activas de construcción moral para la vida entera."
-    },
-    {
-      "numero": 6,
-      "enunciado": "¿Qué virtud permite transformar el celo masónico en una obra sólida y perdurable?",
-      "opciones": [
-        {"letra": "A", "texto": "La constancia perseverante frente a las adversidades del tiempo."},
-        {"letra": "B", "texto": "El entusiasmo efímero limitado únicamente a las tenidas."},
-        {"letra": "C", "texto": "La elocuencia discursiva desvinculada de la acción práctica."},
-        {"letra": "D", "texto": "La búsqueda acelerada de cargos administrativos."}
-      ],
-      "respuesta_correcta": "A",
-      "retroalimentacion": "La constancia serena es la fuerza constructora que labra y consolida la obra de la Maestría."
-    },
-    {
-      "numero": 7,
-      "enunciado": "¿Cómo contribuye el Maestro Masón al equilibrio y la armonía entre columnas?",
-      "opciones": [
-        {"letra": "A", "texto": "Aportando serenidad, espíritu de concordia y rectitud fraterna en los debates."},
-        {"letra": "B", "texto": "Fomentando discrepancias personales que fracturen los lazos de la Cámara."},
-        {"letra": "C", "texto": "Mostrando indiferencia frente a los conflictos entre Hermanos."},
-        {"letra": "D", "texto": "Imponiendo puntos de vista por la fuerza de la jerarquía."}
-      ],
-      "respuesta_correcta": "A",
-      "retroalimentacion": "El Maestro está llamado a ser centro de unión y pilar de concordia en el Taller."
-    },
-    {
-      "numero": 8,
-      "enunciado": "Interrogante Ética: Frente a un dilema donde la conveniencia personal o profana contradice el deber masónico jurado, ¿cuál es la conducta que consagra la verdadera Maestría?",
-      "opciones": [
-        {"letra": "A", "texto": "Sostener la verdad, la probidad y la rectitud moral, asumiendo las consecuencias éticas con templanza y lealtad."},
-        {"letra": "B", "texto": "Transigir moralmente para evitar controversias profanas o costos personales."},
-        {"letra": "C", "texto": "Delegar la decisión ética en el criterio de terceros sin escuchar la propia conciencia."},
-        {"letra": "D", "texto": "Justificar la transgresión bajo el pretexto de circunstancias excepcionales."}
-      ],
-      "respuesta_correcta": "A",
-      "retroalimentacion": "La Maestría Masónica se valida cuando el deber ético y el honor prevalecen sobre cualquier cálculo profano."
-    }
-  ]}',
-  true
-);`;
-}
-
-function copiarSQLFallback() {
-  const area = document.getElementById('sqlFallbackArea');
-  area.select();
-  navigator.clipboard.writeText(area.value).then(() => {
-    alert("Consulta SQL de 8 preguntas copiada al portapapeles. Péguela en el SQL Editor de Supabase.");
-  });
-}
-
 async function obtenerGeminiKeySegura() {
   try {
     const { data, error } = await sbApp
@@ -1516,43 +1694,38 @@ async function generarModuloConIA() {
   const orden = parseInt(document.getElementById('adminOrden').value);
   const texto = document.getElementById('adminTexto').value.trim();
   const status = document.getElementById('adminStatus');
-  const fallbackBox = document.getElementById('contenedorFallbackSQL');
-  const fallbackArea = document.getElementById('sqlFallbackArea');
 
   if (!titulo || !texto) {
     alert("Complete el título y el texto depurado.");
     return;
   }
 
-  fallbackBox.classList.add('hidden');
-  status.innerHTML = "<em>Procesando trazado con Gemini (batería de 8 preguntas con dilema ético)...</em>";
+  status.innerHTML = "<em>Procesando trazado con Gemini (batería de 8 preguntas exigentes)...</em>";
 
   const apiKey = await obtenerGeminiKeySegura();
   if (!apiKey) {
-    status.innerHTML = `<span style="color: var(--error);">No se encontró la credencial protegida en Supabase. Se activó la contingencia SQL.</span>`;
-    fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
-    fallbackBox.classList.remove('hidden');
+    status.innerHTML = `<span style="color: var(--error);">No se encontró la credencial protegida en Supabase.</span>`;
     return;
   }
 
   const promptSistema = `
 Eres un pedagogo e instructor especializado en la Cámara del Medio (Tercer Grado de la Masonería).
-Analiza el siguiente trazado doctrinal depurado, teniendo en cuenta el programa de docencia, el cuaderno de instrucción y los deberes y virtudes del Tercer Grado.
+Analiza el siguiente trazado doctrinal depurado considerando el programa de docencia y el rigor de la Maestría.
 
 Genera exactamente:
 1. "resumen_formativo": Síntesis sobria de las enseñanzas doctrinales centrales (máximo 150 palabras).
 2. "conclusion_enlace": Reflexión que conecte las virtudes expuestas con la práctica de la Maestría (120-180 palabras).
 3. "preguntas": Arreglo de exactamente 8 preguntas pedagógicas de selección múltiple sobre los conceptos del trazado:
-   - Preguntas 1 a 7: Evaluación formativa de conceptos simbólicos, doctrinales y rituales del trabajo.
-   - Pregunta 8 (OBLIGATORIA): Una pregunta o dilema ético profundo que interpele directamente la conciencia del Maestro Masón, cuya respuesta correcta y retroalimentación sirvan de puente formativo para su reflexión personal.
-   Cada una de las 8 preguntas debe incluir:
+   - Preguntas 1 a 7: Evaluación formativa de conceptos simbólicos y rituales. No deben ser obvias; deben obligar a la lectura reflexiva.
+   - Pregunta 8 (OBLIGATORIA): Un dilema ético profundo que interpele directamente la conciencia del Maestro, cuya respuesta correcta y retroalimentación sirvan de puente formativo para su reflexión personal.
+   Cada pregunta debe contener:
    - "numero": (1 a 8)
    - "enunciado": Texto claro y reflexivo.
    - "opciones": 4 alternativas ("letra": "A","B","C","D" y "texto").
    - "respuesta_correcta": Letra de la opción verdadera.
-   - "retroalimentacion": Justificación fraterna, ética y docente.
+   - "retroalimentacion": Justificación fraterna y docente.
 
-REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto adicional:
+REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido:
 {
   "resumen_formativo": "...",
   "conclusion_enlace": "...",
@@ -1589,9 +1762,7 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto a
     const data = await respuesta.json();
 
     if (data.error) {
-      status.innerHTML = `<span style="color: var(--error);">Error API: ${data.error.message}. Se generó la consulta SQL de respaldo.</span>`;
-      fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
-      fallbackBox.classList.remove('hidden');
+      status.innerHTML = `<span style="color: var(--error);">Error API: ${data.error.message}</span>`;
       return;
     }
 
@@ -1618,9 +1789,7 @@ REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido sin texto a
       cargarDatosAdmin();
     }
   } catch (err) {
-    status.innerHTML = `<span style="color: var(--error);">Error en procesamiento: ${err.message}. Se activó la contingencia SQL.</span>`;
-    fallbackArea.value = generarSQLContingencia(orden, titulo, autorFinal, texto);
-    fallbackBox.classList.remove('hidden');
+    status.innerHTML = `<span style="color: var(--error);">Error en procesamiento: ${err.message}</span>`;
   }
 }
 
