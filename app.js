@@ -139,6 +139,7 @@ function configurarEntornoUsuario() {
     document.getElementById('seccionBienvenida').classList.add('hidden');
     document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
     document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
+    document.getElementById('seccionMuroUsuarios').classList.add('hidden');
     cargarDatosAdmin();
   } else {
     document.getElementById('modalSigilo').classList.remove('hidden');
@@ -148,13 +149,14 @@ function configurarEntornoUsuario() {
 function aceptarSigilo() {
   document.getElementById('modalSigilo').classList.add('hidden');
   const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-  document.getElementById('bienvenidaNombreQH').innerText = `Bienvenido, Q.·.H.·. ${nombreLimpio}`;
+  document.getElementById('bienvenidaNombreQH').innerText = `Q.·.H.·. ${nombreLimpio}`;
   document.getElementById('seccionBienvenida').classList.remove('hidden');
 }
 
 async function irACatalogoDocencia() {
   document.getElementById('seccionBienvenida').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
+  document.getElementById('seccionMuroUsuarios').classList.add('hidden');
   await renderizarCatalogoTrabajos();
 }
 
@@ -210,7 +212,7 @@ async function renderizarCatalogoTrabajos() {
             <span>📅 ${fechaCreacion}</span>
           </div>
           <h4 class="grid-card-titulo">${m.titulo}</h4>
-          <p class="grid-card-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara del Medio"}</p>
+          <p class="grid-card-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara de Docencia"}</p>
         </div>
         <div class="grid-card-footer">
           ${badgeHtml}
@@ -228,8 +230,9 @@ async function renderizarCatalogoTrabajos() {
 function entrarADocenciaConModulo(idModulo) {
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
+  document.getElementById('seccionMuroUsuarios').classList.add('hidden');
   document.getElementById('seccionDocencia').classList.remove('hidden');
-  document.getElementById('contadorModulos').innerText = `${listaModulos.length} temas`;
+  document.getElementById('contadorModulos').innerText = `${listaModulos.length} TEMAS`;
   renderizarSidebar();
   seleccionarModulo(idModulo);
 }
@@ -238,6 +241,7 @@ function volverACatalogo() {
   if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
+  document.getElementById('seccionMuroUsuarios').classList.add('hidden');
   renderizarCatalogoTrabajos();
 }
 
@@ -254,11 +258,11 @@ function cerrarSesion() {
   document.getElementById('seccionBienvenida').classList.add('hidden');
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
+  document.getElementById('seccionMuroUsuarios').classList.add('hidden');
   document.getElementById('seccionAdmin').classList.add('hidden');
   document.getElementById('modalSigilo').classList.add('hidden');
   document.getElementById('modalMisAvances').classList.add('hidden');
   document.getElementById('modalCertificado').classList.add('hidden');
-  document.getElementById('modalVerReflexion').classList.add('hidden');
   document.getElementById('modalAuditoriaModulo').classList.add('hidden');
   document.getElementById('modalParametrosHermano').classList.add('hidden');
   document.getElementById('btnSalir').classList.add('hidden');
@@ -273,8 +277,8 @@ function cerrarSesion() {
 const DOCTRINA_DEFAULT = [
   {
     titulo: "1. Descripción General",
-    subtitulo: "La Cámara del Medio como Escuela de Formación Activa",
-    texto: "La Plataforma de Docencia para la Cámara del Medio es un espacio reservado para los Maestros Masones de la R.·.L.·. Orestes Frödden Lorenzen N° 146. Está concebida como un entorno asíncrono para el análisis conceptual y moral de los trazados de instrucción previa a cada Tenida."
+    subtitulo: "La Cámara de Docencia como Escuela de Formación Activa",
+    texto: "La Plataforma de Docencia para la Cámara de Maestros es un espacio reservado para los Maestros Masones de la R.·.L.·. Orestes Frödden Lorenzen N° 146. Está concebida como un entorno asíncrono para el análisis conceptual y moral de los trazados de instrucción previa a cada Tenida."
   },
   {
     titulo: "2. Objetivos Principales",
@@ -287,9 +291,9 @@ const DOCTRINA_DEFAULT = [
     texto: "Fase I: Lectura atenta con tiempo mínimo de análisis reflexivo.\nFase II: Examen formativo de 8 preguntas que culmina en un dilema ético profundo.\nFase III: Consagración de la reflexión personal y acceso al Muro fraterno."
   },
   {
-    titulo: "4. Importancia de la Maestría",
-    subtitulo: "El Deber Masónico en la Vida Profana y Logial",
-    texto: "Ser Maestro no es ostentar un rango, sino encarnar la rectitud moral, el amparo al Hermano ausente y la fidelidad inquebrantable a la palabra empeñada sobre el Ara."
+    titulo: "4. La Trascendencia de la Maestría",
+    subtitulo: "Deber, Coherencia y Rectitud en el Mundo y en el Taller",
+    texto: "La Maestría no constituye una investidura de privilegio ni un reposo en la senda, sino la asunción consciente de una responsabilidad inextinguible. Ser Maestro es erigirse en centro de unión y modelo de templanza; es juzgarse con rigor antes de corregir al semejante, amparar con lealtad el honor del hermano ausente y custodiar en la intimidad de la conciencia el juramento consagrado sobre el Ara. La plenitud del grado se valida únicamente cuando la luz adquirida en la Cámara se transforma en rectitud insobornable frente a las vicisitudes de la vida profana."
   }
 ];
 
@@ -312,6 +316,8 @@ async function obtenerDoctrinaBD() {
 
 async function mostrarDocenciaParaMaestros() {
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
+  document.getElementById('seccionDocencia').classList.add('hidden');
+  document.getElementById('seccionMuroUsuarios').classList.add('hidden');
   const cont = document.getElementById('contenidoInstitucionalDocencia');
   cont.innerHTML = "<p class='td-loading'>Consultando fundamentos doctrinales...</p>";
   document.getElementById('seccionDocenciaInstitucional').classList.remove('hidden');
@@ -328,6 +334,124 @@ async function mostrarDocenciaParaMaestros() {
       </div>
     `;
   });
+}
+
+/* ==========================================================================
+   MURO DE REFLEXIONES PARA USUARIOS (SIN MENÚS EMERGENTES, POR AVANCE)
+   ========================================================================== */
+async function mostrarMuroReflexionesUsuarios() {
+  document.getElementById('seccionDocencia').classList.add('hidden');
+  document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
+  document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
+  
+  const cont = document.getElementById('contenedorMuroUsuariosDirecto');
+  cont.innerHTML = "<p class='td-loading'>Recuperando aportes de la Cámara...</p>";
+  document.getElementById('seccionMuroUsuarios').classList.remove('hidden');
+
+  await refrescarProgresosUsuario();
+
+  // Consulta de todas las reflexiones de la Cámara
+  const { data: aportes, error } = await sbApp
+    .from('progreso_maestro')
+    .select('reflexion, completado_en, modulo_id, usuarios(nombre), modulos(numero_orden, titulo)')
+    .eq('completado', true)
+    .not('reflexion', 'is', null)
+    .order('completado_en', { ascending: false });
+
+  cont.innerHTML = "";
+
+  if (error || !aportes) {
+    cont.innerHTML = "<p style='color: var(--error);'>Error al cargar las reflexiones de la Cámara.</p>";
+    return;
+  }
+
+  // Agrupar reflexiones por módulo
+  const reflexionesPorModulo = {};
+  aportes.forEach(a => {
+    if (!a.modulo_id || !a.reflexion || a.reflexion.trim() === "") return;
+    if (!reflexionesPorModulo[a.modulo_id]) reflexionesPorModulo[a.modulo_id] = [];
+    reflexionesPorModulo[a.modulo_id].push(a);
+  });
+
+  // Identificar los módulos completados por el usuario actual y ordenarlos por fecha más reciente
+  const modulosCompletadosUsuario = [];
+  const modulosPendientesUsuario = [];
+
+  listaModulos.forEach(m => {
+    const prog = misProgresos[m.id];
+    if (prog && prog.completado) {
+      modulosCompletadosUsuario.push({
+        ...m,
+        fechaCompletado: prog.completado_en ? new Date(prog.completado_en).getTime() : 0
+      });
+    } else {
+      modulosPendientesUsuario.push(m);
+    }
+  });
+
+  // Ordenar los completados del más reciente al más antiguo
+  modulosCompletadosUsuario.sort((a, b) => b.fechaCompletado - a.fechaCompletado);
+
+  if (modulosCompletadosUsuario.length === 0) {
+    cont.innerHTML = `
+      <div style="background: rgba(153, 120, 57, 0.08); border-left: 4px solid var(--accent-gold); padding: 20px; border-radius: 6px;">
+        <h3 style="color: var(--accent-gold-dark); margin-bottom: 8px;">Aportes bajo Reserva Docente</h3>
+        <p style="margin: 0; font-family: var(--font-ui); font-size: 0.95rem; color: var(--text-main);">
+          Q.·.H.·., para acceder a las reflexiones vertidas por los Hermanos de la Cámara, debe completar el estudio de los temas correspondientes y consagrar su reflexión personal en la Fase III.
+        </p>
+      </div>
+    `;
+    return;
+  }
+
+  // Desplegar módulos completados con sus reflexiones completas
+  modulosCompletadosUsuario.forEach(m => {
+    const items = reflexionesPorModulo[m.id] || [];
+    let reflexionesHtml = "";
+
+    if (items.length === 0) {
+      reflexionesHtml = "<p style='font-style: italic; color: var(--text-muted); font-size: 0.9rem;'>No hay reflexiones adicionales en este tema.</p>";
+    } else {
+      reflexionesHtml = items.map(it => {
+        const fechaTxt = it.completado_en 
+          ? new Date(it.completado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+          : "";
+        return `
+          <div class="reflexion-item" style="margin-bottom: 14px; background: rgba(0,0,0,0.02); border-left: 3px solid var(--accent-gold); padding: 16px 20px; border-radius: 0 6px 6px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <span class="reflexion-autor">${it.usuarios?.nombre || "Hermano Maestro"}</span>
+              <span style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-ui);">${fechaTxt}</span>
+            </div>
+            <div style="font-size: 1rem; line-height: 1.6; font-style: italic;">"${it.reflexion}"</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    cont.innerHTML += `
+      <div style="margin-bottom: 34px;">
+        <div style="border-bottom: 2px solid var(--accent-gold); padding-bottom: 6px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-end;">
+          <div>
+            <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent-gold-dark); text-transform: uppercase;">Trabajo N° ${m.numero_orden}</span>
+            <h3 style="margin: 2px 0 0 0; font-family: var(--font-reading); color: var(--primary);">${m.titulo}</h3>
+          </div>
+          <span style="font-size: 0.8rem; color: var(--success); font-weight: 700; text-transform: uppercase;">✓ Desbloqueado</span>
+        </div>
+        ${reflexionesHtml}
+      </div>
+    `;
+  });
+
+  // Mostrar aviso de los módulos pendientes que permanecen bloqueados
+  if (modulosPendientesUsuario.length > 0) {
+    let pendientesListado = modulosPendientesUsuario.map(m => `Trabajo ${m.numero_orden}: ${m.titulo}`).join(' • ');
+    cont.innerHTML += `
+      <div style="margin-top: 30px; background: rgba(0,0,0,0.03); border: 1px dashed var(--border-color); padding: 18px; border-radius: 6px; font-family: var(--font-ui); font-size: 0.88rem; color: var(--text-muted);">
+        <strong>🔒 Trabajos con aportes en reserva docente hasta su completación:</strong><br>
+        <span style="font-style: italic;">${pendientesListado}</span>
+      </div>
+    `;
+  }
 }
 
 /* ==========================================================================
@@ -469,7 +593,7 @@ async function evaluarEstadoFasesModulo() {
     return;
   }
 
-  // PRIMERA VEZ: BLOQUEO SILENCIOSO DE 2 MINUTOS (120 SEGUNDOS)
+  // PRIMERA VEZ: BLOQUEO SILENCIOSO DE 2 MINUTOS
   contConfLectura.classList.remove('hidden');
   bloqueFaseDos.classList.add('hidden');
   bloqueFaseTres.classList.add('hidden');
@@ -485,7 +609,7 @@ async function evaluarEstadoFasesModulo() {
     btnConfLectura.innerText = "Confirmo lectura";
     btnConfLectura.style.opacity = "1";
     btnConfLectura.style.cursor = "pointer";
-  }, 120000); // 2 minutos exactos
+  }, 120000);
 }
 
 async function confirmarLecturaFaseUno() {
@@ -585,7 +709,7 @@ function renderizarPreguntaActual() {
 async function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
   if (respuestasMarcadas[indicePreguntaActiva]) return;
 
-  // REGLA: Si responde preguntas, es porque leyó el trabajo
+  // Responder preguntas implica lectura
   sbApp.from('progreso_maestro')
     .update({ leido: true })
     .eq('usuario_id', usuarioActual.id)
@@ -683,7 +807,7 @@ async function finalizarCuestionarioFaseDos() {
 }
 
 /* ==========================================================================
-   FASE III: REFLEXIÓN Y MURO DE REFLEXIONES
+   FASE III: REFLEXIÓN Y MURO DEL TEMA
    ========================================================================== */
 function contarPalabras() {
   const texto = document.getElementById('textoReflexion').value.trim();
@@ -773,7 +897,7 @@ async function cargarMuroReflexiones() {
     data.forEach(item => {
       if (item.reflexion && item.reflexion.trim() !== "" && item.modulo_id === moduloActual.id) {
         contenedor.innerHTML += `
-          <div class="reflexion-item" style="cursor: pointer;" onclick="abrirModalReflexionElegante('${(item.usuarios?.nombre || "Hermano Maestro").replace(/'/g, "\\'")}', '${item.reflexion.replace(/'/g, "\\'")}')">
+          <div class="reflexion-item">
             <div class="reflexion-autor">${item.usuarios?.nombre || "Hermano Maestro"}</div>
             <div>"${item.reflexion}"</div>
           </div>
@@ -785,14 +909,8 @@ async function cargarMuroReflexiones() {
   }
 }
 
-function abrirModalReflexionElegante(autor, texto) {
-  document.getElementById('modalReflexionAutor').innerText = `Reflexión de ${autor}`;
-  document.getElementById('modalReflexionTexto').innerText = `"${texto}"`;
-  document.getElementById('modalVerReflexion').classList.remove('hidden');
-}
-
 /* ==========================================================================
-   MIS AVANCES E IMPRESIÓN LIMPIA DE INFORME PDF (300 DPI, SIN CORTES)
+   MIS AVANCES E INFORME PDF LIMPIO (300 DPI, SIN CORTES)
    ========================================================================== */
 async function abrirModalMisAvances(usuarioObjetivoId = null) {
   const idTarget = usuarioObjetivoId || usuarioActual.id;
@@ -877,7 +995,6 @@ function cerrarModalMisAvances() {
   document.getElementById('modalMisAvances').classList.add('hidden');
 }
 
-/* MOTOR DE IMPRESIÓN NATIVO EN FORMATO CARTA (SOLUCIÓN DEFINITIVA A CORTES) */
 function imprimirInformeAvanceNativo() {
   const original = document.getElementById('documentoInformeAvance');
   const nombreLimpio = document.getElementById('informeNombreHermano').innerText.replace(/\s+/g, '_');
@@ -891,108 +1008,24 @@ function imprimirInformeAvanceNativo() {
       <title>Informe_Docente_${nombreLimpio}</title>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
       <style>
-        @page {
-          size: letter portrait;
-          margin: 12mm 15mm;
-        }
-        body {
-          margin: 0;
-          padding: 0;
-          font-family: 'Inter', system-ui, sans-serif;
-          color: #1A202C;
-          background: #FFFFFF;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        .informe-carta {
-          width: 100%;
-          box-shadow: none !important;
-          padding: 0 !important;
-        }
-        .informe-header-box {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 8px;
-        }
-        .informe-brand p {
-          font-size: 8.5pt;
-          line-height: 1.35;
-          margin: 0;
-          font-weight: 700;
-          color: #152433;
-        }
-        .img-emblema-discreto {
-          height: 52px;
-          object-fit: contain;
-        }
-        .informe-meta-header {
-          text-align: right;
-          font-size: 8pt;
-          color: #718096;
-        }
-        .informe-hr {
-          border: 0;
-          height: 2px;
-          background: #152433;
-          margin: 8px 0 14px 0;
-        }
-        .informe-constancia {
-          font-size: 9.5pt;
-          line-height: 1.5;
-          margin-bottom: 16px;
-        }
-        .informe-kpis-flex {
-          display: flex;
-          gap: 12px;
-          margin-bottom: 18px;
-        }
-        .kpi-card-flex {
-          flex: 1;
-          background: #F7FAFC;
-          border: 1px solid #CBD5E0;
-          border-radius: 4px;
-          padding: 8px;
-          text-align: center;
-        }
-        .kpi-valor {
-          font-size: 15pt;
-          font-weight: 700;
-          color: #152433;
-        }
-        .kpi-label {
-          font-size: 7.5pt;
-          color: #718096;
-          text-transform: uppercase;
-        }
-        .informe-table {
-          width: 100%;
-          border-collapse: collapse;
-          font-size: 8.5pt;
-          margin-bottom: 16px;
-        }
-        .informe-table th {
-          background: #EDF2F7;
-          border: 1px solid #CBD5E0;
-          padding: 6px 8px;
-          text-align: left;
-        }
-        .informe-table td {
-          border: 1px solid #E2E8F0;
-          padding: 6px 8px;
-          vertical-align: top;
-        }
-        .informe-pie-doc {
-          border-top: 1px solid #CBD5E0;
-          padding-top: 8px;
-          font-size: 7.5pt;
-          color: #A0AEC0;
-          display: flex;
-          justify-content: space-between;
-        }
-        .no-print {
-          display: none !important;
-        }
+        @page { size: letter portrait; margin: 12mm 15mm; }
+        body { margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; color: #1A202C; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .informe-carta { width: 100%; box-shadow: none !important; padding: 0 !important; }
+        .informe-header-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .informe-brand p { font-size: 8.5pt; line-height: 1.35; margin: 0; font-weight: 700; color: #152433; }
+        .img-emblema-discreto { height: 52px; object-fit: contain; }
+        .informe-meta-header { text-align: right; font-size: 8pt; color: #718096; }
+        .informe-hr { border: 0; height: 2px; background: #152433; margin: 8px 0 14px 0; }
+        .informe-constancia { font-size: 9.5pt; line-height: 1.5; margin-bottom: 16px; }
+        .informe-kpis-flex { display: flex; gap: 12px; margin-bottom: 18px; }
+        .kpi-card-flex { flex: 1; background: #F7FAFC; border: 1px solid #CBD5E0; border-radius: 4px; padding: 8px; text-align: center; }
+        .kpi-valor { font-size: 15pt; font-weight: 700; color: #152433; }
+        .kpi-label { font-size: 7.5pt; color: #718096; text-transform: uppercase; }
+        .informe-table { width: 100%; border-collapse: collapse; font-size: 8.5pt; margin-bottom: 16px; }
+        .informe-table th { background: #EDF2F7; border: 1px solid #CBD5E0; padding: 6px 8px; text-align: left; }
+        .informe-table td { border: 1px solid #E2E8F0; padding: 6px 8px; vertical-align: top; }
+        .informe-pie-doc { border-top: 1px solid #CBD5E0; padding-top: 8px; font-size: 7.5pt; color: #A0AEC0; display: flex; justify-content: space-between; }
+        .no-print { display: none !important; }
       </style>
     </head>
     <body>
@@ -1056,7 +1089,7 @@ function cerrarModalUniversalDirecto(modalId) {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano', 'modalSigilo', 'modalVerReflexion'].forEach(id => {
+    ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano'].forEach(id => {
       const el = document.getElementById(id);
       if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
     });
@@ -1088,7 +1121,7 @@ function descargarCertificadoPDF() {
 }
 
 /* ==========================================================================
-   CONSOLA SUPERADMIN: GESTIÓN DE TRABAJOS Y AUDITORÍA
+   CONSOLA SUPERADMIN: GESTIÓN DE TRABAJOS Y EDITOR DE 8 PREGUNTAS
    ========================================================================== */
 async function cargarDatosAdmin() {
   const { data: mods } = await sbApp
@@ -1160,15 +1193,15 @@ async function cargarGestionTrabajosAdmin() {
 
   listaModulos.forEach(m => {
     cont.innerHTML += `
-      <div class="card" style="padding: 18px 24px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: gap: 12px;">
+      <div class="card" style="padding: 18px 24px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
         <div>
           <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent-gold-dark);">TRABAJO N° ${m.numero_orden}</span>
           <h4 style="margin: 4px 0;">${m.titulo}</h4>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">${m.autor || "Cámara del Medio"}</p>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">${m.autor || "Cámara de Docencia"}</p>
         </div>
         <div style="display: flex; gap: 8px;">
           <button class="admin-link-btn" onclick="abrirAuditoriaModulo('${m.id}')">🔍 Auditar / Editar 8 Preguntas</button>
-          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarModuloYReordenar('${m.id}')">🗑️️ Eliminar</button>
+          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarModuloYReordenar('${m.id}')">🗑 Eliminar</button>
         </div>
       </div>
     `;
@@ -1184,24 +1217,89 @@ function abrirAuditoriaModulo(moduloId) {
   document.getElementById('editModAutor').value = moduloAuditando.autor || "";
   document.getElementById('editModTexto').value = moduloAuditando.contenido_trazado || "";
 
+  renderizarEditorPreguntasAuditoria();
+  document.getElementById('modalAuditoriaModulo').classList.remove('hidden');
+}
+
+function renderizarEditorPreguntasAuditoria() {
   const contPreguntas = document.getElementById('cuerpoPreguntasAuditoria');
   contPreguntas.innerHTML = "";
 
   const preguntas = moduloAuditando.preguntas_json?.preguntas || [];
   preguntas.forEach((p, idx) => {
     const esEtica = (idx === preguntas.length - 1);
-    let opcionesTxt = p.opciones.map(o => `<div>• <strong>${o.letra})</strong> ${o.texto}</div>`).join('');
+    
+    let opcionesInputs = ['A', 'B', 'C', 'D'].map(letra => {
+      const opObj = p.opciones?.find(o => o.letra === letra) || { letra: letra, texto: "" };
+      return `
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+          <strong style="width: 20px;">${letra})</strong>
+          <input type="text" id="edit_p_${idx}_op_${letra}" value="${opObj.texto.replace(/"/g, '&quot;')}" style="flex: 1; padding: 6px 10px; font-size: 0.9rem;">
+        </div>
+      `;
+    }).join('');
+
     contPreguntas.innerHTML += `
-      <div style="padding: 14px; margin-bottom: 12px; background: rgba(0,0,0,0.03); border-left: 3px solid ${esEtica ? 'var(--accent-gold)' : 'var(--primary)'}; border-radius: 4px;">
-        <p><strong>${esEtica ? 'Pregunta 8 (Dilema Ético)' : `Pregunta ${p.numero}`}:</strong> ${p.enunciado}</p>
-        <div style="margin: 8px 0; font-size: 0.9rem;">${opcionesTxt}</div>
-        <p style="color: var(--success); font-weight: 600; font-size: 0.85rem;">Respuesta Correcta: ${p.respuesta_correcta}</p>
-        <p style="font-style: italic; color: var(--text-muted); font-size: 0.85rem;">Retroalimentación: ${p.retroalimentacion}</p>
+      <div class="bloque-doctrina-card" style="margin-bottom: 16px; border-left-color: ${esEtica ? 'var(--accent-gold)' : 'var(--primary)'};">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <strong style="color: var(--accent-gold-dark);">${esEtica ? 'Pregunta 8 (Dilema Ético)' : `Pregunta ${idx + 1}`}</strong>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 0.85rem; font-weight: 700;">Respuesta Correcta:</label>
+            <select id="edit_p_${idx}_correcta" style="width: 70px; padding: 4px 8px;">
+              <option value="A" ${p.respuesta_correcta === 'A' ? 'selected' : ''}>A</option>
+              <option value="B" ${p.respuesta_correcta === 'B' ? 'selected' : ''}>B</option>
+              <option value="C" ${p.respuesta_correcta === 'C' ? 'selected' : ''}>C</option>
+              <option value="D" ${p.respuesta_correcta === 'D' ? 'selected' : ''}>D</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 10px;">
+          <label>Enunciado:</label>
+          <input type="text" id="edit_p_${idx}_enunciado" value="${(p.enunciado || '').replace(/"/g, '&quot;')}" style="font-size: 0.95rem;">
+        </div>
+        <div style="margin-bottom: 10px;">
+          <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Alternativas:</label>
+          ${opcionesInputs}
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+          <label>Retroalimentación Docente:</label>
+          <input type="text" id="edit_p_${idx}_retro" value="${(p.retroalimentacion || '').replace(/"/g, '&quot;')}" style="font-size: 0.9rem;">
+        </div>
       </div>
     `;
   });
+}
 
-  document.getElementById('modalAuditoriaModulo').classList.remove('hidden');
+async function guardarTodasPreguntasAuditoria() {
+  if (!moduloAuditando) return;
+
+  const preguntas = moduloAuditando.preguntas_json?.preguntas || [];
+  preguntas.forEach((p, idx) => {
+    p.enunciado = document.getElementById(`edit_p_${idx}_enunciado`).value.trim();
+    p.respuesta_correcta = document.getElementById(`edit_p_${idx}_correcta`).value;
+    p.retroalimentacion = document.getElementById(`edit_p_${idx}_retro`).value.trim();
+    p.opciones = ['A', 'B', 'C', 'D'].map(letra => ({
+      letra: letra,
+      texto: document.getElementById(`edit_p_${idx}_op_${letra}`).value.trim()
+    }));
+  });
+
+  const nuevoJson = {
+    ...moduloAuditando.preguntas_json,
+    preguntas: preguntas
+  };
+
+  const { error } = await sbApp
+    .from('modulos')
+    .update({ preguntas_json: nuevoJson })
+    .eq('id', moduloAuditando.id);
+
+  if (error) {
+    alert("Error al actualizar preguntas: " + error.message);
+  } else {
+    moduloAuditando.preguntas_json = nuevoJson;
+    alert("Batería de 8 preguntas actualizada exitosamente.");
+  }
 }
 
 async function guardarEdicionModuloAdmin() {
@@ -1228,10 +1326,13 @@ async function guardarEdicionModuloAdmin() {
     .eq('id', moduloAuditando.id);
 
   if (error) {
-    alert("Error al actualizar: " + error.message);
+    alert("Error al actualizar trabajo: " + error.message);
   } else {
-    alert("Trabajo actualizado con éxito.");
-    cerrarModalUniversalDirecto('modalAuditoriaModulo');
+    moduloAuditando.titulo = nuevoTitulo;
+    moduloAuditando.autor = nuevoAutor;
+    moduloAuditando.numero_orden = nuevoOrden;
+    moduloAuditando.contenido_trazado = nuevoTexto;
+    alert("Título, encabezado y texto guardados exitosamente.");
     await cargarDatosAdmin();
     cargarGestionTrabajosAdmin();
   }
@@ -1407,7 +1508,7 @@ async function guardarParametrosHermanoBD() {
 }
 
 /* ==========================================================================
-   EDITOR GRANULAR DE DOCTRINA INSTITUCIONAL (SUPERADMIN)
+   EDITOR DE DOCTRINA CON REORDENAMIENTO (SUBIR / BAJAR) Y NUEVOS BLOQUES
    ========================================================================== */
 let bloquesDoctrinaAdmin = [];
 
@@ -1425,28 +1526,41 @@ function renderizarFormularioDoctrinaAdmin() {
       <div class="bloque-doctrina-card">
         <div class="bloque-doctrina-header">
           <strong style="color: var(--accent-gold-dark);">Bloque ${idx + 1}</strong>
-          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarBloqueDoctrinaAdmin(${idx})">🗑️ Eliminar Bloque</button>
+          <div class="bloque-doctrina-acciones">
+            <button class="admin-link-btn" onclick="moverBloqueDoctrinaAdmin(${idx}, -1)" ${idx === 0 ? 'disabled style="opacity:0.4;"' : ''}>⬆ Subir</button>
+            <button class="admin-link-btn" onclick="moverBloqueDoctrinaAdmin(${idx}, 1)" ${idx === bloquesDoctrinaAdmin.length - 1 ? 'disabled style="opacity:0.4;"' : ''}>⬇ Bajar</button>
+            <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarBloqueDoctrinaAdmin(${idx})">🗑️ Eliminar</button>
+          </div>
         </div>
         <div class="form-group">
           <label>Título:</label>
-          <input type="text" value="${b.titulo.replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].titulo = this.value">
+          <input type="text" value="${(b.titulo || '').replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].titulo = this.value">
         </div>
         <div class="form-group">
           <label>Subtítulo:</label>
-          <input type="text" value="${b.subtitulo.replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].subtitulo = this.value">
+          <input type="text" value="${(b.subtitulo || '').replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].subtitulo = this.value">
         </div>
         <div class="form-group">
           <label>Texto Doctrinal:</label>
-          <textarea rows="4" oninput="bloquesDoctrinaAdmin[${idx}].texto = this.value">${b.texto}</textarea>
+          <textarea rows="4" oninput="bloquesDoctrinaAdmin[${idx}].texto = this.value">${b.texto || ''}</textarea>
         </div>
       </div>
     `;
   });
 }
 
+function moverBloqueDoctrinaAdmin(idx, direccion) {
+  const nuevoIdx = idx + direccion;
+  if (nuevoIdx < 0 || nuevoIdx >= bloquesDoctrinaAdmin.length) return;
+  const temp = bloquesDoctrinaAdmin[idx];
+  bloquesDoctrinaAdmin[idx] = bloquesDoctrinaAdmin[nuevoIdx];
+  bloquesDoctrinaAdmin[nuevoIdx] = temp;
+  renderizarFormularioDoctrinaAdmin();
+}
+
 function agregarBloqueDoctrinaAdmin() {
   bloquesDoctrinaAdmin.push({
-    titulo: `Nuevo Título ${bloquesDoctrinaAdmin.length + 1}`,
+    titulo: `${bloquesDoctrinaAdmin.length + 1}. Nuevo Título`,
     subtitulo: "Subtítulo descriptivo",
     texto: "Ingrese aquí el contenido doctrinal correspondiente."
   });
@@ -1466,25 +1580,28 @@ async function guardarDoctrinaAdmin() {
     .upsert({ clave: 'doctrina_docencia_maestros', valor: jsonStr });
 
   if (error) {
-    alert("Error al guardar: " + error.message);
+    alert("Error al guardar doctrina: " + error.message);
   } else {
     alert("Contenidos de 'Docencia para Maestros' guardados exitosamente.");
   }
 }
 
 /* ==========================================================================
-   MURO GENERAL Y MODERACIÓN SUPERADMIN
+   MURO GENERAL SUPERADMIN Y EXPORTACIÓN PDF DE ALTA CALIDAD
    ========================================================================== */
 async function cargarMuroGeneralAdmin() {
   const contenedor = document.getElementById('contenedorMuroGeneralAdmin');
   contenedor.innerHTML = "<p class='td-loading'>Consultando todas las reflexiones...</p>";
+
+  const d = new Date();
+  document.getElementById('muroAdminFechaEmision').innerText = `EMISIÓN: ${d.toLocaleDateString('es-CL')} ${d.toLocaleTimeString('es-CL')}`;
 
   const { data: aportes, error } = await sbApp
     .from('progreso_maestro')
     .select('id, reflexion, completado_en, modulo_id, usuarios(nombre), modulos(numero_orden, titulo)')
     .eq('completado', true)
     .not('reflexion', 'is', null)
-    .order('modulo_id');
+    .order('completado_en', { ascending: false });
 
   contenedor.innerHTML = "";
 
@@ -1501,28 +1618,77 @@ async function cargarMuroGeneralAdmin() {
   });
 
   for (const [tituloModulo, items] of Object.entries(grupos)) {
-    let itemsHtml = items.map(it => `
-      <div class="reflexion-item" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;">
-        <div style="flex: 1; cursor: pointer;" onclick="abrirModalReflexionElegante('${(it.usuarios?.nombre || "Hermano").replace(/'/g, "\\'")}', '${it.reflexion.replace(/'/g, "\\'")}')">
-          <div class="reflexion-autor">${it.usuarios?.nombre || "Hermano"}</div>
-          <div style="font-size: 0.95rem;">"${it.reflexion}"</div>
+    let itemsHtml = items.map(it => {
+      const fechaCons = it.completado_en 
+        ? new Date(it.completado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
+        : "";
+      return `
+        <div class="reflexion-item" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 12px; background: rgba(0,0,0,0.02); padding: 14px; border-left: 3px solid var(--accent-gold); border-radius: 4px;">
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span class="reflexion-autor">${it.usuarios?.nombre || "Hermano"}</span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${fechaCons}</span>
+            </div>
+            <div style="font-size: 0.95rem; font-style: italic;">"${it.reflexion}"</div>
+          </div>
+          <div style="display: flex; gap: 6px;" class="no-print">
+            <button class="admin-link-btn" onclick="editarReflexionSuperadmin('${it.id}', '${it.reflexion.replace(/'/g, "\\'")}')">✏️</button>
+            <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarReflexionSuperadmin('${it.id}')">🗑</button>
+          </div>
         </div>
-        <div style="display: flex; gap: 6px;">
-          <button class="admin-link-btn" onclick="editarReflexionSuperadmin('${it.id}', '${it.reflexion.replace(/'/g, "\\'")}')">✏️ Editar</button>
-          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarReflexionSuperadmin('${it.id}')">🗑️️ Eliminar</button>
-        </div>
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     contenedor.innerHTML += `
-      <div style="margin-bottom: 28px;">
-        <h3 style="font-size: 1.15rem; color: var(--accent-gold-dark); margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+      <div style="margin-bottom: 24px;">
+        <h3 style="font-size: 1.15rem; color: var(--accent-gold-dark); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
           ${tituloModulo}
         </h3>
         ${itemsHtml}
       </div>
     `;
   }
+}
+
+function imprimirMuroGeneralPDF() {
+  const original = document.getElementById('documentoMuroGeneralImprimible');
+
+  const ventanaPrint = window.open('', '_blank', 'width=850,height=1100');
+  ventanaPrint.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <title>Recopilacion_Muro_Docencia_OFL146</title>
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+      <style>
+        @page { size: letter portrait; margin: 12mm 15mm; }
+        body { margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; color: #1A202C; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .informe-header-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .informe-brand p { font-size: 8.5pt; line-height: 1.35; margin: 0; font-weight: 700; color: #152433; }
+        .img-emblema-discreto { height: 50px; object-fit: contain; }
+        .informe-meta-header { text-align: right; font-size: 8pt; color: #718096; }
+        .informe-hr { border: 0; height: 2px; background: #152433; margin: 8px 0 14px 0; }
+        .reflexion-item { margin-bottom: 10px; padding: 10px 14px; border-left: 3px solid #997839; background: #F8F9FA; border-radius: 3px; }
+        .reflexion-autor { font-weight: 700; font-size: 8.5pt; color: #785C25; }
+        .no-print { display: none !important; }
+        h3 { font-size: 10.5pt; color: #152433; margin: 14px 0 6px 0; border-bottom: 1px solid #CBD5E0; padding-bottom: 3px; }
+      </style>
+    </head>
+    <body>
+      ${original.innerHTML}
+      <script>
+        window.onload = function() {
+          const noprint = document.querySelectorAll('.no-print');
+          noprint.forEach(el => el.style.display = 'none');
+          window.print();
+          setTimeout(() => window.close(), 1000);
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+  ventanaPrint.document.close();
 }
 
 async function editarReflexionSuperadmin(progresoId, textoActual) {
@@ -1577,7 +1743,7 @@ async function exportarRespaldoCompletoJSON() {
    CARGA PURA Y PROCESAMIENTO CON GEMINI
    ========================================================================== */
 function formatearAutorMasonico(nombreCrudo) {
-  if (!nombreCrudo) return 'Cámara del Medio';
+  if (!nombreCrudo) return 'Cámara de Docencia';
   let nombreLimpio = nombreCrudo.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
   return `Q.·.H.·. ${nombreLimpio}`;
 }
@@ -1709,7 +1875,7 @@ async function generarModuloConIA() {
   }
 
   const promptSistema = `
-Eres un pedagogo e instructor especializado en la Cámara del Medio (Tercer Grado de la Masonería).
+Eres un pedagogo e instructor especializado en la Cámara de Docencia (Tercer Grado de la Masonería).
 Analiza el siguiente trazado doctrinal depurado considerando el programa de docencia y el rigor de la Maestría.
 
 Genera exactamente:
