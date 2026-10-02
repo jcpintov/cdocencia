@@ -1,3 +1,6 @@
+<!-- ==========================================================================
+     1. index.html
+     ========================================================================== -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -22,7 +25,7 @@
   <!-- ENCABEZADO -->
   <header>
     <div class="brand-title">
-      <span>🏛️️</span>
+      <span>🏛️</span>
       <span>DOCENCIA MASÓNICA DE TERCER GRADO</span>
     </div>
     
@@ -55,10 +58,10 @@
     </div>
   </main>
 
-  <!-- MODAL SIGILO -->
+  <!-- MODAL SIGILO (TÍTULO CENTRADO) -->
   <div id="modalSigilo" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalSigilo')">
     <div class="modal-content">
-      <h2 style="color: var(--accent-gold); margin-bottom: 14px;">Advertencia y Condiciones de Uso</h2>
+      <h2 style="color: var(--accent-gold); margin-bottom: 14px; text-align: center;">Advertencia y Condiciones de Uso</h2>
       <p style="text-align: justify; line-height: 1.75; margin-bottom: 22px;">
         Al ingresar a esta Cámara del Medio, reafirmo mi compromiso de mantener estricta reserva sobre los contenidos, 
         trazados, símbolos y reflexiones personales aquí vertidos. Reconozco que este espacio pertenece al ámbito exclusivo 
@@ -68,10 +71,32 @@
     </div>
   </div>
 
+  <!-- PANTALLA INTERMEDIA: BIENVENIDA Y CUADRÍCULA DE TRABAJOS -->
+  <main id="seccionBienvenida" class="bienvenida-container hidden">
+    <div class="bienvenida-hero card card-trazado">
+      <div class="insignia-centro-wrapper">
+        <img src="https://cmaestros.ofl.cl/imgs/escuadra.png" class="img-escuadra-discreta" alt="Escuadra y Compás">
+      </div>
+      <h1 id="bienvenidaNombreQH" class="bienvenida-titulo">Bienvenido, Q.·.H.·.</h1>
+      <p class="login-sub" style="margin-bottom: 24px;">
+        Trabajos doctrinales consagrados en la Cámara del Medio.
+      </p>
+      <button class="btn-primary btn-ir-docencia-directo" onclick="entrarDirectoAlUltimoTrabajo()">
+        🏛️ Ir a Docencia
+      </button>
+    </div>
+
+    <div class="seccion-trabajos-header">
+      <h3>Trabajos Disponibles de la Cámara</h3>
+      <span id="bienvenidaContadorModulos" class="badge-contador-temas"></span>
+    </div>
+
+    <div id="gridTrabajosBienvenida" class="trabajos-grid"></div>
+  </main>
+
   <!-- PANTALLA 2: ENTORNO EXCLUSIVO DE DOCENCIA (PARA HERMANOS REGULARES) -->
   <div id="seccionDocencia" class="templo-layout hidden">
     <aside class="sidebar-templo">
-      <!-- Acceso a Mis Avances -->
       <div class="sidebar-box sidebar-avances-box">
         <button class="btn-mis-avances" onclick="abrirModalMisAvances()">
           📊 Mis Avances y Reportes
@@ -88,8 +113,8 @@
 
       <div class="sidebar-box sidebar-info">
         <h4>Metodología de Trabajo</h4>
-        <p>1. Confirme la lectura del trabajo.<br>
-           2. Responda el cuestionario formativo paso a paso.<br>
+        <p>1. Confirme la lectura del trazado.<br>
+           2. Responda el cuestionario formativo (8 preguntas).<br>
            3. Finalice para acceder al Muro de Reflexiones.</p>
       </div>
     </aside>
@@ -127,7 +152,6 @@
           <iframe id="framePdf" class="pdf-viewer-frame" src=""></iframe>
         </div>
 
-        <!-- BOTÓN FASE 1: CONFIRMAR LECTURA -->
         <div id="contenedorConfirmarLectura" class="fase-action-wrapper">
           <button id="btnConfirmarLectura" class="btn-primary" onclick="confirmarLecturaFaseUno()">
             Confirmo lectura
@@ -135,11 +159,11 @@
         </div>
       </section>
 
-      <!-- FASE II: Examen de Comprensión (Paso a Paso) -->
+      <!-- FASE II: Examen de Comprensión (8 Preguntas Paso a Paso) -->
       <section id="bloqueFaseDos" class="card hidden">
         <div class="card-fase-header">
           <span class="fase-badge">FASE II</span>
-          <h2>Examen de Comprensión</h2>
+          <h2>Examen de Comprensión Simbólica y Ética</h2>
         </div>
         <p class="text-instruccion">
           Seleccione la alternativa que considere correcta. El sistema evaluará su elección al instante.
@@ -161,7 +185,6 @@
       <section id="bloqueFaseTres" class="hidden">
         
         <div class="card card-reflexion">
-          <!-- Insignia Escuadra en Fase III -->
           <div class="insignia-centro-wrapper">
             <img src="https://cmaestros.ofl.cl/imgs/escuadra.png" class="img-escuadra-discreta" alt="Escuadra y Compás">
           </div>
@@ -171,7 +194,7 @@
             <h2 id="tituloFaseTres">Aporte Personal a la Cámara</h2>
           </div>
           <p id="descFaseTres" class="text-instruccion">
-            Ingrese su reflexión personal (máximo 200 palabras) para concluir el módulo y acceder a los aportes de sus Hermanos.
+            Ingrese su reflexión personal (entre 15 y 200 palabras) para concluir el módulo y acceder a los aportes de sus Hermanos.
           </p>
 
           <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión acerca del tema tratado..."></textarea>
@@ -187,7 +210,6 @@
         </div>
 
         <div id="bloqueMuro" class="card">
-          <!-- Insignia Escuadra en Muro de Reflexiones -->
           <div class="insignia-centro-wrapper">
             <img src="https://cmaestros.ofl.cl/imgs/escuadra.png" class="img-escuadra-discreta" alt="Escuadra y Compás">
           </div>
@@ -196,7 +218,7 @@
             <span class="fase-badge badge-muro">MURO</span>
             <h2>Muro de Reflexiones</h2>
           </div>
-          <p class="text-instruccion">Aportes para este trabajo en la Cámara:</p>
+          <p class="text-instruccion">Aportes consagrados para este trabajo en la Cámara:</p>
           <div id="contenedorMuro"></div>
         </div>
 
@@ -209,7 +231,7 @@
     
     <aside class="sidebar-admin">
       <div class="admin-brand">
-        <span style="font-size: 1.4rem;">🏛️️</span>
+        <span style="font-size: 1.4rem;">🏛️</span>
         <h3>Consola Superadmin</h3>
       </div>
 
@@ -253,7 +275,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Carga de Trabajos de Docencia</h2>
-            <p class="text-instruccion" style="margin: 0;">Suba un archivo PDF o Word. Gemini generará el análisis pedagógico y el cuestionario.</p>
+            <p class="text-instruccion" style="margin: 0;">Suba un archivo PDF o Word. Gemini generará el análisis y la batería de 8 preguntas pedagógicas.</p>
           </div>
         </div>
 
@@ -291,7 +313,7 @@
         
         <div id="adminStatus" style="margin-top: 14px; text-align: center; font-family: var(--font-ui); font-weight: 600;"></div>
 
-        <!-- CONTINGENCIA SQL -->
+        <!-- CONTINGENCIA SQL INTELIGENTE (8 PREGUNTAS) -->
         <div id="contenedorFallbackSQL" class="hidden" style="margin-top: 24px; padding: 20px; background: var(--card-bg); border: 2px dashed var(--accent-gold); border-radius: 8px;">
           <h4 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">⚡ Contingencia SQL: Inserción Directa</h4>
           <p style="font-size: 0.88rem; color: var(--text-muted); font-family: var(--font-ui); margin-bottom: 12px;">
@@ -379,6 +401,55 @@
     </div>
   </div>
 
+  <!-- MODAL: AUDITORÍA Y EDICIÓN DE MÓDULOS (SUPERADMIN) -->
+  <div id="modalAuditoriaModulo" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAuditoriaModulo')">
+    <div class="modal-content" style="max-width: 820px; max-height: 90vh; overflow-y: auto; text-align: left;">
+      <h3 style="color: var(--accent-gold); margin-bottom: 12px; font-family: var(--font-ui);">
+        🔍 Auditoría y Edición del Trabajo
+      </h3>
+      
+      <div class="form-group">
+        <label for="editModTitulo">Título del Trabajo:</label>
+        <input type="text" id="editModTitulo">
+      </div>
+      <div class="form-group">
+        <label for="editModAutor">Autor:</label>
+        <input type="text" id="editModAutor">
+      </div>
+      <div class="form-group">
+        <label for="editModTexto">Contenido del Trazado:</label>
+        <textarea id="editModTexto" rows="8"></textarea>
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-bottom: 24px;">
+        <button class="btn-primary" style="flex: 1;" onclick="guardarEdicionModuloAdmin()">💾 Guardar Cambios</button>
+      </div>
+
+      <h4 style="color: var(--primary); margin-bottom: 10px; font-family: var(--font-ui); border-top: 1px solid var(--border-color); padding-top: 14px;">
+        Interrogantes Formativas y Dilema Ético (8 Preguntas)
+      </h4>
+      <div id="cuerpoPreguntasAuditoria" style="font-size: 0.9rem; line-height: 1.6;"></div>
+
+      <div style="margin-top: 20px; text-align: right;">
+        <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalAuditoriaModulo')">Cerrar Auditoría</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GESTIÓN DE MÓDULOS (ELIMINACIÓN CORRELATIVA) -->
+  <div id="modalGestionModulos" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalGestionModulos')">
+    <div class="modal-content" style="max-width: 720px; text-align: left;">
+      <h3 style="color: var(--accent-gold); margin-bottom: 12px; font-family: var(--font-ui);">
+        ⚙️ Gestión de Trabajos Consagrados
+      </h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+        Puede auditar las 8 preguntas o eliminar un módulo de prueba. Al eliminar, el correlativo se reordenará automáticamente (1, 2, 3...).
+      </p>
+      <div id="listaGestionModulos" style="max-height: 380px; overflow-y: auto; margin-bottom: 20px;"></div>
+      <button class="btn-secondary" style="width: 100%;" onclick="cerrarModalGestionModulos()">Cerrar Gestión</button>
+    </div>
+  </div>
+
   <!-- MODAL: MIS AVANCES / FICHA EJECUTIVA EN PDF (CARTA, SOBRIO) -->
   <div id="modalMisAvances" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalMisAvances')">
     <div class="modal-certificado-wrapper">
@@ -392,10 +463,7 @@
         </button>
       </div>
 
-      <!-- Documento Imprimible Formato Carta -->
       <div id="documentoInformeAvance" class="informe-carta">
-        
-        <!-- Encabezado con Emblema a la Derecha -->
         <div class="informe-header-box">
           <div class="informe-brand">
             <p><strong>PLATAFORMA DE DOCENCIA PARA MAESTROS</strong></p>
@@ -417,7 +485,6 @@
           Se deja constancia que a la fecha, el Q.·.H.·. <strong id="informeNombreHermano">NOMBRE</strong> registra el siguiente avance en los trabajos de la Cámara del Medio:
         </p>
 
-        <!-- KPI Grid -->
         <div class="informe-kpis-grid">
           <div class="kpi-card">
             <div class="kpi-valor" id="kpiLecturaPct">0%</div>
@@ -448,7 +515,6 @@
           <tbody id="informeDetalleCuerpo"></tbody>
         </table>
 
-        <!-- Certificados Disponibles para Descarga Inmediata -->
         <div id="seccionCertificadosDisponibles" class="certificados-lista-inline no-print">
           <h4 style="font-family: var(--font-ui); font-size: 0.95rem; margin-bottom: 8px;">
             📜 Certificados Oficiales Disponibles:
@@ -504,7 +570,6 @@
               <p id="certTextoReflexion" class="cert-reflexion-cita">"..."</p>
             </div>
 
-            <!-- Pie del Certificado con Timbre Oficial -->
             <div class="cert-footer">
               <div class="cert-firma">
                 <div class="linea-firma"></div>
@@ -526,20 +591,6 @@
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- MODAL: GESTIÓN DE MÓDULOS -->
-  <div id="modalGestionModulos" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalGestionModulos')">
-    <div class="modal-content" style="max-width: 680px; text-align: left;">
-      <h3 style="color: var(--accent-gold); margin-bottom: 12px; font-family: var(--font-ui);">
-        ⚙️ Gestión de Trabajos Consagrados
-      </h3>
-      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
-        Al eliminar un trabajo cargado por error o prueba, los números de orden de los trabajos restantes se reordenarán automáticamente de manera correlativa (1, 2, 3...).
-      </p>
-      <div id="listaGestionModulos" style="max-height: 380px; overflow-y: auto; margin-bottom: 20px;"></div>
-      <button class="btn-secondary" style="width: 100%;" onclick="cerrarModalGestionModulos()">Cerrar Gestión</button>
     </div>
   </div>
 
