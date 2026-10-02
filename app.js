@@ -898,11 +898,18 @@ async function eliminarReflexionSuperadmin(progresoId) {
 
   const { error } = await sbApp
     .from('progreso_maestro')
-    .update({ reflexion: null, completado: false })
+    .update({ 
+      reflexion: "", 
+      completado: false 
+    })
     .eq('id', progresoId);
 
-  if (error) alert("Error al eliminar: " + error.message);
-  else cargarMuroGeneralAdmin();
+  if (error) {
+    alert("Error al eliminar: " + error.message);
+  } else {
+    alert("Reflexión eliminada con éxito.");
+    cargarMuroGeneralAdmin();
+  }
 }
 
 /* ==========================================================================
