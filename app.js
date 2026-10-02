@@ -19,6 +19,9 @@ let respuestasMarcadas = {};
 let pdfBase64Cargado = null;
 let moduloAuditando = null;
 
+// Cámara Presencial Interactiva (Estado)
+let estadoMesasPresencial = [];
+
 // Temporizador silencioso de lectura (120 segundos)
 let temporizadorLecturaId = null;
 
@@ -350,7 +353,6 @@ async function mostrarMuroReflexionesUsuarios() {
 
   await refrescarProgresosUsuario();
 
-  // Consulta de todas las reflexiones de la Cámara
   const { data: aportes, error } = await sbApp
     .from('progreso_maestro')
     .select('reflexion, completado_en, modulo_id, usuarios(nombre), modulos(numero_orden, titulo)')
@@ -365,7 +367,6 @@ async function mostrarMuroReflexionesUsuarios() {
     return;
   }
 
-  // Agrupar reflexiones por módulo
   const reflexionesPorModulo = {};
   aportes.forEach(a => {
     if (!a.modulo_id || !a.reflexion || a.reflexion.trim() === "") return;
@@ -373,7 +374,6 @@ async function mostrarMuroReflexionesUsuarios() {
     reflexionesPorModulo[a.modulo_id].push(a);
   });
 
-  // Identificar los módulos completados por el usuario actual y ordenarlos por fecha más reciente
   const modulosCompletadosUsuario = [];
   const modulosPendientesUsuario = [];
 
@@ -389,7 +389,6 @@ async function mostrarMuroReflexionesUsuarios() {
     }
   });
 
-  // Ordenar los completados del más reciente al más antiguo
   modulosCompletadosUsuario.sort((a, b) => b.fechaCompletado - a.fechaCompletado);
 
   if (modulosCompletadosUsuario.length === 0) {
@@ -404,7 +403,6 @@ async function mostrarMuroReflexionesUsuarios() {
     return;
   }
 
-  // Desplegar módulos completados con sus reflexiones completas
   modulosCompletadosUsuario.forEach(m => {
     const items = reflexionesPorModulo[m.id] || [];
     let reflexionesHtml = "";
@@ -442,7 +440,6 @@ async function mostrarMuroReflexionesUsuarios() {
     `;
   });
 
-  // Mostrar aviso de los módulos pendientes que permanecen bloqueados
   if (modulosPendientesUsuario.length > 0) {
     let pendientesListado = modulosPendientesUsuario.map(m => `Trabajo ${m.numero_orden}: ${m.titulo}`).join(' • ');
     cont.innerHTML += `
@@ -452,6 +449,28 @@ async function mostrarMuroReflexionesUsuarios() {
       </div>
     `;
   }
+}
+
+/* ==========================================================================
+   RENDERIZADO DE TRAZADO CON PÁRRAFOS Y SUBTÍTULOS DESTACADOS
+   ========================================================================== */
+function renderizarTrazadoEnriquecido(textoBruto) {
+  if (!textoBruto) return "";
+  const parrafos = textoBruto.split(/\n\s*\n/);
+  return parrafos.map(p => {
+    let limpio = p.trim();
+    if (!limpio) return "";
+    
+    // Identificar títulos o subtítulos
+    const esTitulo = /^(I{1,3}|IV|V|VI{0,3}|IX|X|\d+)\.?\s+[A-ZÁÉÍÓÚ\s]{4,}$/m.test(limpio) ||
+                     (limpio.length < 90 && limpio.endsWith(':')) ||
+                     (limpio.length < 80 && limpio === limpio.toUpperCase() && !limpio.includes('. '));
+
+    if (esTitulo) {
+      return `<h3 class="trazado-subtitulo">${limpio}</h3>`;
+    }
+    return `<p class="trazado-parrafo">${limpio.replace(/\n/g, ' ')}</p>`;
+  }).join('');
 }
 
 /* ==========================================================================
@@ -514,7 +533,9 @@ async function seleccionarModulo(idModulo) {
   document.getElementById('temaNumero').innerText = "Trabajo " + moduloActual.numero_orden;
   document.getElementById('temaTitulo').innerText = moduloActual.titulo;
   document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
-  document.getElementById('vistaTexto').innerText = moduloActual.contenido_trazado;
+  
+  // Inyección estructurada de párrafos y subtítulos
+  document.getElementById('vistaTexto').innerHTML = renderizarTrazadoEnriquecido(moduloActual.contenido_trazado);
 
   const tabPdf = document.getElementById('tabPdf');
   const framePdf = document.getElementById('framePdf');
@@ -709,7 +730,6 @@ function renderizarPreguntaActual() {
 async function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
   if (respuestasMarcadas[indicePreguntaActiva]) return;
 
-  // Responder preguntas implica lectura
   sbApp.from('progreso_maestro')
     .update({ leido: true })
     .eq('usuario_id', usuarioActual.id)
@@ -1045,7 +1065,7 @@ function imprimirInformeAvanceNativo() {
 }
 
 /* ==========================================================================
-   CERTIFICADO OFICIAL A4
+   CERTIFICADO OFICIAL A4: SIMETRÍA Y EXPORTACIÓN VECTORIAL
    ========================================================================== */
 async function abrirModalCertificado(moduloId = null, usuarioId = null) {
   const modTarget = moduloId ? listaModulos.find(m => m.id === moduloId) : moduloActual;
@@ -1121,7 +1141,7 @@ function descargarCertificadoPDF() {
 }
 
 /* ==========================================================================
-   CONSOLA SUPERADMIN: GESTIÓN DE TRABAJOS Y EDITOR DE 8 PREGUNTAS
+   CONSOLA SUPERADMIN: CARGA Y SUBSECCIONES
    ========================================================================== */
 async function cargarDatosAdmin() {
   const { data: mods } = await sbApp
@@ -1143,12 +1163,13 @@ async function cargarDatosAdmin() {
     inputOrden.value = listaModulos.length + 1;
   }
 
+  await cargarListaAsistentesPresencialAdmin();
   cambiarSubseccionAdmin('cargar');
 }
 
 function cambiarSubseccionAdmin(seccion) {
-  const btns = ['tabNavCargar', 'tabNavGestionTrabajos', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina'];
-  const secs = ['adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina'];
+  const btns = ['tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina'];
+  const secs = ['adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina'];
 
   btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
@@ -1160,6 +1181,9 @@ function cambiarSubseccionAdmin(seccion) {
     document.getElementById('tabNavGestionTrabajos').classList.add('active');
     document.getElementById('adminSeccionGestionTrabajos').classList.remove('hidden');
     cargarGestionTrabajosAdmin();
+  } else if (seccion === 'presencial') {
+    document.getElementById('tabNavPresencial').classList.add('active');
+    document.getElementById('adminSeccionPresencial').classList.remove('hidden');
   } else if (seccion === 'muro_general') {
     document.getElementById('tabNavMuroGeneral').classList.add('active');
     document.getElementById('adminSeccionMuroGeneral').classList.remove('hidden');
@@ -1178,6 +1202,183 @@ function cambiarSubseccionAdmin(seccion) {
   }
 }
 
+/* ==========================================================================
+   CÁMARA INTERACTIVA PRESENCIAL: GRUPOS, DILEMAS Y TABLERO EN VIVO
+   ========================================================================== */
+async function cargarListaAsistentesPresencialAdmin() {
+  const contenedor = document.getElementById('presencialListaAsistentes');
+  contenedor.innerHTML = "<span class='td-loading'>Cargando padrón...</span>";
+
+  const { data: usuarios } = await sbApp
+    .from('usuarios')
+    .select('id, nombre, es_admin')
+    .eq('activo', true)
+    .order('nombre', { ascending: true });
+
+  contenedor.innerHTML = "";
+  if (usuarios) {
+    usuarios.forEach(u => {
+      if (u.es_admin) return;
+      const nombreLimpio = u.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
+      contenedor.innerHTML += `
+        <label class="asistente-check-label">
+          <input type="checkbox" class="check-asistente-presencial" value="${nombreLimpio}" checked>
+          <span>Q.·.H.·. ${nombreLimpio}</span>
+        </label>
+      `;
+    });
+  }
+}
+
+async function generarDinamicaPresencial() {
+  const checks = document.querySelectorAll('.check-asistente-presencial:checked');
+  const asistentes = Array.from(checks).map(c => c.value);
+
+  if (asistentes.length < 3) {
+    alert("Seleccione al menos 3 Hermanos asistentes para constituir las mesas de trabajo.");
+    return;
+  }
+
+  const numMesas = parseInt(document.getElementById('numMesasPresencial').value) || 3;
+  const tipoDinamica = document.getElementById('selectTipoDinamicaPresencial').value;
+
+  // Mezclar asistentes al azar
+  const mezclados = [...asistentes].sort(() => 0.5 - Math.random());
+  
+  estadoMesasPresencial = [];
+  const nombresMesas = ["Mesa Oriente", "Mesa Occidente", "Mesa Mediodía", "Mesa Septentrión", "Mesa del Ara"];
+
+  for (let i = 0; i < numMesas; i++) {
+    estadoMesasPresencial.push({
+      id: i,
+      nombre: nombresMesas[i] || `Mesa ${i + 1}`,
+      integrantes: [],
+      puntos: 100 // Puntos de Aplomo iniciales
+    });
+  }
+
+  mezclados.forEach((nombre, idx) => {
+    const mesaIdx = idx % numMesas;
+    estadoMesasPresencial[mesaIdx].integrantes.push(nombre);
+  });
+
+  // Extraer dilemas y reflexiones reales de la plataforma
+  const dilemasDisponibles = [];
+  listaModulos.forEach(m => {
+    const pregs = m.preguntas_json?.preguntas || [];
+    if (pregs.length >= 8) {
+      dilemasDisponibles.push({
+        origen: `Trabajo N° ${m.numero_orden}: ${m.titulo}`,
+        enunciado: pregs[7].enunciado,
+        retro: pregs[7].retroalimentacion
+      });
+    }
+  });
+
+  const { data: reflexionesMuro } = await sbApp
+    .from('progreso_maestro')
+    .select('reflexion, modulos(titulo)')
+    .eq('completado', true)
+    .not('reflexion', 'is', null)
+    .limit(15);
+
+  let tituloDinamica = "";
+  let cuerpoDilema = "";
+
+  if (tipoDinamica === "1") {
+    tituloDinamica = "⚖️ Dinámica 1: El Tribunal de la Conciencia y los Dos Defensores";
+    const d = dilemasDisponibles[Math.floor(Math.random() * dilemasDisponibles.length)] || {
+      origen: "Docencia del Grado",
+      enunciado: "Un Maestro de la Logia postula a un cargo público en el que usted es fiscalizador. No cumple con un trámite menor, pero usted conoce su probidad y honradez intachable. El Hermano le solicita comprensión invocando la fraternidad.",
+      retro: "Evaluar la primacía de la justicia y la ley común versus la solidaridad fraternal."
+    };
+    cuerpoDilema = `
+      <strong>Insumo Docente:</strong> ${d.origen}<br><br>
+      <strong>Dilema Ético Planteado:</strong><br>
+      "${d.enunciado}"<br><br>
+      <em>Consigna para las Mesas:</em> Un integrante asume la defensa del deber estricto, otro la indulgencia fraternal, y el resto del grupo redacta un veredicto conjunto en 5 minutos.
+    `;
+  } else if (tipoDinamica === "2") {
+    tituloDinamica = "🎭 Dinámica 2: El Coloquio de las Máscaras Cruzadas (Aporte Anónimo)";
+    let refTexto = "El secreto masónico es saber callar ante la calumnia profana y responder únicamente con el trabajo bien hecho.";
+    if (reflexionesMuro && reflexionesMuro.length > 0) {
+      refTexto = reflexionesMuro[Math.floor(Math.random() * reflexionesMuro.length)].reflexion;
+    }
+    cuerpoDilema = `
+      <strong>Reflexión Anónima del Muro:</strong><br>
+      "${refTexto}"<br><br>
+      <em>Consigna para las Mesas:</em> Encuentren el punto ciego o la contradicción más sutil de esta afirmación. Defiendan por qué esta postura podría fallar en la vida profana real.
+    `;
+  } else if (tipoDinamica === "3") {
+    tituloDinamica = "⚡ Dinámica 3: La Piedra de Toque (Dilema Rápido y Contra-Ataque)";
+    cuerpoDilema = `
+      <strong>Situación de Contingencia:</strong><br>
+      "En una asamblea profana, un hermano del taller es atacado injustamente por un tercero con información confidencial que sólo se conocía en el círculo íntimo del grado. ¿Cómo interviene usted en ese preciso instante sin revelar el vínculo masónico?"<br><br>
+      <em>Consigna:</em> 3 minutos de deliberación por mesa. Cada grupo envía un portavoz que tiene 60 segundos para exponer. Las otras mesas pueden lanzar una pregunta suspicaz.
+    `;
+  } else if (tipoDinamica === "cierre_trivial") {
+    tituloDinamica = "🏆 Cierre Lúdico: Trivial de la Cámara (La Pregunta Imposible)";
+    cuerpoDilema = `
+      <strong>Interrogante Relámpago de Cámara:</strong><br>
+      "¿Cuál es la diferencia sutil e insalvable entre el Secreto del Maestro y el Silencio del Aprendiz frente a una crisis institucional profana?"<br><br>
+      <em>Consigna:</em> Respuesta rápida en 30 segundos por mesa. La solución con mayor agudeza suma +20 puntos.
+    `;
+  } else {
+    tituloDinamica = "🚨 Cierre Lúdico: El Dilema del Venerable en Apuros (60 Segundos)";
+    cuerpoDilema = `
+      <strong>Emergencia en el Templo:</strong><br>
+      "Faltan 5 minutos para iniciar la Tenida de Tercer Grado. Se corta el suministro eléctrico, dos Maestros de la oficialidad no han llegado y hay un visitante ilustre en pasos perdidos sin retejar. ¿Cuál es el plan de contingencia inmediato de su mesa?"<br><br>
+      <em>Consigna:</em> 60 segundos por mesa para exponer la solución más práctica y cómica sin quebrantar el ritual.
+    `;
+  }
+
+  document.getElementById('tituloDinamicaActiva').innerHTML = tituloDinamica;
+  document.getElementById('dilemaDinamicaActiva').innerHTML = cuerpoDilema;
+
+  renderizarTableroMesasPresencial();
+  document.getElementById('contenedorDinamicaEnVivo').classList.remove('hidden');
+}
+
+function renderizarTableroMesasPresencial() {
+  const cont = document.getElementById('mesasTrabajoDinamica');
+  cont.innerHTML = "";
+
+  estadoMesasPresencial.forEach(m => {
+    const nombresStr = m.integrantes.map(n => `• Q.·.H.·. ${n}`).join('<br>');
+    cont.innerHTML += `
+      <div class="mesa-card" id="card_mesa_${m.id}">
+        <div>
+          <div class="mesa-header">
+            <h4 style="margin: 0; color: var(--primary);">${m.nombre}</h4>
+            <span class="mesa-puntos-box" id="pts_mesa_${m.id}">${m.puntos} Pts</span>
+          </div>
+          <div class="mesa-asistentes-lista">${nombresStr || "<em>Sin integrantes</em>"}</div>
+        </div>
+        <div class="mesa-acciones-puntos">
+          <div class="btn-puntos-fila">
+            <button class="btn-pt-bono" onclick="modificarPuntosMesa(${m.id}, 15, 'Corte a Escuadra')">+15 Escuadra</button>
+            <button class="btn-pt-bono" onclick="modificarPuntosMesa(${m.id}, 20, 'Chispa de Maestro')">+20 Chispa</button>
+          </div>
+          <div class="btn-puntos-fila">
+            <button class="btn-pt-sancion" onclick="modificarPuntosMesa(${m.id}, -10, 'Piedra sin Desbastar')">-10 Divagación</button>
+            <button class="btn-pt-sancion" onclick="modificarPuntosMesa(${m.id}, -15, 'Mazo de Medianoche')">-15 Sin Acuerdo</button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function modificarPuntosMesa(mesaId, delta, motivo) {
+  const mesa = estadoMesasPresencial.find(m => m.id === mesaId);
+  if (!mesa) return;
+  mesa.puntos += delta;
+  document.getElementById(`pts_mesa_${mesaId}`).innerText = `${mesa.puntos} Pts`;
+}
+
+/* ==========================================================================
+   GESTIÓN DIRECTA DE TRABAJOS Y EDITOR DE 8 PREGUNTAS
+   ========================================================================== */
 async function cargarGestionTrabajosAdmin() {
   const cont = document.getElementById('listaGestionTrabajosAdmin');
   cont.innerHTML = "<p class='td-loading'>Cargando trabajos...</p>";
@@ -1508,7 +1709,7 @@ async function guardarParametrosHermanoBD() {
 }
 
 /* ==========================================================================
-   EDITOR DE DOCTRINA CON REORDENAMIENTO (SUBIR / BAJAR) Y NUEVOS BLOQUES
+   EDITOR DE DOCTRINA CON REORDENAMIENTO Y BLOQUES DINÁMICOS
    ========================================================================== */
 let bloquesDoctrinaAdmin = [];
 
@@ -1740,7 +1941,7 @@ async function exportarRespaldoCompletoJSON() {
 }
 
 /* ==========================================================================
-   CARGA PURA Y PROCESAMIENTO CON GEMINI
+   NORMALIZACIÓN INTELIGENTE DE TEXTO Y CARGA CON IA
    ========================================================================== */
 function formatearAutorMasonico(nombreCrudo) {
   if (!nombreCrudo) return 'Cámara de Docencia';
@@ -1752,6 +1953,7 @@ function depurarTextoPlancha(textoBruto) {
   if (!textoBruto) return "";
   let t = textoBruto.normalize("NFC");
 
+  // Corrección ortográfica y caracteres corruptos
   t = t.replace(/é%ca/gi, "ética")
        .replace(/colec%vas/gi, "colectivas")
        .replace(/en%dad/gi, "entidad")
@@ -1770,22 +1972,30 @@ function depurarTextoPlancha(textoBruto) {
        .replace(/sen%do/gi, "sentido")
        .replace(/q\s*ue\b/gi, "que");
 
-  let lineas = t.split(/\r?\n/);
-  let lineasFiltradas = [];
+  // Normalizar saltos de línea para preservar párrafos (doble salto)
+  let parrafosCrudos = t.split(/\r?\n\s*\r?\n/);
+  let parrafosNormalizados = [];
 
-  for (let linea of lineas) {
-    let l = linea.trim();
-    if (/^[-–—]?\s*(p[aá]g\.?|p[aá]gina)?\s*\d+\s*[-–—]?$/i.test(l)) continue;
-    if (/^(https?:\/\/|www\.)\S+$/i.test(l)) continue;
-    if (/^\d+\s+(ib[ií]d|op\.\s*cit|ob\.\s*cit|cfr|ver)\b/i.test(l)) continue;
+  for (let parrafo of parrafosCrudos) {
+    let p = parrafo.trim();
+    if (!p) continue;
 
-    let lineaLimpia = linea.replace(/\.\s*\d+\s+([A-ZÁÉÍÓÚ])/g, '. $1')
-                           .replace(/([a-záéíóú])\s+\d+\s+([a-záéíóú])/gi, '$1 $2')
-                           .replace(/Masónica\s+\d+\s+/g, 'Masónica ');
-    lineasFiltradas.push(lineaLimpia);
+    // Descartar números de página aislados o pies de página profanos
+    if (/^[-–—]?\s*(p[aá]g\.?|p[aá]gina)?\s*\d+\s*[-–—]?$/i.test(p)) continue;
+    if (/^(https?:\/\/|www\.)\S+$/i.test(p)) continue;
+    if (/^\d+\s+(ib[ií]d|op\.\s*cit|ob\.\s*cit|cfr|ver)\b/i.test(p)) continue;
+
+    // Reemplazar saltos de línea suaves dentro del párrafo por espacios
+    let parrafoLimpio = p.replace(/\r?\n/g, ' ')
+                         .replace(/\s{2,}/g, ' ')
+                         .replace(/\.\s*\d+\s+([A-ZÁÉÍÓÚ])/g, '. $1')
+                         .replace(/([a-záéíóú])\s+\d+\s+([a-záéíóú])/gi, '$1 $2')
+                         .replace(/Masónica\s+\d+\s+/g, 'Masónica ');
+
+    parrafosNormalizados.push(parrafoLimpio);
   }
 
-  return lineasFiltradas.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return parrafosNormalizados.join("\n\n").trim();
 }
 
 async function leerArchivoPlancha(event) {
@@ -1813,7 +2023,7 @@ async function leerArchivoPlancha(event) {
       mammoth.extractRawText({ arrayBuffer: e.target.result })
         .then(function(result) {
           document.getElementById('adminTexto').value = depurarTextoPlancha(result.value);
-          status.innerText = "Word depurado con éxito.";
+          status.innerText = "Word depurado con éxito respetando párrafos.";
         });
     };
     reader.readAsArrayBuffer(file);
@@ -1826,10 +2036,21 @@ async function leerArchivoPlancha(event) {
         for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
           const page = await pdf.getPage(pageNum);
           const textContent = await page.getTextContent();
-          fullText += textContent.items.map(item => item.str).join(' ') + "\n\n";
+          let pageStr = "";
+          let lastY = null;
+          textContent.items.forEach(item => {
+            if (lastY !== null && Math.abs(item.transform[5] - lastY) > 12) {
+              pageStr += "\n";
+            } else if (lastY !== null) {
+              pageStr += " ";
+            }
+            pageStr += item.str;
+            lastY = item.transform[5];
+          });
+          fullText += pageStr + "\n\n";
         }
         document.getElementById('adminTexto').value = depurarTextoPlancha(fullText);
-        status.innerText = `PDF depurado con éxito (${pdf.numPages} págs).`;
+        status.innerText = `PDF depurado con éxito (${pdf.numPages} págs) respetando párrafos.`;
       } catch (err) {
         status.innerText = "Error PDF: " + err.message;
       }
