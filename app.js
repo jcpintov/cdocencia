@@ -1,6 +1,3 @@
-/* ==========================================================================
-     3. app.js
-     ========================================================================== */
 if (window.pdfjsLib) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 }
@@ -86,7 +83,7 @@ function cambiarTamanoFuente(delta) {
 }
 
 /* ==========================================================================
-   AUTENTICACIÓN, BLINDAJE Y PERSISTENCIA (F5)
+   AUTENTICACIÓN Y ENTORNO
    ========================================================================== */
 async function iniciarSesion() {
   const email = document.getElementById('inputEmail').value.trim().toLowerCase();
@@ -137,21 +134,28 @@ function configurarEntornoUsuario() {
     document.getElementById('seccionAdmin').classList.remove('hidden');
     document.getElementById('seccionDocencia').classList.add('hidden');
     document.getElementById('seccionBienvenida').classList.add('hidden');
+    document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
     cargarDatosAdmin();
   } else {
     document.getElementById('modalSigilo').classList.remove('hidden');
   }
 }
 
-async function aceptarSigilo() {
+// 1. ACEPTAR SIGILO -> PANTALLA LIMPIA DE BIENVENIDA
+function aceptarSigilo() {
   document.getElementById('modalSigilo').classList.add('hidden');
-  await renderizarPantallaBienvenida();
-}
-
-async function renderizarPantallaBienvenida() {
   const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
   document.getElementById('bienvenidaNombreQH').innerText = `Bienvenido, Q.·.H.·. ${nombreLimpio}`;
+  document.getElementById('seccionBienvenida').classList.remove('hidden');
+}
 
+// 2. BOTÓN "IR A DOCENCIA" -> DESPLIEGA EL DESTINO (CATÁLOGO / CUADRÍCULA)
+async function irACatalogoDocencia() {
+  document.getElementById('seccionBienvenida').classList.add('hidden');
+  await renderizarCatalogoTrabajos();
+}
+
+async function renderizarCatalogoTrabajos() {
   const { data: dataModulos, error } = await sbApp
     .from('modulos')
     .select('*')
@@ -178,7 +182,7 @@ async function renderizarPantallaBienvenida() {
   leidos.sort((a, b) => a.numero_orden - b.numero_orden);
   listaModulos = [...noLeidos, ...leidos];
 
-  document.getElementById('bienvenidaContadorModulos').innerText = `${listaModulos.length} temas disponibles`;
+  document.getElementById('catalogoContadorModulos').innerText = `${listaModulos.length} temas disponibles`;
 
   const grid = document.getElementById('gridTrabajosBienvenida');
   grid.innerHTML = "";
@@ -216,21 +220,22 @@ async function renderizarPantallaBienvenida() {
     `;
   });
 
-  document.getElementById('seccionBienvenida').classList.remove('hidden');
+  document.getElementById('seccionCatalogoTrabajos').classList.remove('hidden');
 }
 
-function entrarDirectoAlUltimoTrabajo() {
-  if (listaModulos.length > 0) {
-    entrarADocenciaConModulo(listaModulos[0].id);
-  }
-}
-
+// 3. ENTRAR AL MÓDULO DE LECTURA DESDE LA CUADRÍCULA
 function entrarADocenciaConModulo(idModulo) {
-  document.getElementById('seccionBienvenida').classList.add('hidden');
+  document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
   document.getElementById('seccionDocencia').classList.remove('hidden');
   document.getElementById('contadorModulos').innerText = `${listaModulos.length} temas`;
   renderizarSidebar();
   seleccionarModulo(idModulo);
+}
+
+// 4. VOLVER A LA CUADRÍCULA DESDE LA LECTURA
+function volverACatalogo() {
+  document.getElementById('seccionDocencia').classList.add('hidden');
+  renderizarCatalogoTrabajos();
 }
 
 function cerrarSesion() {
@@ -243,6 +248,7 @@ function cerrarSesion() {
 
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionBienvenida').classList.add('hidden');
+  document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
   document.getElementById('seccionAdmin').classList.add('hidden');
   document.getElementById('modalSigilo').classList.add('hidden');
   document.getElementById('modalMisAvances').classList.add('hidden');
@@ -756,7 +762,7 @@ function abrirModalReflexionElegante(autor, texto) {
 }
 
 /* ==========================================================================
-   MIS AVANCES Y REPORTES EN PDF
+   MIS AVANCES Y GENERACIÓN DE INFORME PDF LIMPIO (SIN DESFASES)
    ========================================================================== */
 async function abrirModalMisAvances(usuarioObjetivoId = null) {
   const idTarget = usuarioObjetivoId || usuarioActual.id;
@@ -816,7 +822,7 @@ async function abrirModalMisAvances(usuarioObjetivoId = null) {
         <td><strong>Trabajo ${m.numero_orden}:</strong> ${m.titulo}</td>
         <td>${leidoTxt}</td>
         <td>${examenTxt}</td>
-        <td style="font-size: 0.85rem;">${reflexTxt}</td>
+        <td style="font-size: 0.8rem;">${reflexTxt}</td>
       </tr>
     `;
 
@@ -841,16 +847,57 @@ function cerrarModalMisAvances() {
   document.getElementById('modalMisAvances').classList.add('hidden');
 }
 
+/* GENERACIÓN BLINDADA DEL PDF CARTA (ELIMINA PÁGINAS EN BLANCO Y CORTES) */
 function descargarInformeAvancePDF() {
-  const elemento = document.getElementById('documentoInformeAvance');
+  const original = document.getElementById('documentoInformeAvance');
+  const btnAccion = document.querySelector('.btn-cert-descargar');
+  btnAccion.innerText = "Generando PDF...";
+  btnAccion.disabled = true;
+
+  // Clonar el documento fuera del modal para aislarlo de scrollbars y márgenes
+  const clon = original.cloneNode(true);
+  
+  // Ocultar sección de botones de certificados en el PDF
+  const certsEnClon = clon.querySelector('#seccionCertificadosDisponibles');
+  if (certsEnClon) certsEnClon.style.display = 'none';
+
+  // Contenedor temporal aislado en el body
+  const contenedorTemp = document.createElement('div');
+  contenedorTemp.style.position = 'fixed';
+  contenedorTemp.style.top = '0';
+  contenedorTemp.style.left = '-9999px';
+  contenedorTemp.style.width = '794px';
+  contenedorTemp.style.background = '#FFFFFF';
+  contenedorTemp.appendChild(clon);
+  document.body.appendChild(contenedorTemp);
+
+  const nombreLimpio = document.getElementById('informeNombreHermano').innerText.replace(/\s+/g, '_');
+
   const opciones = {
-    margin: 0,
-    filename: `Informe_Docente_${document.getElementById('informeNombreHermano').innerText.replace(/\s+/g, '_')}.pdf`,
+    margin: [10, 10, 10, 10],
+    filename: `Informe_Docente_${nombreLimpio}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
-    jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' }
+    html2canvas: {
+      scale: 2,
+      useCORS: true,
+      scrollY: 0,
+      scrollX: 0,
+      windowWidth: 1024
+    },
+    jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
+    pagebreak: { mode: ['avoid-all', 'css'] }
   };
-  html2pdf().set(opciones).from(elemento).save();
+
+  html2pdf().set(opciones).from(clon).save().then(() => {
+    document.body.removeChild(contenedorTemp);
+    btnAccion.innerText = "📥 Descargar Informe en PDF";
+    btnAccion.disabled = false;
+  }).catch((err) => {
+    console.error("Error al generar PDF:", err);
+    document.body.removeChild(contenedorTemp);
+    btnAccion.innerText = "📥 Descargar Informe en PDF";
+    btnAccion.disabled = false;
+  });
 }
 
 /* ==========================================================================
@@ -906,15 +953,28 @@ document.addEventListener('keydown', (e) => {
 });
 
 function descargarCertificadoPDF() {
-  const elemento = document.getElementById('documentoCertificado');
+  const original = document.getElementById('documentoCertificado');
+  
+  const clon = original.cloneNode(true);
+  const contenedorTemp = document.createElement('div');
+  contenedorTemp.style.position = 'fixed';
+  contenedorTemp.style.top = '0';
+  contenedorTemp.style.left = '-9999px';
+  contenedorTemp.style.width = '800px';
+  contenedorTemp.appendChild(clon);
+  document.body.appendChild(contenedorTemp);
+
   const opciones = {
-    margin: 0,
+    margin: [6, 6, 6, 6],
     filename: `Certificado_${moduloActual?.titulo?.replace(/\s+/g, '_') || 'Docencia'}.pdf`,
     image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { scale: 2, useCORS: true },
+    html2canvas: { scale: 2, useCORS: true, scrollY: 0, scrollX: 0 },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
   };
-  html2pdf().set(opciones).from(elemento).save();
+
+  html2pdf().set(opciones).from(clon).save().then(() => {
+    document.body.removeChild(contenedorTemp);
+  });
 }
 
 /* ==========================================================================
@@ -954,7 +1014,7 @@ async function cargarMuroGeneralAdmin() {
         </div>
         <div style="display: flex; gap: 6px;">
           <button class="admin-link-btn" onclick="editarReflexionSuperadmin('${it.id}', '${it.reflexion.replace(/'/g, "\\'")}')">✏️ Editar</button>
-          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarReflexionSuperadmin('${it.id}')">🗑️ Eliminar</button>
+          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarReflexionSuperadmin('${it.id}')">🗑️️ Eliminar</button>
         </div>
       </div>
     `).join('');
