@@ -22,6 +22,9 @@ let moduloAuditando = null;
 // Cámara Presencial Interactiva (Estado)
 let estadoMesasPresencial = [];
 
+// Callback auxiliar para modalConfirmarAccion
+let accionConfirmadaCallback = null;
+
 // Temporizador silencioso de lectura (120 segundos)
 let temporizadorLecturaId = null;
 
@@ -268,6 +271,8 @@ function cerrarSesion() {
   document.getElementById('modalCertificado').classList.add('hidden');
   document.getElementById('modalAuditoriaModulo').classList.add('hidden');
   document.getElementById('modalParametrosHermano').classList.add('hidden');
+  document.getElementById('modalEditarReflexionAdmin').classList.add('hidden');
+  document.getElementById('modalConfirmarAccion').classList.add('hidden');
   document.getElementById('btnSalir').classList.add('hidden');
   document.getElementById('seccionLogin').classList.remove('hidden');
   document.getElementById('inputEmail').value = '';
@@ -461,7 +466,6 @@ function renderizarTrazadoEnriquecido(textoBruto) {
     let limpio = p.trim();
     if (!limpio) return "";
     
-    // Identificar títulos o subtítulos
     const esTitulo = /^(I{1,3}|IV|V|VI{0,3}|IX|X|\d+)\.?\s+[A-ZÁÉÍÓÚ\s]{4,}$/m.test(limpio) ||
                      (limpio.length < 90 && limpio.endsWith(':')) ||
                      (limpio.length < 80 && limpio === limpio.toUpperCase() && !limpio.includes('. '));
@@ -534,7 +538,6 @@ async function seleccionarModulo(idModulo) {
   document.getElementById('temaTitulo').innerText = moduloActual.titulo;
   document.getElementById('temaAutor').innerText = moduloActual.autor ? "Autor: " + formatearAutorMasonico(moduloActual.autor) : "";
   
-  // Inyección estructurada de párrafos y subtítulos
   document.getElementById('vistaTexto').innerHTML = renderizarTrazadoEnriquecido(moduloActual.contenido_trazado);
 
   const tabPdf = document.getElementById('tabPdf');
@@ -614,7 +617,6 @@ async function evaluarEstadoFasesModulo() {
     return;
   }
 
-  // PRIMERA VEZ: BLOQUEO SILENCIOSO DE 2 MINUTOS
   contConfLectura.classList.remove('hidden');
   bloqueFaseDos.classList.add('hidden');
   bloqueFaseTres.classList.add('hidden');
@@ -1107,9 +1109,23 @@ function cerrarModalUniversalDirecto(modalId) {
   if (el) el.classList.add('hidden');
 }
 
+function abrirModalConfirmacion(titulo, mensaje, callback) {
+  document.getElementById('modalConfirmarTitulo').innerText = titulo;
+  document.getElementById('modalConfirmarMensaje').innerText = mensaje;
+  accionConfirmadaCallback = callback;
+  
+  const btn = document.getElementById('btnEjecutarConfirmacion');
+  btn.onclick = () => {
+    cerrarModalUniversalDirecto('modalConfirmarAccion');
+    if (accionConfirmadaCallback) accionConfirmadaCallback();
+  };
+
+  document.getElementById('modalConfirmarAccion').classList.remove('hidden');
+}
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano'].forEach(id => {
+    ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano', 'modalEditarReflexionAdmin', 'modalConfirmarAccion'].forEach(id => {
       const el = document.getElementById(id);
       if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
     });
@@ -1154,8 +1170,17 @@ async function cargarDatosAdmin() {
   
   const selectMetricas = document.getElementById('selectMetricasModulo');
   selectMetricas.innerHTML = "";
+  
+  const selectPresencialMod = document.getElementById('selectOrigenTrabajoPresencial');
+  if (selectPresencialMod) {
+    selectPresencialMod.innerHTML = `<option value="aleatorio">🎲 Todos los Trabajos (Aleatorio)</option>`;
+  }
+
   listaModulos.forEach(m => {
     selectMetricas.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
+    if (selectPresencialMod) {
+      selectPresencialMod.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
+    }
   });
 
   const inputOrden = document.getElementById('adminOrden');
@@ -1163,7 +1188,6 @@ async function cargarDatosAdmin() {
     inputOrden.value = listaModulos.length + 1;
   }
 
-  await cargarListaAsistentesPresencialAdmin();
   cambiarSubseccionAdmin('cargar');
 }
 
@@ -1205,66 +1229,30 @@ function cambiarSubseccionAdmin(seccion) {
 /* ==========================================================================
    CÁMARA INTERACTIVA PRESENCIAL: GRUPOS, DILEMAS Y TABLERO EN VIVO
    ========================================================================== */
-async function cargarListaAsistentesPresencialAdmin() {
-  const contenedor = document.getElementById('presencialListaAsistentes');
-  contenedor.innerHTML = "<span class='td-loading'>Cargando padrón...</span>";
-
-  const { data: usuarios } = await sbApp
-    .from('usuarios')
-    .select('id, nombre, es_admin')
-    .eq('activo', true)
-    .order('nombre', { ascending: true });
-
-  contenedor.innerHTML = "";
-  if (usuarios) {
-    usuarios.forEach(u => {
-      if (u.es_admin) return;
-      const nombreLimpio = u.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-      contenedor.innerHTML += `
-        <label class="asistente-check-label">
-          <input type="checkbox" class="check-asistente-presencial" value="${nombreLimpio}" checked>
-          <span>Q.·.H.·. ${nombreLimpio}</span>
-        </label>
-      `;
-    });
-  }
-}
-
 async function generarDinamicaPresencial() {
-  const checks = document.querySelectorAll('.check-asistente-presencial:checked');
-  const asistentes = Array.from(checks).map(c => c.value);
-
-  if (asistentes.length < 3) {
-    alert("Seleccione al menos 3 Hermanos asistentes para constituir las mesas de trabajo.");
-    return;
-  }
-
-  const numMesas = parseInt(document.getElementById('numMesasPresencial').value) || 3;
+  const numMesas = parseInt(document.getElementById('numMesasPresencial').value) || 4;
   const tipoDinamica = document.getElementById('selectTipoDinamicaPresencial').value;
+  const origenMod = document.getElementById('selectOrigenTrabajoPresencial').value;
 
-  // Mezclar asistentes al azar
-  const mezclados = [...asistentes].sort(() => 0.5 - Math.random());
-  
-  estadoMesasPresencial = [];
   const nombresMesas = ["Mesa Oriente", "Mesa Occidente", "Mesa Mediodía", "Mesa Septentrión", "Mesa del Ara"];
+  estadoMesasPresencial = [];
 
   for (let i = 0; i < numMesas; i++) {
     estadoMesasPresencial.push({
       id: i,
       nombre: nombresMesas[i] || `Mesa ${i + 1}`,
-      integrantes: [],
-      puntos: 100 // Puntos de Aplomo iniciales
+      puntos: 100
     });
   }
 
-  mezclados.forEach((nombre, idx) => {
-    const mesaIdx = idx % numMesas;
-    estadoMesasPresencial[mesaIdx].integrantes.push(nombre);
-  });
+  let modulosDisponibles = listaModulos;
+  if (origenMod !== "aleatorio") {
+    modulosDisponibles = listaModulos.filter(m => m.id === origenMod);
+  }
+  if (modulosDisponibles.length === 0) modulosDisponibles = listaModulos;
 
-  // Extraer dilemas y reflexiones reales de la plataforma
   const dilemasDisponibles = [];
-  listaModulos.forEach(m => {
+  modulosDisponibles.forEach(m => {
     const pregs = m.preguntas_json?.preguntas || [];
     if (pregs.length >= 8) {
       dilemasDisponibles.push({
@@ -1275,60 +1263,63 @@ async function generarDinamicaPresencial() {
     }
   });
 
-  const { data: reflexionesMuro } = await sbApp
-    .from('progreso_maestro')
-    .select('reflexion, modulos(titulo)')
-    .eq('completado', true)
-    .not('reflexion', 'is', null)
-    .limit(15);
-
+  let moduloRef = modulosDisponibles[Math.floor(Math.random() * modulosDisponibles.length)];
   let tituloDinamica = "";
   let cuerpoDilema = "";
 
   if (tipoDinamica === "1") {
     tituloDinamica = "⚖️ Dinámica 1: El Tribunal de la Conciencia y los Dos Defensores";
     const d = dilemasDisponibles[Math.floor(Math.random() * dilemasDisponibles.length)] || {
-      origen: "Docencia del Grado",
-      enunciado: "Un Maestro de la Logia postula a un cargo público en el que usted es fiscalizador. No cumple con un trámite menor, pero usted conoce su probidad y honradez intachable. El Hermano le solicita comprensión invocando la fraternidad.",
-      retro: "Evaluar la primacía de la justicia y la ley común versus la solidaridad fraternal."
+      origen: moduloRef ? `Trabajo N° ${moduloRef.numero_orden}: ${moduloRef.titulo}` : "Docencia del Grado",
+      enunciado: "Un Hermano Maestro solicita su aval financiero para un negocio profano de alto riesgo que compromete el patrimonio de su propia familia, invocando el secreto y socorro del grado.",
+      retro: "Evaluar la prudencia masónica y la responsabilidad profana frente a la solidaridad fraternal."
     };
     cuerpoDilema = `
       <strong>Insumo Docente:</strong> ${d.origen}<br><br>
       <strong>Dilema Ético Planteado:</strong><br>
       "${d.enunciado}"<br><br>
-      <em>Consigna para las Mesas:</em> Un integrante asume la defensa del deber estricto, otro la indulgencia fraternal, y el resto del grupo redacta un veredicto conjunto en 5 minutos.
+      <em>Consigna para las Mesas:</em> En 5 minutos, un integrante defiende el deber estricto, otro la indulgencia y el grupo redacta un veredicto de consenso.
     `;
   } else if (tipoDinamica === "2") {
     tituloDinamica = "🎭 Dinámica 2: El Coloquio de las Máscaras Cruzadas (Aporte Anónimo)";
+    const { data: reflexionesMuro } = await sbApp
+      .from('progreso_maestro')
+      .select('reflexion')
+      .eq('completado', true)
+      .not('reflexion', 'is', null)
+      .limit(20);
+
     let refTexto = "El secreto masónico es saber callar ante la calumnia profana y responder únicamente con el trabajo bien hecho.";
     if (reflexionesMuro && reflexionesMuro.length > 0) {
-      refTexto = reflexionesMuro[Math.floor(Math.random() * reflexionesMuro.length)].reflexion;
+      const azar = reflexionesMuro[Math.floor(Math.random() * reflexionesMuro.length)];
+      if (azar.reflexion) refTexto = azar.reflexion;
     }
+
     cuerpoDilema = `
-      <strong>Reflexión Anónima del Muro:</strong><br>
+      <strong>Reflexión Extraída del Muro:</strong><br>
       "${refTexto}"<br><br>
-      <em>Consigna para las Mesas:</em> Encuentren el punto ciego o la contradicción más sutil de esta afirmación. Defiendan por qué esta postura podría fallar en la vida profana real.
+      <em>Consigna para las Mesas:</em> Encuentren el punto ciego o contradicción práctica de esta postura y preparen una refutación ingeniosa ante el resto del taller.
     `;
   } else if (tipoDinamica === "3") {
     tituloDinamica = "⚡ Dinámica 3: La Piedra de Toque (Dilema Rápido y Contra-Ataque)";
     cuerpoDilema = `
-      <strong>Situación de Contingencia:</strong><br>
-      "En una asamblea profana, un hermano del taller es atacado injustamente por un tercero con información confidencial que sólo se conocía en el círculo íntimo del grado. ¿Cómo interviene usted en ese preciso instante sin revelar el vínculo masónico?"<br><br>
-      <em>Consigna:</em> 3 minutos de deliberación por mesa. Cada grupo envía un portavoz que tiene 60 segundos para exponer. Las otras mesas pueden lanzar una pregunta suspicaz.
+      <strong>Situación de Templo / Contingencia:</strong><br>
+      "En una asamblea profana, un hermano del taller es atacado con calumnias basadas en una indiscreción sobre su vida privada. ¿Cómo interviene usted en el acto sin desvelar la fraternidad institucional?"<br><br>
+      <em>Consigna:</em> 3 minutos de debate en mesa. Un portavoz expone la estrategia en 60 segundos; las otras mesas tienen derecho a lanzar una objeción suspicaz.
     `;
   } else if (tipoDinamica === "cierre_trivial") {
     tituloDinamica = "🏆 Cierre Lúdico: Trivial de la Cámara (La Pregunta Imposible)";
     cuerpoDilema = `
       <strong>Interrogante Relámpago de Cámara:</strong><br>
-      "¿Cuál es la diferencia sutil e insalvable entre el Secreto del Maestro y el Silencio del Aprendiz frente a una crisis institucional profana?"<br><br>
-      <em>Consigna:</em> Respuesta rápida en 30 segundos por mesa. La solución con mayor agudeza suma +20 puntos.
+      "¿Cuál es la diferencia insalvable entre el Secreto del Maestro y el Silencio del Aprendiz frente a una crisis pública?"<br><br>
+      <em>Consigna:</em> Respuesta relámpago de 30 segundos por mesa. El razonamiento más lúcido gana +20 puntos.
     `;
   } else {
     tituloDinamica = "🚨 Cierre Lúdico: El Dilema del Venerable en Apuros (60 Segundos)";
     cuerpoDilema = `
       <strong>Emergencia en el Templo:</strong><br>
-      "Faltan 5 minutos para iniciar la Tenida de Tercer Grado. Se corta el suministro eléctrico, dos Maestros de la oficialidad no han llegado y hay un visitante ilustre en pasos perdidos sin retejar. ¿Cuál es el plan de contingencia inmediato de su mesa?"<br><br>
-      <em>Consigna:</em> 60 segundos por mesa para exponer la solución más práctica y cómica sin quebrantar el ritual.
+      "A minutos de abrir los trabajos, se corta el suministro eléctrico, faltan dos oficiales y un visitante profano espera en pasos perdidos por error. ¿Cuál es el plan de contingencia inmediato de su mesa?"<br><br>
+      <em>Consigna:</em> 60 segundos para exponer la solución más cómica, rápida y respetuosa del ritual.
     `;
   }
 
@@ -1344,7 +1335,6 @@ function renderizarTableroMesasPresencial() {
   cont.innerHTML = "";
 
   estadoMesasPresencial.forEach(m => {
-    const nombresStr = m.integrantes.map(n => `• Q.·.H.·. ${n}`).join('<br>');
     cont.innerHTML += `
       <div class="mesa-card" id="card_mesa_${m.id}">
         <div>
@@ -1352,16 +1342,18 @@ function renderizarTableroMesasPresencial() {
             <h4 style="margin: 0; color: var(--primary);">${m.nombre}</h4>
             <span class="mesa-puntos-box" id="pts_mesa_${m.id}">${m.puntos} Pts</span>
           </div>
-          <div class="mesa-asistentes-lista">${nombresStr || "<em>Sin integrantes</em>"}</div>
+          <div style="margin-bottom: 12px;">
+            <input type="text" placeholder="Anotar integrantes presentes..." style="font-size: 0.8rem; padding: 6px 8px; border: 1px dashed var(--border-color); background: transparent;">
+          </div>
         </div>
         <div class="mesa-acciones-puntos">
           <div class="btn-puntos-fila">
-            <button class="btn-pt-bono" onclick="modificarPuntosMesa(${m.id}, 15, 'Corte a Escuadra')">+15 Escuadra</button>
-            <button class="btn-pt-bono" onclick="modificarPuntosMesa(${m.id}, 20, 'Chispa de Maestro')">+20 Chispa</button>
+            <button class="btn-pt-bono" onclick="modificarPuntosMesa(${m.id}, 15)">+15 Escuadra</button>
+            <button class="btn-pt-bono" onclick="modificarPuntosMesa(${m.id}, 20)">+20 Chispa</button>
           </div>
           <div class="btn-puntos-fila">
-            <button class="btn-pt-sancion" onclick="modificarPuntosMesa(${m.id}, -10, 'Piedra sin Desbastar')">-10 Divagación</button>
-            <button class="btn-pt-sancion" onclick="modificarPuntosMesa(${m.id}, -15, 'Mazo de Medianoche')">-15 Sin Acuerdo</button>
+            <button class="btn-pt-sancion" onclick="modificarPuntosMesa(${m.id}, -10)">-10 Divagación</button>
+            <button class="btn-pt-sancion" onclick="modificarPuntosMesa(${m.id}, -15)">-15 Sin Acuerdo</button>
           </div>
         </div>
       </div>
@@ -1369,7 +1361,7 @@ function renderizarTableroMesasPresencial() {
   });
 }
 
-function modificarPuntosMesa(mesaId, delta, motivo) {
+function modificarPuntosMesa(mesaId, delta) {
   const mesa = estadoMesasPresencial.find(m => m.id === mesaId);
   if (!mesa) return;
   mesa.puntos += delta;
@@ -1539,27 +1531,30 @@ async function guardarEdicionModuloAdmin() {
   }
 }
 
-async function eliminarModuloYReordenar(moduloId) {
-  if (!confirm("¿Está seguro de eliminar este trabajo? Los trabajos restantes se renumerarán automáticamente (1, 2, 3...).")) return;
+function eliminarModuloYReordenar(moduloId) {
+  abrirModalConfirmacion(
+    "Eliminar Trabajo",
+    "¿Está seguro de eliminar este trabajo de docencia? Todos los módulos restantes se renumerarán correlativamente (1, 2, 3...).",
+    async () => {
+      await sbApp.from('progreso_maestro').delete().eq('modulo_id', moduloId);
+      await sbApp.from('modulos').delete().eq('id', moduloId);
 
-  await sbApp.from('progreso_maestro').delete().eq('modulo_id', moduloId);
-  await sbApp.from('modulos').delete().eq('id', moduloId);
+      const { data: restantes } = await sbApp
+        .from('modulos')
+        .select('id')
+        .eq('activo', true)
+        .order('numero_orden', { ascending: true });
 
-  const { data: restantes } = await sbApp
-    .from('modulos')
-    .select('id')
-    .eq('activo', true)
-    .order('numero_orden', { ascending: true });
+      if (restantes) {
+        for (let i = 0; i < restantes.length; i++) {
+          await sbApp.from('modulos').update({ numero_orden: i + 1 }).eq('id', restantes[i].id);
+        }
+      }
 
-  if (restantes) {
-    for (let i = 0; i < restantes.length; i++) {
-      await sbApp.from('modulos').update({ numero_orden: i + 1 }).eq('id', restantes[i].id);
+      await cargarDatosAdmin();
+      cargarGestionTrabajosAdmin();
     }
-  }
-
-  alert("Trabajo eliminado y correlativo reestructurado.");
-  await cargarDatosAdmin();
-  cargarGestionTrabajosAdmin();
+  );
 }
 
 /* ==========================================================================
@@ -1769,9 +1764,14 @@ function agregarBloqueDoctrinaAdmin() {
 }
 
 function eliminarBloqueDoctrinaAdmin(idx) {
-  if (!confirm("¿Está seguro de eliminar este bloque doctrinal?")) return;
-  bloquesDoctrinaAdmin.splice(idx, 1);
-  renderizarFormularioDoctrinaAdmin();
+  abrirModalConfirmacion(
+    "Eliminar Bloque Doctrinal",
+    "¿Está seguro de eliminar este bloque de 'Docencia para Maestros'?",
+    () => {
+      bloquesDoctrinaAdmin.splice(idx, 1);
+      renderizarFormularioDoctrinaAdmin();
+    }
+  );
 }
 
 async function guardarDoctrinaAdmin() {
@@ -1788,7 +1788,7 @@ async function guardarDoctrinaAdmin() {
 }
 
 /* ==========================================================================
-   MURO GENERAL SUPERADMIN Y EXPORTACIÓN PDF DE ALTA CALIDAD
+   MURO GENERAL SUPERADMIN: GESTIÓN CON MODALES EXCLUSIVOS
    ========================================================================== */
 async function cargarMuroGeneralAdmin() {
   const contenedor = document.getElementById('contenedorMuroGeneralAdmin');
@@ -1833,8 +1833,8 @@ async function cargarMuroGeneralAdmin() {
             <div style="font-size: 0.95rem; font-style: italic;">"${it.reflexion}"</div>
           </div>
           <div style="display: flex; gap: 6px;" class="no-print">
-            <button class="admin-link-btn" onclick="editarReflexionSuperadmin('${it.id}', '${it.reflexion.replace(/'/g, "\\'")}')">✏️</button>
-            <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarReflexionSuperadmin('${it.id}')">🗑</button>
+            <button class="admin-link-btn" onclick="abrirModalEditarReflexionAdmin('${it.id}', '${encodeURIComponent(it.reflexion)}')">✏️</button>
+            <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarReflexionSuperadmin('${it.id}')">🗑️</button>
           </div>
         </div>
       `;
@@ -1849,6 +1849,51 @@ async function cargarMuroGeneralAdmin() {
       </div>
     `;
   }
+}
+
+function abrirModalEditarReflexionAdmin(progresoId, textoCodificado) {
+  const textoDecodificado = decodeURIComponent(textoCodificado);
+  document.getElementById('editReflexionProgresoId').value = progresoId;
+  document.getElementById('textareaEditarReflexionAdmin').value = textoDecodificado;
+  document.getElementById('modalEditarReflexionAdmin').classList.remove('hidden');
+}
+
+async function guardarEdicionReflexionModalAdmin() {
+  const progresoId = document.getElementById('editReflexionProgresoId').value;
+  const nuevoTexto = document.getElementById('textareaEditarReflexionAdmin').value.trim();
+
+  if (!nuevoTexto) {
+    alert("El texto de la reflexión no puede quedar vacío.");
+    return;
+  }
+
+  const { error } = await sbApp
+    .from('progreso_maestro')
+    .update({ reflexion: nuevoTexto })
+    .eq('id', progresoId);
+
+  if (error) {
+    alert("Error al actualizar reflexión: " + error.message);
+  } else {
+    cerrarModalUniversalDirecto('modalEditarReflexionAdmin');
+    cargarMuroGeneralAdmin();
+  }
+}
+
+function eliminarReflexionSuperadmin(progresoId) {
+  abrirModalConfirmacion(
+    "Eliminar Reflexión",
+    "¿Está seguro de eliminar esta reflexión? El estado del Hermano cambiará a pendiente para permitirle consagrar un nuevo aporte.",
+    async () => {
+      const { error } = await sbApp
+        .from('progreso_maestro')
+        .update({ reflexion: "", completado: false })
+        .eq('id', progresoId);
+
+      if (error) alert("Error al eliminar: " + error.message);
+      else cargarMuroGeneralAdmin();
+    }
+  );
 }
 
 function imprimirMuroGeneralPDF() {
@@ -1892,39 +1937,10 @@ function imprimirMuroGeneralPDF() {
   ventanaPrint.document.close();
 }
 
-async function editarReflexionSuperadmin(progresoId, textoActual) {
-  const nuevo = prompt("Modificar la reflexión consagrada:", textoActual);
-  if (nuevo === null) return;
-  if (nuevo.trim() === "") {
-    alert("El texto no puede quedar vacío.");
-    return;
-  }
-
-  const { error } = await sbApp
-    .from('progreso_maestro')
-    .update({ reflexion: nuevo.trim() })
-    .eq('id', progresoId);
-
-  if (error) alert("Error al editar: " + error.message);
-  else cargarMuroGeneralAdmin();
-}
-
-async function eliminarReflexionSuperadmin(progresoId) {
-  if (!confirm("¿Está seguro de eliminar esta reflexión? El estado del Hermano pasará a incompleto para que pueda consagrarla nuevamente.")) return;
-
-  const { error } = await sbApp
-    .from('progreso_maestro')
-    .update({ reflexion: "", completado: false })
-    .eq('id', progresoId);
-
-  if (error) alert("Error al eliminar: " + error.message);
-  else cargarMuroGeneralAdmin();
-}
-
 async function exportarRespaldoCompletoJSON() {
   const { data: mods } = await sbApp.from('modulos').select('*');
   const { data: progs } = await sbApp.from('progreso_maestro').select('*');
-  const { data: usrs } = await sbApp.from('usuarios').select('id, nombre, email, activo, es_admin');
+  const { data: usrs } = await sbApp.from('usuarios').select('id, nombre, email, es_admin');
 
   const respaldo = {
     fecha: new Date().toISOString(),
@@ -1953,7 +1969,6 @@ function depurarTextoPlancha(textoBruto) {
   if (!textoBruto) return "";
   let t = textoBruto.normalize("NFC");
 
-  // Corrección ortográfica y caracteres corruptos
   t = t.replace(/é%ca/gi, "ética")
        .replace(/colec%vas/gi, "colectivas")
        .replace(/en%dad/gi, "entidad")
@@ -1972,7 +1987,6 @@ function depurarTextoPlancha(textoBruto) {
        .replace(/sen%do/gi, "sentido")
        .replace(/q\s*ue\b/gi, "que");
 
-  // Normalizar saltos de línea para preservar párrafos (doble salto)
   let parrafosCrudos = t.split(/\r?\n\s*\r?\n/);
   let parrafosNormalizados = [];
 
@@ -1980,12 +1994,10 @@ function depurarTextoPlancha(textoBruto) {
     let p = parrafo.trim();
     if (!p) continue;
 
-    // Descartar números de página aislados o pies de página profanos
     if (/^[-–—]?\s*(p[aá]g\.?|p[aá]gina)?\s*\d+\s*[-–—]?$/i.test(p)) continue;
     if (/^(https?:\/\/|www\.)\S+$/i.test(p)) continue;
     if (/^\d+\s+(ib[ií]d|op\.\s*cit|ob\.\s*cit|cfr|ver)\b/i.test(p)) continue;
 
-    // Reemplazar saltos de línea suaves dentro del párrafo por espacios
     let parrafoLimpio = p.replace(/\r?\n/g, ' ')
                          .replace(/\s{2,}/g, ' ')
                          .replace(/\.\s*\d+\s+([A-ZÁÉÍÓÚ])/g, '. $1')
