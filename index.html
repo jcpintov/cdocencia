@@ -400,7 +400,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Cámara Interactiva Presencial: Módulos de Debate y Dilemas</h2>
-            <p class="text-instruccion" style="margin: 0;">Sesión participativa, dinámica grupal para 3 o más mesas y tablero de Puntos de Aplomo.</p>
+            <p class="text-instruccion" style="margin: 0;">Sesión participativa para 3 o más mesas constituidas en sala con tablero de Puntos de Aplomo.</p>
           </div>
           <div class="admin-header-actions">
             <button class="btn-primary" style="padding: 8px 18px; font-size: 0.9rem;" onclick="generarDinamicaPresencial()">
@@ -410,23 +410,22 @@
         </div>
 
         <div class="presencial-config-panel">
-          <div class="form-group" style="margin-bottom: 12px;">
-            <label>Selección de Asistentes al Taller:</label>
-            <div id="presencialListaAsistentes" class="presencial-asistentes-checks"></div>
-          </div>
-
-          <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+          <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
             <div>
-              <label for="numMesasPresencial" style="font-weight: 700; font-family: var(--font-ui); font-size: 0.88rem;">Número de Mesas / Grupos:</label>
-              <select id="numMesasPresencial" style="width: 140px; padding: 6px 10px;">
-                <option value="3" selected>3 Mesas</option>
-                <option value="4">4 Mesas</option>
+              <label for="selectOrigenTrabajoPresencial" style="font-weight: 700; font-family: var(--font-ui); font-size: 0.88rem; display: block; margin-bottom: 4px;">Trabajo / Trazado Base:</label>
+              <select id="selectOrigenTrabajoPresencial" style="width: 260px; padding: 7px 10px;"></select>
+            </div>
+            <div>
+              <label for="numMesasPresencial" style="font-weight: 700; font-family: var(--font-ui); font-size: 0.88rem; display: block; margin-bottom: 4px;">Número de Mesas / Grupos:</label>
+              <select id="numMesasPresencial" style="width: 130px; padding: 7px 10px;">
+                <option value="3">3 Mesas</option>
+                <option value="4" selected>4 Mesas</option>
                 <option value="5">5 Mesas</option>
               </select>
             </div>
             <div>
-              <label for="selectTipoDinamicaPresencial" style="font-weight: 700; font-family: var(--font-ui); font-size: 0.88rem;">Tipo de Dinámica:</label>
-              <select id="selectTipoDinamicaPresencial" style="width: 280px; padding: 6px 10px;">
+              <label for="selectTipoDinamicaPresencial" style="font-weight: 700; font-family: var(--font-ui); font-size: 0.88rem; display: block; margin-bottom: 4px;">Tipo de Dinámica:</label>
+              <select id="selectTipoDinamicaPresencial" style="width: 290px; padding: 7px 10px;">
                 <option value="1">1. El Tribunal de la Conciencia</option>
                 <option value="2">2. El Coloquio de las Máscaras Cruzadas</option>
                 <option value="3">3. La Piedra de Toque (Dilema Rápido)</option>
@@ -443,11 +442,11 @@
           <div id="mesasTrabajoDinamica" class="mesas-trabajo-grid"></div>
 
           <div class="cierre-reglas-fraternales">
-            <h4 style="margin-bottom: 6px; color: var(--accent-gold-dark);">⚖️ Reglamento de Cámara y Cierre Fraternal:</h4>
+            <h4 style="margin-bottom: 6px; color: var(--accent-gold-dark);">⚖️ Puntos de Aplomo y Deber Fraternal:</h4>
             <p style="margin: 0; font-size: 0.88rem; line-height: 1.5;">
-              • <strong>Puntos de Aplomo:</strong> Se premia la concisión y el pragmatismo doctrinal (+15/+20). Se sanciona la divagación infinita y el desorden (-10/-15/-20).<br>
-              • <strong>Premios Especiales:</strong> Se reconocerá la <em>Respuesta Más Original</em> y al <em>Grupo Más Entusiasta</em>.<br>
-              • <strong>Veredicto Inapelable:</strong> La mesa con menor puntaje final asumirá el deber de <strong>lavar los platos</strong> al término de la colación fraterna.
+              • Bonificaciones: <strong>+15 Corte a Escuadra</strong> (concisión práctica) y <strong>+20 Chispa de Maestro</strong> (agudeza e ingenio).<br>
+              • Penalizaciones: <strong>-10 Divagación</strong> (irse por las ramas), <strong>-15 Sin Acuerdo</strong> y <strong>-10 Ruido en Columnas</strong>.<br>
+              • Premios al final: <em>Respuesta Más Original</em> y <em>Grupo Más Entusiasta</em>. La mesa perdedora asume el compromiso de <strong>lavar los platos</strong> en el refrigerio.
             </p>
           </div>
         </div>
@@ -461,7 +460,7 @@
             <p class="text-instruccion" style="margin: 0;">Reflexiones aportadas por los Hermanos con moderación y exportación de alta calidad.</p>
           </div>
           <div class="admin-header-actions">
-            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="imprimirMuroGeneralPDF()">🖨️️ Descargar Muro en PDF</button>
+            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="imprimirMuroGeneralPDF()">🖨️ Descargar Muro en PDF</button>
             <button class="admin-link-btn" onclick="cargarMuroGeneralAdmin()">🔄 Actualizar Muro</button>
           </div>
         </div>
@@ -537,11 +536,49 @@
     </main>
   </div>
 
+  <!-- MODAL: EDICIÓN PROFESIONAL DE REFLEXIÓN EN SUPERADMIN -->
+  <div id="modalEditarReflexionAdmin" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalEditarReflexionAdmin')">
+    <div class="modal-content" style="max-width: 680px; text-align: left;">
+      <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">
+        ✏️ Modificar Reflexión Consagrada
+      </h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+        Edite el aporte fraterno respetando la profundidad y sentido del Hermano autor.
+      </p>
+
+      <input type="hidden" id="editReflexionProgresoId">
+
+      <div class="form-group">
+        <label for="textareaEditarReflexionAdmin">Texto de la Reflexión:</label>
+        <textarea id="textareaEditarReflexionAdmin" rows="6" style="line-height: 1.6;"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalEditarReflexionAdmin')">Cancelar</button>
+        <button class="btn-primary" style="width: auto; padding: 10px 22px;" onclick="guardarEdicionReflexionModalAdmin()">💾 Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIRMACIÓN DE ACCIONES DESTRUCTIVAS -->
+  <div id="modalConfirmarAccion" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalConfirmarAccion')">
+    <div class="modal-content" style="max-width: 480px; text-align: center;">
+      <span style="font-size: 2.2rem; display: block; margin-bottom: 10px;">⚠️</span>
+      <h3 id="modalConfirmarTitulo" style="color: var(--primary); margin-bottom: 10px; font-family: var(--font-ui);">Confirmar Acción</h3>
+      <p id="modalConfirmarMensaje" style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;"></p>
+
+      <div style="display: flex; justify-content: center; gap: 12px;">
+        <button class="btn-secondary" style="min-width: 110px;" onclick="cerrarModalUniversalDirecto('modalConfirmarAccion')">Cancelar</button>
+        <button id="btnEjecutarConfirmacion" class="btn-primary" style="min-width: 130px; width: auto; background-color: var(--error);">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: EDICIÓN DE PARÁMETROS DE AVANCE DE UN HERMANO -->
   <div id="modalParametrosHermano" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalParametrosHermano')">
     <div class="modal-content" style="max-width: 650px; text-align: left;">
       <h3 style="color: var(--accent-gold); margin-bottom: 12px; font-family: var(--font-ui);">
-        ✏️️ Modificar Parámetros de Avance del Hermano
+        ⚙️ Modificar Parámetros de Avance del Hermano
       </h3>
       <p id="subParamHermano" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;"></p>
 
