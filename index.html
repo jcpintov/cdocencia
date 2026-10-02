@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Docencia Masónica de Tercer Grado | Cámara del Medio</title>
+  <title>Docencia Masónica de Tercer Grado | Cámara de Docencia</title>
   
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -31,14 +31,14 @@
       <button class="icon-btn" onclick="alternarTemaLuminosidad()" id="btnTema" title="Cambiar Luminosidad">☀️</button>
       <button class="font-btn" onclick="cambiarTamanoFuente(1)" title="Aumentar letra">A+</button>
       <button class="font-btn" onclick="cambiarTamanoFuente(-1)" title="Disminuir letra">A-</button>
-      <button id="btnSalir" class="logout-btn hidden" onclick="cerrarSesion()">Cerrar Cámara</button>
+      <button id="btnSalir" class="logout-btn hidden" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
   </header>
 
   <!-- PANTALLA 1: ACCESO -->
   <main id="seccionLogin" class="login-wrapper">
     <div class="card card-trazado">
-      <h2 style="text-align: center; margin-bottom: 6px;">Cámara del Medio</h2>
+      <h2 style="text-align: center; margin-bottom: 6px;">Cámara de Docencia</h2>
       <p class="login-sub">Espacio docente reservado para Maestros Masones.</p>
       
       <div class="form-group">
@@ -56,16 +56,19 @@
     </div>
   </main>
 
-  <!-- MODAL SIGILO -->
-  <div id="modalSigilo" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalSigilo')">
-    <div class="modal-content">
-      <h2 style="color: var(--accent-gold); margin-bottom: 14px; text-align: center;">Advertencia y Condiciones de Uso</h2>
-      <p style="text-align: justify; line-height: 1.75; margin-bottom: 22px;">
-        Al ingresar a esta Cámara del Medio, reafirmo mi compromiso de mantener estricta reserva sobre los contenidos, 
+  <!-- MODAL SIGILO Y ADVERTENCIA -->
+  <div id="modalSigilo" class="modal-overlay hidden">
+    <div class="modal-content modal-sigilo-box">
+      <h2 class="modal-sigilo-titulo">Advertencia y Condiciones de Uso</h2>
+      <p class="modal-sigilo-texto">
+        Al ingresar a este Espacio Docente, reafirmo mi compromiso de mantener estricta reserva sobre los contenidos, 
         trazados, símbolos y reflexiones personales aquí vertidos. Reconozco que este espacio pertenece al ámbito exclusivo 
-        del Tercer Grado, quedando estrictamente prohibida su difusión profana o copia no autorizada bajo los preceptos del honor y el cumplimiento del Deber Masónico.
+        del Tercer Grado de la R.·.L.·. Orestes Frödden Lorenzen N°146 del Valle de Talagante, quedando estrictamente 
+        prohibida su difusión profana, a grados inferiores o su copia no autorizada bajo los preceptos del honor y el cumplimiento del Deber Masónico.
       </p>
-      <button class="btn-primary" onclick="aceptarSigilo()">Reafirmo mi Juramento e Ingreso</button>
+      <button class="btn-primary btn-sigilo-accion" onclick="aceptarSigilo()">
+        REAFIRMO MI COMPROMISO Y DISCRECIÓN
+      </button>
     </div>
   </div>
 
@@ -75,27 +78,32 @@
       <div class="insignia-centro-wrapper">
         <img src="https://cmaestros.ofl.cl/imgs/escuadra.png" class="img-escuadra-discreta" alt="Escuadra y Compás">
       </div>
-      <h1 id="bienvenidaNombreQH" class="bienvenida-nombre-texto">Bienvenido, Q.·.H.·.</h1>
+      <div class="bienvenida-lineas-contenedor">
+        <span class="bienvenida-subtitulo-linea">Bienvenido,</span>
+        <h1 id="bienvenidaNombreQH" class="bienvenida-nombre-linea">Q.·.H.·.</h1>
+      </div>
       <button class="btn-primary btn-ir-docencia-accion" onclick="irACatalogoDocencia()">
         Ir a Docencia
       </button>
     </div>
   </div>
 
-  <!-- PANTALLA 3: CATÁLOGO DE TRABAJOS Y BOTÓN A DOCENCIA PARA MAESTROS -->
+  <!-- PANTALLA 3: CATÁLOGO DE TRABAJOS -->
   <main id="seccionCatalogoTrabajos" class="bienvenida-container hidden">
     <div class="seccion-trabajos-header">
       <div>
-        <h2 style="font-family: var(--font-reading); color: var(--primary); margin-bottom: 4px;">Trabajos Disponibles de la Cámara</h2>
+        <h2 class="titulo-catalogo-temas">Trabajos Disponibles de la Cámara</h2>
         <p style="font-size: 0.9rem; color: var(--text-muted); font-family: var(--font-ui); margin: 0;">Seleccione un trabajo para su estudio doctrinal.</p>
       </div>
       <div class="catalogo-botones-top">
-        <button class="btn-secondary" onclick="mostrarDocenciaParaMaestros()">
-          📜 Docencia para Maestros
-        </button>
-        <button class="btn-mis-avances" onclick="abrirModalMisAvances()">
-          📊 Mis Avances
-        </button>
+        <div class="botones-gemelos-wrapper">
+          <button class="btn-gemelo btn-gemelo-secundario" onclick="mostrarDocenciaParaMaestros()">
+            📜 Docencia para Maestros
+          </button>
+          <button class="btn-gemelo btn-gemelo-primario" onclick="abrirModalMisAvances()">
+            📊 Mis Avances
+          </button>
+        </div>
         <span id="catalogoContadorModulos" class="badge-contador-temas"></span>
       </div>
     </div>
@@ -116,7 +124,27 @@
     </div>
   </main>
 
-  <!-- PANTALLA 5: ENTORNO DE LECTURA Y EVALUACIÓN -->
+  <!-- PANTALLA 5: MURO DE REFLEXIONES DE USUARIOS (DIRECTO EN PÁGINA, SIN POPUPS) -->
+  <main id="seccionMuroUsuarios" class="bienvenida-container hidden">
+    <div class="card card-reflexion">
+      <div class="institucional-top-bar">
+        <button class="btn-secondary" onclick="volverACatalogo()">⬅ Volver a Trabajos</button>
+        <div class="insignia-centro-wrapper" style="margin: 0;">
+          <img src="https://cmaestros.ofl.cl/imgs/escuadra.png" class="img-escuadra-discreta" alt="Escuadra">
+        </div>
+      </div>
+      <div class="card-fase-header">
+        <span class="fase-badge badge-muro">MURO GENERAL</span>
+        <h2>Muro de Reflexiones de la Cámara de Docencia</h2>
+      </div>
+      <p class="text-instruccion">
+        Aportes consagrados por los QQ.·.HH.·., organizados por trabajos aprobados en orden cronológico reciente. Los trabajos pendientes permanecen bajo sigilo docente.
+      </p>
+      <div id="contenedorMuroUsuariosDirecto"></div>
+    </div>
+  </main>
+
+  <!-- PANTALLA 6: ENTORNO DE ESTUDIO Y EVALUACIÓN -->
   <div id="seccionDocencia" class="templo-layout hidden">
     <aside class="sidebar-templo">
       <div class="sidebar-box sidebar-avances-box">
@@ -131,10 +159,16 @@
         </button>
       </div>
 
+      <div class="sidebar-box sidebar-avances-box" style="margin-top: -6px;">
+        <button class="btn-mis-avances" onclick="mostrarMuroReflexionesUsuarios()">
+          💬 Ver Muro de Reflexiones
+        </button>
+      </div>
+
       <div class="sidebar-box">
         <div class="sidebar-title">
-          <span>Trabajos de la Cámara</span>
-          <span id="contadorModulos"></span>
+          <span class="sidebar-title-label">TRABAJOS DE LA CÁMARA</span>
+          <span id="contadorModulos" class="sidebar-title-contador"></span>
         </div>
         <div id="listaModulosNav"></div>
       </div>
@@ -143,7 +177,7 @@
         <h4>Metodología de Trabajo</h4>
         <p>1. Confirme la lectura del trazado tras su análisis.<br>
            2. Responda el cuestionario formativo (8 preguntas).<br>
-           3. Finalice para acceder al Muro de Reflexiones.</p>
+           3. Ingrese sus aportes al tema para acceder al Muro de Reflexiones.</p>
       </div>
     </aside>
 
@@ -180,7 +214,6 @@
           <iframe id="framePdf" class="pdf-viewer-frame" src=""></iframe>
         </div>
 
-        <!-- BOTÓN CON TEMPORIZADOR DE 2 MINUTOS (SIN CUENTA REGRESIVA VISIBLE) -->
         <div id="contenedorConfirmarLectura" class="fase-action-wrapper">
           <button id="btnConfirmarLectura" class="btn-primary" onclick="confirmarLecturaFaseUno()">
             Confirmo lectura
@@ -244,7 +277,7 @@
 
           <div class="card-fase-header">
             <span class="fase-badge badge-muro">MURO</span>
-            <h2>Muro de Reflexiones</h2>
+            <h2>Muro de Reflexiones de este Trabajo</h2>
           </div>
           <p class="text-instruccion">Aportes consagrados para este trabajo en la Cámara:</p>
           <div id="contenedorMuro"></div>
@@ -253,7 +286,7 @@
     </main>
   </div>
 
-  <!-- PANTALLA 6: CONSOLA SUPERADMIN -->
+  <!-- PANTALLA 7: CONSOLA SUPERADMIN -->
   <div id="seccionAdmin" class="admin-layout hidden">
     <aside class="sidebar-admin">
       <div class="admin-brand">
@@ -267,9 +300,6 @@
         </a>
         <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq" target="_blank" class="admin-nav-link-ext">
           ⚡ Supabase Dashboard
-        </a>
-        <a href="https://gemini.google.com" target="_blank" class="admin-nav-link-ext">
-          💬 Esta Conversación
         </a>
       </div>
 
@@ -363,14 +393,35 @@
       <section id="adminSeccionMuroGeneral" class="card card-reflexion hidden">
         <div class="admin-card-header">
           <div>
-            <h2>Muro General de la Cámara</h2>
-            <p class="text-instruccion" style="margin: 0;">Reflexiones aportadas por los Hermanos con moderación directa.</p>
+            <h2>Muro General de la Cámara de Docencia</h2>
+            <p class="text-instruccion" style="margin: 0;">Reflexiones aportadas por los Hermanos con moderación y exportación de alta calidad.</p>
           </div>
           <div class="admin-header-actions">
+            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="imprimirMuroGeneralPDF()">🖨️ Descargar Muro en PDF</button>
             <button class="admin-link-btn" onclick="cargarMuroGeneralAdmin()">🔄 Actualizar Muro</button>
           </div>
         </div>
-        <div id="contenedorMuroGeneralAdmin"></div>
+
+        <!-- CONTENEDOR DIAGRAMADO CON ENCABEZADOS OFICIALES -->
+        <div id="documentoMuroGeneralImprimible">
+          <div class="informe-header-box informe-header-muro">
+            <div class="informe-brand">
+              <p><strong>PLATAFORMA DE DOCENCIA PARA MAESTROS</strong></p>
+              <p>R.·.L.·. OFL 146</p>
+              <p>TALAGANTE</p>
+            </div>
+            <div class="informe-emblema-wrapper">
+              <img src="https://cmaestros.ofl.cl/imgs/emblema.png" class="img-emblema-discreto" alt="Emblema OFL 146">
+            </div>
+            <div class="informe-meta-header">
+              <p>RECOPILACIÓN GENERAL DE REFLEXIONES</p>
+              <p>CÁMARA DE DOCENCIA</p>
+              <p id="muroAdminFechaEmision"></p>
+            </div>
+          </div>
+          <hr class="informe-hr">
+          <div id="contenedorMuroGeneralAdmin"></div>
+        </div>
       </section>
 
       <!-- SUBSECCIÓN 4: MATRIZ DE AVANCE Y EDICIÓN DE PARÁMETROS -->
@@ -410,7 +461,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Editor de Contenido: Docencia para Maestros</h2>
-            <p class="text-instruccion" style="margin: 0;">Agregue, edite o elimine por separado títulos, subtítulos y bloques de texto doctrinal.</p>
+            <p class="text-instruccion" style="margin: 0;">Agregue, reordene (subir/bajar) o elimine por separado títulos, subtítulos y bloques de texto doctrinal.</p>
           </div>
           <div class="admin-header-actions">
             <button class="admin-link-btn" onclick="agregarBloqueDoctrinaAdmin()">➕ Agregar Nuevo Bloque</button>
@@ -464,9 +515,9 @@
     </div>
   </div>
 
-  <!-- MODAL: AUDITORÍA Y EDICIÓN COMPLETA DEL TRABAJO -->
+  <!-- MODAL: AUDITORÍA Y EDICIÓN COMPLETA DEL TRABAJO Y SUS 8 PREGUNTAS -->
   <div id="modalAuditoriaModulo" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAuditoriaModulo')">
-    <div class="modal-content" style="max-width: 860px; max-height: 90vh; overflow-y: auto; text-align: left;">
+    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto; text-align: left;">
       <h3 style="color: var(--accent-gold); margin-bottom: 12px; font-family: var(--font-ui);">
         🔍 Auditoría y Edición Integral del Trabajo
       </h3>
@@ -495,32 +546,17 @@
         <button class="btn-primary" onclick="guardarEdicionModuloAdmin()">💾 Guardar Encabezado y Texto</button>
       </div>
 
-      <h4 style="color: var(--primary); margin-bottom: 12px; font-family: var(--font-ui); border-top: 1px solid var(--border-color); padding-top: 16px;">
-        Batería de 8 Preguntas Pedagógicas (Con Dilema Ético)
-      </h4>
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 16px; margin-bottom: 14px;">
+        <h4 style="color: var(--primary); font-family: var(--font-ui); margin: 0;">
+          Batería de 8 Preguntas Pedagógicas (Con Dilema Ético)
+        </h4>
+        <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="guardarTodasPreguntasAuditoria()">💾 Guardar Cambios en Preguntas</button>
+      </div>
+
       <div id="cuerpoPreguntasAuditoria"></div>
 
       <div style="margin-top: 20px; text-align: right;">
         <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalAuditoriaModulo')">Cerrar Auditoría</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: VISUALIZACIÓN ELEGANTE DE REFLEXIÓN -->
-  <div id="modalVerReflexion" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalVerReflexion')">
-    <div class="modal-content modal-reflexion-vista">
-      <div class="modal-reflexion-header">
-        <span style="font-size: 1.5rem;">📜</span>
-        <div>
-          <h3 id="modalReflexionAutor" style="font-family: var(--font-reading); color: var(--accent-gold); font-size: 1.25rem;">Reflexión del Hermano</h3>
-          <p id="modalReflexionSub" style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-ui);">Aporte Consagrado en la Cámara</p>
-        </div>
-      </div>
-      <blockquote id="modalReflexionTexto" class="modal-reflexion-cuerpo"></blockquote>
-      <div style="margin-top: 24px; text-align: right;">
-        <button class="btn-cert-cerrar" style="background: var(--primary) !important; color: #fff !important;" onclick="cerrarModalUniversalDirecto('modalVerReflexion')">
-          ✕ Cerrar Lectura
-        </button>
       </div>
     </div>
   </div>
@@ -549,6 +585,7 @@
           </div>
           <div class="informe-meta-header">
             <p>INFORME DE PARTICIPACIÓN DOCENTE</p>
+            <p>CÁMARA DE DOCENCIA</p>
             <p id="informeFechaHoraEmision"></p>
           </div>
         </div>
@@ -556,7 +593,7 @@
         <hr class="informe-hr">
 
         <p class="informe-constancia" id="informeTextoConstancia">
-          Se deja constancia que a la fecha, el Q.·.H.·. <strong id="informeNombreHermano">NOMBRE</strong> registra el siguiente avance en los trabajos de la Cámara del Medio:
+          Se deja constancia que a la fecha, el Q.·.H.·. <strong id="informeNombreHermano">NOMBRE</strong> registra el siguiente avance en los trabajos de la Cámara de Docencia:
         </p>
 
         <div class="informe-kpis-flex">
@@ -622,7 +659,7 @@
             <p class="cert-lema">A.·.L.·.G.·.D.·.G.·.A.·.D.·.U.·.</p>
             <h2 class="cert-logia">R.·. L.·. ORESTES FRÖDDEN LORENZEN Nº 146</h2>
             <p class="cert-valle">Valle de Talagante</p>
-            <p class="cert-camara">CÁMARA DEL MEDIO — TERCER GRADO</p>
+            <p class="cert-camara">CÁMARA DE DOCENCIA — TERCER GRADO</p>
             <div class="cert-divider">✦ ✦ ✦</div>
             <p class="cert-cuerpo">Se certifica que el Venerable Maestro</p>
             <h3 id="certNombreHermano" class="cert-nombre">Q.·.H.·. NOMBRE DEL HERMANO</h3>
