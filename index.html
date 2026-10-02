@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Docencia Masónica de Tercer Grado</title>
+  <title>Docencia Masónica de Tercer Grado | Cámara del Medio</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -22,7 +22,7 @@
   <!-- ENCABEZADO -->
   <header>
     <div class="brand-title">
-      <span>🏛️</span>
+      <span>🏛️️</span>
       <span>DOCENCIA MASÓNICA DE TERCER GRADO</span>
     </div>
     
@@ -46,7 +46,7 @@
       </div>
 
       <div class="form-group">
-        <label for="inputClave">Palabra de Paso para la Cámara:</label>
+        <label for="inputClave">Palabra de Paso de la Cámara:</label>
         <input type="password" id="inputClave" placeholder="••••••••">
       </div>
 
@@ -56,13 +56,13 @@
   </main>
 
   <!-- MODAL SIGILO -->
-  <div id="modalSigilo" class="modal-overlay hidden">
+  <div id="modalSigilo" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalSigilo')">
     <div class="modal-content">
-      <h2 style="color: var(--accent-gold); margin-bottom: 14px;">Advertencia y condiciones de Uso</h2>
+      <h2 style="color: var(--accent-gold); margin-bottom: 14px;">Advertencia y Condiciones de Uso</h2>
       <p style="text-align: justify; line-height: 1.75; margin-bottom: 22px;">
         Al ingresar a esta Cámara del Medio, reafirmo mi compromiso de mantener estricta reserva sobre los contenidos, 
         trazados, símbolos y reflexiones personales aquí vertidos. Reconozco que este espacio pertenece al ámbito exclusivo 
-        del Tercer Grado, quedando estrictamente prohibida su difusión profana o copia no autorizada bajo los preceptos del honor y el cumoplimiento del Deber Masónico.
+        del Tercer Grado, quedando estrictamente prohibida su difusión profana o copia no autorizada bajo los preceptos del honor y el cumplimiento del Deber Masónico.
       </p>
       <button class="btn-primary" onclick="aceptarSigilo()">Reafirmo mi Juramento e Ingreso</button>
     </div>
@@ -71,9 +71,16 @@
   <!-- PANTALLA 2: ENTORNO EXCLUSIVO DE DOCENCIA (PARA HERMANOS REGULARES) -->
   <div id="seccionDocencia" class="templo-layout hidden">
     <aside class="sidebar-templo">
+      <!-- Acceso a Mis Avances -->
+      <div class="sidebar-box sidebar-avances-box">
+        <button class="btn-mis-avances" onclick="abrirModalMisAvances()">
+          📊 Mis Avances y Reportes
+        </button>
+      </div>
+
       <div class="sidebar-box">
         <div class="sidebar-title">
-          <span>TYrabajos de la Cámara</span>
+          <span>Trabajos de la Cámara</span>
           <span id="contadorModulos"></span>
         </div>
         <div id="listaModulosNav"></div>
@@ -81,12 +88,14 @@
 
       <div class="sidebar-box sidebar-info">
         <h4>Metodología de Trabajo</h4>
-        <p>Para desbloquear el muro de reflexiones, tras la lectura del trabajo, debe completar primero 6 preguntas relacionadas con el tema expuesto.</p>
+        <p>1. Confirme la lectura del trabajo.<br>
+           2. Responda el cuestionario formativo paso a paso.<br>
+           3. Finalice para acceder al Muro de Reflexiones.</p>
       </div>
     </aside>
 
     <main>
-      <!-- FASE I: Trazado -->
+      <!-- FASE I: Trazado / Trabajo -->
       <section class="card card-trazado">
         <div class="card-fase-header">
           <span class="fase-badge">FASE I</span>
@@ -104,7 +113,7 @@
 
           <div class="action-buttons-group">
             <a id="btnDescargarTrazado" href="#" target="_blank" class="btn-descargar hidden">
-              📥 Descargar trabajo (PDF)
+              📥 Descargar Trabajo (PDF)
             </a>
             <button id="btnVerCertificado" class="btn-certificado hidden" onclick="abrirModalCertificado()">
               📜 Obtener Certificado Oficial
@@ -117,32 +126,55 @@
         <div id="vistaPdf" class="hidden">
           <iframe id="framePdf" class="pdf-viewer-frame" src=""></iframe>
         </div>
+
+        <!-- BOTÓN FASE 1: CONFIRMAR LECTURA -->
+        <div id="contenedorConfirmarLectura" class="fase-action-wrapper">
+          <button id="btnConfirmarLectura" class="btn-primary" onclick="confirmarLecturaFaseUno()">
+            Confirmo lectura
+          </button>
+        </div>
       </section>
 
-      <!-- FASE II: Examen Simbólico -->
-      <section id="bloqueFaseDos" class="card">
+      <!-- FASE II: Examen de Comprensión (Paso a Paso) -->
+      <section id="bloqueFaseDos" class="card hidden">
         <div class="card-fase-header">
           <span class="fase-badge">FASE II</span>
           <h2>Examen de Comprensión</h2>
         </div>
         <p class="text-instruccion">
-          Haga clic sobre la alternativa que considere correcta.
+          Seleccione la alternativa que considere correcta. El sistema evaluará su elección al instante.
         </p>
-        <div id="contenedorPreguntas"></div>
+
+        <div id="contenedorPreguntaPaso"></div>
+
+        <div class="pregunta-nav-bar">
+          <button id="btnSiguientePregunta" class="btn-secondary hidden" onclick="avanzarSiguientePregunta()">
+            Siguiente Pregunta ➔
+          </button>
+          <button id="btnFinalizarCuestionario" class="btn-primary hidden" onclick="finalizarCuestionarioFaseDos()">
+            Finalizar
+          </button>
+        </div>
       </section>
 
       <!-- FASE III: Reflexión y Muro -->
       <section id="bloqueFaseTres" class="hidden">
+        
         <div class="card card-reflexion">
+          <!-- Insignia Escuadra en Fase III -->
+          <div class="insignia-centro-wrapper">
+            <img src="https://cmaestros.ofl.cl/imgs/escuadra.png" class="img-escuadra-discreta" alt="Escuadra y Compás">
+          </div>
+
           <div class="card-fase-header">
             <span class="fase-badge badge-fase3">FASE III</span>
             <h2 id="tituloFaseTres">Aporte Personal a la Cámara</h2>
           </div>
           <p id="descFaseTres" class="text-instruccion">
-            Ingrese su reflexión personal (máximo 200 palabras) para concluir el módulo y desbloquear las reflexiones de sus Hermanos.
+            Ingrese su reflexión personal (máximo 200 palabras) para concluir el módulo y acceder a los aportes de sus Hermanos.
           </p>
 
-          <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión acderca del tema tratado..."></textarea>
+          <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión acerca del tema tratado..."></textarea>
           
           <div class="reflexion-footer">
             <span id="contadorPalabras">Palabras: 0 / 200</span>
@@ -155,131 +187,288 @@
         </div>
 
         <div id="bloqueMuro" class="card">
+          <!-- Insignia Escuadra en Muro de Reflexiones -->
+          <div class="insignia-centro-wrapper">
+            <img src="https://cmaestros.ofl.cl/imgs/escuadra.png" class="img-escuadra-discreta" alt="Escuadra y Compás">
+          </div>
+
           <div class="card-fase-header">
             <span class="fase-badge badge-muro">MURO</span>
-            <h2>Reflexiones de los Hermanos Maestros</h2>
+            <h2>Muro de Reflexiones</h2>
           </div>
-          <p class="text-instruccion">Aportes para este trazado:</p>
+          <p class="text-instruccion">Aportes para este trabajo en la Cámara:</p>
           <div id="contenedorMuro"></div>
         </div>
+
       </section>
     </main>
   </div>
 
   <!-- PANTALLA 3: ENTORNO EXCLUSIVO DEL SUPERADMIN -->
-  <main id="seccionAdmin" class="admin-container hidden">
+  <div id="seccionAdmin" class="admin-layout hidden">
     
-    <nav class="admin-subnav">
-      <button id="tabNavCargar" class="admin-nav-tab active" onclick="cambiarSubseccionAdmin('cargar')">
-        🏛️ Cargar Nuevo Trabajo
-      </button>
-      <button id="tabNavMetricas" class="admin-nav-tab" onclick="cambiarSubseccionAdmin('metricas')">
-        📊 Matriz de Avance
-      </button>
-    </nav>
-
-    <!-- SECCIÓN 1: CARGA DE PLANCHAS CON FALLBACK SQL INTELIGENTE -->
-    <section id="adminSeccionCarga" class="card card-trazado">
-      <div class="admin-card-header">
-        <div>
-          <h2>Carga de Trabajos</h2>
-          <p class="text-instruccion" style="margin: 0;">Suba un archivo PDF o Word.</p>
-        </div>
-        <div class="admin-header-actions">
-          <a href="https://github.com/jcpintov/cdocencia/blob/main/index.html" target="_blank" class="admin-link-btn">🐙 GitHub</a>
-          <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq/sql/02eaddd7-b53a-430e-8fad-7ed8249b9440" target="_blank" class="admin-link-btn">⚡ SQL Supabase</a>
-        </div>
+    <aside class="sidebar-admin">
+      <div class="admin-brand">
+        <span style="font-size: 1.4rem;">🏛️️</span>
+        <h3>Consola Superadmin</h3>
       </div>
 
-      <div class="upload-box">
-        <label for="archivoDoc" style="font-weight: 700; color: var(--text-main); cursor: pointer; display: block; margin-bottom: 8px;">
-          📄 Seleccionar Trabajo (PDF o Word .docx)
-        </label>
-        <input type="file" id="archivoDoc" accept=".docx, .pdf" onchange="leerArchivoPlancha(event)">
-        <p id="archivoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 8px; font-weight: 600;"></p>
+      <div class="admin-links-top">
+        <a href="https://github.com/jcpintov/cdocencia" target="_blank" class="admin-nav-link-ext">
+          🐙 Repositorio GitHub
+        </a>
+        <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq" target="_blank" class="admin-nav-link-ext">
+          ⚡ Supabase Dashboard
+        </a>
+        <a href="https://gemini.google.com" target="_blank" class="admin-nav-link-ext">
+          💬 Esta Conversación
+        </a>
       </div>
 
-      <div class="admin-grid">
-        <div class="form-group">
-          <label for="adminOrden">N° Módulo:</label>
-          <input type="number" id="adminOrden" value="4">
-        </div>
-        <div class="form-group">
-          <label for="adminTitulo">Título:</label>
-          <input type="text" id="adminTitulo" placeholder="Ej: Los Cinco Puntos del Maestro">
-        </div>
-        <div class="form-group">
-          <label for="adminAutor">Autor:</label>
-          <input type="text" id="adminAutor" placeholder="Ej: Ricardo Pérez G. 3º">
-        </div>
-      </div>
+      <hr class="admin-divider">
 
-      <div class="form-group">
-        <label for="adminTexto">Texto Normalizado:</label>
-        <textarea id="adminTexto" rows="12" placeholder="El texto depurado aparecerá aquí..."></textarea>
-      </div>
+      <nav class="admin-menu-list">
+        <button id="tabNavCargar" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('cargar')">
+          📄 Carga de Trabajos
+        </button>
+        <button id="tabNavMuroGeneral" class="admin-side-btn" onclick="cambiarSubseccionAdmin('muro_general')">
+          💬 Muro General de la Cámara
+        </button>
+        <button id="tabNavMetricas" class="admin-side-btn" onclick="cambiarSubseccionAdmin('metricas')">
+          📊 Matriz de Avance
+        </button>
+      </nav>
 
-      <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">
-        ⚙️ Procesar
-      </button>
+      <div class="admin-side-footer">
+        <button class="btn-secondary" style="width: 100%; border-color: rgba(255,255,255,0.3); color: #fff;" onclick="cerrarSesion()">
+          Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <main class="admin-main-content">
       
-      <div id="adminStatus" style="margin-top: 14px; text-align: center; font-family: var(--font-ui); font-weight: 600;"></div>
-
-      <!-- CONTENEDOR DE CONTINGENCIA SQL (SI GEMINI REPORTA SATURACIÓN) -->
-      <div id="contenedorFallbackSQL" class="hidden" style="margin-top: 24px; padding: 20px; background: var(--card-bg); border: 2px dashed var(--accent-gold); border-radius: 8px;">
-        <h4 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">⚡ Contingencia por Saturación de API: Inserción Directa</h4>
-        <p style="font-size: 0.88rem; color: var(--text-muted); font-family: var(--font-ui); margin-bottom: 12px;">
-          Copie la siguiente consulta e insértela directamente en el Editor SQL de Supabase:
-        </p>
-        <textarea id="sqlFallbackArea" rows="10" readonly style="font-family: monospace; font-size: 0.82rem; background: #0A0E13; color: #4AF626; border-radius: 6px; padding: 12px;"></textarea>
-        <button class="btn-secondary" style="margin-top: 10px;" onclick="copiarSQLFallback()">📋 Copiar Consulta SQL al Portapapeles</button>
-      </div>
-    </section>
-
-    <!-- SECCIÓN 2: MÉTRICAS Y DASHBOARD AISLADO -->
-    <section id="adminSeccionMetricas" class="card card-reflexion hidden">
-      <div class="admin-card-header">
-        <div>
-          <h2>Matriz de Avance Docente</h2>
-          <p class="text-instruccion" style="margin: 0;">Seguimiento individual de lecturas, avance y aportes de la Cámara.</p>
+      <!-- SUBSECCIÓN 1: CARGA DE TRABAJOS CON IA -->
+      <section id="adminSeccionCarga" class="card card-trazado">
+        <div class="admin-card-header">
+          <div>
+            <h2>Carga de Trabajos de Docencia</h2>
+            <p class="text-instruccion" style="margin: 0;">Suba un archivo PDF o Word. Gemini generará el análisis pedagógico y el cuestionario.</p>
+          </div>
         </div>
+
+        <div class="upload-box">
+          <label for="archivoDoc" style="font-weight: 700; color: var(--text-main); cursor: pointer; display: block; margin-bottom: 8px;">
+            📄 Seleccionar Trabajo (PDF o Word .docx)
+          </label>
+          <input type="file" id="archivoDoc" accept=".docx, .pdf" onchange="leerArchivoPlancha(event)">
+          <p id="archivoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 8px; font-weight: 600;"></p>
+        </div>
+
+        <div class="admin-grid">
+          <div class="form-group">
+            <label for="adminOrden">N° Módulo:</label>
+            <input type="number" id="adminOrden" value="1">
+          </div>
+          <div class="form-group">
+            <label for="adminTitulo">Título del Trabajo:</label>
+            <input type="text" id="adminTitulo" placeholder="Ej: Los Cinco Puntos del Maestro">
+          </div>
+          <div class="form-group">
+            <label for="adminAutor">Autor (Nombre Limpio):</label>
+            <input type="text" id="adminAutor" placeholder="Ej: Ricardo Pérez G.">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="adminTexto">Texto Normalizado para IA:</label>
+          <textarea id="adminTexto" rows="12" placeholder="El texto depurado aparecerá aquí..."></textarea>
+        </div>
+
+        <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">
+          ⚙️ Procesar con Gemini y Consagrar Trabajo
+        </button>
         
-        <div class="admin-header-actions">
-          <label for="selectMetricasModulo">Trabajo:</label>
-          <select id="selectMetricasModulo" onchange="cargarMetricasAvance(this.value)"></select>
-          <button class="admin-link-btn" onclick="recargarMetricasActuales()">🔄 Actualizar</button>
-          <button class="admin-link-btn" onclick="exportarRespaldoCompletoJSON()">💾 Respaldar JSON</button>
+        <div id="adminStatus" style="margin-top: 14px; text-align: center; font-family: var(--font-ui); font-weight: 600;"></div>
+
+        <!-- CONTINGENCIA SQL -->
+        <div id="contenedorFallbackSQL" class="hidden" style="margin-top: 24px; padding: 20px; background: var(--card-bg); border: 2px dashed var(--accent-gold); border-radius: 8px;">
+          <h4 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">⚡ Contingencia SQL: Inserción Directa</h4>
+          <p style="font-size: 0.88rem; color: var(--text-muted); font-family: var(--font-ui); margin-bottom: 12px;">
+            Copie y pegue esta consulta en el SQL Editor de Supabase:
+          </p>
+          <textarea id="sqlFallbackArea" rows="10" readonly style="font-family: monospace; font-size: 0.82rem; background: #0A0E13; color: #4AF626; border-radius: 6px; padding: 12px;"></textarea>
+          <button class="btn-secondary" style="margin-top: 10px;" onclick="copiarSQLFallback()">📋 Copiar Consulta SQL</button>
+        </div>
+      </section>
+
+      <!-- SUBSECCIÓN 2: MURO GENERAL DE LA CÁMARA -->
+      <section id="adminSeccionMuroGeneral" class="card card-reflexion hidden">
+        <div class="admin-card-header">
+          <div>
+            <h2>Muro General de la Cámara</h2>
+            <p class="text-instruccion" style="margin: 0;">Reflexiones aportadas por los Hermanos, agrupadas por trabajo con moderación directa.</p>
+          </div>
+          <div class="admin-header-actions">
+            <button class="admin-link-btn" onclick="cargarMuroGeneralAdmin()">🔄 Actualizar Muro</button>
+          </div>
+        </div>
+
+        <div id="contenedorMuroGeneralAdmin">
+          <p class="td-loading">Consultando aportes de la Cámara...</p>
+        </div>
+      </section>
+
+      <!-- SUBSECCIÓN 3: MATRIZ DE AVANCE DOCENTE -->
+      <section id="adminSeccionMetricas" class="card card-reflexion hidden">
+        <div class="admin-card-header">
+          <div>
+            <h2>Matriz de Avance Docente</h2>
+            <p class="text-instruccion" style="margin: 0;">Seguimiento individual. Haga clic sobre cualquier Hermano para emitir su Ficha Ejecutiva.</p>
+          </div>
+          
+          <div class="admin-header-actions">
+            <label for="selectMetricasModulo">Trabajo:</label>
+            <select id="selectMetricasModulo" onchange="cargarMetricasAvance(this.value)"></select>
+            <button class="admin-link-btn" onclick="recargarMetricasActuales()">🔄 Actualizar</button>
+            <button class="admin-link-btn" onclick="abrirModalGestionModulos()">⚙️ Gestionar Trabajos</button>
+            <button class="admin-link-btn" onclick="exportarRespaldoCompletoJSON()">💾 Backup JSON</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="metricas-table">
+            <thead>
+              <tr>
+                <th>Hermano</th>
+                <th>Lectura</th>
+                <th>Examen</th>
+                <th>Reflexión</th>
+                <th>Fecha Consagración</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaMetricasBody">
+              <tr>
+                <td colspan="6" class="td-loading">Consultando registros...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- MODAL DE VISUALIZACIÓN ELEGANTE DE REFLEXIÓN -->
+  <div id="modalVerReflexion" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalVerReflexion')">
+    <div class="modal-content modal-reflexion-vista">
+      <div class="modal-reflexion-header">
+        <span style="font-size: 1.5rem;">📜</span>
+        <div>
+          <h3 id="modalReflexionAutor" style="font-family: var(--font-reading); color: var(--accent-gold); font-size: 1.25rem;">Reflexión del Hermano</h3>
+          <p id="modalReflexionSub" style="font-size: 0.85rem; color: var(--text-muted); font-family: var(--font-ui);">Aporte Consagrado en la Cámara</p>
         </div>
       </div>
-
-      <div class="table-responsive">
-        <table class="metricas-table">
-          <thead>
-            <tr>
-              <th>Hermano</th>
-              <th>Correo</th>
-              <th>Lectura</th>
-              <th>Examen</th>
-              <th>Reflexiones</th>
-              <th>Fecha</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tablaMetricasBody">
-            <tr>
-              <td colspan="7" class="td-loading">Consultando registros...</td>
-            </tr>
-          </tbody>
-        </table>
+      <blockquote id="modalReflexionTexto" class="modal-reflexion-cuerpo"></blockquote>
+      <div style="margin-top: 24px; text-align: right;">
+        <button class="btn-cert-cerrar" style="background: var(--primary) !important; color: #fff !important;" onclick="cerrarModalUniversalDirecto('modalVerReflexion')">
+          ✕ Cerrar Lectura
+        </button>
       </div>
-    </section>
-  </main>
+    </div>
+  </div>
 
-  <!-- MODAL: CERTIFICADO DE APROBACIÓN CON TIMBRE OFICIAL -->
-  <div id="modalCertificado" class="modal-overlay hidden" onclick="cerrarModalPorFondo(event)">
+  <!-- MODAL: MIS AVANCES / FICHA EJECUTIVA EN PDF (CARTA, SOBRIO) -->
+  <div id="modalMisAvances" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalMisAvances')">
     <div class="modal-certificado-wrapper">
       
-      <!-- Barra Superior de Acciones Mejorada -->
+      <div class="modal-cert-actions">
+        <button class="btn-cert-descargar" onclick="descargarInformeAvancePDF()">
+          📥 Descargar Informe en PDF
+        </button>
+        <button class="btn-cert-cerrar" onclick="cerrarModalMisAvances()">
+          ✕ Cerrar
+        </button>
+      </div>
+
+      <!-- Documento Imprimible Formato Carta -->
+      <div id="documentoInformeAvance" class="informe-carta">
+        
+        <!-- Encabezado con Emblema a la Derecha -->
+        <div class="informe-header-box">
+          <div class="informe-brand">
+            <p><strong>PLATAFORMA DE DOCENCIA PARA MAESTROS</strong></p>
+            <p>R.·.L.·. OFL 146</p>
+            <p>TALAGANTE</p>
+          </div>
+          <div class="informe-emblema-wrapper">
+            <img src="https://cmaestros.ofl.cl/imgs/emblema.png" class="img-emblema-discreto" alt="Emblema Oficial OFL 146">
+          </div>
+          <div class="informe-meta-header">
+            <p>INFORME DE PARTICIPACIÓN DOCENTE</p>
+            <p id="informeFechaHoraEmision"></p>
+          </div>
+        </div>
+
+        <hr class="informe-hr">
+
+        <p class="informe-constancia" id="informeTextoConstancia">
+          Se deja constancia que a la fecha, el Q.·.H.·. <strong id="informeNombreHermano">NOMBRE</strong> registra el siguiente avance en los trabajos de la Cámara del Medio:
+        </p>
+
+        <!-- KPI Grid -->
+        <div class="informe-kpis-grid">
+          <div class="kpi-card">
+            <div class="kpi-valor" id="kpiLecturaPct">0%</div>
+            <div class="kpi-label">Lecturas Confirmadas</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-valor" id="kpiExamenesAprob">0 / 0</div>
+            <div class="kpi-label">Cuestionarios Finalizados</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-valor" id="kpiAportesConsag">0</div>
+            <div class="kpi-label">Reflexiones Consagradas</div>
+          </div>
+        </div>
+
+        <h4 style="font-family: var(--font-ui); font-size: 1rem; color: #152433; margin: 20px 0 10px 0;">
+          Detalle de Trabajos y Aportes
+        </h4>
+        <table class="informe-table">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Trabajo</th>
+              <th style="width: 15%;">Lectura</th>
+              <th style="width: 15%;">Examen</th>
+              <th style="width: 45%;">Reflexión Consagrada</th>
+            </tr>
+          </thead>
+          <tbody id="informeDetalleCuerpo"></tbody>
+        </table>
+
+        <!-- Certificados Disponibles para Descarga Inmediata -->
+        <div id="seccionCertificadosDisponibles" class="certificados-lista-inline no-print">
+          <h4 style="font-family: var(--font-ui); font-size: 0.95rem; margin-bottom: 8px;">
+            📜 Certificados Oficiales Disponibles:
+          </h4>
+          <div id="contenedorBotonesCertificados" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+        </div>
+
+        <div class="informe-pie-doc">
+          <p>Documento de uso docente interno emitido bajo reserva masónica.</p>
+          <p id="informeCodigoVerif"></p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CERTIFICADO DE APROBACIÓN CON TIMBRE OFICIAL -->
+  <div id="modalCertificado" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalCertificado')">
+    <div class="modal-certificado-wrapper">
+      
       <div class="modal-cert-actions">
         <button class="btn-cert-descargar" onclick="descargarCertificadoPDF()">
           📥 Descargar en PDF
@@ -304,18 +493,18 @@
             <h3 id="certNombreHermano" class="cert-nombre">Q.·.H.·. NOMBRE DEL HERMANO</h3>
             
             <p class="cert-cuerpo">
-              Ha culminado satisfactoriamente el estudio doctrinal, examen simbólico y reflexiones correspondientes al trabajo de docencia:
+              Ha culminado satisfactoriamente el estudio doctrinal, examen simbólico y consagración de reflexiones correspondientes al trabajo de docencia:
             </p>
 
             <h4 id="certTituloPlancha" class="cert-plancha">"TÍTULO DEL TRABAJO"</h4>
             <p id="certAutorPlancha" class="cert-autor">Autor: Q.·.H.·. Autor</p>
 
             <div class="cert-reflexion-box">
-              <p class="cert-reflexion-label">Aporte al trabajo en la Cámara:</p>
+              <p class="cert-reflexion-label">Aporte consagrado en la Cámara:</p>
               <p id="certTextoReflexion" class="cert-reflexion-cita">"..."</p>
             </div>
 
-            <!-- Pie del Certificado con Timbre Oficial (3 Columnas Equilibradas) -->
+            <!-- Pie del Certificado con Timbre Oficial -->
             <div class="cert-footer">
               <div class="cert-firma">
                 <div class="linea-firma"></div>
@@ -337,6 +526,20 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GESTIÓN DE MÓDULOS -->
+  <div id="modalGestionModulos" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalGestionModulos')">
+    <div class="modal-content" style="max-width: 680px; text-align: left;">
+      <h3 style="color: var(--accent-gold); margin-bottom: 12px; font-family: var(--font-ui);">
+        ⚙️ Gestión de Trabajos Consagrados
+      </h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+        Al eliminar un trabajo cargado por error o prueba, los números de orden de los trabajos restantes se reordenarán automáticamente de manera correlativa (1, 2, 3...).
+      </p>
+      <div id="listaGestionModulos" style="max-height: 380px; overflow-y: auto; margin-bottom: 20px;"></div>
+      <button class="btn-secondary" style="width: 100%;" onclick="cerrarModalGestionModulos()">Cerrar Gestión</button>
     </div>
   </div>
 
