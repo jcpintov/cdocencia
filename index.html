@@ -64,7 +64,7 @@
         Al ingresar a este Espacio Docente, reafirmo mi compromiso de mantener estricta reserva sobre los contenidos, 
         trazados, símbolos y reflexiones personales aquí vertidos. Reconozco que este espacio pertenece al ámbito exclusivo 
         del Tercer Grado de la R.·.L.·. Orestes Frödden Lorenzen N°146 del Valle de Talagante, quedando estrictamente 
-        prohibida su difusión profana, a grados inferiores o su copia no autorizada bajo los preceptos del honor y el cumplimiento del Deber Masónico.
+        prohibida su difusión profana, a grados inferiores o su copia no autorizada, bajo los preceptos del Honor y el cumplimiento del Deber Masónico.
       </p>
       <button class="btn-primary btn-sigilo-accion" onclick="aceptarSigilo()">
         REAFIRMO MI COMPROMISO Y DISCRECIÓN
@@ -72,7 +72,7 @@
     </div>
   </div>
 
-  <!-- PANTALLA 2: BIENVENIDA LIMPIA Y CENTRADA EN VERTICAL -->
+  <!-- PANTALLA 2: BIENVENIDA CENTRADA EN VERTICAL -->
   <div id="seccionBienvenida" class="bienvenida-centrada-wrapper hidden">
     <div class="card card-trazado bienvenida-tarjeta-limpia">
       <div class="insignia-centro-wrapper">
@@ -111,7 +111,7 @@
     <div id="gridTrabajosBienvenida" class="trabajos-grid"></div>
   </main>
 
-  <!-- PANTALLA 4: INSTITUCIONAL "DOCENCIA PARA MAESTROS" (VISTA HERMANOS) -->
+  <!-- PANTALLA 4: INSTITUCIONAL "DOCENCIA PARA MAESTROS" -->
   <main id="seccionDocenciaInstitucional" class="bienvenida-container hidden">
     <div class="card card-trazado institucional-wrapper">
       <div class="institucional-top-bar">
@@ -124,7 +124,7 @@
     </div>
   </main>
 
-  <!-- PANTALLA 5: MURO DE REFLEXIONES DE USUARIOS (DIRECTO EN PÁGINA, SIN POPUPS) -->
+  <!-- PANTALLA 5: MURO DE REFLEXIONES DE USUARIOS -->
   <main id="seccionMuroUsuarios" class="bienvenida-container hidden">
     <div class="card card-reflexion">
       <div class="institucional-top-bar">
@@ -208,7 +208,7 @@
           </div>
         </div>
 
-        <article id="vistaTexto" class="protected-text" style="white-space: pre-line; text-align: justify;"></article>
+        <article id="vistaTexto" class="protected-text"></article>
 
         <div id="vistaPdf" class="hidden">
           <iframe id="framePdf" class="pdf-viewer-frame" src=""></iframe>
@@ -301,6 +301,9 @@
         <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq" target="_blank" class="admin-nav-link-ext">
           ⚡ Supabase Dashboard
         </a>
+        <a href="#" id="linkCuadernoDocencia" target="_blank" class="admin-nav-link-ext" title="Acceso al Cuaderno de Curaduría">
+          📓 Cuaderno de Docencia (3er Grado)
+        </a>
       </div>
 
       <hr class="admin-divider">
@@ -311,6 +314,9 @@
         </button>
         <button id="tabNavGestionTrabajos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">
           ⚙️ Gestión de Trabajos
+        </button>
+        <button id="tabNavPresencial" class="admin-side-btn" onclick="cambiarSubseccionAdmin('presencial')">
+          🏛️ Cámara Presencial (Debate)
         </button>
         <button id="tabNavMuroGeneral" class="admin-side-btn" onclick="cambiarSubseccionAdmin('muro_general')">
           💬 Muro General
@@ -389,7 +395,65 @@
         <div id="listaGestionTrabajosAdmin" class="gestion-trabajos-lista"></div>
       </section>
 
-      <!-- SUBSECCIÓN 3: MURO GENERAL -->
+      <!-- SUBSECCIÓN 3: CÁMARA INTERACTIVA PRESENCIAL -->
+      <section id="adminSeccionPresencial" class="card card-trazado hidden">
+        <div class="admin-card-header">
+          <div>
+            <h2>Cámara Interactiva Presencial: Módulos de Debate y Dilemas</h2>
+            <p class="text-instruccion" style="margin: 0;">Sesión participativa, dinámica grupal para 3 o más mesas y tablero de Puntos de Aplomo.</p>
+          </div>
+          <div class="admin-header-actions">
+            <button class="btn-primary" style="padding: 8px 18px; font-size: 0.9rem;" onclick="generarDinamicaPresencial()">
+              🎲 Generar Dinámica Presencial
+            </button>
+          </div>
+        </div>
+
+        <div class="presencial-config-panel">
+          <div class="form-group" style="margin-bottom: 12px;">
+            <label>Selección de Asistentes al Taller:</label>
+            <div id="presencialListaAsistentes" class="presencial-asistentes-checks"></div>
+          </div>
+
+          <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+            <div>
+              <label for="numMesasPresencial" style="font-weight: 700; font-family: var(--font-ui); font-size: 0.88rem;">Número de Mesas / Grupos:</label>
+              <select id="numMesasPresencial" style="width: 140px; padding: 6px 10px;">
+                <option value="3" selected>3 Mesas</option>
+                <option value="4">4 Mesas</option>
+                <option value="5">5 Mesas</option>
+              </select>
+            </div>
+            <div>
+              <label for="selectTipoDinamicaPresencial" style="font-weight: 700; font-family: var(--font-ui); font-size: 0.88rem;">Tipo de Dinámica:</label>
+              <select id="selectTipoDinamicaPresencial" style="width: 280px; padding: 6px 10px;">
+                <option value="1">1. El Tribunal de la Conciencia</option>
+                <option value="2">2. El Coloquio de las Máscaras Cruzadas</option>
+                <option value="3">3. La Piedra de Toque (Dilema Rápido)</option>
+                <option value="cierre_trivial">4. Cierre: Trivial de la Cámara</option>
+                <option value="cierre_apuros">5. Cierre: Dilema en Apuros (60s)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div id="contenedorDinamicaEnVivo" class="dinamica-envivo-box hidden">
+          <div id="tituloDinamicaActiva" class="dinamica-titulo-card"></div>
+          <div id="dilemaDinamicaActiva" class="dinamica-dilema-card"></div>
+          <div id="mesasTrabajoDinamica" class="mesas-trabajo-grid"></div>
+
+          <div class="cierre-reglas-fraternales">
+            <h4 style="margin-bottom: 6px; color: var(--accent-gold-dark);">⚖️ Reglamento de Cámara y Cierre Fraternal:</h4>
+            <p style="margin: 0; font-size: 0.88rem; line-height: 1.5;">
+              • <strong>Puntos de Aplomo:</strong> Se premia la concisión y el pragmatismo doctrinal (+15/+20). Se sanciona la divagación infinita y el desorden (-10/-15/-20).<br>
+              • <strong>Premios Especiales:</strong> Se reconocerá la <em>Respuesta Más Original</em> y al <em>Grupo Más Entusiasta</em>.<br>
+              • <strong>Veredicto Inapelable:</strong> La mesa con menor puntaje final asumirá el deber de <strong>lavar los platos</strong> al término de la colación fraterna.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUBSECCIÓN 4: MURO GENERAL -->
       <section id="adminSeccionMuroGeneral" class="card card-reflexion hidden">
         <div class="admin-card-header">
           <div>
@@ -397,7 +461,7 @@
             <p class="text-instruccion" style="margin: 0;">Reflexiones aportadas por los Hermanos con moderación y exportación de alta calidad.</p>
           </div>
           <div class="admin-header-actions">
-            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="imprimirMuroGeneralPDF()">🖨️ Descargar Muro en PDF</button>
+            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="imprimirMuroGeneralPDF()">🖨️️ Descargar Muro en PDF</button>
             <button class="admin-link-btn" onclick="cargarMuroGeneralAdmin()">🔄 Actualizar Muro</button>
           </div>
         </div>
@@ -424,7 +488,7 @@
         </div>
       </section>
 
-      <!-- SUBSECCIÓN 4: MATRIZ DE AVANCE Y EDICIÓN DE PARÁMETROS -->
+      <!-- SUBSECCIÓN 5: MATRIZ DE AVANCE -->
       <section id="adminSeccionMetricas" class="card card-reflexion hidden">
         <div class="admin-card-header">
           <div>
@@ -456,7 +520,7 @@
         </div>
       </section>
 
-      <!-- SUBSECCIÓN 5: EDITOR DE SECCIÓN "DOCENCIA PARA MAESTROS" -->
+      <!-- SUBSECCIÓN 6: EDITOR DE SECCIÓN "DOCENCIA PARA MAESTROS" -->
       <section id="adminSeccionEditorDoctrina" class="card card-trazado hidden">
         <div class="admin-card-header">
           <div>
@@ -477,7 +541,7 @@
   <div id="modalParametrosHermano" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalParametrosHermano')">
     <div class="modal-content" style="max-width: 650px; text-align: left;">
       <h3 style="color: var(--accent-gold); margin-bottom: 12px; font-family: var(--font-ui);">
-        ✏️ Modificar Parámetros de Avance del Hermano
+        ✏️️ Modificar Parámetros de Avance del Hermano
       </h3>
       <p id="subParamHermano" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;"></p>
 
@@ -672,19 +736,21 @@
               <p class="cert-reflexion-label">Aporte consagrado en la Cámara:</p>
               <p id="certTextoReflexion" class="cert-reflexion-cita">"..."</p>
             </div>
+            
+            <!-- PIE DE FIRMA SIMÉTRICO Y ALINEADO HORIZONTALMENTE -->
             <div class="cert-footer">
               <div class="cert-firma">
                 <div class="linea-firma"></div>
-                <p>Cámara de Maestros</p>
-                <p id="certFechaEmision">Talagante</p>
+                <p class="cert-cargo-linea">Cámara de Maestros</p>
+                <p id="certFechaEmision" class="cert-fecha-linea">Talagante</p>
               </div>
               <div class="cert-timbre-col">
                 <img src="logo.svg" class="timbre-estampa" alt="Timbre OFL 146">
               </div>
               <div class="cert-firma">
                 <div class="linea-firma"></div>
-                <p>Docencia Masónica</p>
-                <p>Tercer Grado</p>
+                <p class="cert-cargo-linea">Docencia Masónica</p>
+                <p class="cert-cargo-linea">Tercer Grado</p>
               </div>
             </div>
           </div>
