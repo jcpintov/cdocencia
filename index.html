@@ -195,11 +195,11 @@
         <div class="doc-actions-bar">
           <div id="contenedorTabs" class="tabs-container">
             <button id="tabTexto" class="tab-btn active" onclick="cambiarVistaDocencia('texto')">📖 Lectura Adaptada</button>
-            <button id="tabPdf" class="tab-btn hidden" onclick="cambiarVistaDocencia('pdf')">📜 Documento Original (PDF/DOCX)</button>
+            <button id="tabPdf" class="tab-btn hidden" onclick="cambiarVistaDocencia('pdf')">📜 Visor de Documento</button>
           </div>
 
           <div class="action-buttons-group">
-            <a id="btnDescargarTrazado" href="#" target="_blank" class="btn-descargar hidden">
+            <a id="btnDescargarTrazado" href="#" download class="btn-descargar hidden">
               📥 Descargar Trabajo Original
             </a>
             <button id="btnVerCertificado" class="btn-certificado hidden" onclick="abrirModalCertificado()">
@@ -310,7 +310,7 @@
 
       <nav class="admin-menu-list">
         <button id="tabNavCargar" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('cargar')">
-          📄 Carga de Trabajos
+          📁 Adjuntar Archivo Original
         </button>
         <button id="tabNavGestionTrabajos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">
           ⚙️ Gestión de Trabajos
@@ -337,48 +337,36 @@
     </aside>
 
     <main class="admin-main-content">
-      <!-- SUBSECCIÓN 1: CARGA DE TRABAJOS CON IA -->
+      <!-- SUBSECCIÓN 1: ASOCIACIÓN Y ADJUNCIÓN DE ARCHIVOS ORIGINALES -->
       <section id="adminSeccionCarga" class="card card-trazado">
         <div class="admin-card-header">
           <div>
-            <h2>Carga de Trabajos de Docencia</h2>
-            <p class="text-instruccion" style="margin: 0;">Suba un PDF o Word. Gemini generará la síntesis y las 8 preguntas docentes.</p>
+            <h2>Asociación de Archivo Original a Trabajos Consagrados</h2>
+            <p class="text-instruccion" style="margin: 0;">Los trabajos y preguntas se normalizan vía SQL. Suba aquí el archivo PDF o Word original para habilitar su descarga por parte de los Hermanos.</p>
           </div>
+        </div>
+
+        <div class="form-group" style="max-width: 520px; margin-bottom: 24px;">
+          <label for="selectModuloParaArchivo" style="font-weight: 700;">Seleccionar Trabajo al que se asociará el documento:</label>
+          <select id="selectModuloParaArchivo" onchange="verificarEstadoArchivoModulo(this.value)"></select>
+          <p id="estadoArchivoActual" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px;"></p>
         </div>
 
         <div class="upload-box">
-          <label for="archivoDoc" style="font-weight: 700; color: var(--text-main); cursor: pointer; display: block; margin-bottom: 8px;">
-            📄 Seleccionar Trabajo (PDF o Word .docx)
+          <label for="archivoDocAdjunto" style="font-weight: 700; color: var(--text-main); cursor: pointer; display: block; margin-bottom: 8px;">
+            📄 Seleccionar Archivo Original (PDF o Word .docx)
           </label>
-          <input type="file" id="archivoDoc" accept=".docx, .pdf" onchange="leerArchivoPlancha(event)">
-          <p id="archivoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 8px; font-weight: 600;"></p>
+          <input type="file" id="archivoDocAdjunto" accept=".docx, .pdf" onchange="procesarArchivoParaAdjuntar(event)">
+          <p id="archivoAdjuntoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 8px; font-weight: 600;"></p>
         </div>
 
-        <div class="admin-grid">
-          <div class="form-group">
-            <label for="adminOrden">N° Módulo:</label>
-            <input type="number" id="adminOrden" value="1">
-          </div>
-          <div class="form-group">
-            <label for="adminTitulo">Título del Trabajo:</label>
-            <input type="text" id="adminTitulo" placeholder="Ej: Los Cinco Puntos del Maestro">
-          </div>
-          <div class="form-group">
-            <label for="adminAutor">Autor (Nombre Limpio):</label>
-            <input type="text" id="adminAutor" placeholder="Ej: Ricardo Pérez G.">
-          </div>
+        <div style="max-width: 320px; margin: 0 auto;">
+          <button id="btnGuardarArchivoOriginal" class="btn-primary" onclick="guardarArchivoOriginalEnBD()">
+            💾 Guardar y Habilitar Descarga
+          </button>
         </div>
-
-        <div class="form-group">
-          <label for="adminTexto">Texto Normalizado para IA:</label>
-          <textarea id="adminTexto" rows="12" placeholder="El texto depurado aparecerá aquí..."></textarea>
-        </div>
-
-        <button id="btnGenerarModulo" class="btn-primary" onclick="generarModuloConIA()">
-          ⚙️ Procesar con Gemini y Consagrar Trabajo
-        </button>
         
-        <div id="adminStatus" style="margin-top: 14px; text-align: center; font-family: var(--font-ui); font-weight: 600;"></div>
+        <div id="adminAdjuntoStatus" style="margin-top: 14px; text-align: center; font-family: var(--font-ui); font-weight: 600;"></div>
       </section>
 
       <!-- SUBSECCIÓN 2: GESTIÓN DIRECTA DE TRABAJOS -->
@@ -442,7 +430,7 @@
           <div id="mesasTrabajoDinamica" class="mesas-trabajo-grid"></div>
 
           <div class="cierre-reglas-fraternales">
-            <h4 style="margin-bottom: 6px; color: var(--accent-gold-dark);">⚖️️ Puntos de Aplomo y Deber Fraternal:</h4>
+            <h4 style="margin-bottom: 6px; color: var(--accent-gold-dark);">⚖️ Puntos de Aplomo y Deber Fraternal:</h4>
             <p style="margin: 0; font-size: 0.88rem; line-height: 1.5;">
               • Bonificaciones: <strong>+15 Corte a Escuadra</strong> (concisión práctica) y <strong>+20 Chispa de Maestro</strong> (agudeza e ingenio).<br>
               • Penalizaciones: <strong>-10 Divagación</strong> (irse por las ramas), <strong>-15 Sin Acuerdo</strong> y <strong>-10 Ruido en Columnas</strong>.<br>
@@ -563,7 +551,7 @@
   <!-- MODAL: CONFIRMACIÓN DE ACCIONES DESTRUCTIVAS -->
   <div id="modalConfirmarAccion" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalConfirmarAccion')">
     <div class="modal-content" style="max-width: 480px; text-align: center;">
-      <span style="font-size: 2.2rem; display: block; margin-bottom: 10px;">⚠️</span>
+      <span style="font-size: 2.2rem; display: block; margin-bottom: 10px;">⚠️️</span>
       <h3 id="modalConfirmarTitulo" style="color: var(--primary); margin-bottom: 10px; font-family: var(--font-ui);">Confirmar Acción</h3>
       <p id="modalConfirmarMensaje" style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;"></p>
 
@@ -667,7 +655,7 @@
     <div class="modal-certificado-wrapper">
       <div class="modal-cert-actions">
         <button class="btn-cert-descargar" onclick="imprimirInformeAvanceNativo()">
-          🖨 Descargar / Imprimir Informe en PDF
+          🖨️ Descargar / Imprimir Informe en PDF
         </button>
         <button class="btn-cert-cerrar" onclick="cerrarModalMisAvances()">
           ✕ Cerrar
