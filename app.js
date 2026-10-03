@@ -345,7 +345,7 @@ async function mostrarDocenciaParaMaestros() {
 }
 
 /* ==========================================================================
-   MURO DE REFLEXIONES PARA USUARIOS (SIN MENÚS EMERGENTES, POR AVANCE)
+   MURO DE REFLEXIONES PARA USUARIOS (CON VISIBILIDAD NOCTURNA BLINDADA)
    ========================================================================== */
 async function mostrarMuroReflexionesUsuarios() {
   document.getElementById('seccionDocencia').classList.add('hidden');
@@ -420,7 +420,7 @@ async function mostrarMuroReflexionesUsuarios() {
           ? new Date(it.completado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
           : "";
         return `
-          <div class="reflexion-item" style="margin-bottom: 14px; background: rgba(0,0,0,0.02); border-left: 3px solid var(--accent-gold); padding: 16px 20px; border-radius: 0 6px 6px 0;">
+          <div class="reflexion-item" style="margin-bottom: 14px; border-left: 3px solid var(--accent-gold); padding: 16px 20px; border-radius: 0 6px 6px 0;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
               <span class="reflexion-autor">${it.usuarios?.nombre || "Hermano Maestro"}</span>
               <span style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-ui);">${fechaTxt}</span>
@@ -435,8 +435,8 @@ async function mostrarMuroReflexionesUsuarios() {
       <div style="margin-bottom: 34px;">
         <div style="border-bottom: 2px solid var(--accent-gold); padding-bottom: 6px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-end;">
           <div>
-            <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent-gold-dark); text-transform: uppercase;">Trabajo N° ${m.numero_orden}</span>
-            <h3 style="margin: 2px 0 0 0; font-family: var(--font-reading); color: var(--primary);">${m.titulo}</h3>
+            <span class="muro-trabajo-orden">Trabajo N° ${m.numero_orden}</span>
+            <h3 class="muro-trabajo-titulo" style="margin: 2px 0 0 0; font-family: var(--font-reading);">${m.titulo}</h3>
           </div>
           <span style="font-size: 0.8rem; color: var(--success); font-weight: 700; text-transform: uppercase;">✓ Desbloqueado</span>
         </div>
@@ -933,7 +933,7 @@ async function cargarMuroReflexiones() {
 
 /* ==========================================================================
    MIS AVANCES E INFORME PDF LIMPIO (300 DPI, SIN CORTES)
-   ========================================================================== */
+   ========================================================================= */
 async function abrirModalMisAvances(usuarioObjetivoId = null) {
   const idTarget = usuarioObjetivoId || usuarioActual.id;
   
@@ -1836,7 +1836,7 @@ async function guardarDoctrinaAdmin() {
 }
 
 /* ==========================================================================
-   MURO GENERAL SUPERADMIN: GESTIÓN CON MODALES EXCLUSIVOS (SIN PROMPT)
+   MURO GENERAL SUPERADMIN: GESTIÓN CON MODALES EXCLUSIVOS
    ========================================================================== */
 async function cargarMuroGeneralAdmin() {
   const contenedor = document.getElementById('contenedorMuroGeneralAdmin');
@@ -1872,7 +1872,7 @@ async function cargarMuroGeneralAdmin() {
         ? new Date(it.completado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
         : "";
       return `
-        <div class="reflexion-item" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 12px; background: rgba(0,0,0,0.02); padding: 14px; border-left: 3px solid var(--accent-gold); border-radius: 4px;">
+        <div class="reflexion-item" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 12px; border-left: 3px solid var(--accent-gold); padding: 14px; border-radius: 4px;">
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
               <span class="reflexion-autor">${it.usuarios?.nombre || "Hermano"}</span>
@@ -1890,7 +1890,7 @@ async function cargarMuroGeneralAdmin() {
 
     contenedor.innerHTML += `
       <div style="margin-bottom: 24px;">
-        <h3 style="font-size: 1.15rem; color: var(--accent-gold-dark); margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
+        <h3 class="muro-trabajo-titulo" style="font-size: 1.15rem; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
           ${tituloModulo}
         </h3>
         ${itemsHtml}
