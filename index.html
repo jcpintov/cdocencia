@@ -195,12 +195,12 @@
         <div class="doc-actions-bar">
           <div id="contenedorTabs" class="tabs-container">
             <button id="tabTexto" class="tab-btn active" onclick="cambiarVistaDocencia('texto')">📖 Lectura Adaptada</button>
-            <button id="tabPdf" class="tab-btn hidden" onclick="cambiarVistaDocencia('pdf')">📜 Documento Original (PDF)</button>
+            <button id="tabPdf" class="tab-btn hidden" onclick="cambiarVistaDocencia('pdf')">📜 Documento Original (PDF/DOCX)</button>
           </div>
 
           <div class="action-buttons-group">
             <a id="btnDescargarTrazado" href="#" target="_blank" class="btn-descargar hidden">
-              📥 Descargar Trabajo (PDF)
+              📥 Descargar Trabajo Original
             </a>
             <button id="btnVerCertificado" class="btn-certificado hidden" onclick="abrirModalCertificado()">
               📜 Obtener Certificado Oficial
@@ -465,7 +465,7 @@
           </div>
         </div>
 
-        <!-- CONTENEDOR DIAGRAMADO CON ENCABEZADOS OFICIALES -->
+        <!-- CONTENEDOR CON MEMBRETE OFICIAL IMPRIMIBLE -->
         <div id="documentoMuroGeneralImprimible">
           <div class="informe-header-box informe-header-muro">
             <div class="informe-brand">
@@ -536,7 +536,7 @@
     </main>
   </div>
 
-  <!-- MODAL: EDICIÓN PROFESIONAL DE REFLEXIÓN EN SUPERADMIN -->
+  <!-- MODAL: EDICIÓN DE REFLEXIÓN EN SUPERADMIN (SIN PROMPT) -->
   <div id="modalEditarReflexionAdmin" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalEditarReflexionAdmin')">
     <div class="modal-content" style="max-width: 680px; text-align: left;">
       <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">
@@ -560,7 +560,7 @@
     </div>
   </div>
 
-  <!-- MODAL: CONFIRMACIÓN DE ACCIONES DESTRUCTIVAS -->
+  <!-- MODAL: CONFIRMACIÓN DE ACCIONES DESTRUCTIVAS (SIN CONFIRM) -->
   <div id="modalConfirmarAccion" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalConfirmarAccion')">
     <div class="modal-content" style="max-width: 480px; text-align: center;">
       <span style="font-size: 2.2rem; display: block; margin-bottom: 10px;">⚠️</span>
@@ -667,7 +667,7 @@
     <div class="modal-certificado-wrapper">
       <div class="modal-cert-actions">
         <button class="btn-cert-descargar" onclick="imprimirInformeAvanceNativo()">
-          🖨️ Descargar / Imprimir Informe en PDF
+          🖨️️ Descargar / Imprimir Informe en PDF
         </button>
         <button class="btn-cert-cerrar" onclick="cerrarModalMisAvances()">
           ✕ Cerrar
