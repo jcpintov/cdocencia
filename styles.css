@@ -1617,6 +1617,42 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
 .error-msg { color: var(--error); margin-top: 14px; text-align: center; font-size: 0.95rem; font-family: var(--font-ui); font-weight: 600; }
 .hidden { display: none !important; }
 
+/* ==========================================================================
+   CORRECCIÓN DE CONTRASTE: MURO GENERAL Y MURO DE USUARIOS EN MODO NOCTURNO
+   ========================================================================== */
+#seccionMuroUsuarios h2,
+#seccionMuroUsuarios h3,
+#documentoMuroGeneralImprimible h3,
+.muro-trabajo-titulo {
+  color: var(--primary);
+  transition: color 0.25s ease;
+}
+
+body.theme-nocturno #seccionMuroUsuarios h2,
+body.theme-nocturno #seccionMuroUsuarios h3,
+body.theme-nocturno #documentoMuroGeneralImprimible h3,
+body.theme-nocturno .muro-trabajo-titulo {
+  color: #FFFFFF !important;
+}
+
+.muro-trabajo-orden {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-gold-dark);
+  text-transform: uppercase;
+}
+
+body.theme-nocturno .muro-trabajo-orden {
+  color: var(--accent-gold) !important;
+}
+
+body.theme-nocturno #seccionMuroUsuarios .reflexion-item,
+body.theme-nocturno #documentoMuroGeneralImprimible .reflexion-item {
+  color: #E6EBED !important;
+  background: #16202B !important;
+}
+
 /* REGLAS RESPONSIVAS GLOBALES */
 @media (max-width: 768px) {
   .gestion-trabajo-botones {
