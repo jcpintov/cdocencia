@@ -960,7 +960,74 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   font-family: var(--font-ui);
 }
 
-/* CÁMARA INTERACTIVA PRESENCIAL */
+/* ==========================================================================
+   NORMALIZACIÓN DE TARJETAS DE GESTIÓN (BOTONES ABAJO A LA DERECHA)
+   ========================================================================== */
+.card-gestion-trabajo {
+  padding: 22px 28px !important;
+  margin-bottom: 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 14px;
+}
+
+.gestion-trabajo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gestion-trabajo-orden {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent-gold-dark);
+  letter-spacing: 0.5px;
+}
+body.theme-nocturno .gestion-trabajo-orden {
+  color: var(--accent-gold);
+}
+
+.gestion-trabajo-titulo {
+  font-family: var(--font-reading);
+  font-size: 1.25rem;
+  margin: 0;
+  line-height: 1.35;
+  color: var(--primary);
+}
+body.theme-nocturno .gestion-trabajo-titulo {
+  color: #FFFFFF;
+}
+
+.gestion-trabajo-autor {
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin: 0;
+}
+
+.gestion-trabajo-botones {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  margin-top: 4px;
+}
+
+.btn-eliminar-trabajo {
+  color: var(--error) !important;
+  border-color: var(--error) !important;
+}
+.btn-eliminar-trabajo:hover {
+  background: var(--error-light) !important;
+}
+
+/* ==========================================================================
+   CÁMARA INTERACTIVA PRESENCIAL Y PAUTA DEL MODERADOR
+   ========================================================================== */
 .presencial-config-panel {
   background: rgba(0,0,0,0.02);
   border: 1px solid var(--border-color);
@@ -994,6 +1061,51 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
   line-height: 1.7;
   color: var(--text-main);
   margin-bottom: 22px;
+}
+
+.pauta-moderador-box {
+  background: var(--card-bg);
+  border: 1px solid var(--accent-gold);
+  border-left: 4px solid var(--accent-gold-dark);
+  border-radius: 6px;
+  margin-top: 18px;
+  padding: 14px 18px;
+}
+body.theme-nocturno .pauta-moderador-box {
+  background: #121921;
+}
+
+.pauta-moderador-toggle {
+  background: transparent;
+  border: none;
+  color: var(--accent-gold-dark);
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+}
+body.theme-nocturno .pauta-moderador-toggle {
+  color: var(--accent-gold);
+}
+
+.pauta-moderador-contenido {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-color);
+  font-family: var(--font-ui);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-main);
+}
+.pauta-moderador-contenido strong {
+  color: var(--accent-gold-dark);
+}
+body.theme-nocturno .pauta-moderador-contenido strong {
+  color: var(--accent-gold);
 }
 
 .mesas-trabajo-grid {
@@ -1504,3 +1616,31 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
 .login-sub { text-align: center; color: var(--text-muted); margin-bottom: 24px; font-family: var(--font-ui); font-size: 0.95rem; }
 .error-msg { color: var(--error); margin-top: 14px; text-align: center; font-size: 0.95rem; font-family: var(--font-ui); font-weight: 600; }
 .hidden { display: none !important; }
+
+/* REGLAS RESPONSIVAS GLOBALES */
+@media (max-width: 768px) {
+  .gestion-trabajo-botones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .gestion-trabajo-botones .admin-link-btn {
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+  }
+
+  .botones-gemelos-wrapper {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn-gemelo {
+    width: 100%;
+  }
+
+  .catalogo-botones-top {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
