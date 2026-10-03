@@ -16,8 +16,10 @@ let tamanoBase = 19;
 // Control de preguntas paso a paso
 let indicePreguntaActiva = 0;
 let respuestasMarcadas = {};
-let pdfBase64Cargado = null;
 let moduloAuditando = null;
+
+// Archivo binario en espera de ser adjuntado en Superadmin
+let archivoBase64Pendiente = null;
 
 // Cámara Presencial Interactiva (Estado)
 let estadoMesasPresencial = [];
@@ -258,6 +260,7 @@ function cerrarSesion() {
   moduloActual = null;
   misProgresos = {};
   respuestasMarcadas = {};
+  archivoBase64Pendiente = null;
   sessionStorage.removeItem('camara_usuario_sesion');
 
   document.getElementById('seccionDocencia').classList.add('hidden');
@@ -345,7 +348,7 @@ async function mostrarDocenciaParaMaestros() {
 }
 
 /* ==========================================================================
-   MURO DE REFLEXIONES PARA USUARIOS (CON VISIBILIDAD NOCTURNA BLINDADA)
+   MURO DE REFLEXIONES PARA USUARIOS (VISIBILIDAD NOCTURNA)
    ========================================================================== */
 async function mostrarMuroReflexionesUsuarios() {
   document.getElementById('seccionDocencia').classList.add('hidden');
@@ -544,14 +547,26 @@ async function seleccionarModulo(idModulo) {
   const framePdf = document.getElementById('framePdf');
   const btnDescargar = document.getElementById('btnDescargarTrazado');
 
-  let rutaPdf = moduloActual.archivo_pdf_base64 || moduloActual.archivo_url;
+  let rutaArchivo = moduloActual.archivo_pdf_base64 || moduloActual.archivo_url;
 
-  if (rutaPdf) {
-    tabPdf.classList.remove('hidden');
-    framePdf.src = rutaPdf;
-    btnDescargar.href = rutaPdf;
-    btnDescargar.target = "_blank";
+  // LÓGICA CONDICIONADA: SOLO HABILITAR DESCARGA SI EL ARCHIVO ESTÁ DISPONIBLE
+  if (rutaArchivo && rutaArchivo.trim() !== "") {
+    btnDescargar.href = rutaArchivo;
+    
+    // Determinar nombre y extensión sugerida para la descarga
+    const esWord = rutaArchivo.startsWith('data:application/vnd.openxmlformats') || rutaArchivo.endsWith('.docx');
+    const extension = esWord ? '.docx' : '.pdf';
+    btnDescargar.download = `Trabajo_${moduloActual.numero_orden}_${moduloActual.titulo.replace(/[\s\W]+/g, '_')}${extension}`;
     btnDescargar.classList.remove('hidden');
+
+    // Visor integrado solo para PDFs
+    if (!esWord && (rutaArchivo.startsWith('data:application/pdf') || rutaArchivo.endsWith('.pdf'))) {
+      tabPdf.classList.remove('hidden');
+      framePdf.src = rutaArchivo;
+    } else {
+      tabPdf.classList.add('hidden');
+      cambiarVistaDocencia('texto');
+    }
   } else {
     tabPdf.classList.add('hidden');
     btnDescargar.classList.add('hidden');
@@ -933,7 +948,7 @@ async function cargarMuroReflexiones() {
 
 /* ==========================================================================
    MIS AVANCES E INFORME PDF LIMPIO (300 DPI, SIN CORTES)
-   ========================================================================= */
+   ========================================================================== */
 async function abrirModalMisAvances(usuarioObjetivoId = null) {
   const idTarget = usuarioObjetivoId || usuarioActual.id;
   
@@ -1176,16 +1191,24 @@ async function cargarDatosAdmin() {
     selectPresencialMod.innerHTML = `<option value="aleatorio">🎲 Todos los Trabajos (Aleatorio)</option>`;
   }
 
+  // Poblar select para adjuntar archivos originales
+  const selectAdjunto = document.getElementById('selectModuloParaArchivo');
+  if (selectAdjunto) {
+    selectAdjunto.innerHTML = "";
+  }
+
   listaModulos.forEach(m => {
     selectMetricas.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
     if (selectPresencialMod) {
       selectPresencialMod.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
     }
+    if (selectAdjunto) {
+      selectAdjunto.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
+    }
   });
 
-  const inputOrden = document.getElementById('adminOrden');
-  if (inputOrden) {
-    inputOrden.value = listaModulos.length + 1;
+  if (selectAdjunto && listaModulos.length > 0) {
+    verificarEstadoArchivoModulo(selectAdjunto.value || listaModulos[0].id);
   }
 
   cambiarSubseccionAdmin('cargar');
@@ -1223,6 +1246,83 @@ function cambiarSubseccionAdmin(seccion) {
       const select = document.getElementById('selectMetricasModulo');
       cargarMetricasAvance(select.value || listaModulos[0].id);
     }
+  }
+}
+
+/* ==========================================================================
+   ASOCIACIÓN DIRECTA DE ARCHIVO ORIGINAL (PDF / DOCX) EN SUPERADMIN
+   ========================================================================== */
+function verificarEstadoArchivoModulo(moduloId) {
+  const m = listaModulos.find(mod => mod.id === moduloId);
+  const pEstado = document.getElementById('estadoArchivoActual');
+  if (!m || !pEstado) return;
+
+  if (m.archivo_pdf_base64 || m.archivo_url) {
+    pEstado.innerHTML = `<span style="color: var(--success); font-weight: 600;">✓ Este trabajo ya cuenta con un archivo asociado listo para descarga. Subir uno nuevo lo reemplazará.</span>`;
+  } else {
+    pEstado.innerHTML = `<span style="color: var(--text-muted); font-style: italic;">Este trabajo aún no tiene archivo asociado (descarga inactiva para los Hermanos).</span>`;
+  }
+}
+
+function procesarArchivoParaAdjuntar(event) {
+  const file = event.target.files[0];
+  const status = document.getElementById('archivoAdjuntoStatus');
+  archivoBase64Pendiente = null;
+
+  if (!file) {
+    status.innerText = "";
+    return;
+  }
+
+  status.innerText = `Leyendo "${file.name}"...`;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    archivoBase64Pendiente = e.target.result;
+    status.innerText = `✓ "${file.name}" procesado (${(file.size / 1024).toFixed(1)} KB). Listo para guardar.`;
+  };
+  reader.onerror = function() {
+    status.innerText = "Error al leer el archivo en el navegador.";
+  };
+  reader.readAsDataURL(file);
+}
+
+async function guardarArchivoOriginalEnBD() {
+  const selectModulo = document.getElementById('selectModuloParaArchivo');
+  const moduloId = selectModulo ? selectModulo.value : null;
+  const status = document.getElementById('adminAdjuntoStatus');
+
+  if (!moduloId) {
+    alert("Seleccione un trabajo.");
+    return;
+  }
+
+  if (!archivoBase64Pendiente) {
+    alert("Seleccione primero un archivo PDF o Word.");
+    return;
+  }
+
+  status.innerHTML = "<em>Guardando archivo en la base de datos...</em>";
+
+  const { error } = await sbApp
+    .from('modulos')
+    .update({ archivo_pdf_base64: archivoBase64Pendiente })
+    .eq('id', moduloId);
+
+  if (error) {
+    status.innerHTML = `<span style="color: var(--error);">Error al guardar: ${error.message}</span>`;
+  } else {
+    status.innerHTML = `<span style="color: var(--success);">¡Archivo original asociado con éxito! La descarga ha quedado habilitada para los Hermanos.</span>`;
+    
+    // Actualizar el estado en memoria
+    const m = listaModulos.find(mod => mod.id === moduloId);
+    if (m) m.archivo_pdf_base64 = archivoBase64Pendiente;
+
+    // Limpiar input y estado
+    document.getElementById('archivoDocAdjunto').value = '';
+    document.getElementById('archivoAdjuntoStatus').innerText = '';
+    archivoBase64Pendiente = null;
+    verificarEstadoArchivoModulo(moduloId);
   }
 }
 
@@ -2004,239 +2104,10 @@ async function exportarRespaldoCompletoJSON() {
   a.click();
 }
 
-/* ==========================================================================
-   NORMALIZACIÓN INTELIGENTE DE TEXTO Y CARGA CON IA (PDF / DOCX EN BASE64)
-   ========================================================================== */
 function formatearAutorMasonico(nombreCrudo) {
   if (!nombreCrudo) return 'Cámara de Docencia';
   let nombreLimpio = nombreCrudo.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
   return `Q.·.H.·. ${nombreLimpio}`;
-}
-
-function depurarTextoPlancha(textoBruto) {
-  if (!textoBruto) return "";
-  let t = textoBruto.normalize("NFC");
-
-  t = t.replace(/é%ca/gi, "ética")
-       .replace(/colec%vas/gi, "colectivas")
-       .replace(/en%dad/gi, "entidad")
-       .replace(/É%ca/gi, "Ética")
-       .replace(/puni%vos/gi, "punitivos")
-       .replace(/fana%zantes/gi, "fanatizantes")
-       .replace(/é%cos/gi, "éticos")
-       .replace(/ins%tución/gi, "institución")
-       .replace(/iniciá%ca/gi, "iniciática")
-       .replace(/prác%ca/gi, "práctica")
-       .replace(/gra%ficante/gi, "gratificante")
-       .replace(/par%cipación/gi, "participación")
-       .replace(/au%éntico/gi, "auténtico")
-       .replace(/ac%tud/gi, "actitud")
-       .replace(/sa%sfacción/gi, "satisfacción")
-       .replace(/sen%do/gi, "sentido")
-       .replace(/q\s*ue\b/gi, "que");
-
-  let parrafosCrudos = t.split(/\r?\n\s*\r?\n/);
-  let parrafosNormalizados = [];
-
-  for (let parrafo of parrafosCrudos) {
-    let p = parrafo.trim();
-    if (!p) continue;
-
-    if (/^[-–—]?\s*(p[aá]g\.?|p[aá]gina)?\s*\d+\s*[-–—]?$/i.test(p)) continue;
-    if (/^(https?:\/\/|www\.)\S+$/i.test(p)) continue;
-    if (/^\d+\s+(ib[ií]d|op\.\s*cit|ob\.\s*cit|cfr|ver)\b/i.test(p)) continue;
-
-    let parrafoLimpio = p.replace(/\r?\n/g, ' ')
-                         .replace(/\s{2,}/g, ' ')
-                         .replace(/\.\s*\d+\s+([A-ZÁÉÍÓÚ])/g, '. $1')
-                         .replace(/([a-záéíóú])\s+\d+\s+([a-záéíóú])/gi, '$1 $2')
-                         .replace(/Masónica\s+\d+\s+/g, 'Masónica ');
-
-    parrafosNormalizados.push(parrafoLimpio);
-  }
-
-  return parrafosNormalizados.join("\n\n").trim();
-}
-
-async function leerArchivoPlancha(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const status = document.getElementById('archivoStatus');
-  status.innerText = "Extrayendo y depurando texto...";
-
-  const inputTitulo = document.getElementById('adminTitulo');
-  if (!inputTitulo.value) inputTitulo.value = file.name.replace(/\.[^/.]+$/, "");
-
-  // RESPALDO BINARIO EN BASE64 (APLICA A PDF Y WORD .DOCX)
-  const b64Reader = new FileReader();
-  b64Reader.onload = function(e) { 
-    pdfBase64Cargado = e.target.result; 
-  };
-  b64Reader.readAsDataURL(file);
-
-  const reader = new FileReader();
-
-  if (file.name.endsWith('.docx')) {
-    reader.onload = function(e) {
-      mammoth.extractRawText({ arrayBuffer: e.target.result })
-        .then(function(result) {
-          document.getElementById('adminTexto').value = depurarTextoPlancha(result.value);
-          status.innerText = "Word depurado con éxito respetando párrafos.";
-        });
-    };
-    reader.readAsArrayBuffer(file);
-  } else if (file.name.endsWith('.pdf')) {
-    reader.onload = async function(e) {
-      try {
-        const typedarray = new Uint8Array(e.target.result);
-        const pdf = await pdfjsLib.getDocument(typedarray).promise;
-        let fullText = "";
-        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-          const page = await pdf.getPage(pageNum);
-          const textContent = await page.getTextContent();
-          let pageStr = "";
-          let lastY = null;
-          textContent.items.forEach(item => {
-            if (lastY !== null && Math.abs(item.transform[5] - lastY) > 12) {
-              pageStr += "\n";
-            } else if (lastY !== null) {
-              pageStr += " ";
-            }
-            pageStr += item.str;
-            lastY = item.transform[5];
-          });
-          fullText += pageStr + "\n\n";
-        }
-        document.getElementById('adminTexto').value = depurarTextoPlancha(fullText);
-        status.innerText = `PDF depurado con éxito (${pdf.numPages} págs) respetando párrafos.`;
-      } catch (err) {
-        status.innerText = "Error PDF: " + err.message;
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  }
-}
-
-async function obtenerGeminiKeySegura() {
-  try {
-    const { data, error } = await sbApp
-      .from('config_segura')
-      .select('valor')
-      .eq('clave', 'gemini_api_key')
-      .single();
-
-    if (!error && data) return data.valor;
-  } catch (e) {
-    console.warn("No se pudo obtener la clave protegida:", e);
-  }
-  return null;
-}
-
-async function generarModuloConIA() {
-  const titulo = document.getElementById('adminTitulo').value.trim();
-  const autorInput = document.getElementById('adminAutor').value.trim();
-  const autorFinal = formatearAutorMasonico(autorInput);
-  const orden = parseInt(document.getElementById('adminOrden').value);
-  const texto = document.getElementById('adminTexto').value.trim();
-  const status = document.getElementById('adminStatus');
-
-  if (!titulo || !texto) {
-    alert("Complete el título y el texto depurado.");
-    return;
-  }
-
-  status.innerHTML = "<em>Procesando trazado con Gemini (batería de 8 preguntas exigentes)...</em>";
-
-  const apiKey = await obtenerGeminiKeySegura();
-  if (!apiKey) {
-    status.innerHTML = `<span style="color: var(--error);">No se encontró la credencial protegida en Supabase.</span>`;
-    return;
-  }
-
-  const promptSistema = `
-Eres un pedagogo e instructor especializado en la Cámara de Docencia (Tercer Grado de la Masonería).
-Analiza el siguiente trazado doctrinal depurado considerando el programa de docencia y el rigor de la Maestría.
-
-Genera exactamente:
-1. "resumen_formativo": Síntesis sobria de las enseñanzas doctrinales centrales (máximo 150 palabras).
-2. "conclusion_enlace": Reflexión que conecte las virtudes expuestas con la práctica de la Maestría (120-180 palabras).
-3. "preguntas": Arreglo de exactamente 8 preguntas pedagógicas de selección múltiple sobre los conceptos del trazado:
-   - Preguntas 1 a 7: Evaluación formativa de conceptos simbólicos y rituales. No deben ser obvias; deben obligar a la lectura reflexiva.
-   - Pregunta 8 (OBLIGATORIA): Un dilema ético profundo que interpele directamente la conciencia del Maestro, cuya respuesta correcta y retroalimentación sirvan de puente formativo para su reflexión personal.
-   Cada pregunta debe contener:
-   - "numero": (1 a 8)
-   - "enunciado": Texto claro y reflexivo.
-   - "opciones": 4 alternativas ("letra": "A","B","C","D" y "texto").
-   - "respuesta_correcta": Letra de la opción verdadera.
-   - "retroalimentacion": Justificación fraterna y docente.
-
-REGLA ESTRICTA: Tu respuesta debe ser exclusivamente un JSON válido:
-{
-  "resumen_formativo": "...",
-  "conclusion_enlace": "...",
-  "preguntas": [
-    {
-      "numero": 1,
-      "enunciado": "...",
-      "opciones": [
-        {"letra": "A", "texto": "..."},
-        {"letra": "B", "texto": "..."},
-        {"letra": "C", "texto": "..."},
-        {"letra": "D", "texto": "..."}
-      ],
-      "respuesta_correcta": "A",
-      "retroalimentacion": "..."
-    }
-  ]
-}
-`;
-
-  try {
-    const respuesta = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json', 
-        'x-goog-api-key': apiKey 
-      },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: promptSistema + "\n\n--- TEXTO DE LA PLANCHA ---\n" + texto }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0.2 }
-      })
-    });
-
-    const data = await respuesta.json();
-
-    if (data.error) {
-      status.innerHTML = `<span style="color: var(--error);">Error API: ${data.error.message}</span>`;
-      return;
-    }
-
-    let contenidoTexto = data.candidates[0].content.parts[0].text;
-    contenidoTexto = contenidoTexto.replace(/```json/gi, '').replace(/```/gi, '').trim();
-    const jsonResultado = JSON.parse(contenidoTexto);
-
-    const { error } = await sbApp.from('modulos').insert({
-      numero_orden: orden,
-      titulo: titulo,
-      autor: autorFinal,
-      contenido_trazado: texto,
-      resumen_formativo: jsonResultado.resumen_formativo,
-      conclusion_enlace: jsonResultado.conclusion_enlace,
-      preguntas_json: jsonResultado,
-      archivo_pdf_base64: pdfBase64Cargado,
-      activo: true
-    });
-
-    if (error) {
-      status.innerText = "Error BD: " + error.message;
-    } else {
-      status.innerHTML = `<span style="color: var(--success);">¡Trabajo consagrado con éxito con su batería de 8 preguntas!</span>`;
-      cargarDatosAdmin();
-    }
-  } catch (err) {
-    status.innerHTML = `<span style="color: var(--error);">Error en procesamiento: ${err.message}</span>`;
-  }
 }
 
 /* ==========================================================================
