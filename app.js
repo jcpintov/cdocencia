@@ -1227,7 +1227,7 @@ function cambiarSubseccionAdmin(seccion) {
 }
 
 /* ==========================================================================
-   CÁMARA INTERACTIVA PRESENCIAL: GRUPOS, DILEMAS Y TABLERO EN VIVO
+   CÁMARA INTERACTIVA PRESENCIAL: GRUPOS, DILEMAS, TABLERO Y GUÍA DOCTRINAL
    ========================================================================== */
 async function generarDinamicaPresencial() {
   const numMesas = parseInt(document.getElementById('numMesasPresencial').value) || 4;
@@ -1255,10 +1255,13 @@ async function generarDinamicaPresencial() {
   modulosDisponibles.forEach(m => {
     const pregs = m.preguntas_json?.preguntas || [];
     if (pregs.length >= 8) {
+      const p8 = pregs[7];
+      const opcionCorrectaObj = p8.opciones?.find(o => o.letra === p8.respuesta_correcta);
       dilemasDisponibles.push({
         origen: `Trabajo N° ${m.numero_orden}: ${m.titulo}`,
-        enunciado: pregs[7].enunciado,
-        retro: pregs[7].retroalimentacion
+        enunciado: p8.enunciado,
+        opcionCorrecta: opcionCorrectaObj ? `${p8.respuesta_correcta}) ${opcionCorrectaObj.texto}` : p8.respuesta_correcta,
+        retro: p8.retroalimentacion || "Criterio de equilibrio ético y fidelidad al juramento de Maestro."
       });
     }
   });
@@ -1266,19 +1269,28 @@ async function generarDinamicaPresencial() {
   let moduloRef = modulosDisponibles[Math.floor(Math.random() * modulosDisponibles.length)];
   let tituloDinamica = "";
   let cuerpoDilema = "";
+  let pautaModerador = "";
 
   if (tipoDinamica === "1") {
     tituloDinamica = "⚖️ Dinámica 1: El Tribunal de la Conciencia y los Dos Defensores";
     const d = dilemasDisponibles[Math.floor(Math.random() * dilemasDisponibles.length)] || {
       origen: moduloRef ? `Trabajo N° ${moduloRef.numero_orden}: ${moduloRef.titulo}` : "Docencia del Grado",
       enunciado: "Un Hermano Maestro solicita su aval financiero para un negocio profano de alto riesgo que compromete el patrimonio de su propia familia, invocando el secreto y socorro del grado.",
-      retro: "Evaluar la prudencia masónica y la responsabilidad profana frente a la solidaridad fraternal."
+      opcionCorrecta: "Preservar el bienestar familiar y brindar apoyo técnico/personal sin comprometer la subsistencia del hogar.",
+      retro: "La solidaridad fraternal nunca debe vulnerar la prudencia ni los deberes sagrados adquiridos con la familia y la ley moral."
     };
+
     cuerpoDilema = `
       <strong>Insumo Docente:</strong> ${d.origen}<br><br>
       <strong>Dilema Ético Planteado:</strong><br>
       "${d.enunciado}"<br><br>
       <em>Consigna para las Mesas:</em> En 5 minutos, un integrante defiende el deber estricto, otro la indulgencia y el grupo redacta un veredicto de consenso.
+    `;
+
+    pautaModerador = `
+      <strong>Línea Doctrinal Recomendada:</strong> ${d.opcionCorrecta}<br>
+      <strong>Fundamento para el Moderador:</strong> ${d.retro}<br><br>
+      <strong>Pregunta Incisiva de Guía:</strong> <em>"¿Puede considerarse verdaderamente fraternal una solicitud que traslada irresponsablemente el riesgo material a un hermano?"</em>
     `;
   } else if (tipoDinamica === "2") {
     tituloDinamica = "🎭 Dinámica 2: El Coloquio de las Máscaras Cruzadas (Aporte Anónimo)";
@@ -1300,12 +1312,22 @@ async function generarDinamicaPresencial() {
       "${refTexto}"<br><br>
       <em>Consigna para las Mesas:</em> Encuentren el punto ciego o contradicción práctica de esta postura y preparen una refutación ingeniosa ante el resto del taller.
     `;
+
+    pautaModerador = `
+      <strong>Línea Doctrinal Recomendada:</strong> El silencio es prudencia frente al ataque vano, pero se torna en cobardía o complicidad si callar permite la consumación de una injusticia contra un tercero o contra la Institución.<br>
+      <strong>Pregunta Incisiva de Guía:</strong> <em>"¿Dónde termina la discreción del sabio y dónde comienza la comodidad del silencio ante un daño real?"</em>
+    `;
   } else if (tipoDinamica === "3") {
     tituloDinamica = "⚡ Dinámica 3: La Piedra de Toque (Dilema Rápido y Contra-Ataque)";
     cuerpoDilema = `
       <strong>Situación de Templo / Contingencia:</strong><br>
       "En una asamblea profana, un hermano del taller es atacado con calumnias basadas en una indiscreción sobre su vida privada. ¿Cómo interviene usted en el acto sin desvelar la fraternidad institucional?"<br><br>
       <em>Consigna:</em> 3 minutos de debate en mesa. Un portavoz expone la estrategia en 60 segundos; las otras mesas tienen derecho a lanzar una objeción suspicaz.
+    `;
+
+    pautaModerador = `
+      <strong>Línea Doctrinal Recomendada:</strong> Defender la honra del agraviado en base a principios universales de justicia, derecho a la réplica y presunción de rectitud ciudadana, sin mencionar jamás la filiación masónica.<br>
+      <strong>Fundamento para el Moderador:</strong> El Maestro actúa como centro de unión y templanza sin exponer el sigilo institucional.
     `;
   } else if (tipoDinamica === "cierre_trivial") {
     tituloDinamica = "🏆 Cierre Lúdico: Trivial de la Cámara (La Pregunta Imposible)";
@@ -1314,6 +1336,10 @@ async function generarDinamicaPresencial() {
       "¿Cuál es la diferencia insalvable entre el Secreto del Maestro y el Silencio del Aprendiz frente a una crisis pública?"<br><br>
       <em>Consigna:</em> Respuesta relámpago de 30 segundos por mesa. El razonamiento más lúcido gana +20 puntos.
     `;
+
+    pautaModerador = `
+      <strong>Clave Doctrinal:</strong> El Aprendiz guarda silencio como ejercicio de aprendizaje y disciplina interior (no opina aún); el Maestro custodia el secreto por prudencia activa y discernimiento moral (sabe qué decir, cómo decirlo y qué reservar para construir).
+    `;
   } else {
     tituloDinamica = "🚨 Cierre Lúdico: El Dilema del Venerable en Apuros (60 Segundos)";
     cuerpoDilema = `
@@ -1321,13 +1347,35 @@ async function generarDinamicaPresencial() {
       "A minutos de abrir los trabajos, se corta el suministro eléctrico, faltan dos oficiales y un visitante profano espera en pasos perdidos por error. ¿Cuál es el plan de contingencia inmediato de su mesa?"<br><br>
       <em>Consigna:</em> 60 segundos para exponer la solución más cómica, rápida y respetuosa del ritual.
     `;
+
+    pautaModerador = `
+      <strong>Solución Práctica Óptima:</strong> Encender luminarias de reserva ritual (velas), cubrir los puestos con Maestros disponibles en columnas, y encomendar a un Maestro de probada templanza la conducción amable del visitante a un recinto exterior adecuado.
+    `;
   }
 
+  const pautaHtml = `
+    <div class="pauta-moderador-box">
+      <button class="pauta-moderador-toggle" onclick="togglePautaModerador()">
+        👁️ Ver Pauta Doctrinal / Clave del Moderador
+      </button>
+      <div id="cuerpoPautaModerador" class="pauta-moderador-contenido hidden">
+        ${pautaModerador}
+      </div>
+    </div>
+  `;
+
   document.getElementById('tituloDinamicaActiva').innerHTML = tituloDinamica;
-  document.getElementById('dilemaDinamicaActiva').innerHTML = cuerpoDilema;
+  document.getElementById('dilemaDinamicaActiva').innerHTML = cuerpoDilema + pautaHtml;
 
   renderizarTableroMesasPresencial();
   document.getElementById('contenedorDinamicaEnVivo').classList.remove('hidden');
+}
+
+function togglePautaModerador() {
+  const p = document.getElementById('cuerpoPautaModerador');
+  if (p) {
+    p.classList.toggle('hidden');
+  }
 }
 
 function renderizarTableroMesasPresencial() {
@@ -1369,7 +1417,7 @@ function modificarPuntosMesa(mesaId, delta) {
 }
 
 /* ==========================================================================
-   GESTIÓN DIRECTA DE TRABAJOS Y EDITOR DE 8 PREGUNTAS
+   GESTIÓN DIRECTA DE TRABAJOS (BOTONES ALINEADOS A LA DERECHA)
    ========================================================================== */
 async function cargarGestionTrabajosAdmin() {
   const cont = document.getElementById('listaGestionTrabajosAdmin');
@@ -1386,15 +1434,15 @@ async function cargarGestionTrabajosAdmin() {
 
   listaModulos.forEach(m => {
     cont.innerHTML += `
-      <div class="card" style="padding: 18px 24px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-        <div>
-          <span style="font-size: 0.8rem; font-weight: 700; color: var(--accent-gold-dark);">TRABAJO N° ${m.numero_orden}</span>
-          <h4 style="margin: 4px 0;">${m.titulo}</h4>
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">${m.autor || "Cámara de Docencia"}</p>
+      <div class="card card-gestion-trabajo">
+        <div class="gestion-trabajo-info">
+          <span class="gestion-trabajo-orden">TRABAJO N° ${m.numero_orden}</span>
+          <h4 class="gestion-trabajo-titulo">${m.titulo}</h4>
+          <p class="gestion-trabajo-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara de Docencia"}</p>
         </div>
-        <div style="display: flex; gap: 8px;">
+        <div class="gestion-trabajo-botones">
           <button class="admin-link-btn" onclick="abrirAuditoriaModulo('${m.id}')">🔍 Auditar / Editar 8 Preguntas</button>
-          <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarModuloYReordenar('${m.id}')">🗑 Eliminar</button>
+          <button class="admin-link-btn btn-eliminar-trabajo" onclick="eliminarModuloYReordenar('${m.id}')">🗑️ Eliminar</button>
         </div>
       </div>
     `;
@@ -1788,7 +1836,7 @@ async function guardarDoctrinaAdmin() {
 }
 
 /* ==========================================================================
-   MURO GENERAL SUPERADMIN: GESTIÓN CON MODALES EXCLUSIVOS
+   MURO GENERAL SUPERADMIN: GESTIÓN CON MODALES EXCLUSIVOS (SIN PROMPT)
    ========================================================================== */
 async function cargarMuroGeneralAdmin() {
   const contenedor = document.getElementById('contenedorMuroGeneralAdmin');
@@ -1957,7 +2005,7 @@ async function exportarRespaldoCompletoJSON() {
 }
 
 /* ==========================================================================
-   NORMALIZACIÓN INTELIGENTE DE TEXTO Y CARGA CON IA
+   NORMALIZACIÓN INTELIGENTE DE TEXTO Y CARGA CON IA (PDF / DOCX EN BASE64)
    ========================================================================== */
 function formatearAutorMasonico(nombreCrudo) {
   if (!nombreCrudo) return 'Cámara de Docencia';
@@ -2020,7 +2068,7 @@ async function leerArchivoPlancha(event) {
   const inputTitulo = document.getElementById('adminTitulo');
   if (!inputTitulo.value) inputTitulo.value = file.name.replace(/\.[^/.]+$/, "");
 
-  // RESPALDO BINARIO EN BASE64 (APLICA A PDF Y A WORD .DOCX)
+  // RESPALDO BINARIO EN BASE64 (APLICA A PDF Y WORD .DOCX)
   const b64Reader = new FileReader();
   b64Reader.onload = function(e) { 
     pdfBase64Cargado = e.target.result; 
