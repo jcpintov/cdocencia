@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Docencia Masónica de Tercer Grado</title>
+  <title>Docencia Masónica de Tercer Grado | Cámara de Docencia</title>
   
   <link rel="icon" type="image/svg+xml" href="logo.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,7 +39,7 @@
   <main id="seccionLogin" class="login-wrapper">
     <div class="card card-trazado">
       <h2 style="text-align: center; margin-bottom: 6px;">Cámara de Docencia</h2>
-      <p class="login-sub">Espacio docente reservado para Maestros.</p>
+      <p class="login-sub">Espacio docente reservado para Maestros Masones.</p>
       
       <div class="form-group">
         <label for="inputEmail">Correo Electrónico Registrado:</label>
@@ -62,7 +62,7 @@
       <h2 class="modal-sigilo-titulo">Advertencia y Condiciones de Uso</h2>
       <p class="modal-sigilo-texto">
         Al ingresar a este Espacio Docente, reafirmo mi compromiso de mantener estricta reserva sobre los contenidos, 
-        trazados, símbolos y reflexiones personales aquí vertidos. Reconozco que este espacio pertenece al ámbito exclusivo de la Docencia
+        trazados, símbolos y reflexiones personales aquí vertidos. Reconozco que este espacio pertenece al ámbito exclusivo 
         del Tercer Grado de la R.·.L.·. Orestes Frödden Lorenzen N°146 del Valle de Talagante, quedando estrictamente 
         prohibida su difusión profana, a grados inferiores o su copia no autorizada, bajo los preceptos del Honor y el cumplimiento del Deber Masónico.
       </p>
@@ -93,7 +93,7 @@
     <div class="seccion-trabajos-header">
       <div>
         <h2 class="titulo-catalogo-temas">Trabajos Disponibles de la Cámara</h2>
-        <p style="font-size: 0.9rem; color: var(--text-muted); font-family: var(--font-ui); margin: 0;">Seleccione un trabajo para su estudio.</p>
+        <p style="font-size: 0.9rem; color: var(--text-muted); font-family: var(--font-ui); margin: 0;">Seleccione un trabajo para su estudio doctrinal.</p>
       </div>
       <div class="catalogo-botones-top">
         <div class="botones-gemelos-wrapper">
@@ -203,7 +203,7 @@
               📥 Descargar Trabajo Original
             </a>
             <button id="btnVerCertificado" class="btn-certificado hidden" onclick="abrirModalCertificado()">
-              📜 Obtener Certificado
+              📜 Obtener Certificado Oficial
             </button>
           </div>
         </div>
@@ -301,8 +301,8 @@
         <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq" target="_blank" class="admin-nav-link-ext">
           ⚡ Supabase Dashboard
         </a>
-        <a href="https://gemini.google.com/notebook/ab1746bc-db16-4999-b153-73a76f598343" id="linkCuadernoDocencia" target="_blank" class="admin-nav-link-ext" title="Acceso al Cuaderno de Curaduría">
-          📓 Cuaderno de Docencia
+        <a href="#" id="linkCuadernoDocencia" target="_blank" class="admin-nav-link-ext" title="Acceso al Cuaderno de Curaduría">
+          📓 Cuaderno de Docencia (3er Grado)
         </a>
       </div>
 
@@ -316,7 +316,7 @@
           ⚙️ Gestión de Trabajos
         </button>
         <button id="tabNavPresencial" class="admin-side-btn" onclick="cambiarSubseccionAdmin('presencial')">
-          🏛️ Cámara Presencial
+          🏛️ Cámara Presencial (Debate)
         </button>
         <button id="tabNavMuroGeneral" class="admin-side-btn" onclick="cambiarSubseccionAdmin('muro_general')">
           💬 Muro General
@@ -325,7 +325,10 @@
           📊 Matriz de Avance
         </button>
         <button id="tabNavEditorDoctrina" class="admin-side-btn" onclick="cambiarSubseccionAdmin('editor_doctrina')">
-          📜 Editar Docencia
+          📜 Editar Docencia P. Maestros
+        </button>
+        <button id="tabNavAccesos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('accesos')">
+          🛡️ Bitácora de Accesos
         </button>
       </nav>
 
@@ -354,7 +357,7 @@
 
         <div class="upload-box">
           <label for="archivoDocAdjunto" style="font-weight: 700; color: var(--text-main); cursor: pointer; display: block; margin-bottom: 8px;">
-            📄 Seleccionar Archivo Original
+            📄 Seleccionar Archivo Original (PDF o Word .docx)
           </label>
           <input type="file" id="archivoDocAdjunto" accept=".docx, .pdf" onchange="procesarArchivoParaAdjuntar(event)">
           <p id="archivoAdjuntoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 8px; font-weight: 600;"></p>
@@ -387,7 +390,7 @@
       <section id="adminSeccionPresencial" class="card card-trazado hidden">
         <div class="admin-card-header">
           <div>
-            <h2>Cámara Presencial: Módulos de Debate y Dilemas</h2>
+            <h2>Cámara Interactiva Presencial: Módulos de Debate y Dilemas</h2>
             <p class="text-instruccion" style="margin: 0;">Sesión participativa para 3 o más mesas constituidas en sala con tablero de Puntos de Aplomo.</p>
           </div>
           <div class="admin-header-actions">
@@ -445,7 +448,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Muro General de la Cámara de Docencia</h2>
-            <p class="text-instruccion" style="margin: 0;">Reflexiones aportadas por los Hermanos.</p>
+            <p class="text-instruccion" style="margin: 0;">Reflexiones aportadas por los Hermanos con moderación y exportación de alta calidad.</p>
           </div>
           <div class="admin-header-actions">
             <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="imprimirMuroGeneralPDF()">🖨️ Descargar Muro en PDF</button>
@@ -520,6 +523,39 @@
           </div>
         </div>
         <div id="contenedorEditorDoctrinaAdmin"></div>
+      </section>
+
+      <!-- SUBSECCIÓN 7: BITÁCORA Y REGISTRO DE ACCESOS -->
+      <section id="adminSeccionAccesos" class="card card-reflexion hidden">
+        <div class="admin-card-header">
+          <div>
+            <h2>Bitácora de Accesos a la Cámara</h2>
+            <p class="text-instruccion" style="margin: 0;">Registro cronológico de ingresos de usuarios con marca de tiempo y dirección IP.</p>
+          </div>
+          <div class="admin-header-actions">
+            <label for="filtroUsuarioAcceso">Filtrar Hermano:</label>
+            <select id="filtroUsuarioAcceso" onchange="cargarBitacoraAccesos(this.value)">
+              <option value="todos">👥 Todos los Hermanos</option>
+            </select>
+            <button class="admin-link-btn" onclick="cargarBitacoraAccesos()">🔄 Actualizar</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="metricas-table">
+            <thead>
+              <tr>
+                <th>Fecha y Hora</th>
+                <th>Hermano</th>
+                <th>Correo Electrónico</th>
+                <th>IP de Origen</th>
+              </tr>
+            </thead>
+            <tbody id="tablaAccesosBody">
+              <tr><td colspan="4" class="td-loading">Consultando bitácora...</td></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
   </div>
@@ -750,7 +786,7 @@
             <p class="cert-valle">Valle de Talagante</p>
             <p class="cert-camara">CÁMARA DE DOCENCIA — TERCER GRADO</p>
             <div class="cert-divider">✦ ✦ ✦</div>
-            <p class="cert-cuerpo">Se da constancia que el Venerable Maestro</p>
+            <p class="cert-cuerpo">Se certifica que el Venerable Maestro</p>
             <h3 id="certNombreHermano" class="cert-nombre">Q.·.H.·. NOMBRE DEL HERMANO</h3>
             <p class="cert-cuerpo">
               Ha culminado satisfactoriamente el estudio doctrinal, examen simbólico y consagración de reflexiones correspondientes al trabajo de docencia:
