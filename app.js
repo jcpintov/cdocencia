@@ -81,7 +81,7 @@ function aplicarTema(tema) {
     btn.innerText = '🌙';
     btn.title = 'Modo Nocturno (clic para Día)';
   } else {
-    btn.innerText = '☀️';
+    btn.innerText = '☀️️';
     btn.title = 'Modo Día (clic para Sepia)';
     tema = 'dia';
   }
@@ -121,7 +121,31 @@ async function iniciarSesion() {
 
   usuarioActual = data[0];
   sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
+
+  // Registrar auditoría de acceso e IP
+  registrarIngresoAuditoria(usuarioActual);
+
   configurarEntornoUsuario();
+}
+
+async function registrarIngresoAuditoria(usuario) {
+  let ipDetectada = "No determinada";
+  try {
+    const res = await fetch('https://api.ipify.org?format=json');
+    if (res.ok) {
+      const data = await res.json();
+      ipDetectada = data.ip || ipDetectada;
+    }
+  } catch (e) {
+    console.warn("No se pudo obtener IP externa:", e);
+  }
+
+  await sbApp.from('registro_accesos').insert({
+    usuario_id: usuario.id,
+    nombre: usuario.nombre,
+    email: usuario.email,
+    ip_origen: ipDetectada
+  });
 }
 
 function recuperarSesionGuardada() {
@@ -1191,7 +1215,7 @@ async function cargarDatosAdmin() {
     selectPresencialMod.innerHTML = `<option value="aleatorio">🎲 Todos los Trabajos (Aleatorio)</option>`;
   }
 
-  // Poblar select para adjuntar archivos originales
+  // Poblar selector para asociar archivos
   const selectAdjunto = document.getElementById('selectModuloParaArchivo');
   if (selectAdjunto) {
     selectAdjunto.innerHTML = "";
@@ -1215,8 +1239,8 @@ async function cargarDatosAdmin() {
 }
 
 function cambiarSubseccionAdmin(seccion) {
-  const btns = ['tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina'];
-  const secs = ['adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina'];
+  const btns = ['tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
+  const secs = ['adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
 
   btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
@@ -1239,6 +1263,10 @@ function cambiarSubseccionAdmin(seccion) {
     document.getElementById('tabNavEditorDoctrina').classList.add('active');
     document.getElementById('adminSeccionEditorDoctrina').classList.remove('hidden');
     cargarEditorDoctrinaAdmin();
+  } else if (seccion === 'accesos') {
+    document.getElementById('tabNavAccesos').classList.add('active');
+    document.getElementById('adminSeccionAccesos').classList.remove('hidden');
+    cargarBitacoraAccesos();
   } else {
     document.getElementById('tabNavMetricas').classList.add('active');
     document.getElementById('adminSeccionMetricas').classList.remove('hidden');
@@ -1314,7 +1342,7 @@ async function guardarArchivoOriginalEnBD() {
   } else {
     status.innerHTML = `<span style="color: var(--success);">¡Archivo original asociado con éxito! La descarga ha quedado habilitada para los Hermanos.</span>`;
     
-    // Actualizar el estado en memoria
+    // Actualizar estado local
     const m = listaModulos.find(mod => mod.id === moduloId);
     if (m) m.archivo_pdf_base64 = archivoBase64Pendiente;
 
@@ -1324,6 +1352,60 @@ async function guardarArchivoOriginalEnBD() {
     archivoBase64Pendiente = null;
     verificarEstadoArchivoModulo(moduloId);
   }
+}
+
+/* ==========================================================================
+   BITÁCORA DE ACCESOS E HISTORIAL POR FECHA
+   ========================================================================== */
+async function cargarBitacoraAccesos(filtroUsuarioId = null) {
+  const tbody = document.getElementById('tablaAccesosBody');
+  tbody.innerHTML = `<tr><td colspan="4" class="td-loading">Consultando registros...</td></tr>`;
+
+  // Poblar selector de Hermanos si no se ha inicializado
+  const selectFiltro = document.getElementById('filtroUsuarioAcceso');
+  if (selectFiltro && selectFiltro.options.length <= 1) {
+    const { data: usrs } = await sbApp.from('usuarios').select('id, nombre').order('nombre', { ascending: true });
+    if (usrs) {
+      usrs.forEach(u => {
+        selectFiltro.innerHTML += `<option value="${u.id}">${u.nombre}</option>`;
+      });
+    }
+  }
+
+  let query = sbApp
+    .from('registro_accesos')
+    .select('*')
+    .order('creado_en', { ascending: false })
+    .limit(100);
+
+  const filtroActual = filtroUsuarioId || (selectFiltro ? selectFiltro.value : 'todos');
+  if (filtroActual && filtroActual !== 'todos') {
+    query = query.eq('usuario_id', filtroActual);
+  }
+
+  const { data: registros, error } = await query;
+
+  tbody.innerHTML = "";
+
+  if (error || !registros || registros.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic;">No hay ingresos registrados para el criterio seleccionado.</td></tr>`;
+    return;
+  }
+
+  registros.forEach(r => {
+    const d = new Date(r.creado_en);
+    const fechaTxt = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const horaTxt = d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    tbody.innerHTML += `
+      <tr>
+        <td style="white-space: nowrap;"><strong>${fechaTxt}</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">${horaTxt}</span></td>
+        <td><span style="font-weight: 600;">${r.nombre || "Hermano"}</span></td>
+        <td style="font-family: monospace; font-size: 0.88rem;">${r.email}</td>
+        <td><span style="background: rgba(153,120,57,0.1); color: var(--accent-gold-dark); padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85rem;">${r.ip_origen || "—"}</span></td>
+      </tr>
+    `;
+  });
 }
 
 /* ==========================================================================
@@ -1688,432 +1770,4 @@ function eliminarModuloYReordenar(moduloId) {
       await sbApp.from('modulos').delete().eq('id', moduloId);
 
       const { data: restantes } = await sbApp
-        .from('modulos')
-        .select('id')
-        .eq('activo', true)
-        .order('numero_orden', { ascending: true });
-
-      if (restantes) {
-        for (let i = 0; i < restantes.length; i++) {
-          await sbApp.from('modulos').update({ numero_orden: i + 1 }).eq('id', restantes[i].id);
-        }
-      }
-
-      await cargarDatosAdmin();
-      cargarGestionTrabajosAdmin();
-    }
-  );
-}
-
-/* ==========================================================================
-   MATRIZ DE AVANCE Y EDITOR DE PARÁMETROS DEL HERMANO (SUPERADMIN)
-   ========================================================================== */
-async function cargarMetricasAvance(moduloId) {
-  const tbody = document.getElementById('tablaMetricasBody');
-  tbody.innerHTML = `<tr><td colspan="6" class="td-loading">Consultando registros...</td></tr>`;
-
-  const { data: usuarios } = await sbApp
-    .from('usuarios')
-    .select('id, nombre, es_admin')
-    .order('nombre', { ascending: true });
-
-  const { data: progresos } = await sbApp
-    .from('progreso_maestro')
-    .select('*')
-    .eq('modulo_id', moduloId);
-
-  const mapProg = {};
-  if (progresos) progresos.forEach(p => { mapProg[p.usuario_id] = p; });
-
-  tbody.innerHTML = "";
-
-  usuarios.forEach(u => {
-    if (u.es_admin) return;
-
-    const prog = mapProg[u.id];
-
-    const leidoHtml = prog && prog.leido
-      ? `<span style="color: var(--success); font-weight: 600;">✓ Sí leyó</span>`
-      : `<span style="color: var(--text-muted);">— Pendiente</span>`;
-
-    let evalHtml = `<span style="color: var(--text-muted);">Sin intentos</span>`;
-    if (prog) {
-      const resp = prog.respuestas_evaluacion ? Object.keys(prog.respuestas_evaluacion).length : (prog.intentos_preguntas || 0);
-      if (resp >= 8) evalHtml = `<span style="color: var(--success); font-weight: 600;">✓ 8/8 Finalizado</span>`;
-      else if (resp > 0) evalHtml = `<span style="color: #B27B10; font-weight: 600;">En curso (${resp}/8)</span>`;
-    }
-
-    let reflexHtml = `<span style="color: var(--text-muted);">Pendiente</span>`;
-    let fechaHtml = `<span style="color: var(--text-muted);">—</span>`;
-
-    if (prog && prog.completado) {
-      reflexHtml = `<span style="color: var(--success); font-weight: 700;">✓ Consagrado</span>`;
-      if (prog.completado_en) {
-        const d = new Date(prog.completado_en);
-        fechaHtml = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-      }
-    }
-
-    tbody.innerHTML += `
-      <tr>
-        <td>
-          <a href="javascript:void(0)" onclick="abrirModalMisAvances('${u.id}')" style="color: var(--primary); font-weight: 700; text-decoration: underline;">
-            ${u.nombre || "Hermano"}
-          </a>
-        </td>
-        <td>${leidoHtml}</td>
-        <td>${evalHtml}</td>
-        <td>${reflexHtml}</td>
-        <td>${fechaHtml}</td>
-        <td>
-          <div style="display: flex; gap: 6px;">
-            <button class="admin-link-btn" onclick="abrirEditorParametrosHermano('${u.id}', '${moduloId}', '${(u.nombre || '').replace(/'/g, "\\'")}')">⚙️ Parámetros</button>
-            <button class="admin-link-btn" onclick="abrirModalMisAvances('${u.id}')">📄 Ficha</button>
-          </div>
-        </td>
-      </tr>
-    `;
-  });
-}
-
-function recargarMetricasActuales() {
-  const select = document.getElementById('selectMetricasModulo');
-  if (select && select.value) cargarMetricasAvance(select.value);
-}
-
-async function abrirEditorParametrosHermano(usuarioId, moduloId, nombreHermano) {
-  document.getElementById('subParamHermano').innerText = `Hermano: ${nombreHermano}`;
-  document.getElementById('paramUsuarioId').value = usuarioId;
-  document.getElementById('paramModuloId').value = moduloId;
-
-  const { data: prog } = await sbApp
-    .from('progreso_maestro')
-    .select('*')
-    .eq('usuario_id', usuarioId)
-    .eq('modulo_id', moduloId)
-    .maybeSingle();
-
-  document.getElementById('paramProgresoId').value = prog ? prog.id : "";
-  document.getElementById('paramLeido').value = (prog && prog.leido) ? "true" : "false";
-  
-  if (prog && prog.completado_en) {
-    const d = new Date(prog.completado_en);
-    const tzOffset = d.getTimezoneOffset() * 60000;
-    const localISOTime = (new Date(d.getTime() - tzOffset)).toISOString().slice(0, 16);
-    document.getElementById('paramFecha').value = localISOTime;
-  } else {
-    document.getElementById('paramFecha').value = "";
-  }
-
-  document.getElementById('paramIntentos').value = prog ? (prog.intentos_preguntas || 0) : 0;
-  document.getElementById('paramReflexion').value = prog ? (prog.reflexion || "") : "";
-
-  document.getElementById('modalParametrosHermano').classList.remove('hidden');
-}
-
-async function guardarParametrosHermanoBD() {
-  const progresoId = document.getElementById('paramProgresoId').value;
-  const usuarioId = document.getElementById('paramUsuarioId').value;
-  const moduloId = document.getElementById('paramModuloId').value;
-  const leido = document.getElementById('paramLeido').value === "true";
-  const fechaVal = document.getElementById('paramFecha').value;
-  const intentos = parseInt(document.getElementById('paramIntentos').value) || 0;
-  const reflexion = document.getElementById('paramReflexion').value.trim();
-
-  const completado = reflexion.length >= 15;
-  const completado_en = fechaVal ? new Date(fechaVal).toISOString() : (completado ? new Date().toISOString() : null);
-
-  const payload = {
-    usuario_id: usuarioId,
-    modulo_id: moduloId,
-    leido: leido,
-    intentos_preguntas: intentos,
-    reflexion: reflexion,
-    completado: completado,
-    completado_en: completado_en
-  };
-
-  let error = null;
-  if (progresoId) {
-    const res = await sbApp.from('progreso_maestro').update(payload).eq('id', progresoId);
-    error = res.error;
-  } else {
-    const res = await sbApp.from('progreso_maestro').insert(payload);
-    error = res.error;
-  }
-
-  if (error) {
-    alert("Error al actualizar parámetros: " + error.message);
-  } else {
-    alert("Parámetros actualizados con éxito.");
-    cerrarModalUniversalDirecto('modalParametrosHermano');
-    recargarMetricasActuales();
-  }
-}
-
-/* ==========================================================================
-   EDITOR DE DOCTRINA CON REORDENAMIENTO Y BLOQUES DINÁMICOS
-   ========================================================================== */
-let bloquesDoctrinaAdmin = [];
-
-async function cargarEditorDoctrinaAdmin() {
-  bloquesDoctrinaAdmin = await obtenerDoctrinaBD();
-  renderizarFormularioDoctrinaAdmin();
-}
-
-function renderizarFormularioDoctrinaAdmin() {
-  const cont = document.getElementById('contenedorEditorDoctrinaAdmin');
-  cont.innerHTML = "";
-
-  bloquesDoctrinaAdmin.forEach((b, idx) => {
-    cont.innerHTML += `
-      <div class="bloque-doctrina-card">
-        <div class="bloque-doctrina-header">
-          <strong style="color: var(--accent-gold-dark);">Bloque ${idx + 1}</strong>
-          <div class="bloque-doctrina-acciones">
-            <button class="admin-link-btn" onclick="moverBloqueDoctrinaAdmin(${idx}, -1)" ${idx === 0 ? 'disabled style="opacity:0.4;"' : ''}>⬆ Subir</button>
-            <button class="admin-link-btn" onclick="moverBloqueDoctrinaAdmin(${idx}, 1)" ${idx === bloquesDoctrinaAdmin.length - 1 ? 'disabled style="opacity:0.4;"' : ''}>⬇ Bajar</button>
-            <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarBloqueDoctrinaAdmin(${idx})">🗑️ Eliminar</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label>Título:</label>
-          <input type="text" value="${(b.titulo || '').replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].titulo = this.value">
-        </div>
-        <div class="form-group">
-          <label>Subtítulo:</label>
-          <input type="text" value="${(b.subtitulo || '').replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].subtitulo = this.value">
-        </div>
-        <div class="form-group">
-          <label>Texto Doctrinal:</label>
-          <textarea rows="4" oninput="bloquesDoctrinaAdmin[${idx}].texto = this.value">${b.texto || ''}</textarea>
-        </div>
-      </div>
-    `;
-  });
-}
-
-function moverBloqueDoctrinaAdmin(idx, direccion) {
-  const nuevoIdx = idx + direccion;
-  if (nuevoIdx < 0 || nuevoIdx >= bloquesDoctrinaAdmin.length) return;
-  const temp = bloquesDoctrinaAdmin[idx];
-  bloquesDoctrinaAdmin[idx] = bloquesDoctrinaAdmin[nuevoIdx];
-  bloquesDoctrinaAdmin[nuevoIdx] = temp;
-  renderizarFormularioDoctrinaAdmin();
-}
-
-function agregarBloqueDoctrinaAdmin() {
-  bloquesDoctrinaAdmin.push({
-    titulo: `${bloquesDoctrinaAdmin.length + 1}. Nuevo Título`,
-    subtitulo: "Subtítulo descriptivo",
-    texto: "Ingrese aquí el contenido doctrinal correspondiente."
-  });
-  renderizarFormularioDoctrinaAdmin();
-}
-
-function eliminarBloqueDoctrinaAdmin(idx) {
-  abrirModalConfirmacion(
-    "Eliminar Bloque Doctrinal",
-    "¿Está seguro de eliminar este bloque de 'Docencia para Maestros'?",
-    () => {
-      bloquesDoctrinaAdmin.splice(idx, 1);
-      renderizarFormularioDoctrinaAdmin();
-    }
-  );
-}
-
-async function guardarDoctrinaAdmin() {
-  const jsonStr = JSON.stringify(bloquesDoctrinaAdmin);
-  const { error } = await sbApp
-    .from('config_segura')
-    .upsert({ clave: 'doctrina_docencia_maestros', valor: jsonStr });
-
-  if (error) {
-    alert("Error al guardar doctrina: " + error.message);
-  } else {
-    alert("Contenidos de 'Docencia para Maestros' guardados exitosamente.");
-  }
-}
-
-/* ==========================================================================
-   MURO GENERAL SUPERADMIN: GESTIÓN CON MODALES EXCLUSIVOS
-   ========================================================================== */
-async function cargarMuroGeneralAdmin() {
-  const contenedor = document.getElementById('contenedorMuroGeneralAdmin');
-  contenedor.innerHTML = "<p class='td-loading'>Consultando todas las reflexiones...</p>";
-
-  const d = new Date();
-  document.getElementById('muroAdminFechaEmision').innerText = `EMISIÓN: ${d.toLocaleDateString('es-CL')} ${d.toLocaleTimeString('es-CL')}`;
-
-  const { data: aportes, error } = await sbApp
-    .from('progreso_maestro')
-    .select('id, reflexion, completado_en, modulo_id, usuarios(nombre), modulos(numero_orden, titulo)')
-    .eq('completado', true)
-    .not('reflexion', 'is', null)
-    .order('completado_en', { ascending: false });
-
-  contenedor.innerHTML = "";
-
-  if (error || !aportes || aportes.length === 0) {
-    contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay reflexiones consagradas en la Cámara.</p>";
-    return;
-  }
-
-  const grupos = {};
-  aportes.forEach(a => {
-    const modKey = `Trabajo ${a.modulos?.numero_orden || '?'}: ${a.modulos?.titulo || 'Sin título'}`;
-    if (!grupos[modKey]) grupos[modKey] = [];
-    grupos[modKey].push(a);
-  });
-
-  for (const [tituloModulo, items] of Object.entries(grupos)) {
-    let itemsHtml = items.map(it => {
-      const fechaCons = it.completado_en 
-        ? new Date(it.completado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        : "";
-      return `
-        <div class="reflexion-item" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 12px; border-left: 3px solid var(--accent-gold); padding: 14px; border-radius: 4px;">
-          <div style="flex: 1;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-              <span class="reflexion-autor">${it.usuarios?.nombre || "Hermano"}</span>
-              <span style="font-size: 0.75rem; color: var(--text-muted);">${fechaCons}</span>
-            </div>
-            <div style="font-size: 0.95rem; font-style: italic;">"${it.reflexion}"</div>
-          </div>
-          <div style="display: flex; gap: 6px;" class="no-print">
-            <button class="admin-link-btn" onclick="abrirModalEditarReflexionAdmin('${it.id}', '${encodeURIComponent(it.reflexion)}')">✏️</button>
-            <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarReflexionSuperadmin('${it.id}')">🗑️</button>
-          </div>
-        </div>
-      `;
-    }).join('');
-
-    contenedor.innerHTML += `
-      <div style="margin-bottom: 24px;">
-        <h3 class="muro-trabajo-titulo" style="font-size: 1.15rem; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
-          ${tituloModulo}
-        </h3>
-        ${itemsHtml}
-      </div>
-    `;
-  }
-}
-
-function abrirModalEditarReflexionAdmin(progresoId, textoCodificado) {
-  const textoDecodificado = decodeURIComponent(textoCodificado);
-  document.getElementById('editReflexionProgresoId').value = progresoId;
-  document.getElementById('textareaEditarReflexionAdmin').value = textoDecodificado;
-  document.getElementById('modalEditarReflexionAdmin').classList.remove('hidden');
-}
-
-async function guardarEdicionReflexionModalAdmin() {
-  const progresoId = document.getElementById('editReflexionProgresoId').value;
-  const nuevoTexto = document.getElementById('textareaEditarReflexionAdmin').value.trim();
-
-  if (!nuevoTexto) {
-    alert("El texto de la reflexión no puede quedar vacío.");
-    return;
-  }
-
-  const { error } = await sbApp
-    .from('progreso_maestro')
-    .update({ reflexion: nuevoTexto })
-    .eq('id', progresoId);
-
-  if (error) {
-    alert("Error al actualizar reflexión: " + error.message);
-  } else {
-    cerrarModalUniversalDirecto('modalEditarReflexionAdmin');
-    cargarMuroGeneralAdmin();
-  }
-}
-
-function eliminarReflexionSuperadmin(progresoId) {
-  abrirModalConfirmacion(
-    "Eliminar Reflexión",
-    "¿Está seguro de eliminar esta reflexión? El estado del Hermano cambiará a pendiente para permitirle consagrar un nuevo aporte.",
-    async () => {
-      const { error } = await sbApp
-        .from('progreso_maestro')
-        .update({ reflexion: "", completado: false })
-        .eq('id', progresoId);
-
-      if (error) alert("Error al eliminar: " + error.message);
-      else cargarMuroGeneralAdmin();
-    }
-  );
-}
-
-function imprimirMuroGeneralPDF() {
-  const original = document.getElementById('documentoMuroGeneralImprimible');
-
-  const ventanaPrint = window.open('', '_blank', 'width=850,height=1100');
-  ventanaPrint.document.write(`
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8">
-      <title>Recopilacion_Muro_Docencia_OFL146</title>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-      <style>
-        @page { size: letter portrait; margin: 12mm 15mm; }
-        body { margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; color: #1A202C; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .informe-header-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .informe-brand p { font-size: 8.5pt; line-height: 1.35; margin: 0; font-weight: 700; color: #152433; }
-        .img-emblema-discreto { height: 50px; object-fit: contain; }
-        .informe-meta-header { text-align: right; font-size: 8pt; color: #718096; }
-        .informe-hr { border: 0; height: 2px; background: #152433; margin: 8px 0 14px 0; }
-        .reflexion-item { margin-bottom: 10px; padding: 10px 14px; border-left: 3px solid #997839; background: #F8F9FA; border-radius: 3px; }
-        .reflexion-autor { font-weight: 700; font-size: 8.5pt; color: #785C25; }
-        .no-print { display: none !important; }
-        h3 { font-size: 10.5pt; color: #152433; margin: 14px 0 6px 0; border-bottom: 1px solid #CBD5E0; padding-bottom: 3px; }
-      </style>
-    </head>
-    <body>
-      ${original.innerHTML}
-      <script>
-        window.onload = function() {
-          const noprint = document.querySelectorAll('.no-print');
-          noprint.forEach(el => el.style.display = 'none');
-          window.print();
-          setTimeout(() => window.close(), 1000);
-        };
-      <\/script>
-    </body>
-    </html>
-  `);
-  ventanaPrint.document.close();
-}
-
-async function exportarRespaldoCompletoJSON() {
-  const { data: mods } = await sbApp.from('modulos').select('*');
-  const { data: progs } = await sbApp.from('progreso_maestro').select('*');
-  const { data: usrs } = await sbApp.from('usuarios').select('id, nombre, email, es_admin');
-
-  const respaldo = {
-    fecha: new Date().toISOString(),
-    modulos: mods,
-    usuarios: usrs,
-    progresos: progs
-  };
-
-  const blob = new Blob([JSON.stringify(respaldo, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `backup_docencia_camara_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-}
-
-function formatearAutorMasonico(nombreCrudo) {
-  if (!nombreCrudo) return 'Cámara de Docencia';
-  let nombreLimpio = nombreCrudo.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-  return `Q.·.H.·. ${nombreLimpio}`;
-}
-
-/* ==========================================================================
-   INICIALIZACIÓN AL CARGAR EL DOM
-   ========================================================================== */
-document.addEventListener("DOMContentLoaded", () => {
-  inicializarLuminosidad();
-  recuperarSesionGuardada();
-});
+        .from
