@@ -947,6 +947,16 @@ body.theme-nocturno .metricas-table th { background: #1C2733; color: var(--accen
 .metricas-table td { padding: 12px 14px; border-bottom: 1px solid var(--border-color); }
 .metricas-table tr:hover { background: rgba(153,120,57,0.06); }
 
+/* CONTRASTE DE NOMBRES DE HERMANOS EN MATRIZ DE AVANCE (MODO NOCTURNO) */
+.metricas-table td a,
+body.theme-nocturno .metricas-table td a[style*="var(--primary)"] {
+  color: #FFFFFF !important;
+  text-decoration: underline;
+}
+body:not(.theme-nocturno) .metricas-table td a {
+  color: var(--primary) !important;
+}
+
 .admin-grid { display: grid; grid-template-columns: 140px 1.4fr 1.2fr; gap: 16px; }
 @media (max-width: 768px) { .admin-grid { grid-template-columns: 1fr; } }
 
