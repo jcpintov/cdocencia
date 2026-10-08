@@ -28,6 +28,7 @@
     </div>
     
     <div class="header-controls">
+      <button class="icon-btn hidden" onclick="abrirModalCambioClaveUsuario()" id="btnCambiarMiClave" title="Cambiar mi Contraseña">🔑</button>
       <button class="icon-btn" onclick="alternarTemaLuminosidad()" id="btnTema" title="Cambiar Luminosidad">☀️</button>
       <button class="font-btn" onclick="cambiarTamanoFuente(1)" title="Aumentar letra">A+</button>
       <button class="font-btn" onclick="cambiarTamanoFuente(-1)" title="Disminuir letra">A-</button>
@@ -85,8 +86,8 @@
         🔒 Definición de Contraseña Personal
       </h3>
       <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
-        Para garantizar que nadie suplante su identidad en los aportes y evaluaciones, debe definir su contraseña personal.
-        <br><strong>Requisito de seguridad:</strong> Mínimo 7 caracteres en total (al menos 6 caracteres normales y al menos 1 símbolo especial como <em>! @ # $ % * ?</em>).
+        Para garantizar la identidad personal en los aportes y evaluaciones, debe definir su contraseña.
+        <br><strong>Requisito:</strong> Mínimo 7 caracteres en total (al menos 6 caracteres normales y al menos 1 símbolo especial como <em>! @ # $ % * ?</em>).
       </p>
 
       <div class="form-group">
@@ -104,6 +105,55 @@
       <button class="btn-primary" onclick="guardarNuevaClaveObligatoria()">
         💾 Guardar Contraseña y Continuar
       </button>
+    </div>
+  </div>
+
+  <!-- MODAL CAMBIO DE CONTRASEÑA PROPIA VOLUNTARIO -->
+  <div id="modalCambiarMiClave" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalCambiarMiClave')">
+    <div class="modal-content" style="max-width: 460px; text-align: left;">
+      <h3 style="color: var(--accent-gold); margin-bottom: 8px;">🔑 Cambiar mi Contraseña</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Mínimo 6 caracteres normales y al menos 1 símbolo especial.</p>
+      
+      <div class="form-group">
+        <label for="inputMiClaveNueva">Nueva Contraseña:</label>
+        <input type="text" id="inputMiClaveNueva" placeholder="Ej: MiPaso#2026">
+      </div>
+      
+      <div style="margin-bottom: 12px;">
+        <button class="btn-secondary" style="font-size: 0.8rem;" onclick="autogenerarEnInputMiClave()">🎲 Generar Clave Segura</button>
+      </div>
+      
+      <p id="errorMiCambioClave" class="error-msg" style="text-align: left; margin-bottom: 10px;"></p>
+      
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalCambiarMiClave')">Cancelar</button>
+        <button class="btn-primary" style="width: auto;" onclick="guardarMiNuevaClave()">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SUPERADMIN PARA GESTIONAR CONTRASEÑA DE UN HERMANO -->
+  <div id="modalAdminClaveHermano" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAdminClaveHermano')">
+    <div class="modal-content" style="max-width: 480px; text-align: left;">
+      <h3 style="color: var(--accent-gold); margin-bottom: 8px;">🔑 Gestionar Contraseña de Hermano</h3>
+      <p style="font-size: 0.9rem; margin-bottom: 14px;">Hermano: <strong id="adminHermanoNombreSpan"></strong></p>
+      <input type="hidden" id="adminTargetHermanoId">
+
+      <div class="form-group">
+        <label for="inputAdminClaveHermano">Nueva Contraseña Asignada:</label>
+        <input type="text" id="inputAdminClaveHermano" placeholder="Ej: Maestro#2026">
+      </div>
+
+      <div style="margin-bottom: 12px;">
+        <button class="btn-secondary" style="font-size: 0.8rem;" onclick="autogenerarAdminClaveHermano()">🎲 Generar y Copiar</button>
+      </div>
+
+      <p id="errorAdminClaveHermano" class="error-msg" style="text-align: left; margin-bottom: 10px;"></p>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalAdminClaveHermano')">Cancelar</button>
+        <button class="btn-primary" style="width: auto;" onclick="guardarAdminClaveHermano()">Asignar</button>
+      </div>
     </div>
   </div>
 
@@ -572,7 +622,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Matriz de Avance Docente</h2>
-            <p class="text-instruccion" style="margin: 0;">Supervisión por Hermano. Puede alterar parámetros (leído, fecha, reflexión) o emitir ficha.</p>
+            <p class="text-instruccion" style="margin: 0;">Supervisión por Hermano. Puede alterar parámetros, reasignar claves o emitir ficha.</p>
           </div>
           <div class="admin-header-actions">
             <label for="selectMetricasModulo">Trabajo:</label>
