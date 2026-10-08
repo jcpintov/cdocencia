@@ -5,7 +5,15 @@ if (window.pdfjsLib) {
 const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
 
-const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Inicialización forzando apikey y Authorization Bearer para evitar error 401
+const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  global: {
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`
+    }
+  }
+});
 
 let usuarioActual = null;
 let listaModulos = [];
@@ -122,9 +130,7 @@ async function iniciarSesion() {
   usuarioActual = data[0];
   sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
 
-  // Registrar auditoría de acceso e IP
   registrarIngresoAuditoria(usuarioActual);
-
   configurarEntornoUsuario();
 }
 
@@ -203,7 +209,7 @@ async function renderizarCatalogoTrabajos() {
 
   await refrescarProgresosUsuario();
 
-  // Controlar visibilidad del botón Muro y Foro en Home
+  // Controlar visibilidad del botón Muro y Foro en Home según avance
   const btnMuroHome = document.getElementById('btnMuroHome');
   const tieneCompletados = Object.values(misProgresos).some(p => p && p.completado === true);
   if (btnMuroHome) {
@@ -385,7 +391,7 @@ async function mostrarDocenciaParaMaestros() {
 }
 
 /* ==========================================================================
-   MURO Y FORO DE REFLEXIONES (DEDUPLICADO Y FORMULARIOS INDIVIDUALES)
+   MURO Y FORO DE REFLEXIONES (DEDUPLICACIÓN EXACTA Y FORMULARIOS INDIVIDUALES)
    ========================================================================== */
 async function mostrarMuroReflexionesUsuarios() {
   document.getElementById('seccionDocencia').classList.add('hidden');
@@ -412,7 +418,7 @@ async function mostrarMuroReflexionesUsuarios() {
     return;
   }
 
-  // Traer comentarios activos
+  // Traer comentarios activos y deduplicar por id
   let comentariosMap = {};
   const { data: comentariosData } = await sbApp
     .from('comentarios_muro')
@@ -664,9 +670,20 @@ function eliminarComentarioForo(comentarioId) {
     "Eliminar Comentario",
     "¿Está seguro de eliminar este comentario? Dejará de ser visible para los Hermanos, pero su huella original permanecerá auditada.",
     async () => {
-      const { error } = await sbApp.from('comentarios_muro').update({ activo: false }).eq('id', comentarioId);
-      if (error) alert("Error al eliminar: " + error.message);
-      else await mostrarMuroReflexionesUsuarios();
+      try {
+        const { error } = await sbApp
+          .from('comentarios_muro')
+          .update({ activo: false })
+          .eq('id', comentarioId);
+
+        if (error) {
+          alert("Error al eliminar: " + error.message);
+        } else {
+          await mostrarMuroReflexionesUsuarios();
+        }
+      } catch (err) {
+        alert("Error de conexión: " + err.message);
+      }
     }
   );
 }
@@ -927,7 +944,6 @@ function renderizarPreguntaActual() {
   const total = preguntas.length;
   const esPreguntaEtica = (indicePreguntaActiva === total - 1);
 
-  // Generar IDs únicos para inputs de radio y evitar warnings del navegador
   let opcionesHtml = p.opciones.map(op => {
     const inputId = `preg_opt_${indicePreguntaActiva}_${op.letra}`;
     return `
@@ -986,7 +1002,7 @@ async function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
 
   feedbackBox.style.display = "block";
 
-  const totalPreguntas = moduloActual.preguntas_json?.preguntas?.length || 8;
+  const totalPreguntas = moduloActual.preguntas_json?.preguntas || 8;
   if (indicePreguntaActiva < totalPreguntas - 1) {
     document.getElementById('btnSiguientePregunta').classList.remove('hidden');
   } else {
@@ -1163,7 +1179,6 @@ async function cargarMuroReflexiones() {
       });
     }
 
-    // Deduplicar reflexiones por usuario
     const usuariosVistos = new Set();
 
     data.forEach(item => {
