@@ -126,6 +126,21 @@ function generarClaveAleatoriaSegura() {
   return p;
 }
 
+function alternarVisibilidadClaveLogin() {
+  const input = document.getElementById('inputClave');
+  const btn = document.getElementById('btnToggleVerClave');
+  if (!input) return;
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.innerText = '🙈';
+    btn.title = 'Ocultar contraseña';
+  } else {
+    input.type = 'password';
+    btn.innerText = '👁️';
+    btn.title = 'Mostrar contraseña';
+  }
+}
+
 /* ==========================================================================
    AUTENTICACIÓN Y ENTORNO
    ========================================================================== */
@@ -281,6 +296,9 @@ function cerrarSesion() {
   document.getElementById('errorLogin').innerText = '';
   document.getElementById('inputEmail').value = '';
   document.getElementById('inputClave').value = '';
+  document.getElementById('inputClave').type = 'password';
+  const btnEye = document.getElementById('btnToggleVerClave');
+  if (btnEye) btnEye.innerText = '👁️';
 
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionBienvenida').classList.add('hidden');
@@ -292,15 +310,13 @@ function cerrarSesion() {
   document.getElementById('modalCambioClaveObligatorio').classList.add('hidden');
   document.getElementById('modalCambiarMiClave').classList.add('hidden');
   document.getElementById('modalAdminClaveHermano').classList.add('hidden');
+  document.getElementById('modalAdminUsuario').classList.add('hidden');
   document.getElementById('modalRecuperarClave').classList.add('hidden');
   document.getElementById('modalResetearConToken').classList.add('hidden');
   document.getElementById('modalMisAvances').classList.add('hidden');
   document.getElementById('modalCertificado').classList.add('hidden');
   document.getElementById('modalAuditoriaModulo').classList.add('hidden');
   document.getElementById('modalParametrosHermano').classList.add('hidden');
-  document.getElementById('modalEditarReflexionAdmin').classList.add('hidden');
-  document.getElementById('modalEditarComentarioForo').classList.add('hidden');
-  document.getElementById('modalAuditoriaComentario').classList.add('hidden');
   document.getElementById('modalConfirmarAccion').classList.add('hidden');
   document.getElementById('btnSalir').classList.add('hidden');
   document.getElementById('btnCambiarMiClave').classList.add('hidden');
@@ -353,12 +369,172 @@ async function guardarMiNuevaClave() {
 }
 
 /* ==========================================================================
-   SUPERADMIN: GESTIÓN DE CLAVES DE HERMANOS
+   SUPERADMIN: MÓDULO ADMINISTRAR USUARIOS
    ========================================================================== */
+async function cargarListadoUsuariosAdmin() {
+  const tbody = document.getElementById('tablaUsuariosAdminBody');
+  tbody.innerHTML = `<tr><td colspan="5" class="td-loading">Consultando padrón de usuarios...</td></tr>`;
+
+  const { data: usuarios, error } = await sbApp
+    .from('usuarios')
+    .select('id, nombre, email, es_admin, debe_cambiar_clave')
+    .order('nombre', { ascending: true });
+
+  tbody.innerHTML = '';
+
+  if (error || !usuarios || usuarios.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); font-style: italic;">No se encontraron usuarios registrados.</td></tr>`;
+    return;
+  }
+
+  usuarios.forEach(u => {
+    const rolHtml = u.es_admin
+      ? `<span style="background: rgba(153,120,57,0.15); color: var(--accent-gold-dark); font-weight: 700; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;">Superadmin</span>`
+      : `<span style="background: rgba(0,0,0,0.05); color: var(--text-main); padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;">Hermano</span>`;
+
+    const estadoClaveHtml = u.debe_cambiar_clave
+      ? `<span style="color: #B27B10; font-weight: 600; font-size: 0.82rem;">⚠️ Requiere cambio</span>`
+      : `<span style="color: var(--success); font-weight: 600; font-size: 0.82rem;">✓ Al día</span>`;
+
+    const nombreEscapado = (u.nombre || '').replace(/'/g, "\\'");
+    const emailEscapado = (u.email || '').replace(/'/g, "\\'");
+
+    tbody.innerHTML += `
+      <tr>
+        <td><strong>${u.nombre || "Hermano"}</strong></td>
+        <td style="font-family: monospace; font-size: 0.88rem;">${u.email}</td>
+        <td>${rolHtml}</td>
+        <td>${estadoClaveHtml}</td>
+        <td>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="admin-link-btn" onclick="abrirModalEditarUsuario('${u.id}', '${nombreEscapado}', '${emailEscapado}',${u.es_admin})">✏️ Editar</button>
+            <button class="admin-link-btn" style="color: var(--accent-gold-dark);" onclick="abrirModalAdminClaveHermano('${u.id}', '${nombreEscapado}')">🔑 Clave</button>
+            ${u.id !== usuarioActual.id ? `<button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="confirmarEliminarUsuario('${u.id}', '${nombreEscapado}')">🗑️ Eliminar</button>` : ''}
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+function abrirModalCrearUsuario() {
+  document.getElementById('modalAdminUsuarioTitulo').innerText = '👤 Nuevo Hermano en Padrón';
+  document.getElementById('adminUsuarioTargetId').value = '';
+  document.getElementById('adminUsuarioNombre').value = '';
+  document.getElementById('adminUsuarioEmail').value = '';
+  document.getElementById('adminUsuarioClave').value = 'OFL.146!';
+  document.getElementById('adminUsuarioEsAdmin').checked = false;
+  document.getElementById('grupoClaveCreacion').classList.remove('hidden');
+  document.getElementById('errorAdminUsuario').innerText = '';
+  document.getElementById('modalAdminUsuario').classList.remove('hidden');
+}
+
+function autogenerarClaveNuevoUsuario() {
+  const p = generarClaveAleatoriaSegura();
+  document.getElementById('adminUsuarioClave').value = p;
+  navigator.clipboard.writeText(p);
+  alert("Contraseña copiada al portapapeles: " + p);
+}
+
+function abrirModalEditarUsuario(id, nombre, email, esAdmin) {
+  document.getElementById('modalAdminUsuarioTitulo').innerText = '✏️ Editar Datos de Usuario';
+  document.getElementById('adminUsuarioTargetId').value = id;
+  document.getElementById('adminUsuarioNombre').value = nombre;
+  document.getElementById('adminUsuarioEmail').value = email;
+  document.getElementById('adminUsuarioEsAdmin').checked = (esAdmin === true || esAdmin === 'true');
+  document.getElementById('grupoClaveCreacion').classList.add('hidden');
+  document.getElementById('errorAdminUsuario').innerText = '';
+  document.getElementById('modalAdminUsuario').classList.remove('hidden');
+}
+
+async function guardarAdminUsuario() {
+  const targetId = document.getElementById('adminUsuarioTargetId').value;
+  const nombre = document.getElementById('adminUsuarioNombre').value.trim();
+  const email = document.getElementById('adminUsuarioEmail').value.trim().toLowerCase();
+  const esAdmin = document.getElementById('adminUsuarioEsAdmin').checked;
+  const err = document.getElementById('errorAdminUsuario');
+
+  if (!nombre || !email) {
+    err.innerText = "El nombre y el correo son obligatorios.";
+    return;
+  }
+
+  err.innerText = "Guardando...";
+
+  try {
+    if (!targetId) {
+      const clave = document.getElementById('adminUsuarioClave').value.trim();
+      const fallo = validarSeguridadClave(clave);
+      if (fallo) {
+        err.innerText = fallo;
+        return;
+      }
+
+      const { error } = await sbApp.rpc('admin_crear_usuario', {
+        p_admin_id: usuarioActual.id,
+        p_nombre: nombre,
+        p_email: email,
+        p_clave: clave,
+        p_es_admin: esAdmin
+      });
+
+      if (error) {
+        err.innerText = "Error: " + error.message;
+        return;
+      }
+      alert("Usuario incorporado exitosamente.");
+    } else {
+      const { error } = await sbApp.rpc('admin_editar_usuario', {
+        p_admin_id: usuarioActual.id,
+        p_target_id: targetId,
+        p_nombre: nombre,
+        p_email: email,
+        p_es_admin: esAdmin
+      });
+
+      if (error) {
+        err.innerText = "Error: " + error.message;
+        return;
+      }
+      alert("Usuario actualizado exitosamente.");
+    }
+
+    cerrarModalUniversalDirecto('modalAdminUsuario');
+    cargarListadoUsuariosAdmin();
+  } catch (ex) {
+    err.innerText = "Error: " + ex.message;
+  }
+}
+
+function confirmarEliminarUsuario(targetId, nombre) {
+  abrirModalConfirmacion(
+    "Eliminar Usuario del Padrón",
+    `¿Está seguro de eliminar al usuario "${nombre}"? Esta acción borrará permanentemente sus accesos y progresos registrados.`,
+    async () => {
+      try {
+        const { error } = await sbApp.rpc('admin_eliminar_usuario', {
+          p_admin_id: usuarioActual.id,
+          p_target_id: targetId
+        });
+
+        if (error) {
+          alert("Error al eliminar: " + error.message);
+        } else {
+          alert("Usuario eliminado correctamente.");
+          cargarListadoUsuariosAdmin();
+        }
+      } catch (ex) {
+        alert("Error de conexión: " + ex.message);
+      }
+    }
+  );
+}
+
 function abrirModalAdminClaveHermano(targetId, nombreHermano) {
   document.getElementById('adminTargetHermanoId').value = targetId;
   document.getElementById('adminHermanoNombreSpan').innerText = nombreHermano;
   document.getElementById('inputAdminClaveHermano').value = '';
+  document.getElementById('chkForzarCambioAdmin').checked = true;
   document.getElementById('errorAdminClaveHermano').innerText = '';
   document.getElementById('modalAdminClaveHermano').classList.remove('hidden');
 }
@@ -368,12 +544,13 @@ function autogenerarAdminClaveHermano() {
   const input = document.getElementById('inputAdminClaveHermano');
   input.value = p;
   navigator.clipboard.writeText(p);
-  alert("Contraseña generada y copiada al portapapeles: " + p);
+  alert("Contraseña copiada al portapapeles: " + p);
 }
 
 async function guardarAdminClaveHermano() {
   const targetId = document.getElementById('adminTargetHermanoId').value;
   const clave = document.getElementById('inputAdminClaveHermano').value.trim();
+  const forzar = document.getElementById('chkForzarCambioAdmin').checked;
   const err = document.getElementById('errorAdminClaveHermano');
 
   const fallo = validarSeguridadClave(clave);
@@ -385,9 +562,11 @@ async function guardarAdminClaveHermano() {
   err.innerText = "Actualizando...";
 
   try {
-    const { error } = await sbApp.rpc('cambiar_clave_usuario', {
-      p_usuario_id: targetId,
-      p_nueva_clave: clave
+    const { error } = await sbApp.rpc('admin_cambiar_clave', {
+      p_admin_id: usuarioActual.id,
+      p_target_id: targetId,
+      p_nueva_clave: clave,
+      p_forzar_cambio: forzar
     });
 
     if (error) {
@@ -395,6 +574,7 @@ async function guardarAdminClaveHermano() {
     } else {
       alert("Contraseña asignada con éxito al Hermano.");
       cerrarModalUniversalDirecto('modalAdminClaveHermano');
+      cargarListadoUsuariosAdmin();
     }
   } catch (ex) {
     err.innerText = "Error: " + ex.message;
@@ -778,7 +958,7 @@ async function mostrarMuroReflexionesUsuarios() {
             botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido)}')">✏️ Editar</button>`;
           }
           if (usuarioActual.es_admin) {
-            botonesComentario += `<button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${(c.usuarios?.nombre || '').replace(/'/g, "\\'")}', '${cFecha}')">🔍 Huella</button>`;
+            botonesComentario += `<button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${(c.usuarios?.nombre \vert{}\vert{} '').replace(/'/g, "\\'")}', '${cFecha}')">🔍 Huella</button>`;
             botonesComentario += `<button class="foro-comentario-btn" style="color: var(--error);" onclick="eliminarComentarioForo('${c.id}')">🗑️</button>`;
           }
 
@@ -788,8 +968,7 @@ async function mostrarMuroReflexionesUsuarios() {
                 <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
                 <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
               </div>
-              <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>
-              ${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
+              <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
             </div>
           `;
         }).join('');
@@ -837,7 +1016,7 @@ async function mostrarMuroReflexionesUsuarios() {
   });
 
   if (modulosPendientesUsuario.length > 0) {
-    let pendientesListado = modulosPendientesUsuario.map(m => `Trabajo ${m.numero_orden}: ${m.titulo}`).join(' • ');
+    let pendientesListado = modulosPendientesUsuario.map(m => `Trabajo ${m.numero_orden}:${m.titulo}`).join(' • ');
     cont.innerHTML += `
       <div style="margin-top: 30px; background: rgba(0,0,0,0.03); border: 1px dashed var(--border-color); padding: 18px; border-radius: 6px; font-family: var(--font-ui); font-size: 0.88rem; color: var(--text-muted);">
         <strong>🔒 Trabajos con aportes en reserva docente hasta su completación:</strong><br>
@@ -848,7 +1027,7 @@ async function mostrarMuroReflexionesUsuarios() {
 }
 
 /* ==========================================================================
-   GESTIÓN DE COMENTARIOS DEL FORO (HILOS, EDICIÓN Y AUDITORÍA INMUTABLE)
+   GESTIÓN DE COMENTARIOS DEL FORO
    ========================================================================== */
 function toggleFormularioComentario(progresoId) {
   const caja = document.getElementById(`caja_comentario_${progresoId}`);
@@ -950,7 +1129,7 @@ async function guardarEdicionComentarioModal() {
 
 function abrirAuditoriaComentario(comentarioId, textoOriginalCodificado, autor, fecha) {
   const textoOriginal = decodeURIComponent(textoOriginalCodificado);
-  document.getElementById('auditoriaComentarioMeta').innerText = `Autor: ${autor} | Emisión: ${fecha}`;
+  document.getElementById('auditoriaComentarioMeta').innerText = `Autor: ${autor} \vert{} Emisión: ${fecha}`;
   document.getElementById('auditoriaTextoOriginal').innerText = textoOriginal;
   document.getElementById('modalAuditoriaComentario').classList.remove('hidden');
 }
@@ -1047,8 +1226,7 @@ function renderizarSidebar() {
     contenedor.innerHTML += `
       <div class="modulo-nav-item" id="nav_mod_${m.id}" onclick="seleccionarModulo('${m.id}')">
         <div class="nav-item-header">
-          <span class="nav-item-num">Trabajo ${m.numero_orden}</span>
-          ${badgeHtml}
+          <span class="nav-item-num">Trabajo ${m.numero_orden}</span>${badgeHtml}
         </div>
         <div class="nav-item-title">${m.titulo}</div>
       </div>
@@ -1254,22 +1432,21 @@ function renderizarPreguntaActual() {
     return `
       <label class="opcion-label" id="label_paso_${op.letra}" for="${inputId}" onclick="evaluarRespuestaPasoAPaso('${op.letra}', '${p.respuesta_correcta}')">
         <input type="radio" id="${inputId}" name="preg_paso_radio_${indicePreguntaActiva}" value="${op.letra}">
-        <span><strong>${op.letra})</strong> ${op.texto}</span>
+        <span><strong>${op.letra})</strong>${op.texto}</span>
       </label>
     `;
   }).join('');
 
   const etiquetaPregunta = esPreguntaEtica 
     ? `Pregunta 8 de ${total} — Dilema e Interrogante Ética`
-    : `Pregunta ${indicePreguntaActiva + 1} de ${total}`;
+    : `Pregunta ${indicePreguntaActiva + 1} de${total}`;
 
   cont.innerHTML = `
     <div class="pregunta-paso-card" style="${esPreguntaEtica ? 'border-left-color: var(--accent-gold); background: rgba(153,120,57,0.06);' : ''}">
       <p style="font-size: 0.85rem; font-weight: 700; color: var(--accent-gold-dark); text-transform: uppercase; margin-bottom: 6px;">
         ${etiquetaPregunta}
       </p>
-      <p style="font-weight: 600; margin-bottom: 14px;">${p.enunciado}</p>
-      ${opcionesHtml}
+      <p style="font-weight: 600; margin-bottom: 14px;">${p.enunciado}</p>${opcionesHtml}
       <div class="feedback-box" id="feedback_paso_box">
         <div style="font-weight: 700; margin-bottom: 6px;" id="feedback_paso_titulo"></div>
         <div id="feedback_paso_texto">${p.retroalimentacion}</div>
@@ -1302,7 +1479,7 @@ async function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
   } else {
     labelSeleccionado.classList.add('opcion-erronea');
     labelCorrecto?.classList.add('opcion-correcta');
-    feedbackTitulo.innerHTML = `<span style="color: var(--error);">✗ Seleccionada: ${letraSeleccionada}</span> | Correcta: <strong>${letraCorrecta}</strong>`;
+    feedbackTitulo.innerHTML = `<span style="color: var(--error);">✗ Seleccionada: ${letraSeleccionada}</span> \vert{} Correcta: <strong>${letraCorrecta}</strong>`;
   }
 
   feedbackBox.style.display = "block";
@@ -1504,7 +1681,7 @@ async function cargarMuroReflexiones() {
           botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido)}')">✏️ Editar</button>`;
         }
         if (usuarioActual.es_admin) {
-          botonesComentario += `<button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${(c.usuarios?.nombre || '').replace(/'/g, "\\'")}', '${cFecha}')">🔍 Huella</button>`;
+          botonesComentario += `<button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${(c.usuarios?.nombre \vert{}\vert{} '').replace(/'/g, "\\'")}', '${cFecha}')">🔍 Huella</button>`;
           botonesComentario += `<button class="foro-comentario-btn" style="color: var(--error);" onclick="eliminarComentarioForo('${c.id}')">🗑️</button>`;
         }
 
@@ -1514,8 +1691,7 @@ async function cargarMuroReflexiones() {
               <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
               <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
             </div>
-            <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>
-            ${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
+            <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
           </div>
         `;
       }).join('');
@@ -1583,13 +1759,13 @@ async function abrirModalMisAvances(usuarioObjetivoId = null) {
   const pctLectura = Math.round((totalLeidos / totalModulos) * 100);
 
   const d = new Date();
-  document.getElementById('informeFechaHoraEmision').innerText = `EMISIÓN: ${d.toLocaleDateString('es-CL')} ${d.toLocaleTimeString('es-CL')}`;
+  document.getElementById('informeFechaHoraEmision').innerText = `EMISIÓN: ${d.toLocaleDateString('es-CL')}${d.toLocaleTimeString('es-CL')}`;
   
   const nombreLimpio = usuarioData.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
   document.getElementById('informeNombreHermano').innerText = nombreLimpio;
 
   document.getElementById('kpiLecturaPct').innerText = `${pctLectura}%`;
-  document.getElementById('kpiExamenesAprob').innerText = `${totalCompletados} / ${totalModulos}`;
+  document.getElementById('kpiExamenesAprob').innerText = `${totalCompletados} /${totalModulos}`;
   document.getElementById('kpiAportesConsag').innerText = `${totalCompletados}`;
 
   const tablaCuerpo = document.getElementById('informeDetalleCuerpo');
@@ -1606,7 +1782,7 @@ async function abrirModalMisAvances(usuarioObjetivoId = null) {
 
     tablaCuerpo.innerHTML += `
       <tr>
-        <td><strong>Trabajo ${m.numero_orden}:</strong> ${m.titulo}</td>
+        <td><strong>Trabajo ${m.numero_orden}:</strong>${m.titulo}</td>
         <td>${leidoTxt}</td>
         <td>${examenTxt}</td>
         <td style="font-size: 0.8rem;">${reflexTxt}</td>
@@ -1684,7 +1860,7 @@ function imprimirInformeAvanceNativo() {
 }
 
 /* ==========================================================================
-   CERTIFICADO OFICIAL A4: SIMETRÍA Y EXPORTACIÓN VECTORIAL
+   CERTIFICADO OFICIAL A4
    ========================================================================== */
 async function abrirModalCertificado(moduloId = null, usuarioId = null) {
   const modTarget = moduloId ? listaModulos.find(m => m.id === moduloId) : moduloActual;
@@ -1747,7 +1923,7 @@ document.addEventListener('keydown', (e) => {
       return;
     }
 
-    ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano', 'modalEditarReflexionAdmin', 'modalEditarComentarioForo', 'modalAuditoriaComentario', 'modalConfirmarAccion', 'modalRecuperarClave', 'modalCambiarMiClave', 'modalAdminClaveHermano'].forEach(id => {
+    ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano', 'modalEditarReflexionAdmin', 'modalEditarComentarioForo', 'modalAuditoriaComentario', 'modalConfirmarAccion', 'modalRecuperarClave', 'modalCambiarMiClave', 'modalAdminClaveHermano', 'modalAdminUsuario'].forEach(id => {
       const el = document.getElementById(id);
       if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
     });
@@ -1791,67 +1967,71 @@ async function cargarDatosAdmin() {
   listaModulos = mods || [];
   
   const selectMetricas = document.getElementById('selectMetricasModulo');
-  selectMetricas.innerHTML = "";
+  if (selectMetricas) {
+    selectMetricas.innerHTML = "";
+    listaModulos.forEach(m => {
+      selectMetricas.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}:${m.titulo}</option>`;
+    });
+  }
   
   const selectPresencialMod = document.getElementById('selectOrigenTrabajoPresencial');
   if (selectPresencialMod) {
     selectPresencialMod.innerHTML = `<option value="aleatorio">🎲 Todos los Trabajos (Aleatorio)</option>`;
+    listaModulos.forEach(m => {
+      selectPresencialMod.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}:${m.titulo}</option>`;
+    });
   }
 
   const selectAdjunto = document.getElementById('selectModuloParaArchivo');
   if (selectAdjunto) {
     selectAdjunto.innerHTML = "";
+    listaModulos.forEach(m => {
+      selectAdjunto.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}:${m.titulo}</option>`;
+    });
+    if (listaModulos.length > 0) {
+      verificarEstadoArchivoModulo(selectAdjunto.value || listaModulos[0].id);
+    }
   }
 
-  listaModulos.forEach(m => {
-    selectMetricas.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
-    if (selectPresencialMod) {
-      selectPresencialMod.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
-    }
-    if (selectAdjunto) {
-      selectAdjunto.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
-    }
-  });
-
-  if (selectAdjunto && listaModulos.length > 0) {
-    verificarEstadoArchivoModulo(selectAdjunto.value || listaModulos[0].id);
-  }
-
-  cambiarSubseccionAdmin('cargar');
+  cambiarSubseccionAdmin('usuarios');
 }
 
 function cambiarSubseccionAdmin(seccion) {
-  const btns = ['tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
-  const secs = ['adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
+  const btns = ['tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
+  const secs = ['adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
 
   btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
 
-  if (seccion === 'cargar') {
-    document.getElementById('tabNavCargar').classList.add('active');
-    document.getElementById('adminSeccionCarga').classList.remove('hidden');
+  if (seccion === 'usuarios') {
+    document.getElementById('tabNavUsuarios')?.classList.add('active');
+    document.getElementById('adminSeccionUsuarios')?.classList.remove('hidden');
+    cargarListadoUsuariosAdmin();
+  } else if (seccion === 'cargar') {
+    document.getElementById('tabNavCargar')?.classList.add('active');
+    document.getElementById('adminSeccionCarga')?.classList.remove('hidden');
   } else if (seccion === 'gestion_trabajos') {
-    document.getElementById('tabNavGestionTrabajos').classList.add('active');
-    document.getElementById('adminSeccionGestionTrabajos').classList.remove('hidden');
+    document.getElementById('tabNavGestionTrabajos')?.classList.add('active');
+    document.getElementById('adminSeccionGestionTrabajos')?.classList.remove('hidden');
     cargarGestionTrabajosAdmin();
   } else if (seccion === 'presencial') {
-    document.getElementById('tabNavPresencial').classList.add('active');
-    document.getElementById('adminSeccionPresencial').classList.remove('hidden');
+    document.getElementById('tabNavPresencial')?.classList.add('active');
+    document.getElementById('adminSeccionPresencial')?.classList.remove('hidden');
   } else if (seccion === 'muro_general') {
-    document.getElementById('tabNavMuroGeneral').classList.add('active');
-    document.getElementById('adminSeccionMuroGeneral').classList.remove('hidden');
+    document.getElementById('tabNavMuroGeneral')?.classList.add('active');
+    document.getElementById('adminSeccionMuroGeneral')?.classList.remove('hidden');
     cargarMuroGeneralAdmin();
   } else if (seccion === 'editor_doctrina') {
-    document.getElementById('tabNavEditorDoctrina').classList.add('active');
-    document.getElementById('adminSeccionEditorDoctrina').classList.remove('hidden');
+    document.getElementById('tabNavEditorDoctrina')?.classList.add('active');
+    document.getElementById('adminSeccionEditorDoctrina')?.classList.remove('hidden');
     cargarEditorDoctrinaAdmin();
   } else if (seccion === 'accesos') {
-    document.getElementById('tabNavAccesos').classList.add('active');
-    document.getElementById('adminSeccionAccesos').classList.remove('hidden');
+    document.getElementById('tabNavAccesos')?.classList.add('active');
+    document.getElementById('adminSeccionAccesos')?.classList.remove('hidden');
     cargarBitacoraAccesos();
   } else {
-    document.getElementById('tabNavMetricas').classList.add('active');
-    document.getElementById('adminSeccionMetricas').classList.remove('hidden');
+    document.getElementById('tabNavMetricas')?.classList.add('active');
+    document.getElementById('adminSeccionMetricas')?.classList.remove('hidden');
     if (listaModulos.length > 0) {
       const select = document.getElementById('selectMetricasModulo');
       cargarMetricasAvance(select.value || listaModulos[0].id);
@@ -1860,7 +2040,7 @@ function cambiarSubseccionAdmin(seccion) {
 }
 
 /* ==========================================================================
-   ASOCIACIÓN DIRECTA DE ARCHIVO ORIGINAL (PDF / DOCX) EN SUPERADMIN
+   ASOCIACIÓN DIRECTA DE ARCHIVO ORIGINAL
    ========================================================================== */
 function verificarEstadoArchivoModulo(moduloId) {
   const m = listaModulos.find(mod => mod.id === moduloId);
@@ -1935,7 +2115,7 @@ async function guardarArchivoOriginalEnBD() {
 }
 
 /* ==========================================================================
-   BITÁCORA DE ACCESOS E HISTORIAL POR FECHA
+   BITÁCORA DE ACCESOS
    ========================================================================== */
 async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   const tbody = document.getElementById('tablaAccesosBody');
@@ -1988,7 +2168,7 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
 }
 
 /* ==========================================================================
-   CÁMARA INTERACTIVA PRESENCIAL: GRUPOS, DILEMAS, TABLERO Y GUÍA DOCTRINAL
+   CÁMARA INTERACTIVA PRESENCIAL
    ========================================================================== */
 async function generarDinamicaPresencial() {
   const numMesas = parseInt(document.getElementById('numMesasPresencial').value) || 4;
@@ -2019,9 +2199,9 @@ async function generarDinamicaPresencial() {
       const p8 = pregs[7];
       const opcionCorrectaObj = p8.opciones?.find(o => o.letra === p8.respuesta_correcta);
       dilemasDisponibles.push({
-        origen: `Trabajo N° ${m.numero_orden}: ${m.titulo}`,
+        origen: `Trabajo N° ${m.numero_orden}:${m.titulo}`,
         enunciado: p8.enunciado,
-        opcionCorrecta: opcionCorrectaObj ? `${p8.respuesta_correcta}) ${opcionCorrectaObj.texto}` : p8.respuesta_correcta,
+        opcionCorrecta: opcionCorrectaObj ? `${p8.respuesta_correcta})${opcionCorrectaObj.texto}` : p8.respuesta_correcta,
         retro: p8.retroalimentacion || "Criterio ético para el análisis del caso."
       });
     }
@@ -2035,7 +2215,7 @@ async function generarDinamicaPresencial() {
   if (tipoDinamica === "1") {
     tituloDinamica = "⚖️ Dinámica 1: El Tribunal de la Conciencia y los Dos Defensores";
     const d = dilemasDisponibles[Math.floor(Math.random() * dilemasDisponibles.length)] || {
-      origen: moduloRef ? `Trabajo N° ${moduloRef.numero_orden}: ${moduloRef.titulo}` : "Docencia del Grado",
+      origen: moduloRef ? `Trabajo N° ${moduloRef.numero_orden}:${moduloRef.titulo}` : "Docencia del Grado",
       enunciado: "Un Hermano solicita apoyo financiero urgente para un negocio riesgoso invocando el secreto del grado.",
       opcionCorrecta: "Preservar el bienestar familiar y brindar apoyo técnico sin comprometer la subsistencia del hogar.",
       retro: "La solidaridad no debe vulnerar la prudencia ni los deberes con la familia y la ley moral."
@@ -2134,9 +2314,7 @@ async function generarDinamicaPresencial() {
 
 function togglePautaModerador() {
   const p = document.getElementById('cuerpoPautaModerador');
-  if (p) {
-    p.classList.toggle('hidden');
-  }
+  if (p) p.classList.toggle('hidden');
 }
 
 function renderizarTableroMesasPresencial() {
@@ -2178,7 +2356,7 @@ function modificarPuntosMesa(mesaId, delta) {
 }
 
 /* ==========================================================================
-   GESTIÓN DIRECTA DE TRABAJOS (BOTONES ALINEADOS A LA DERECHA)
+   GESTIÓN DIRECTA DE TRABAJOS
    ========================================================================== */
 async function cargarGestionTrabajosAdmin() {
   const cont = document.getElementById('listaGestionTrabajosAdmin');
@@ -2367,471 +2545,8 @@ function eliminarModuloYReordenar(moduloId) {
 }
 
 /* ==========================================================================
-   MATRIZ DE AVANCE Y GESTIÓN DE PARÁMETROS Y CLAVES (SUPERADMIN)
+   MATRIZ DE AVANCE
    ========================================================================== */
 async function cargarMetricasAvance(moduloId) {
   const tbody = document.getElementById('tablaMetricasBody');
-  tbody.innerHTML = `<tr><td colspan="6" class="td-loading">Consultando registros...</td></tr>`;
-
-  const { data: usuarios } = await sbApp
-    .from('usuarios')
-    .select('id, nombre, es_admin')
-    .order('nombre', { ascending: true });
-
-  const { data: progresos } = await sbApp
-    .from('progreso_maestro')
-    .select('*')
-    .eq('modulo_id', moduloId);
-
-  const mapProg = {};
-  if (progresos) progresos.forEach(p => { mapProg[p.usuario_id] = p; });
-
-  tbody.innerHTML = "";
-
-  usuarios.forEach(u => {
-    if (u.es_admin) return;
-
-    const prog = mapProg[u.id];
-
-    const leidoHtml = prog && prog.leido
-      ? `<span style="color: var(--success); font-weight: 600;">✓ Sí leyó</span>`
-      : `<span style="color: var(--text-muted);">— Pendiente</span>`;
-
-    let evalHtml = `<span style="color: var(--text-muted);">Sin intentos</span>`;
-    if (prog) {
-      const resp = prog.respuestas_evaluacion ? Object.keys(prog.respuestas_evaluacion).length : (prog.intentos_preguntas || 0);
-      if (resp >= 8) evalHtml = `<span style="color: var(--success); font-weight: 600;">✓ 8/8 Finalizado</span>`;
-      else if (resp > 0) evalHtml = `<span style="color: #B27B10; font-weight: 600;">En curso (${resp}/8)</span>`;
-    }
-
-    let reflexHtml = `<span style="color: var(--text-muted);">Pendiente</span>`;
-    let fechaHtml = `<span style="color: var(--text-muted);">—</span>`;
-
-    if (prog && prog.completado) {
-      reflexHtml = `<span style="color: var(--success); font-weight: 700;">✓ Consagrado</span>`;
-      if (prog.completado_en) {
-        const d = new Date(prog.completado_en);
-        fechaHtml = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-      }
-    }
-
-    const nombreEscapado = (u.nombre || '').replace(/'/g, "\\'");
-
-    tbody.innerHTML += `
-      <tr>
-        <td>
-          <a href="javascript:void(0)" onclick="abrirModalMisAvances('${u.id}')" style="color: var(--primary); font-weight: 700; text-decoration: underline;">
-            ${u.nombre || "Hermano"}
-          </a>
-        </td>
-        <td>${leidoHtml}</td>
-        <td>${evalHtml}</td>
-        <td>${reflexHtml}</td>
-        <td>${fechaHtml}</td>
-        <td>
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button class="admin-link-btn" onclick="abrirEditorParametrosHermano('${u.id}', '${moduloId}', '${nombreEscapado}')">⚙️ Parámetros</button>
-            <button class="admin-link-btn" style="color: var(--accent-gold-dark);" onclick="abrirModalAdminClaveHermano('${u.id}', '${nombreEscapado}')">🔑 Clave</button>
-            <button class="admin-link-btn" onclick="abrirModalMisAvances('${u.id}')">📄 Ficha</button>
-          </div>
-        </td>
-      </tr>
-    `;
-  });
-}
-
-function recargarMetricasActuales() {
-  const select = document.getElementById('selectMetricasModulo');
-  if (select && select.value) cargarMetricasAvance(select.value);
-}
-
-async function abrirEditorParametrosHermano(usuarioId, moduloId, nombreHermano) {
-  document.getElementById('subParamHermano').innerText = `Hermano: ${nombreHermano}`;
-  document.getElementById('paramUsuarioId').value = usuarioId;
-  document.getElementById('paramModuloId').value = moduloId;
-
-  const { data: prog } = await sbApp
-    .from('progreso_maestro')
-    .select('*')
-    .eq('usuario_id', usuarioId)
-    .eq('modulo_id', moduloId)
-    .maybeSingle();
-
-  document.getElementById('paramProgresoId').value = prog ? prog.id : "";
-  document.getElementById('paramLeido').value = (prog && prog.leido) ? "true" : "false";
-  
-  if (prog && prog.completado_en) {
-    const d = new Date(prog.completado_en);
-    const tzOffset = d.getTimezoneOffset() * 60000;
-    const localISOTime = (new Date(d.getTime() - tzOffset)).toISOString().slice(0, 16);
-    document.getElementById('paramFecha').value = localISOTime;
-  } else {
-    document.getElementById('paramFecha').value = "";
-  }
-
-  document.getElementById('paramIntentos').value = prog ? (prog.intentos_preguntas || 0) : 0;
-  document.getElementById('paramReflexion').value = prog ? (prog.reflexion || "") : "";
-
-  document.getElementById('modalParametrosHermano').classList.remove('hidden');
-}
-
-async function guardarParametrosHermanoBD() {
-  const progresoId = document.getElementById('paramProgresoId').value;
-  const usuarioId = document.getElementById('paramUsuarioId').value;
-  const moduloId = document.getElementById('paramModuloId').value;
-  const leido = document.getElementById('paramLeido').value === "true";
-  const fechaVal = document.getElementById('paramFecha').value;
-  const intentos = parseInt(document.getElementById('paramIntentos').value) || 0;
-  const reflexion = document.getElementById('paramReflexion').value.trim();
-
-  const completado = reflexion.length >= 15;
-  const completado_en = fechaVal ? new Date(fechaVal).toISOString() : (completado ? new Date().toISOString() : null);
-
-  const payload = {
-    usuario_id: usuarioId,
-    modulo_id: moduloId,
-    leido: leido,
-    intentos_preguntas: intentos,
-    reflexion: reflexion,
-    completado: completado,
-    completado_en: completado_en
-  };
-
-  let error = null;
-  if (progresoId) {
-    const res = await sbApp.from('progreso_maestro').update(payload).eq('id', progresoId);
-    error = res.error;
-  } else {
-    const res = await sbApp.from('progreso_maestro').insert(payload);
-    error = res.error;
-  }
-
-  if (error) {
-    alert("Error al actualizar parámetros: " + error.message);
-  } else {
-    alert("Parámetros actualizados con éxito.");
-    cerrarModalUniversalDirecto('modalParametrosHermano');
-    recargarMetricasActuales();
-  }
-}
-
-/* ==========================================================================
-   EDITOR DE DOCTRINA CON REORDENAMIENTO Y BLOQUES DINÁMICOS
-   ========================================================================== */
-let bloquesDoctrinaAdmin = [];
-
-async function cargarEditorDoctrinaAdmin() {
-  bloquesDoctrinaAdmin = await obtenerDoctrinaBD();
-  renderizarFormularioDoctrinaAdmin();
-}
-
-function renderizarFormularioDoctrinaAdmin() {
-  const cont = document.getElementById('contenedorEditorDoctrinaAdmin');
-  cont.innerHTML = "";
-
-  bloquesDoctrinaAdmin.forEach((b, idx) => {
-    cont.innerHTML += `
-      <div class="bloque-doctrina-card">
-        <div class="bloque-doctrina-header">
-          <strong style="color: var(--accent-gold-dark);">Bloque ${idx + 1}</strong>
-          <div class="bloque-doctrina-acciones">
-            <button class="admin-link-btn" onclick="moverBloqueDoctrinaAdmin(${idx}, -1)" ${idx === 0 ? 'disabled style="opacity:0.4;"' : ''}>⬆ Subir</button>
-            <button class="admin-link-btn" onclick="moverBloqueDoctrinaAdmin(${idx}, 1)" ${idx === bloquesDoctrinaAdmin.length - 1 ? 'disabled style="opacity:0.4;"' : ''}>⬇ Bajar</button>
-            <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarBloqueDoctrinaAdmin(${idx})">🗑️ Eliminar</button>
-          </div>
-        </div>
-        <div class="form-group">
-          <label for="doc_tit_${idx}">Título:</label>
-          <input type="text" id="doc_tit_${idx}" name="doc_tit_${idx}" value="${(b.titulo || '').replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].titulo = this.value">
-        </div>
-        <div class="form-group">
-          <label for="doc_sub_${idx}">Subtítulo:</label>
-          <input type="text" id="doc_sub_${idx}" name="doc_sub_${idx}" value="${(b.subtitulo || '').replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].subtitulo = this.value">
-        </div>
-        <div class="form-group">
-          <label for="doc_txt_${idx}">Texto Doctrinal:</label>
-          <textarea id="doc_txt_${idx}" name="doc_txt_${idx}" rows="4" oninput="bloquesDoctrinaAdmin[${idx}].texto = this.value">${b.texto || ''}</textarea>
-        </div>
-      </div>
-    `;
-  });
-}
-
-function moverBloqueDoctrinaAdmin(idx, direccion) {
-  const nuevoIdx = idx + direccion;
-  if (nuevoIdx < 0 || nuevoIdx >= bloquesDoctrinaAdmin.length) return;
-  const temp = bloquesDoctrinaAdmin[idx];
-  bloquesDoctrinaAdmin[idx] = bloquesDoctrinaAdmin[nuevoIdx];
-  bloquesDoctrinaAdmin[nuevoIdx] = temp;
-  renderizarFormularioDoctrinaAdmin();
-}
-
-function agregarBloqueDoctrinaAdmin() {
-  bloquesDoctrinaAdmin.push({
-    titulo: `${bloquesDoctrinaAdmin.length + 1}. Nuevo Título`,
-    subtitulo: "Subtítulo descriptivo",
-    texto: "Ingrese aquí el contenido doctrinal correspondiente."
-  });
-  renderizarFormularioDoctrinaAdmin();
-}
-
-function eliminarBloqueDoctrinaAdmin(idx) {
-  abrirModalConfirmacion(
-    "Eliminar Bloque Doctrinal",
-    "¿Está seguro de eliminar este bloque de 'Docencia para Maestros'?",
-    () => {
-      bloquesDoctrinaAdmin.splice(idx, 1);
-      renderizarFormularioDoctrinaAdmin();
-    }
-  );
-}
-
-async function guardarDoctrinaAdmin() {
-  const jsonStr = JSON.stringify(bloquesDoctrinaAdmin);
-  const { error } = await sbApp
-    .from('config_segura')
-    .upsert({ clave: 'doctrina_docencia_maestros', valor: jsonStr });
-
-  if (error) {
-    alert("Error al guardar doctrina: " + error.message);
-  } else {
-    alert("Contenidos de 'Docencia para Maestros' guardados exitosamente.");
-  }
-}
-
-/* ==========================================================================
-   MURO GENERAL SUPERADMIN: GESTIÓN CON MODALES EXCLUSIVOS
-   ========================================================================== */
-async function cargarMuroGeneralAdmin() {
-  const contenedor = document.getElementById('contenedorMuroGeneralAdmin');
-  contenedor.innerHTML = "<p class='td-loading'>Consultando todas las reflexiones...</p>";
-
-  const d = new Date();
-  document.getElementById('muroAdminFechaEmision').innerText = `EMISIÓN: ${d.toLocaleDateString('es-CL')} ${d.toLocaleTimeString('es-CL')}`;
-
-  const { data: aportes, error } = await sbApp
-    .from('progreso_maestro')
-    .select('id, reflexion, completado_en, modulo_id, usuarios(nombre), modulos(numero_orden, titulo)')
-    .eq('completado', true)
-    .not('reflexion', 'is', null)
-    .order('completado_en', { ascending: false });
-
-  contenedor.innerHTML = "";
-
-  if (error || !aportes || aportes.length === 0) {
-    contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay reflexiones consagradas en la Cámara.</p>";
-    return;
-  }
-
-  let comentariosMap = {};
-  const { data: comentariosData } = await sbApp
-    .from('comentarios_muro')
-    .select('id, progreso_id, usuario_id, contenido, contenido_original, editado, creado_en, usuarios(nombre)')
-    .eq('activo', true)
-    .order('creado_en', { ascending: true });
-
-  if (comentariosData) {
-    const idsProcesados = new Set();
-    comentariosData.forEach(c => {
-      if (idsProcesados.has(c.id)) return;
-      idsProcesados.add(c.id);
-
-      if (!comentariosMap[c.progreso_id]) comentariosMap[c.progreso_id] = [];
-      comentariosMap[c.progreso_id].push(c);
-    });
-  }
-
-  const grupos = {};
-  aportes.forEach(a => {
-    const modKey = `Trabajo ${a.modulos?.numero_orden || '?'}: ${a.modulos?.titulo || 'Sin título'}`;
-    if (!grupos[modKey]) grupos[modKey] = [];
-    grupos[modKey].push(a);
-  });
-
-  for (const [tituloModulo, items] of Object.entries(grupos)) {
-    let itemsHtml = items.map(it => {
-      const fechaCons = it.completado_en 
-        ? new Date(it.completado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        : "";
-      
-      const coms = comentariosMap[it.id] || [];
-      let comsAdminHtml = coms.map(c => {
-        const cFecha = c.creado_en 
-          ? new Date(c.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-          : "";
-        return `
-          <div class="foro-comentario-item" id="comentario_item_${c.id}" style="margin-top: 6px;">
-            <div class="foro-comentario-header">
-              <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
-              <span class="foro-comentario-fecha">${cFecha}</span>
-            </div>
-            <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>
-            <div class="foro-comentario-acciones">
-              <button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${(c.usuarios?.nombre || '').replace(/'/g, "\\'")}', '${cFecha}')">🔍 Ver Huella Original</button>
-              <button class="foro-comentario-btn" style="color: var(--error);" onclick="eliminarComentarioForo('${c.id}')">🗑️ Eliminar</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-
-      return `
-        <div class="reflexion-item" style="margin-bottom: 16px; border-left: 3px solid var(--accent-gold); padding: 14px; border-radius: 4px;">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px;">
-            <div style="flex: 1;">
-              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                <span class="reflexion-autor">${it.usuarios?.nombre || "Hermano"}</span>
-                <span style="font-size: 0.75rem; color: var(--text-muted);">${fechaCons}</span>
-              </div>
-              <div style="font-size: 0.95rem; font-style: italic;">"${it.reflexion}"</div>
-            </div>
-            <div style="display: flex; gap: 6px;" class="no-print">
-              <button class="admin-link-btn" onclick="abrirModalEditarReflexionAdmin('${it.id}', '${encodeURIComponent(it.reflexion)}')">✏️</button>
-              <button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="eliminarReflexionSuperadmin('${it.id}')">🗑️</button>
-            </div>
-          </div>
-          ${coms.length > 0 ? `<div class="foro-comentarios-wrapper" style="margin-top: 10px;">${comsAdminHtml}</div>` : ''}
-        </div>
-      `;
-    }).join('');
-
-    contenedor.innerHTML += `
-      <div style="margin-bottom: 24px;">
-        <h3 class="muro-trabajo-titulo" style="font-size: 1.15rem; margin-bottom: 10px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px;">
-          ${tituloModulo}
-        </h3>
-        ${itemsHtml}
-      </div>
-    `;
-  }
-}
-
-function abrirModalEditarReflexionAdmin(progresoId, textoCodificado) {
-  const textoDecodificado = decodeURIComponent(textoCodificado);
-  document.getElementById('editReflexionProgresoId').value = progresoId;
-  document.getElementById('textareaEditarReflexionAdmin').value = textoDecodificado;
-  document.getElementById('modalEditarReflexionAdmin').classList.remove('hidden');
-}
-
-async function guardarEdicionReflexionModalAdmin() {
-  const progresoId = document.getElementById('editReflexionProgresoId').value;
-  const nuevoTexto = document.getElementById('textareaEditarReflexionAdmin').value.trim();
-
-  if (!nuevoTexto) {
-    alert("El texto de la reflexión no puede quedar vacío.");
-    return;
-  }
-
-  const { error } = await sbApp
-    .from('progreso_maestro')
-    .update({ reflexion: nuevoTexto })
-    .eq('id', progresoId);
-
-  if (error) {
-    alert("Error al actualizar reflexión: " + error.message);
-  } else {
-    cerrarModalUniversalDirecto('modalEditarReflexionAdmin');
-    cargarMuroGeneralAdmin();
-  }
-}
-
-function eliminarReflexionSuperadmin(progresoId) {
-  abrirModalConfirmacion(
-    "Eliminar Reflexión",
-    "¿Está seguro de eliminar esta reflexión? El estado del Hermano cambiará a pendiente para permitirle consagrar un nuevo aporte.",
-    async () => {
-      const { error } = await sbApp
-        .from('progreso_maestro')
-        .update({ reflexion: "", completado: false })
-        .eq('id', progresoId);
-
-      if (error) alert("Error al eliminar: " + error.message);
-      else cargarMuroGeneralAdmin();
-    }
-  );
-}
-
-function imprimirMuroGeneralPDF() {
-  const original = document.getElementById('documentoMuroGeneralImprimible');
-
-  const ventanaPrint = window.open('', '_blank', 'width=850,height=1100');
-  ventanaPrint.document.write(`
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-8">
-      <title>Recopilacion_Muro_Docencia_OFL146</title>
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-      <style>
-        @page { size: letter portrait; margin: 12mm 15mm; }
-        body { margin: 0; padding: 0; font-family: 'Inter', system-ui, sans-serif; color: #1A202C; background: #FFFFFF; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        .informe-header-box { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .informe-brand p { font-size: 8.5pt; line-height: 1.35; margin: 0; font-weight: 700; color: #152433; }
-        .img-emblema-discreto { height: 50px; object-fit: contain; }
-        .informe-meta-header { text-align: right; font-size: 8pt; color: #718096; }
-        .informe-hr { border: 0; height: 2px; background: #152433; margin: 8px 0 14px 0; }
-        .reflexion-item { margin-bottom: 10px; padding: 10px 14px; border-left: 3px solid #997839; background: #F8F9FA; border-radius: 3px; }
-        .reflexion-autor { font-weight: 700; font-size: 8.5pt; color: #785C25; }
-        .no-print { display: none !important; }
-        h3 { font-size: 10.5pt; color: #152433; margin: 14px 0 6px 0; border-bottom: 1px solid #CBD5E0; padding-bottom: 3px; }
-      </style>
-    </head>
-    <body>
-      ${original.innerHTML}
-      <script>
-        window.onload = function() {
-          const noprint = document.querySelectorAll('.no-print');
-          noprint.forEach(el => el.style.display = 'none');
-          window.print();
-          setTimeout(() => window.close(), 1000);
-        };
-      <\/script>
-    </body>
-    </html>
-  `);
-  ventanaPrint.document.close();
-}
-
-async function exportarRespaldoCompletoJSON() {
-  const { data: mods } = await sbApp.from('modulos').select('*');
-  const { data: progs } = await sbApp.from('progreso_maestro').select('*');
-  const { data: usrs } = await sbApp.from('usuarios').select('id, nombre, email, es_admin');
-
-  const respaldo = {
-    fecha: new Date().toISOString(),
-    modulos: mods,
-    usuarios: usrs,
-    progresos: progs
-  };
-
-  const blob = new Blob([JSON.stringify(respaldo, null, 2)], { type: 'application/json' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `backup_docencia_camara_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();
-}
-
-function formatearAutorMasonico(nombreCrudo) {
-  if (!nombreCrudo) return 'Cámara de Docencia';
-  let nombreLimpio = nombreCrudo.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-  return `Q.·.H.·. ${nombreLimpio}`;
-}
-
-/* ==========================================================================
-   INICIALIZACIÓN AL CARGAR EL DOM
-   ========================================================================== */
-document.addEventListener("DOMContentLoaded", () => {
-  inicializarLuminosidad();
-  verificarTokenUrl();
-  recuperarSesionGuardada();
-
-  ['inputEmail', 'inputClave'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          iniciarSesion();
-        }
-      });
-    }
-  });
-});
+  tbody.innerHTML = `<tr><td colspan="6" class="td-loading">Consultando registros...</td>
