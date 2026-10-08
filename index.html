@@ -43,12 +43,12 @@
       
       <div class="form-group">
         <label for="inputEmail">Correo Electrónico Registrado:</label>
-        <input type="email" id="inputEmail" placeholder="su.correo@ejemplo.com">
+        <input type="email" id="inputEmail" name="login_email" placeholder="su.correo@ejemplo.com" autocomplete="username">
       </div>
 
       <div class="form-group">
         <label for="inputClave">Palabra de Paso de la Cámara:</label>
-        <input type="password" id="inputClave" placeholder="••••••••">
+        <input type="password" id="inputClave" name="login_clave" placeholder="••••••••" autocomplete="current-password">
       </div>
 
       <button class="btn-primary" onclick="iniciarSesion()">Acceder a la Cámara</button>
@@ -102,6 +102,10 @@
           </button>
           <button class="btn-gemelo btn-gemelo-primario" onclick="abrirModalMisAvances()">
             📊 Mis Avances
+          </button>
+          <!-- BOTÓN DINÁMICO DEL MURO EN HOME -->
+          <button id="btnMuroHome" class="btn-gemelo btn-gemelo-secundario hidden" onclick="mostrarMuroReflexionesUsuarios()">
+            💬 Muro y Foro
           </button>
         </div>
         <span id="catalogoContadorModulos" class="badge-contador-temas"></span>
@@ -258,7 +262,7 @@
             Ingrese su reflexión personal (entre 15 y 200 palabras) para concluir el módulo y acceder a los aportes de sus Hermanos.
           </p>
 
-          <textarea id="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión acerca del tema tratado..."></textarea>
+          <textarea id="textoReflexion" name="textoReflexion" rows="5" oninput="contarPalabras()" placeholder="Escriba aquí su reflexión acerca del tema tratado..."></textarea>
           
           <div class="reflexion-footer">
             <span id="contadorPalabras">Palabras: 0 / 200</span>
@@ -279,7 +283,7 @@
             <span class="fase-badge badge-muro">MURO</span>
             <h2>Muro y Foro de este Trabajo</h2>
           </div>
-          <p class="text-instruccion">Aportes consagrados y comentarios fraternales para este trabajo:</p>
+          <p class="text-instruccion">Aportes consagrados y comentarios para este trabajo:</p>
           <div id="contenedorMuro"></div>
         </div>
       </section>
@@ -351,7 +355,7 @@
 
         <div class="form-group" style="max-width: 520px; margin-bottom: 24px;">
           <label for="selectModuloParaArchivo" style="font-weight: 700;">Seleccionar Trabajo al que se asociará el documento:</label>
-          <select id="selectModuloParaArchivo" onchange="verificarEstadoArchivoModulo(this.value)"></select>
+          <select id="selectModuloParaArchivo" name="selectModuloParaArchivo" onchange="verificarEstadoArchivoModulo(this.value)"></select>
           <p id="estadoArchivoActual" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px;"></p>
         </div>
 
@@ -359,7 +363,7 @@
           <label for="archivoDocAdjunto" style="font-weight: 700; color: var(--text-main); cursor: pointer; display: block; margin-bottom: 8px;">
             📄 Seleccionar Archivo Original (PDF o Word .docx)
           </label>
-          <input type="file" id="archivoDocAdjunto" accept=".docx, .pdf" onchange="procesarArchivoParaAdjuntar(event)">
+          <input type="file" id="archivoDocAdjunto" name="archivoDocAdjunto" accept=".docx, .pdf" onchange="procesarArchivoParaAdjuntar(event)">
           <p id="archivoAdjuntoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 8px; font-weight: 600;"></p>
         </div>
 
@@ -404,11 +408,11 @@
           <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
             <div>
               <label for="selectOrigenTrabajoPresencial" style="font-weight: 700; font-family: var(--font-ui); font-size: 0.88rem; display: block; margin-bottom: 4px;">Trabajo / Trazado Base:</label>
-              <select id="selectOrigenTrabajoPresencial" style="width: 260px; padding: 7px 10px;"></select>
+              <select id="selectOrigenTrabajoPresencial" name="selectOrigenTrabajoPresencial" style="width: 260px; padding: 7px 10px;"></select>
             </div>
             <div>
               <label for="numMesasPresencial" style="font-weight: 700; font-family: var(--font-ui); font-size: 0.88rem; display: block; margin-bottom: 4px;">Número de Mesas / Grupos:</label>
-              <select id="numMesasPresencial" style="width: 130px; padding: 7px 10px;">
+              <select id="numMesasPresencial" name="numMesasPresencial" style="width: 130px; padding: 7px 10px;">
                 <option value="3">3 Mesas</option>
                 <option value="4" selected>4 Mesas</option>
                 <option value="5">5 Mesas</option>
@@ -416,12 +420,12 @@
             </div>
             <div>
               <label for="selectTipoDinamicaPresencial" style="font-weight: 700; font-family: var(--font-ui); font-size: 0.88rem; display: block; margin-bottom: 4px;">Tipo de Dinámica:</label>
-              <select id="selectTipoDinamicaPresencial" style="width: 290px; padding: 7px 10px;">
+              <select id="selectTipoDinamicaPresencial" name="selectTipoDinamicaPresencial" style="width: 290px; padding: 7px 10px;">
                 <option value="1">1. El Tribunal de la Conciencia</option>
                 <option value="2">2. El Coloquio de las Máscaras Cruzadas</option>
                 <option value="3">3. La Piedra de Toque (Dilema Rápido)</option>
-                <option value="cierre_trivial">4. Cierre: Trivial de la Cámara</option>
-                <option value="cierre_apuros">5. Cierre: Dilema en Apuros (60s)</option>
+                <option value="cierre_trivial">4. Cierre: Pregunta de Análisis</option>
+                <option value="cierre_apuros">5. Cierre: Plan de Contingencia (60s)</option>
               </select>
             </div>
           </div>
@@ -433,11 +437,11 @@
           <div id="mesasTrabajoDinamica" class="mesas-trabajo-grid"></div>
 
           <div class="cierre-reglas-fraternales">
-            <h4 style="margin-bottom: 6px; color: var(--accent-gold-dark);">⚖️ Puntos de Aplomo y Deber Fraternal:</h4>
+            <h4 style="margin-bottom: 6px; color: var(--accent-gold-dark);">⚖️ Puntos de Aplomo:</h4>
             <p style="margin: 0; font-size: 0.88rem; line-height: 1.5;">
-              • Bonificaciones: <strong>+15 Corte a Escuadra</strong> (concisión práctica) y <strong>+20 Chispa de Maestro</strong> (agudeza e ingenio).<br>
-              • Penalizaciones: <strong>-10 Divagación</strong> (irse por las ramas), <strong>-15 Sin Acuerdo</strong> y <strong>-10 Ruido en Columnas</strong>.<br>
-              • Premios al final: <em>Respuesta Más Original</em> y <em>Grupo Más Entusiasta</em>. La mesa perdedora asume el compromiso de <strong>lavar los platos</strong> en el refrigerio.
+              • Bonificaciones: <strong>+15 Precisión</strong> y <strong>+20 Aporte Lúcido</strong>.<br>
+              • Penalizaciones: <strong>-10 Divagación</strong>, <strong>-15 Sin Acuerdo</strong> y <strong>-10 Ruido</strong>.<br>
+              • Premios al final: <em>Respuesta Más Precisa</em> y <em>Grupo Más Participativo</em>.
             </p>
           </div>
         </div>
@@ -448,7 +452,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Muro General de la Cámara de Docencia</h2>
-            <p class="text-instruccion" style="margin: 0;">Reflexiones aportadas por los Hermanos con moderación y exportación de alta calidad.</p>
+            <p class="text-instruccion" style="margin: 0;">Reflexiones aportadas por los Hermanos con moderación y exportación.</p>
           </div>
           <div class="admin-header-actions">
             <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="imprimirMuroGeneralPDF()">🖨️ Descargar Muro en PDF</button>
@@ -456,7 +460,6 @@
           </div>
         </div>
 
-        <!-- CONTENEDOR CON MEMBRETE OFICIAL IMPRIMIBLE -->
         <div id="documentoMuroGeneralImprimible">
           <div class="informe-header-box informe-header-muro">
             <div class="informe-brand">
@@ -487,7 +490,7 @@
           </div>
           <div class="admin-header-actions">
             <label for="selectMetricasModulo">Trabajo:</label>
-            <select id="selectMetricasModulo" onchange="cargarMetricasAvance(this.value)"></select>
+            <select id="selectMetricasModulo" name="selectMetricasModulo" onchange="cargarMetricasAvance(this.value)"></select>
             <button class="admin-link-btn" onclick="recargarMetricasActuales()">🔄 Actualizar</button>
             <button class="admin-link-btn" onclick="exportarRespaldoCompletoJSON()">💾 Backup JSON</button>
           </div>
@@ -515,7 +518,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Editor de Contenido: Docencia para Maestros</h2>
-            <p class="text-instruccion" style="margin: 0;">Agregue, reordene (subir/bajar) o elimine por separado títulos, subtítulos y bloques de texto doctrinal.</p>
+            <p class="text-instruccion" style="margin: 0;">Edite los bloques de texto institucional.</p>
           </div>
           <div class="admin-header-actions">
             <button class="admin-link-btn" onclick="agregarBloqueDoctrinaAdmin()">➕ Agregar Nuevo Bloque</button>
@@ -530,11 +533,11 @@
         <div class="admin-card-header">
           <div>
             <h2>Bitácora de Accesos a la Cámara</h2>
-            <p class="text-instruccion" style="margin: 0;">Registro cronológico de ingresos de usuarios con marca de tiempo y dirección IP.</p>
+            <p class="text-instruccion" style="margin: 0;">Registro cronológico de ingresos con marca de tiempo e IP.</p>
           </div>
           <div class="admin-header-actions">
             <label for="filtroUsuarioAcceso">Filtrar Hermano:</label>
-            <select id="filtroUsuarioAcceso" onchange="cargarBitacoraAccesos(this.value)">
+            <select id="filtroUsuarioAcceso" name="filtroUsuarioAcceso" onchange="cargarBitacoraAccesos(this.value)">
               <option value="todos">👥 Todos los Hermanos</option>
             </select>
             <button class="admin-link-btn" onclick="cargarBitacoraAccesos()">🔄 Actualizar</button>
@@ -570,11 +573,11 @@
         La huella original permanecerá registrada para efectos de auditoría.
       </p>
 
-      <input type="hidden" id="editComentarioId">
+      <input type="hidden" id="editComentarioId" name="editComentarioId">
 
       <div class="form-group">
         <label for="textareaEditarComentario">Texto del Aporte:</label>
-        <textarea id="textareaEditarComentario" rows="4"></textarea>
+        <textarea id="textareaEditarComentario" name="textareaEditarComentario" rows="4"></textarea>
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
@@ -593,7 +596,7 @@
       <p id="auditoriaComentarioMeta" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;"></p>
 
       <div class="form-group">
-        <label>Texto Original Inmutable:</label>
+        <span style="font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; display: block;">Texto Original Inmutable:</span>
         <div id="auditoriaTextoOriginal" style="background: rgba(0,0,0,0.04); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px; font-family: var(--font-ui); font-size: 0.95rem; line-height: 1.6;"></div>
       </div>
 
@@ -613,11 +616,11 @@
         Edite el aporte fraterno respetando la profundidad y sentido del Hermano autor.
       </p>
 
-      <input type="hidden" id="editReflexionProgresoId">
+      <input type="hidden" id="editReflexionProgresoId" name="editReflexionProgresoId">
 
       <div class="form-group">
         <label for="textareaEditarReflexionAdmin">Texto de la Reflexión:</label>
-        <textarea id="textareaEditarReflexionAdmin" rows="6" style="line-height: 1.6;"></textarea>
+        <textarea id="textareaEditarReflexionAdmin" name="textareaEditarReflexionAdmin" rows="6" style="line-height: 1.6;"></textarea>
       </div>
 
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
@@ -649,13 +652,13 @@
       </h3>
       <p id="subParamHermano" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;"></p>
 
-      <input type="hidden" id="paramProgresoId">
-      <input type="hidden" id="paramUsuarioId">
-      <input type="hidden" id="paramModuloId">
+      <input type="hidden" id="paramProgresoId" name="paramProgresoId">
+      <input type="hidden" id="paramUsuarioId" name="paramUsuarioId">
+      <input type="hidden" id="paramModuloId" name="paramModuloId">
 
       <div class="form-group">
         <label for="paramLeido">Estado de Lectura de la Plancha:</label>
-        <select id="paramLeido">
+        <select id="paramLeido" name="paramLeido">
           <option value="true">✓ Confirmado / Leído</option>
           <option value="false">✗ Pendiente / No leído</option>
         </select>
@@ -663,17 +666,17 @@
 
       <div class="form-group">
         <label for="paramFecha">Fecha y Hora de Consagración:</label>
-        <input type="datetime-local" id="paramFecha">
+        <input type="datetime-local" id="paramFecha" name="paramFecha">
       </div>
 
       <div class="form-group">
         <label for="paramIntentos">Preguntas Respondidas (0 a 8):</label>
-        <input type="number" id="paramIntentos" min="0" max="8">
+        <input type="number" id="paramIntentos" name="paramIntentos" min="0" max="8">
       </div>
 
       <div class="form-group">
         <label for="paramReflexion">Reflexión Consagrada:</label>
-        <textarea id="paramReflexion" rows="5"></textarea>
+        <textarea id="paramReflexion" name="paramReflexion" rows="5"></textarea>
       </div>
 
       <div style="display: flex; gap: 10px; margin-top: 20px;">
@@ -693,21 +696,21 @@
       <div class="admin-grid">
         <div class="form-group">
           <label for="editModOrden">N° Orden:</label>
-          <input type="number" id="editModOrden">
+          <input type="number" id="editModOrden" name="editModOrden">
         </div>
         <div class="form-group">
           <label for="editModTitulo">Título:</label>
-          <input type="text" id="editModTitulo">
+          <input type="text" id="editModTitulo" name="editModTitulo">
         </div>
         <div class="form-group">
           <label for="editModAutor">Autor:</label>
-          <input type="text" id="editModAutor">
+          <input type="text" id="editModAutor" name="editModAutor">
         </div>
       </div>
 
       <div class="form-group">
         <label for="editModTexto">Contenido del Trazado:</label>
-        <textarea id="editModTexto" rows="8"></textarea>
+        <textarea id="editModTexto" name="editModTexto" rows="8"></textarea>
       </div>
 
       <div style="margin-bottom: 24px;">
@@ -841,7 +844,6 @@
               <p id="certTextoReflexion" class="cert-reflexion-cita">"..."</p>
             </div>
             
-            <!-- PIE DE FIRMA SIMÉTRICO Y ALINEADO HORIZONTALMENTE -->
             <div class="cert-footer">
               <div class="cert-firma">
                 <div class="linea-firma"></div>
