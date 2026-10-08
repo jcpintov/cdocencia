@@ -21,6 +21,9 @@ let moduloActual = null;
 let misProgresos = {};
 let tamanoBase = 19;
 
+// Control de token activo de recuperación
+let tokenRecuperacionActivo = null;
+
 // Control de preguntas paso a paso
 let indicePreguntaActiva = 0;
 let respuestasMarcadas = {};
@@ -102,6 +105,25 @@ function cambiarTamanoFuente(delta) {
 }
 
 /* ==========================================================================
+   VALIDACIÓN DE SEGURIDAD DE CONTRASEÑA
+   (Mínimo 7 caracteres: al menos 6 alfanuméricos y al menos 1 símbolo especial)
+   ========================================================================== */
+function validarSeguridadClave(clave) {
+  if (!clave || clave.length < 7) {
+    return "La contraseña debe tener al menos 7 caracteres en total.";
+  }
+  const alfanumericos = (clave.match(/[a-zA-Z0-9]/g) || []).length;
+  if (alfanumericos < 6) {
+    return "La contraseña debe contener al menos 6 caracteres normales (letras o números).";
+  }
+  const tieneSimbolo = /[^a-zA-Z0-9]/.test(clave);
+  if (!tieneSimbolo) {
+    return "La contraseña debe incluir al menos 1 símbolo especial (ej: ! @ # $ % * ?).";
+  }
+  return null;
+}
+
+/* ==========================================================================
    AUTENTICACIÓN Y ENTORNO
    ========================================================================== */
 async function iniciarSesion() {
@@ -109,29 +131,32 @@ async function iniciarSesion() {
   const clave = document.getElementById('inputClave').value.trim();
   const err = document.getElementById('errorLogin');
 
-  if (clave !== "OFL.146!") {
-    err.innerText = "Credencial de paso no válida.";
+  if (!email || !clave) {
+    err.innerText = "Por favor ingrese su correo y contraseña.";
     return;
   }
 
-  err.innerText = "Verificando en padrón...";
+  err.innerText = "Verificando credenciales...";
 
-  const { data, error } = await sbApp
-    .from('usuarios')
-    .select('*')
-    .eq('email', email)
-    .limit(1);
+  try {
+    const { data, error } = await sbApp.rpc('autenticar_usuario', {
+      p_email: email,
+      p_clave: clave
+    });
 
-  if (error || !data || data.length === 0) {
-    err.innerText = "El correo no figura en el padrón de la Cámara.";
-    return;
+    if (error || !data || data.length === 0) {
+      err.innerText = "Correo o contraseña no válidos.";
+      return;
+    }
+
+    usuarioActual = data[0];
+    sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
+
+    registrarIngresoAuditoria(usuarioActual);
+    configurarEntornoUsuario();
+  } catch (ex) {
+    err.innerText = "Error de conexión: " + ex.message;
   }
-
-  usuarioActual = data[0];
-  sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
-
-  registrarIngresoAuditoria(usuarioActual);
-  configurarEntornoUsuario();
 }
 
 async function registrarIngresoAuditoria(usuario) {
@@ -186,11 +211,156 @@ function configurarEntornoUsuario() {
 
 function aceptarSigilo() {
   document.getElementById('modalSigilo').classList.add('hidden');
+
+  // Si aún tiene pendiente el cambio forzado de contraseña en el primer ingreso
+  if (usuarioActual.debe_cambiar_clave) {
+    document.getElementById('modalCambioClaveObligatorio').classList.remove('hidden');
+    return;
+  }
+
   const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
   document.getElementById('bienvenidaNombreQH').innerText = `Q.·.H.·. ${nombreLimpio}`;
   document.getElementById('seccionBienvenida').classList.remove('hidden');
 }
 
+async function guardarNuevaClaveObligatoria() {
+  const c1 = document.getElementById('nuevaClaveInput').value;
+  const c2 = document.getElementById('repetirClaveInput').value;
+  const err = document.getElementById('errorCambioClave');
+
+  if (c1 !== c2) {
+    err.innerText = "Las contraseñas no coinciden.";
+    return;
+  }
+
+  const falloSeguridad = validarSeguridadClave(c1);
+  if (falloSeguridad) {
+    err.innerText = falloSeguridad;
+    return;
+  }
+
+  err.innerText = "Actualizando su contraseña...";
+
+  try {
+    const { error } = await sbApp.rpc('cambiar_clave_usuario', {
+      p_usuario_id: usuarioActual.id,
+      p_nueva_clave: c1
+    });
+
+    if (error) {
+      err.innerText = "Error: " + error.message;
+      return;
+    }
+
+    usuarioActual.debe_cambiar_clave = false;
+    sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
+
+    document.getElementById('modalCambioClaveObligatorio').classList.add('hidden');
+    const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
+    document.getElementById('bienvenidaNombreQH').innerText = `Q.·.H.·. ${nombreLimpio}`;
+    document.getElementById('seccionBienvenida').classList.remove('hidden');
+  } catch (ex) {
+    err.innerText = "Error: " + ex.message;
+  }
+}
+
+/* ==========================================================================
+   RECUPERACIÓN Y RESTABLECIMIENTO DE CONTRASEÑA
+   ========================================================================== */
+function abrirModalRecuperarClave() {
+  document.getElementById('recuperarEmailInput').value = '';
+  document.getElementById('recuperarStatusMsg').innerHTML = '';
+  document.getElementById('modalRecuperarClave').classList.remove('hidden');
+}
+
+async function enviarSolicitudRecuperacion() {
+  const email = document.getElementById('recuperarEmailInput').value.trim().toLowerCase();
+  const statusMsg = document.getElementById('recuperarStatusMsg');
+
+  if (!email) {
+    statusMsg.innerHTML = `<span style="color: var(--error);">Ingrese su correo electrónico.</span>`;
+    return;
+  }
+
+  statusMsg.innerHTML = "<em>Generando enlace de recuperación...</em>";
+
+  try {
+    const { data: token, error } = await sbApp.rpc('solicitar_recuperacion_clave', {
+      p_email: email
+    });
+
+    if (error || !token) {
+      statusMsg.innerHTML = `<span style="color: var(--error);">El correo no figura registrado en el padrón.</span>`;
+      return;
+    }
+
+    const enlaceReset = `${window.location.origin}${window.location.pathname}?token=${token}`;
+    statusMsg.innerHTML = `
+      <div style="background: rgba(153,120,57,0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--accent-gold); margin-top: 8px;">
+        <p style="margin: 0 0 6px 0; color: var(--success); font-weight: 700;">✓ Enlace de recuperación generado:</p>
+        <a href="${enlaceReset}" style="font-size: 0.8rem; word-break: break-all; color: var(--accent-gold-dark); text-decoration: underline;">
+          ${enlaceReset}
+        </a>
+        <p style="margin: 6px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
+          Haga clic en el enlace para restablecer su contraseña de inmediato (válido por 30 minutos).
+        </p>
+      </div>
+    `;
+  } catch (ex) {
+    statusMsg.innerHTML = `<span style="color: var(--error);">Error al procesar: ${ex.message}</span>`;
+  }
+}
+
+function verificarTokenUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get('token');
+  if (token) {
+    tokenRecuperacionActivo = token;
+    document.getElementById('modalResetearConToken').classList.remove('hidden');
+  }
+}
+
+async function guardarResetConToken() {
+  const c1 = document.getElementById('tokenNuevaClave').value;
+  const c2 = document.getElementById('tokenRepetirClave').value;
+  const err = document.getElementById('errorResetToken');
+
+  if (c1 !== c2) {
+    err.innerText = "Las contraseñas no coinciden.";
+    return;
+  }
+
+  const falloSeguridad = validarSeguridadClave(c1);
+  if (falloSeguridad) {
+    err.innerText = falloSeguridad;
+    return;
+  }
+
+  err.innerText = "Restableciendo contraseña...";
+
+  try {
+    const { error } = await sbApp.rpc('resetear_clave_con_token', {
+      p_token: tokenRecuperacionActivo,
+      p_nueva_clave: c1
+    });
+
+    if (error) {
+      err.innerText = "Error: " + error.message;
+      return;
+    }
+
+    alert("Contraseña restablecida con éxito. Ingrese con sus nuevas credenciales.");
+    window.history.replaceState({}, document.title, window.location.pathname);
+    document.getElementById('modalResetearConToken').classList.add('hidden');
+    tokenRecuperacionActivo = null;
+  } catch (ex) {
+    err.innerText = "Error: " + ex.message;
+  }
+}
+
+/* ==========================================================================
+   CATÁLOGO DE TRABAJOS Y ENTORNO
+   ========================================================================== */
 async function irACatalogoDocencia() {
   document.getElementById('seccionBienvenida').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
@@ -311,6 +481,9 @@ function cerrarSesion() {
   document.getElementById('seccionMuroUsuarios').classList.add('hidden');
   document.getElementById('seccionAdmin').classList.add('hidden');
   document.getElementById('modalSigilo').classList.add('hidden');
+  document.getElementById('modalCambioClaveObligatorio').classList.add('hidden');
+  document.getElementById('modalRecuperarClave').classList.add('hidden');
+  document.getElementById('modalResetearConToken').classList.add('hidden');
   document.getElementById('modalMisAvances').classList.add('hidden');
   document.getElementById('modalCertificado').classList.add('hidden');
   document.getElementById('modalAuditoriaModulo').classList.add('hidden');
@@ -418,7 +591,6 @@ async function mostrarMuroReflexionesUsuarios() {
     return;
   }
 
-  // Traer comentarios activos y deduplicar por id
   let comentariosMap = {};
   const { data: comentariosData } = await sbApp
     .from('comentarios_muro')
@@ -437,7 +609,6 @@ async function mostrarMuroReflexionesUsuarios() {
     });
   }
 
-  // Deduplicar reflexiones por (usuario_id + modulo_id)
   const reflexionesPorModulo = {};
   const clavesReflexionVistas = new Set();
 
@@ -625,7 +796,6 @@ async function enviarComentarioForo(progresoId, moduloId) {
     input.value = "";
     toggleFormularioComentario(progresoId);
     
-    // Refrescar reactivamente la vista que se encuentra abierta
     const seccionMuroUsuarios = document.getElementById('seccionMuroUsuarios');
     if (seccionMuroUsuarios && !seccionMuroUsuarios.classList.contains('hidden')) {
       await mostrarMuroReflexionesUsuarios();
@@ -662,7 +832,6 @@ async function guardarEdicionComentarioModal() {
   } else {
     cerrarModalUniversalDirecto('modalEditarComentarioForo');
     
-    // Actualización reactiva instantánea en el nodo del DOM si existe
     const cuerpoEl = document.getElementById(`comentario_cuerpo_${id}`);
     if (cuerpoEl) {
       cuerpoEl.innerText = texto;
@@ -700,13 +869,11 @@ function eliminarComentarioForo(comentarioId) {
           return;
         }
 
-        // 1. Remover el nodo visual del DOM al instante
         const nodo = document.getElementById(`comentario_item_${comentarioId}`);
         if (nodo) {
           nodo.remove();
         }
 
-        // 2. Refrescar reactivamente la vista activa
         const seccionMuroUsuarios = document.getElementById('seccionMuroUsuarios');
         const seccionAdmin = document.getElementById('seccionAdmin');
 
@@ -1473,7 +1640,13 @@ function abrirModalConfirmacion(titulo, mensaje, callback) {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano', 'modalEditarReflexionAdmin', 'modalEditarComentarioForo', 'modalAuditoriaComentario', 'modalConfirmarAccion'].forEach(id => {
+    // Si el modal de cambio obligatorio está abierto, NO cerrarlo con Escape
+    const modalObligatorio = document.getElementById('modalCambioClaveObligatorio');
+    if (modalObligatorio && !modalObligatorio.classList.contains('hidden')) {
+      return;
+    }
+
+    ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano', 'modalEditarReflexionAdmin', 'modalEditarComentarioForo', 'modalAuditoriaComentario', 'modalConfirmarAccion', 'modalRecuperarClave'].forEach(id => {
       const el = document.getElementById(id);
       if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
     });
@@ -2544,5 +2717,6 @@ function formatearAutorMasonico(nombreCrudo) {
    ========================================================================== */
 document.addEventListener("DOMContentLoaded", () => {
   inicializarLuminosidad();
+  verificarTokenUrl();
   recuperarSesionGuardada();
 });
