@@ -97,7 +97,7 @@ function cambiarTamanoFuente(delta) {
 }
 
 /* ==========================================================================
-   VALIDACIÓN DE SEGURIDAD DE CONTRASEÑA
+   VALIDACIÓN DE SEGURIDAD Y GENERADOR DE CONTRASEÑA
    (Mínimo 7 caracteres: al menos 6 alfanuméricos y al menos 1 símbolo especial)
    ========================================================================== */
 function validarSeguridadClave(clave) {
@@ -113,6 +113,17 @@ function validarSeguridadClave(clave) {
     return "La contraseña debe incluir al menos 1 símbolo especial (ej: ! @ # $ % * ?).";
   }
   return null;
+}
+
+function generarClaveAleatoriaSegura() {
+  const letras = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const simbolos = "!@#$%*?";
+  let p = "";
+  for (let i = 0; i < 6; i++) {
+    p += letras.charAt(Math.floor(Math.random() * letras.length));
+  }
+  p += simbolos.charAt(Math.floor(Math.random() * simbolos.length));
+  return p;
 }
 
 /* ==========================================================================
@@ -144,6 +155,7 @@ async function iniciarSesion() {
     usuarioActual = data[0];
     sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
 
+    err.innerText = "";
     registrarIngresoAuditoria(usuarioActual);
     configurarEntornoUsuario();
   } catch (ex) {
@@ -187,6 +199,7 @@ function configurarEntornoUsuario() {
   reiniciarTemporizadorInactividad();
   document.getElementById('seccionLogin').classList.add('hidden');
   document.getElementById('btnSalir').classList.remove('hidden');
+  document.getElementById('btnCambiarMiClave').classList.remove('hidden');
 
   if (usuarioActual.es_admin) {
     document.getElementById('seccionAdmin').classList.remove('hidden');
@@ -255,8 +268,141 @@ async function guardarNuevaClaveObligatoria() {
   }
 }
 
+function cerrarSesion() {
+  if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
+  if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
+  usuarioActual = null;
+  moduloActual = null;
+  misProgresos = {};
+  respuestasMarcadas = {};
+  archivoBase64Pendiente = null;
+  sessionStorage.removeItem('camara_usuario_sesion');
+
+  document.getElementById('errorLogin').innerText = '';
+  document.getElementById('inputEmail').value = '';
+  document.getElementById('inputClave').value = '';
+
+  document.getElementById('seccionDocencia').classList.add('hidden');
+  document.getElementById('seccionBienvenida').classList.add('hidden');
+  document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
+  document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
+  document.getElementById('seccionMuroUsuarios').classList.add('hidden');
+  document.getElementById('seccionAdmin').classList.add('hidden');
+  document.getElementById('modalSigilo').classList.add('hidden');
+  document.getElementById('modalCambioClaveObligatorio').classList.add('hidden');
+  document.getElementById('modalCambiarMiClave').classList.add('hidden');
+  document.getElementById('modalAdminClaveHermano').classList.add('hidden');
+  document.getElementById('modalRecuperarClave').classList.add('hidden');
+  document.getElementById('modalResetearConToken').classList.add('hidden');
+  document.getElementById('modalMisAvances').classList.add('hidden');
+  document.getElementById('modalCertificado').classList.add('hidden');
+  document.getElementById('modalAuditoriaModulo').classList.add('hidden');
+  document.getElementById('modalParametrosHermano').classList.add('hidden');
+  document.getElementById('modalEditarReflexionAdmin').classList.add('hidden');
+  document.getElementById('modalEditarComentarioForo').classList.add('hidden');
+  document.getElementById('modalAuditoriaComentario').classList.add('hidden');
+  document.getElementById('modalConfirmarAccion').classList.add('hidden');
+  document.getElementById('btnSalir').classList.add('hidden');
+  document.getElementById('btnCambiarMiClave').classList.add('hidden');
+  document.getElementById('seccionLogin').classList.remove('hidden');
+}
+
 /* ==========================================================================
-   RECUPERACIÓN Y RESTABLECIMIENTO DE CONTRASEÑA
+   CAMBIO DE CLAVE PROPIA VOLUNTARIO
+   ========================================================================== */
+function abrirModalCambioClaveUsuario() {
+  document.getElementById('inputMiClaveNueva').value = '';
+  document.getElementById('errorMiCambioClave').innerText = '';
+  document.getElementById('modalCambiarMiClave').classList.remove('hidden');
+}
+
+function autogenerarEnInputMiClave() {
+  const p = generarClaveAleatoriaSegura();
+  const input = document.getElementById('inputMiClaveNueva');
+  input.value = p;
+  navigator.clipboard.writeText(p);
+  alert("Contraseña generada y copiada al portapapeles: " + p);
+}
+
+async function guardarMiNuevaClave() {
+  const clave = document.getElementById('inputMiClaveNueva').value.trim();
+  const err = document.getElementById('errorMiCambioClave');
+  const fallo = validarSeguridadClave(clave);
+  if (fallo) {
+    err.innerText = fallo;
+    return;
+  }
+
+  err.innerText = "Guardando...";
+
+  try {
+    const { error } = await sbApp.rpc('cambiar_clave_usuario', {
+      p_usuario_id: usuarioActual.id,
+      p_nueva_clave: clave
+    });
+
+    if (error) {
+      err.innerText = "Error: " + error.message;
+    } else {
+      alert("Contraseña actualizada con éxito.");
+      cerrarModalUniversalDirecto('modalCambiarMiClave');
+    }
+  } catch (ex) {
+    err.innerText = "Error: " + ex.message;
+  }
+}
+
+/* ==========================================================================
+   SUPERADMIN: GESTIÓN DE CLAVES DE HERMANOS
+   ========================================================================== */
+function abrirModalAdminClaveHermano(targetId, nombreHermano) {
+  document.getElementById('adminTargetHermanoId').value = targetId;
+  document.getElementById('adminHermanoNombreSpan').innerText = nombreHermano;
+  document.getElementById('inputAdminClaveHermano').value = '';
+  document.getElementById('errorAdminClaveHermano').innerText = '';
+  document.getElementById('modalAdminClaveHermano').classList.remove('hidden');
+}
+
+function autogenerarAdminClaveHermano() {
+  const p = generarClaveAleatoriaSegura();
+  const input = document.getElementById('inputAdminClaveHermano');
+  input.value = p;
+  navigator.clipboard.writeText(p);
+  alert("Contraseña generada y copiada al portapapeles: " + p);
+}
+
+async function guardarAdminClaveHermano() {
+  const targetId = document.getElementById('adminTargetHermanoId').value;
+  const clave = document.getElementById('inputAdminClaveHermano').value.trim();
+  const err = document.getElementById('errorAdminClaveHermano');
+
+  const fallo = validarSeguridadClave(clave);
+  if (fallo) {
+    err.innerText = fallo;
+    return;
+  }
+
+  err.innerText = "Actualizando...";
+
+  try {
+    const { error } = await sbApp.rpc('cambiar_clave_usuario', {
+      p_usuario_id: targetId,
+      p_nueva_clave: clave
+    });
+
+    if (error) {
+      err.innerText = "Error: " + error.message;
+    } else {
+      alert("Contraseña asignada con éxito al Hermano.");
+      cerrarModalUniversalDirecto('modalAdminClaveHermano');
+    }
+  } catch (ex) {
+    err.innerText = "Error: " + ex.message;
+  }
+}
+
+/* ==========================================================================
+   RECUPERACIÓN Y RESTABLECIMIENTO POR TOKEN
    ========================================================================== */
 function abrirModalRecuperarClave() {
   document.getElementById('recuperarEmailInput').value = '';
@@ -452,40 +598,6 @@ function volverACatalogo() {
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   document.getElementById('seccionMuroUsuarios').classList.add('hidden');
   renderizarCatalogoTrabajos();
-}
-
-function cerrarSesion() {
-  if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
-  if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
-  usuarioActual = null;
-  moduloActual = null;
-  misProgresos = {};
-  respuestasMarcadas = {};
-  archivoBase64Pendiente = null;
-  sessionStorage.removeItem('camara_usuario_sesion');
-
-  document.getElementById('seccionDocencia').classList.add('hidden');
-  document.getElementById('seccionBienvenida').classList.add('hidden');
-  document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
-  document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
-  document.getElementById('seccionMuroUsuarios').classList.add('hidden');
-  document.getElementById('seccionAdmin').classList.add('hidden');
-  document.getElementById('modalSigilo').classList.add('hidden');
-  document.getElementById('modalCambioClaveObligatorio').classList.add('hidden');
-  document.getElementById('modalRecuperarClave').classList.add('hidden');
-  document.getElementById('modalResetearConToken').classList.add('hidden');
-  document.getElementById('modalMisAvances').classList.add('hidden');
-  document.getElementById('modalCertificado').classList.add('hidden');
-  document.getElementById('modalAuditoriaModulo').classList.add('hidden');
-  document.getElementById('modalParametrosHermano').classList.add('hidden');
-  document.getElementById('modalEditarReflexionAdmin').classList.add('hidden');
-  document.getElementById('modalEditarComentarioForo').classList.add('hidden');
-  document.getElementById('modalAuditoriaComentario').classList.add('hidden');
-  document.getElementById('modalConfirmarAccion').classList.add('hidden');
-  document.getElementById('btnSalir').classList.add('hidden');
-  document.getElementById('seccionLogin').classList.remove('hidden');
-  document.getElementById('inputEmail').value = '';
-  document.getElementById('inputClave').value = '';
 }
 
 /* ==========================================================================
@@ -1635,7 +1747,7 @@ document.addEventListener('keydown', (e) => {
       return;
     }
 
-    ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano', 'modalEditarReflexionAdmin', 'modalEditarComentarioForo', 'modalAuditoriaComentario', 'modalConfirmarAccion', 'modalRecuperarClave'].forEach(id => {
+    ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano', 'modalEditarReflexionAdmin', 'modalEditarComentarioForo', 'modalAuditoriaComentario', 'modalConfirmarAccion', 'modalRecuperarClave', 'modalCambiarMiClave', 'modalAdminClaveHermano'].forEach(id => {
       const el = document.getElementById(id);
       if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
     });
@@ -1668,7 +1780,7 @@ function descargarCertificadoPDF() {
 
 /* ==========================================================================
    CONSOLA SUPERADMIN: CARGA Y SUBSECCIONES
-   ========================================================================= */
+   ========================================================================== */
 async function cargarDatosAdmin() {
   const { data: mods } = await sbApp
     .from('modulos')
@@ -2255,7 +2367,7 @@ function eliminarModuloYReordenar(moduloId) {
 }
 
 /* ==========================================================================
-   MATRIZ DE AVANCE Y EDITOR DE PARÁMETROS DEL HERMANO (SUPERADMIN)
+   MATRIZ DE AVANCE Y GESTIÓN DE PARÁMETROS Y CLAVES (SUPERADMIN)
    ========================================================================== */
 async function cargarMetricasAvance(moduloId) {
   const tbody = document.getElementById('tablaMetricasBody');
@@ -2303,6 +2415,8 @@ async function cargarMetricasAvance(moduloId) {
       }
     }
 
+    const nombreEscapado = (u.nombre || '').replace(/'/g, "\\'");
+
     tbody.innerHTML += `
       <tr>
         <td>
@@ -2315,8 +2429,9 @@ async function cargarMetricasAvance(moduloId) {
         <td>${reflexHtml}</td>
         <td>${fechaHtml}</td>
         <td>
-          <div style="display: flex; gap: 6px;">
-            <button class="admin-link-btn" onclick="abrirEditorParametrosHermano('${u.id}', '${moduloId}', '${(u.nombre || '').replace(/'/g, "\\'")}')">⚙️ Parámetros</button>
+          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+            <button class="admin-link-btn" onclick="abrirEditorParametrosHermano('${u.id}', '${moduloId}', '${nombreEscapado}')">⚙️ Parámetros</button>
+            <button class="admin-link-btn" style="color: var(--accent-gold-dark);" onclick="abrirModalAdminClaveHermano('${u.id}', '${nombreEscapado}')">🔑 Clave</button>
             <button class="admin-link-btn" onclick="abrirModalMisAvances('${u.id}')">📄 Ficha</button>
           </div>
         </td>
@@ -2708,4 +2823,15 @@ document.addEventListener("DOMContentLoaded", () => {
   inicializarLuminosidad();
   verificarTokenUrl();
   recuperarSesionGuardada();
+
+  ['inputEmail', 'inputClave'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          iniciarSesion();
+        }
+      });
+    }
+  });
 });
