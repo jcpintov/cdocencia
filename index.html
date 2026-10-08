@@ -135,10 +135,10 @@
       </div>
       <div class="card-fase-header">
         <span class="fase-badge badge-muro">MURO GENERAL</span>
-        <h2 class="muro-seccion-titulo">Muro de Reflexiones de la Cámara de Docencia</h2>
+        <h2 class="muro-seccion-titulo">Muro y Foro de Reflexiones de la Cámara de Docencia</h2>
       </div>
       <p class="text-instruccion">
-        Aportes consagrados por los QQ.·.HH.·., organizados por trabajos aprobados en orden cronológico reciente. Los trabajos pendientes permanecen bajo sigilo docente.
+        Aportes y comentarios de los QQ.·.HH.·., organizados por trabajos aprobados en orden cronológico reciente. Los trabajos pendientes permanecen bajo sigilo docente.
       </p>
       <div id="contenedorMuroUsuariosDirecto"></div>
     </div>
@@ -161,7 +161,7 @@
 
       <div class="sidebar-box sidebar-avances-box" style="margin-top: -6px;">
         <button class="btn-mis-avances" onclick="mostrarMuroReflexionesUsuarios()">
-          💬 Ver Muro de Reflexiones
+          💬 Ver Muro y Foro
         </button>
       </div>
 
@@ -277,9 +277,9 @@
 
           <div class="card-fase-header">
             <span class="fase-badge badge-muro">MURO</span>
-            <h2>Muro de Reflexiones de este Trabajo</h2>
+            <h2>Muro y Foro de este Trabajo</h2>
           </div>
-          <p class="text-instruccion">Aportes consagrados para este trabajo en la Cámara:</p>
+          <p class="text-instruccion">Aportes consagrados y comentarios fraternales para este trabajo:</p>
           <div id="contenedorMuro"></div>
         </div>
       </section>
@@ -560,6 +560,49 @@
     </main>
   </div>
 
+  <!-- MODAL: EDICIÓN DE COMENTARIO EN EL FORO -->
+  <div id="modalEditarComentarioForo" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalEditarComentarioForo')">
+    <div class="modal-content" style="max-width: 600px; text-align: left;">
+      <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">
+        ✏️ Modificar Aporte
+      </h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 14px;">
+        La huella original permanecerá registrada para efectos de auditoría.
+      </p>
+
+      <input type="hidden" id="editComentarioId">
+
+      <div class="form-group">
+        <label for="textareaEditarComentario">Texto del Aporte:</label>
+        <textarea id="textareaEditarComentario" rows="4"></textarea>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+        <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalEditarComentarioForo')">Cancelar</button>
+        <button class="btn-primary" style="width: auto; padding: 10px 22px;" onclick="guardarEdicionComentarioModal()">💾 Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: AUDITORÍA DE COMENTARIO (TEXTO ORIGINAL INMUTABLE) -->
+  <div id="modalAuditoriaComentario" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAuditoriaComentario')">
+    <div class="modal-content" style="max-width: 600px; text-align: left;">
+      <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">
+        🔍 Huella de Auditoría
+      </h3>
+      <p id="auditoriaComentarioMeta" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;"></p>
+
+      <div class="form-group">
+        <label>Texto Original Inmutable:</label>
+        <div id="auditoriaTextoOriginal" style="background: rgba(0,0,0,0.04); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px; font-family: var(--font-ui); font-size: 0.95rem; line-height: 1.6;"></div>
+      </div>
+
+      <div style="text-align: right; margin-top: 18px;">
+        <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalAuditoriaComentario')">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: EDICIÓN DE REFLEXIÓN EN SUPERADMIN -->
   <div id="modalEditarReflexionAdmin" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalEditarReflexionAdmin')">
     <div class="modal-content" style="max-width: 680px; text-align: left;">
@@ -587,7 +630,7 @@
   <!-- MODAL: CONFIRMACIÓN DE ACCIONES DESTRUCTIVAS -->
   <div id="modalConfirmarAccion" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalConfirmarAccion')">
     <div class="modal-content" style="max-width: 480px; text-align: center;">
-      <span style="font-size: 2.2rem; display: block; margin-bottom: 10px;">⚠️️</span>
+      <span style="font-size: 2.2rem; display: block; margin-bottom: 10px;">⚠</span>
       <h3 id="modalConfirmarTitulo" style="color: var(--primary); margin-bottom: 10px; font-family: var(--font-ui);">Confirmar Acción</h3>
       <p id="modalConfirmarMensaje" style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;"></p>
 
