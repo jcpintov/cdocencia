@@ -203,6 +203,17 @@ async function renderizarCatalogoTrabajos() {
 
   await refrescarProgresosUsuario();
 
+  // Controlar visibilidad del botón Muro y Foro en Home
+  const btnMuroHome = document.getElementById('btnMuroHome');
+  const tieneCompletados = Object.values(misProgresos).some(p => p && p.completado === true);
+  if (btnMuroHome) {
+    if (tieneCompletados) {
+      btnMuroHome.classList.remove('hidden');
+    } else {
+      btnMuroHome.classList.add('hidden');
+    }
+  }
+
   const noLeidos = [];
   const leidos = [];
 
@@ -374,7 +385,7 @@ async function mostrarDocenciaParaMaestros() {
 }
 
 /* ==========================================================================
-   MURO Y FORO DE REFLEXIONES (CON COMENTARIOS ANIDADOS)
+   MURO Y FORO DE REFLEXIONES (DEDUPLICADO Y FORMULARIOS INDIVIDUALES)
    ========================================================================== */
 async function mostrarMuroReflexionesUsuarios() {
   document.getElementById('seccionDocencia').classList.add('hidden');
@@ -401,6 +412,7 @@ async function mostrarMuroReflexionesUsuarios() {
     return;
   }
 
+  // Traer comentarios activos
   let comentariosMap = {};
   const { data: comentariosData } = await sbApp
     .from('comentarios_muro')
@@ -409,15 +421,26 @@ async function mostrarMuroReflexionesUsuarios() {
     .order('creado_en', { ascending: true });
 
   if (comentariosData) {
+    const idsProcesados = new Set();
     comentariosData.forEach(c => {
+      if (idsProcesados.has(c.id)) return;
+      idsProcesados.add(c.id);
+
       if (!comentariosMap[c.progreso_id]) comentariosMap[c.progreso_id] = [];
       comentariosMap[c.progreso_id].push(c);
     });
   }
 
+  // Deduplicar reflexiones por (usuario_id + modulo_id)
   const reflexionesPorModulo = {};
+  const clavesReflexionVistas = new Set();
+
   aportes.forEach(a => {
     if (!a.modulo_id || !a.reflexion || a.reflexion.trim() === "") return;
+    const claveUnica = `${a.usuario_id}_${a.modulo_id}`;
+    if (clavesReflexionVistas.has(claveUnica)) return;
+    clavesReflexionVistas.add(claveUnica);
+
     if (!reflexionesPorModulo[a.modulo_id]) reflexionesPorModulo[a.modulo_id] = [];
     reflexionesPorModulo[a.modulo_id].push(a);
   });
@@ -505,7 +528,7 @@ async function mostrarMuroReflexionesUsuarios() {
             </button>
 
             <div id="caja_comentario_${it.id}" class="foro-comentar-caja hidden">
-              <textarea id="input_comentario_${it.id}" rows="3" class="foro-comentar-input" placeholder="Escriba su comentario aquí..."></textarea>
+              <textarea id="input_comentario_${it.id}" name="input_comentario_${it.id}" rows="3" class="foro-comentar-input" placeholder="Escriba su comentario aquí..."></textarea>
               <div style="display: flex; justify-content: flex-end; gap: 8px;">
                 <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleFormularioComentario('${it.id}')">Cancelar</button>
                 <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem; width: auto;" onclick="enviarComentarioForo('${it.id}', '${m.id}')">Publicar</button>
@@ -904,12 +927,16 @@ function renderizarPreguntaActual() {
   const total = preguntas.length;
   const esPreguntaEtica = (indicePreguntaActiva === total - 1);
 
-  let opcionesHtml = p.opciones.map(op => `
-    <label class="opcion-label" id="label_paso_${op.letra}" onclick="evaluarRespuestaPasoAPaso('${op.letra}', '${p.respuesta_correcta}')">
-      <input type="radio" name="preg_paso_radio" value="${op.letra}">
-      <span><strong>${op.letra})</strong> ${op.texto}</span>
-    </label>
-  `).join('');
+  // Generar IDs únicos para inputs de radio y evitar warnings del navegador
+  let opcionesHtml = p.opciones.map(op => {
+    const inputId = `preg_opt_${indicePreguntaActiva}_${op.letra}`;
+    return `
+      <label class="opcion-label" id="label_paso_${op.letra}" for="${inputId}" onclick="evaluarRespuestaPasoAPaso('${op.letra}', '${p.respuesta_correcta}')">
+        <input type="radio" id="${inputId}" name="preg_paso_radio_${indicePreguntaActiva}" value="${op.letra}">
+        <span><strong>${op.letra})</strong> ${op.texto}</span>
+      </label>
+    `;
+  }).join('');
 
   const etiquetaPregunta = esPreguntaEtica 
     ? `Pregunta 8 de ${total} — Dilema e Interrogante Ética`
@@ -940,7 +967,7 @@ async function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
 
   respuestasMarcadas[indicePreguntaActiva] = letraSeleccionada;
 
-  const radios = document.querySelectorAll(`input[name="preg_paso_radio"]`);
+  const radios = document.querySelectorAll(`input[name="preg_paso_radio_${indicePreguntaActiva}"]`);
   radios.forEach(r => r.disabled = true);
 
   const labelSeleccionado = document.getElementById(`label_paso_${letraSeleccionada}`);
@@ -1126,66 +1153,75 @@ async function cargarMuroReflexiones() {
       .order('creado_en', { ascending: true });
 
     if (comentariosData) {
+      const idsProcesados = new Set();
       comentariosData.forEach(c => {
+        if (idsProcesados.has(c.id)) return;
+        idsProcesados.add(c.id);
+
         if (!comentariosMap[c.progreso_id]) comentariosMap[c.progreso_id] = [];
         comentariosMap[c.progreso_id].push(c);
       });
     }
 
+    // Deduplicar reflexiones por usuario
+    const usuariosVistos = new Set();
+
     data.forEach(item => {
-      if (item.reflexion && item.reflexion.trim() !== "" && item.modulo_id === moduloActual.id) {
-        const coms = comentariosMap[item.id] || [];
-        let comsHtml = coms.map(c => {
-          const cFecha = c.creado_en 
-            ? new Date(c.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-            : "";
-          const esAutor = (c.usuario_id === usuarioActual.id);
-          const editadoTag = c.editado ? ` <span style="font-size: 0.72rem; color: var(--accent-gold); font-style: italic;">(editado)</span>` : "";
+      if (!item.reflexion || item.reflexion.trim() === "" || item.modulo_id !== moduloActual.id) return;
+      if (usuariosVistos.has(item.usuario_id)) return;
+      usuariosVistos.add(item.usuario_id);
 
-          let botonesComentario = "";
-          if (esAutor) {
-            botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido)}')">✏️ Editar</button>`;
-          }
-          if (usuarioActual.es_admin) {
-            botonesComentario += `<button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${(c.usuarios?.nombre || '').replace(/'/g, "\\'")}', '${cFecha}')">🔍 Huella</button>`;
-            botonesComentario += `<button class="foro-comentario-btn" style="color: var(--error);" onclick="eliminarComentarioForo('${c.id}')">🗑️</button>`;
-          }
+      const coms = comentariosMap[item.id] || [];
+      let comsHtml = coms.map(c => {
+        const cFecha = c.creado_en 
+          ? new Date(c.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+          : "";
+        const esAutor = (c.usuario_id === usuarioActual.id);
+        const editadoTag = c.editado ? ` <span style="font-size: 0.72rem; color: var(--accent-gold); font-style: italic;">(editado)</span>` : "";
 
-          return `
-            <div class="foro-comentario-item">
-              <div class="foro-comentario-header">
-                <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
-                <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
-              </div>
-              <div class="foro-comentario-cuerpo">${c.contenido}</div>
-              ${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
+        let botonesComentario = "";
+        if (esAutor) {
+          botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido)}')">✏️ Editar</button>`;
+        }
+        if (usuarioActual.es_admin) {
+          botonesComentario += `<button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${(c.usuarios?.nombre || '').replace(/'/g, "\\'")}', '${cFecha}')">🔍 Huella</button>`;
+          botonesComentario += `<button class="foro-comentario-btn" style="color: var(--error);" onclick="eliminarComentarioForo('${c.id}')">🗑️</button>`;
+        }
+
+        return `
+          <div class="foro-comentario-item">
+            <div class="foro-comentario-header">
+              <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
+              <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
             </div>
-          `;
-        }).join('');
-
-        contenedor.innerHTML += `
-          <div class="reflexion-item" style="margin-bottom: 20px;">
-            <div class="reflexion-autor">${item.usuarios?.nombre || "Hermano Maestro"}</div>
-            <div style="font-style: italic; margin-bottom: 8px;">"${item.reflexion}"</div>
-            
-            <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${item.id}')">
-              💬 Comentarios (${coms.length})
-            </button>
-
-            <div id="caja_comentario_${item.id}" class="foro-comentar-caja hidden">
-              <textarea id="input_comentario_${item.id}" rows="3" class="foro-comentar-input" placeholder="Escriba su comentario aquí..."></textarea>
-              <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleFormularioComentario('${item.id}')">Cancelar</button>
-                <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem; width: auto;" onclick="enviarComentarioForo('${item.id}', '${moduloActual.id}')">Publicar</button>
-              </div>
-            </div>
-
-            <div class="foro-comentarios-wrapper" id="lista_comentarios_${item.id}">
-              ${comsHtml}
-            </div>
+            <div class="foro-comentario-cuerpo">${c.contenido}</div>
+            ${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
           </div>
         `;
-      }
+      }).join('');
+
+      contenedor.innerHTML += `
+        <div class="reflexion-item" style="margin-bottom: 20px;">
+          <div class="reflexion-autor">${item.usuarios?.nombre || "Hermano Maestro"}</div>
+          <div style="font-style: italic; margin-bottom: 8px;">"${item.reflexion}"</div>
+          
+          <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${item.id}')">
+            💬 Comentarios (${coms.length})
+          </button>
+
+          <div id="caja_comentario_${item.id}" class="foro-comentar-caja hidden">
+            <textarea id="input_comentario_${item.id}" name="input_comentario_${item.id}" rows="3" class="foro-comentar-input" placeholder="Escriba su comentario aquí..."></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+              <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleFormularioComentario('${item.id}')">Cancelar</button>
+              <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem; width: auto;" onclick="enviarComentarioForo('${item.id}', '${moduloActual.id}')">Publicar</button>
+            </div>
+          </div>
+
+          <div class="foro-comentarios-wrapper" id="lista_comentarios_${item.id}">
+            ${comsHtml}
+          </div>
+        </div>
+      `;
     });
   } else {
     contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Aún no hay reflexiones consagradas en este trabajo.</p>";
@@ -1875,7 +1911,7 @@ function renderizarEditorPreguntasAuditoria() {
       return `
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
           <strong style="width: 20px;">${letra})</strong>
-          <input type="text" id="edit_p_${idx}_op_${letra}" value="${opObj.texto.replace(/"/g, '&quot;')}" style="flex: 1; padding: 6px 10px; font-size: 0.9rem;">
+          <input type="text" id="edit_p_${idx}_op_${letra}" name="edit_p_${idx}_op_${letra}" value="${opObj.texto.replace(/"/g, '&quot;')}" style="flex: 1; padding: 6px 10px; font-size: 0.9rem;">
         </div>
       `;
     }).join('');
@@ -1885,8 +1921,8 @@ function renderizarEditorPreguntasAuditoria() {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <strong style="color: var(--accent-gold-dark);">${esEtica ? 'Pregunta 8 (Dilema Ético)' : `Pregunta ${idx + 1}`}</strong>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <label style="font-size: 0.85rem; font-weight: 700;">Respuesta Correcta:</label>
-            <select id="edit_p_${idx}_correcta" style="width: 70px; padding: 4px 8px;">
+            <label for="edit_p_${idx}_correcta" style="font-size: 0.85rem; font-weight: 700;">Respuesta Correcta:</label>
+            <select id="edit_p_${idx}_correcta" name="edit_p_${idx}_correcta" style="width: 70px; padding: 4px 8px;">
               <option value="A" ${p.respuesta_correcta === 'A' ? 'selected' : ''}>A</option>
               <option value="B" ${p.respuesta_correcta === 'B' ? 'selected' : ''}>B</option>
               <option value="C" ${p.respuesta_correcta === 'C' ? 'selected' : ''}>C</option>
@@ -1895,16 +1931,16 @@ function renderizarEditorPreguntasAuditoria() {
           </div>
         </div>
         <div class="form-group" style="margin-bottom: 10px;">
-          <label>Enunciado:</label>
-          <input type="text" id="edit_p_${idx}_enunciado" value="${(p.enunciado || '').replace(/"/g, '&quot;')}" style="font-size: 0.95rem;">
+          <label for="edit_p_${idx}_enunciado">Enunciado:</label>
+          <input type="text" id="edit_p_${idx}_enunciado" name="edit_p_${idx}_enunciado" value="${(p.enunciado || '').replace(/"/g, '&quot;')}" style="font-size: 0.95rem;">
         </div>
         <div style="margin-bottom: 10px;">
-          <label style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Alternativas:</label>
+          <span style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Alternativas:</span>
           ${opcionesInputs}
         </div>
         <div class="form-group" style="margin-bottom: 0;">
-          <label>Retroalimentación:</label>
-          <input type="text" id="edit_p_${idx}_retro" value="${(p.retroalimentacion || '').replace(/"/g, '&quot;')}" style="font-size: 0.9rem;">
+          <label for="edit_p_${idx}_retro">Retroalimentación:</label>
+          <input type="text" id="edit_p_${idx}_retro" name="edit_p_${idx}_retro" value="${(p.retroalimentacion || '').replace(/"/g, '&quot;')}" style="font-size: 0.9rem;">
         </div>
       </div>
     `;
@@ -2177,16 +2213,16 @@ function renderizarFormularioDoctrinaAdmin() {
           </div>
         </div>
         <div class="form-group">
-          <label>Título:</label>
-          <input type="text" value="${(b.titulo || '').replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].titulo = this.value">
+          <label for="doc_tit_${idx}">Título:</label>
+          <input type="text" id="doc_tit_${idx}" name="doc_tit_${idx}" value="${(b.titulo || '').replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].titulo = this.value">
         </div>
         <div class="form-group">
-          <label>Subtítulo:</label>
-          <input type="text" value="${(b.subtitulo || '').replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].subtitulo = this.value">
+          <label for="doc_sub_${idx}">Subtítulo:</label>
+          <input type="text" id="doc_sub_${idx}" name="doc_sub_${idx}" value="${(b.subtitulo || '').replace(/"/g, '&quot;')}" oninput="bloquesDoctrinaAdmin[${idx}].subtitulo = this.value">
         </div>
         <div class="form-group">
-          <label>Texto Doctrinal:</label>
-          <textarea rows="4" oninput="bloquesDoctrinaAdmin[${idx}].texto = this.value">${b.texto || ''}</textarea>
+          <label for="doc_txt_${idx}">Texto Doctrinal:</label>
+          <textarea id="doc_txt_${idx}" name="doc_txt_${idx}" rows="4" oninput="bloquesDoctrinaAdmin[${idx}].texto = this.value">${b.texto || ''}</textarea>
         </div>
       </div>
     `;
@@ -2267,7 +2303,11 @@ async function cargarMuroGeneralAdmin() {
     .order('creado_en', { ascending: true });
 
   if (comentariosData) {
+    const idsProcesados = new Set();
     comentariosData.forEach(c => {
+      if (idsProcesados.has(c.id)) return;
+      idsProcesados.add(c.id);
+
       if (!comentariosMap[c.progreso_id]) comentariosMap[c.progreso_id] = [];
       comentariosMap[c.progreso_id].push(c);
     });
