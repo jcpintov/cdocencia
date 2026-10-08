@@ -49,7 +49,11 @@ body.theme-nocturno {
   --error-light: #3A1818;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+}
 
 body {
   background-color: var(--bg-color);
@@ -1701,15 +1705,15 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
   margin-bottom: 8px !important; 
 }
 
-#documentoCertificado .cert-cargo-linea {
-  margin: 0 !important;
-  line-height: 1.4 !important;
+#documentoCertificado .cert-cargo-linea { 
+  margin: 0 !important; 
+  line-height: 1.4 !important; 
 }
 
-#documentoCertificado .cert-fecha-linea {
-  margin: 0 !important;
-  line-height: 1.4 !important;
-  white-space: nowrap !important;
+#documentoCertificado .cert-fecha-linea { 
+  margin: 0 !important; 
+  line-height: 1.4 !important; 
+  white-space: nowrap !important; 
 }
 
 .cert-timbre-col {
