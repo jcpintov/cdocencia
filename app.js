@@ -5,6 +5,7 @@ if (window.pdfjsLib) {
 const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
 
+const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 // Inicialización forzando credenciales en headers globales para evitar error 401
 const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   global: {
