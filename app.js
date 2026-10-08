@@ -6,15 +6,6 @@ const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
 
 const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-// Inicialización forzando credenciales en headers globales para evitar error 401
-const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-  global: {
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`
-    }
-  }
-});
 
 let usuarioActual = null;
 let listaModulos = [];
@@ -213,7 +204,6 @@ function configurarEntornoUsuario() {
 function aceptarSigilo() {
   document.getElementById('modalSigilo').classList.add('hidden');
 
-  // Si aún tiene pendiente el cambio forzado de contraseña en el primer ingreso
   if (usuarioActual.debe_cambiar_clave) {
     document.getElementById('modalCambioClaveObligatorio').classList.remove('hidden');
     return;
@@ -380,7 +370,6 @@ async function renderizarCatalogoTrabajos() {
 
   await refrescarProgresosUsuario();
 
-  // Controlar visibilidad del botón Muro y Foro en Home según avance
   const btnMuroHome = document.getElementById('btnMuroHome');
   const tieneCompletados = Object.values(misProgresos).some(p => p && p.completado === true);
   if (btnMuroHome) {
@@ -1641,7 +1630,6 @@ function abrirModalConfirmacion(titulo, mensaje, callback) {
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
-    // Si el modal de cambio obligatorio está abierto, NO cerrarlo con Escape
     const modalObligatorio = document.getElementById('modalCambioClaveObligatorio');
     if (modalObligatorio && !modalObligatorio.classList.contains('hidden')) {
       return;
@@ -1680,7 +1668,7 @@ function descargarCertificadoPDF() {
 
 /* ==========================================================================
    CONSOLA SUPERADMIN: CARGA Y SUBSECCIONES
-   ========================================================================== */
+   ========================================================================= */
 async function cargarDatosAdmin() {
   const { data: mods } = await sbApp
     .from('modulos')
