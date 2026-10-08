@@ -49,7 +49,10 @@
 
       <div class="form-group">
         <label for="inputClave">Contraseña:</label>
-        <input type="password" id="inputClave" name="login_clave" placeholder="••••••••" autocomplete="current-password">
+        <div style="position: relative; display: flex; align-items: center;">
+          <input type="password" id="inputClave" name="login_clave" placeholder="••••••••" autocomplete="current-password" style="padding-right: 42px;">
+          <button type="button" id="btnToggleVerClave" onclick="alternarVisibilidadClaveLogin()" style="position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 1.15rem; color: var(--text-muted); padding: 0;" title="Mostrar / Ocultar contraseña">👁️</button>
+        </div>
       </div>
 
       <div style="display: flex; justify-content: flex-end; margin-top: -10px; margin-bottom: 16px;">
@@ -132,10 +135,50 @@
     </div>
   </div>
 
-  <!-- MODAL SUPERADMIN PARA GESTIONAR CONTRASEÑA DE UN HERMANO -->
+  <!-- MODAL SUPERADMIN: CREAR / EDITAR USUARIO -->
+  <div id="modalAdminUsuario" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAdminUsuario')">
+    <div class="modal-content" style="max-width: 520px; text-align: left;">
+      <h3 id="modalAdminUsuarioTitulo" style="color: var(--accent-gold); margin-bottom: 8px;">👤 Nuevo Usuario</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Complete los datos del Hermano para su incorporación o actualización.</p>
+
+      <input type="hidden" id="adminUsuarioTargetId">
+
+      <div class="form-group">
+        <label for="adminUsuarioNombre">Nombre Completo:</label>
+        <input type="text" id="adminUsuarioNombre" placeholder="Ej: Julio César Pinto Villar">
+      </div>
+
+      <div class="form-group">
+        <label for="adminUsuarioEmail">Correo Electrónico:</label>
+        <input type="email" id="adminUsuarioEmail" placeholder="hermano@correo.com">
+      </div>
+
+      <div class="form-group" id="grupoClaveCreacion">
+        <label for="adminUsuarioClave">Contraseña Inicial:</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="adminUsuarioClave" placeholder="Ej: OFL.146! o generada">
+          <button class="btn-secondary" type="button" style="padding: 6px 12px; font-size: 0.8rem; white-space: nowrap;" onclick="autogenerarClaveNuevoUsuario()">🎲 Generar</button>
+        </div>
+      </div>
+
+      <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+        <input type="checkbox" id="adminUsuarioEsAdmin" style="width: 18px; height: 18px; cursor: pointer;">
+        <label for="adminUsuarioEsAdmin" style="margin: 0; cursor: pointer; font-weight: 600;">Asignar Privilegios de Superadmin</label>
+      </div>
+
+      <p id="errorAdminUsuario" class="error-msg" style="text-align: left; margin-bottom: 12px;"></p>
+
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;">
+        <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalAdminUsuario')">Cancelar</button>
+        <button class="btn-primary" style="width: auto;" onclick="guardarAdminUsuario()">Guardar Usuario</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL SUPERADMIN: REASIGNAR CONTRASEÑA DIRECTA -->
   <div id="modalAdminClaveHermano" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAdminClaveHermano')">
     <div class="modal-content" style="max-width: 480px; text-align: left;">
-      <h3 style="color: var(--accent-gold); margin-bottom: 8px;">🔑 Gestionar Contraseña de Hermano</h3>
+      <h3 style="color: var(--accent-gold); margin-bottom: 8px;">🔑 Reasignar Contraseña</h3>
       <p style="font-size: 0.9rem; margin-bottom: 14px;">Hermano: <strong id="adminHermanoNombreSpan"></strong></p>
       <input type="hidden" id="adminTargetHermanoId">
 
@@ -148,11 +191,16 @@
         <button class="btn-secondary" style="font-size: 0.8rem;" onclick="autogenerarAdminClaveHermano()">🎲 Generar y Copiar</button>
       </div>
 
+      <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+        <input type="checkbox" id="chkForzarCambioAdmin" style="width: 18px; height: 18px; cursor: pointer;" checked>
+        <label for="chkForzarCambioAdmin" style="margin: 0; cursor: pointer; font-size: 0.88rem;">Exigir cambio de clave al próximo inicio de sesión</label>
+      </div>
+
       <p id="errorAdminClaveHermano" class="error-msg" style="text-align: left; margin-bottom: 10px;"></p>
 
       <div style="display: flex; justify-content: flex-end; gap: 8px;">
         <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalAdminClaveHermano')">Cancelar</button>
-        <button class="btn-primary" style="width: auto;" onclick="guardarAdminClaveHermano()">Asignar</button>
+        <button class="btn-primary" style="width: auto;" onclick="guardarAdminClaveHermano()">Actualizar Clave</button>
       </div>
     </div>
   </div>
@@ -441,15 +489,15 @@
         <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq" target="_blank" class="admin-nav-link-ext">
           ⚡ Supabase Dashboard
         </a>
-        <a href="#" id="linkCuadernoDocencia" target="_blank" class="admin-nav-link-ext" title="Acceso al Cuaderno de Curaduría">
-          📓 Cuaderno de Docencia (3er Grado)
-        </a>
       </div>
 
       <hr class="admin-divider">
 
       <nav class="admin-menu-list">
-        <button id="tabNavCargar" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('cargar')">
+        <button id="tabNavUsuarios" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('usuarios')">
+          👥 Administrar Usuarios
+        </button>
+        <button id="tabNavCargar" class="admin-side-btn" onclick="cambiarSubseccionAdmin('cargar')">
           📁 Adjuntar Archivo Original
         </button>
         <button id="tabNavGestionTrabajos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">
@@ -480,17 +528,48 @@
     </aside>
 
     <main class="admin-main-content">
+      <!-- SUBSECCIÓN: ADMINISTRAR USUARIOS -->
+      <section id="adminSeccionUsuarios" class="card card-trazado">
+        <div class="admin-card-header">
+          <div>
+            <h2>Padrón y Administración de Usuarios</h2>
+            <p class="text-instruccion" style="margin: 0;">Gestione altas, bajas, roles y contraseñas de los integrantes de la Cámara.</p>
+          </div>
+          <div class="admin-header-actions">
+            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="abrirModalCrearUsuario()">➕ Nuevo Hermano</button>
+            <button class="admin-link-btn" onclick="cargarListadoUsuariosAdmin()">🔄 Refrescar Padrón</button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="metricas-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Correo Electrónico</th>
+                <th>Rol</th>
+                <th>Estado Clave</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tablaUsuariosAdminBody">
+              <tr><td colspan="5" class="td-loading">Consultando padrón de usuarios...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- SUBSECCIÓN 1: ASOCIACIÓN Y ADJUNCIÓN DE ARCHIVOS ORIGINALES -->
-      <section id="adminSeccionCarga" class="card card-trazado">
+      <section id="adminSeccionCarga" class="card card-trazado hidden">
         <div class="admin-card-header">
           <div>
             <h2>Asociación de Archivo Original a Trabajos Consagrados</h2>
-            <p class="text-instruccion" style="margin: 0;">Los trabajos y preguntas se normalizan vía SQL. Suba aquí el archivo PDF o Word original para habilitar su descarga por parte de los Hermanos.</p>
+            <p class="text-instruccion" style="margin: 0;">Suba aquí el archivo PDF o Word original para habilitar su descarga por parte de los Hermanos.</p>
           </div>
         </div>
 
         <div class="form-group" style="max-width: 520px; margin-bottom: 24px;">
-          <label for="selectModuloParaArchivo" style="font-weight: 700;">Seleccionar Trabajo al que se asociará el documento:</label>
+          <label for="selectModuloParaArchivo" style="font-weight: 700;">Seleccionar Trabajo:</label>
           <select id="selectModuloParaArchivo" name="selectModuloParaArchivo" onchange="verificarEstadoArchivoModulo(this.value)"></select>
           <p id="estadoArchivoActual" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 6px;"></p>
         </div>
@@ -517,7 +596,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Gestión y Modificación de Trabajos Consagrados</h2>
-            <p class="text-instruccion" style="margin: 0;">Edite títulos, autor, orden, textos, batería de 8 preguntas o elimine trabajos de prueba.</p>
+            <p class="text-instruccion" style="margin: 0;">Edite títulos, autor, orden, textos, batería de 8 preguntas o elimine trabajos.</p>
           </div>
           <div class="admin-header-actions">
             <button class="admin-link-btn" onclick="cargarGestionTrabajosAdmin()">🔄 Refrescar Lista</button>
@@ -531,7 +610,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Cámara Interactiva Presencial: Módulos de Debate y Dilemas</h2>
-            <p class="text-instruccion" style="margin: 0;">Sesión participativa para 3 o más mesas constituidas en sala con tablero de Puntos de Aplomo.</p>
+            <p class="text-instruccion" style="margin: 0;">Sesión participativa para 3 o más mesas con tablero de Puntos de Aplomo.</p>
           </div>
           <div class="admin-header-actions">
             <button class="btn-primary" style="padding: 8px 18px; font-size: 0.9rem;" onclick="generarDinamicaPresencial()">
@@ -576,8 +655,7 @@
             <h4 style="margin-bottom: 6px; color: var(--accent-gold-dark);">⚖️ Puntos de Aplomo:</h4>
             <p style="margin: 0; font-size: 0.88rem; line-height: 1.5;">
               • Bonificaciones: <strong>+15 Precisión</strong> y <strong>+20 Aporte Lúcido</strong>.<br>
-              • Penalizaciones: <strong>-10 Divagación</strong>, <strong>-15 Sin Acuerdo</strong> y <strong>-10 Ruido</strong>.<br>
-              • Premios al final: <em>Respuesta Más Precisa</em> y <em>Grupo Más Participativo</em>.
+              • Penalizaciones: <strong>-10 Divagación</strong>, <strong>-15 Sin Acuerdo</strong> y <strong>-10 Ruido</strong>.
             </p>
           </div>
         </div>
@@ -697,73 +775,6 @@
         </div>
       </section>
     </main>
-  </div>
-
-  <!-- MODAL: EDICIÓN DE COMENTARIO EN EL FORO -->
-  <div id="modalEditarComentarioForo" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalEditarComentarioForo')">
-    <div class="modal-content" style="max-width: 600px; text-align: left;">
-      <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">
-        ✏️ Modificar Aporte
-      </h3>
-      <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 14px;">
-        La huella original permanecerá registrada para efectos de auditoría.
-      </p>
-
-      <input type="hidden" id="editComentarioId" name="editComentarioId">
-
-      <div class="form-group">
-        <label for="textareaEditarComentario">Texto del Aporte:</label>
-        <textarea id="textareaEditarComentario" name="textareaEditarComentario" rows="4"></textarea>
-      </div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
-        <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalEditarComentarioForo')">Cancelar</button>
-        <button class="btn-primary" style="width: auto; padding: 10px 22px;" onclick="guardarEdicionComentarioModal()">💾 Guardar Cambios</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: AUDITORÍA DE COMENTARIO (TEXTO ORIGINAL INMUTABLE) -->
-  <div id="modalAuditoriaComentario" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAuditoriaComentario')">
-    <div class="modal-content" style="max-width: 600px; text-align: left;">
-      <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">
-        🔍 Huella de Auditoría
-      </h3>
-      <p id="auditoriaComentarioMeta" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;"></p>
-
-      <div class="form-group">
-        <span style="font-size: 0.95rem; font-weight: 600; margin-bottom: 6px; display: block;">Texto Original Inmutable:</span>
-        <div id="auditoriaTextoOriginal" style="background: rgba(0,0,0,0.04); border: 1px solid var(--border-color); padding: 12px; border-radius: 6px; font-family: var(--font-ui); font-size: 0.95rem; line-height: 1.6;"></div>
-      </div>
-
-      <div style="text-align: right; margin-top: 18px;">
-        <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalAuditoriaComentario')">Cerrar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: EDICIÓN DE REFLEXIÓN EN SUPERADMIN -->
-  <div id="modalEditarReflexionAdmin" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalEditarReflexionAdmin')">
-    <div class="modal-content" style="max-width: 680px; text-align: left;">
-      <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">
-        ✏️ Modificar Reflexión Consagrada
-      </h3>
-      <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
-        Edite el aporte fraterno respetando la profundidad y sentido del Hermano autor.
-      </p>
-
-      <input type="hidden" id="editReflexionProgresoId" name="editReflexionProgresoId">
-
-      <div class="form-group">
-        <label for="textareaEditarReflexionAdmin">Texto de la Reflexión:</label>
-        <textarea id="textareaEditarReflexionAdmin" name="textareaEditarReflexionAdmin" rows="6" style="line-height: 1.6;"></textarea>
-      </div>
-
-      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
-        <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalEditarReflexionAdmin')">Cancelar</button>
-        <button class="btn-primary" style="width: auto; padding: 10px 22px;" onclick="guardarEdicionReflexionModalAdmin()">💾 Guardar Cambios</button>
-      </div>
-    </div>
   </div>
 
   <!-- MODAL: CONFIRMACIÓN DE ACCIONES DESTRUCTIVAS -->
