@@ -47,8 +47,14 @@
       </div>
 
       <div class="form-group">
-        <label for="inputClave">Palabra de Paso de la Cámara:</label>
+        <label for="inputClave">Contraseña:</label>
         <input type="password" id="inputClave" name="login_clave" placeholder="••••••••" autocomplete="current-password">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: -10px; margin-bottom: 16px;">
+        <a href="javascript:void(0)" onclick="abrirModalRecuperarClave()" style="font-family: var(--font-ui); font-size: 0.85rem; color: var(--accent-gold-dark); text-decoration: underline;">
+          ¿Olvidó su contraseña?
+        </a>
       </div>
 
       <button class="btn-primary" onclick="iniciarSesion()">Acceder a la Cámara</button>
@@ -68,6 +74,87 @@
       </p>
       <button class="btn-primary btn-sigilo-accion" onclick="aceptarSigilo()">
         REAFIRMO MI COMPROMISO Y DISCRECIÓN
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL CAMBIO DE CONTRASEÑA OBLIGATORIO (PRIMER INGRESO) -->
+  <div id="modalCambioClaveObligatorio" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 520px; text-align: left;">
+      <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">
+        🔒 Definición de Contraseña Personal
+      </h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+        Para garantizar que nadie suplante su identidad en los aportes y evaluaciones, debe definir su contraseña personal.
+        <br><strong>Requisito de seguridad:</strong> Mínimo 7 caracteres en total (al menos 6 caracteres normales y al menos 1 símbolo especial como <em>! @ # $ % * ?</em>).
+      </p>
+
+      <div class="form-group">
+        <label for="nuevaClaveInput">Nueva Contraseña:</label>
+        <input type="password" id="nuevaClaveInput" name="nuevaClaveInput" placeholder="Ej: Maestro#2026">
+      </div>
+
+      <div class="form-group">
+        <label for="repetirClaveInput">Repetir Nueva Contraseña:</label>
+        <input type="password" id="repetirClaveInput" name="repetirClaveInput" placeholder="Repita la misma contraseña">
+      </div>
+
+      <p id="errorCambioClave" class="error-msg" style="text-align: left; margin-bottom: 12px;"></p>
+
+      <button class="btn-primary" onclick="guardarNuevaClaveObligatoria()">
+        💾 Guardar Contraseña y Continuar
+      </button>
+    </div>
+  </div>
+
+  <!-- MODAL SOLICITUD DE RECUPERACIÓN DE CONTRASEÑA -->
+  <div id="modalRecuperarClave" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalRecuperarClave')">
+    <div class="modal-content" style="max-width: 480px; text-align: left;">
+      <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">
+        🔑 Recuperación de Contraseña
+      </h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+        Ingrese su correo registrado en el padrón para generar su enlace de restablecimiento seguro.
+      </p>
+
+      <div class="form-group">
+        <label for="recuperarEmailInput">Correo Electrónico:</label>
+        <input type="email" id="recuperarEmailInput" name="recuperarEmailInput" placeholder="su.correo@ejemplo.com">
+      </div>
+
+      <div id="recuperarStatusMsg" style="font-family: var(--font-ui); font-size: 0.88rem; margin-bottom: 14px;"></div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalRecuperarClave')">Cancelar</button>
+        <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="enviarSolicitudRecuperacion()">Generar Enlace</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL RESTABLECIMIENTO POR TOKEN DE RECUPERACIÓN -->
+  <div id="modalResetearConToken" class="modal-overlay hidden">
+    <div class="modal-content" style="max-width: 500px; text-align: left;">
+      <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">
+        🔄 Restablecer su Contraseña
+      </h3>
+      <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
+        Ingrese su nueva contraseña de seguridad (mínimo 6 caracteres normales y al menos 1 símbolo especial).
+      </p>
+
+      <div class="form-group">
+        <label for="tokenNuevaClave">Nueva Contraseña:</label>
+        <input type="password" id="tokenNuevaClave" name="tokenNuevaClave" placeholder="••••••••">
+      </div>
+
+      <div class="form-group">
+        <label for="tokenRepetirClave">Confirmar Nueva Contraseña:</label>
+        <input type="password" id="tokenRepetirClave" name="tokenRepetirClave" placeholder="••••••••">
+      </div>
+
+      <p id="errorResetToken" class="error-msg" style="text-align: left; margin-bottom: 12px;"></p>
+
+      <button class="btn-primary" onclick="guardarResetConToken()">
+        Actualizar Contraseña e Ingresar
       </button>
     </div>
   </div>
@@ -103,7 +190,6 @@
           <button class="btn-gemelo btn-gemelo-primario" onclick="abrirModalMisAvances()">
             📊 Mis Avances
           </button>
-          <!-- BOTÓN DINÁMICO DEL MURO EN HOME -->
           <button id="btnMuroHome" class="btn-gemelo btn-gemelo-secundario hidden" onclick="mostrarMuroReflexionesUsuarios()">
             💬 Muro y Foro
           </button>
