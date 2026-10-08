@@ -833,6 +833,122 @@ body.theme-nocturno .reflexion-item { background: #131B23; border-left-color: va
 .reflexion-autor { font-size: 0.9rem; font-family: var(--font-ui); font-weight: 700; color: var(--accent-gold-dark); margin-bottom: 6px; }
 body.theme-nocturno .reflexion-autor { color: var(--accent-gold); }
 
+/* ==========================================================================
+   SISTEMA DE FORO: COMENTARIOS ANIDADOS Y HILOS DE DEBATE
+   ========================================================================== */
+.foro-comentarios-wrapper {
+  margin-top: 14px;
+  padding-left: 18px;
+  border-left: 2px dashed var(--border-color);
+}
+body.theme-nocturno .foro-comentarios-wrapper {
+  border-left-color: #2D3D4E;
+}
+
+.foro-comentario-item {
+  background: rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-top: 10px;
+  font-family: var(--font-ui);
+}
+body.theme-nocturno .foro-comentario-item {
+  background: #18222C;
+  border-color: #2A3847;
+}
+
+.foro-comentario-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.foro-comentario-autor {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent-gold-dark);
+}
+body.theme-nocturno .foro-comentario-autor {
+  color: var(--accent-gold);
+}
+
+.foro-comentario-fecha {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.foro-comentario-cuerpo {
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--text-main);
+  white-space: pre-wrap;
+}
+
+.foro-comentario-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border-color);
+}
+body.theme-nocturno .foro-comentario-acciones {
+  border-top-color: #263544;
+}
+
+.foro-comentario-btn {
+  background: transparent;
+  border: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 2px 6px;
+  color: var(--text-muted);
+  transition: color 0.2s;
+}
+.foro-comentario-btn:hover {
+  color: var(--accent-gold);
+}
+
+.foro-comentar-caja {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.foro-comentar-input {
+  width: 100%;
+  padding: 8px 12px !important;
+  font-size: 0.92rem !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: 6px !important;
+  font-family: var(--font-ui) !important;
+  resize: vertical;
+}
+
+.foro-btn-toggle-comentar {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.foro-btn-toggle-comentar:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
 /* PANEL SUPERADMIN */
 .admin-layout {
   display: grid;
@@ -970,9 +1086,7 @@ body:not(.theme-nocturno) .metricas-table td a {
   font-family: var(--font-ui);
 }
 
-/* ==========================================================================
-   NORMALIZACIÓN DE TARJETAS DE GESTIÓN (BOTONES ABAJO A LA DERECHA)
-   ========================================================================== */
+/* NORMALIZACIÓN DE TARJETAS DE GESTIÓN */
 .card-gestion-trabajo {
   padding: 22px 28px !important;
   margin-bottom: 16px !important;
@@ -1035,9 +1149,7 @@ body.theme-nocturno .gestion-trabajo-titulo {
   background: var(--error-light) !important;
 }
 
-/* ==========================================================================
-   CÁMARA INTERACTIVA PRESENCIAL Y PAUTA DEL MODERADOR
-   ========================================================================== */
+/* CÁMARA INTERACTIVA PRESENCIAL */
 .presencial-config-panel {
   background: rgba(0,0,0,0.02);
   border: 1px solid var(--border-color);
@@ -1308,9 +1420,7 @@ body.theme-nocturno .mesa-puntos-box {
   backdrop-filter: blur(4px) !important;
 }
 
-/* ==========================================================================
-   INFORME EJECUTIVO DE AVANCE Y ENCABEZADOS DE ALTA DEFINICIÓN
-   ========================================================================== */
+/* INFORME EJECUTIVO DE AVANCE */
 .informe-carta {
   background: #FFFFFF !important;
   color: #1A202C !important;
@@ -1446,9 +1556,7 @@ body.theme-nocturno .mesa-puntos-box {
   margin-top: 14px;
 }
 
-/* ==========================================================================
-   DIPLOMA A4: SIMETRÍA EXACTA EN PIE DE FIRMA
-   ========================================================================== */
+/* DIPLOMA A4 */
 #documentoCertificado.certificado-a4 {
   background: #FDFBF7 !important;
   color: #12161A !important;
@@ -1567,7 +1675,7 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
   color: #12161A !important;
 }
 
-/* PIE DE FIRMA: ALINEACIÓN SUPERIOR Y SIMETRÍA */
+/* PIE DE FIRMA */
 #documentoCertificado .cert-footer {
   display: flex !important;
   justify-content: space-between !important;
@@ -1588,7 +1696,7 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
 }
 
 #documentoCertificado .linea-firma { 
-  width: 100% !important;
+  width: 100% !important; 
   border-top: 1px solid #3B4754 !important; 
   margin-bottom: 8px !important; 
 }
@@ -1627,9 +1735,7 @@ body.theme-nocturno #documentoCertificado h4.cert-plancha {
 .error-msg { color: var(--error); margin-top: 14px; text-align: center; font-size: 0.95rem; font-family: var(--font-ui); font-weight: 600; }
 .hidden { display: none !important; }
 
-/* ==========================================================================
-   CORRECCIÓN DE CONTRASTE: MURO GENERAL Y MURO DE USUARIOS EN MODO NOCTURNO
-   ========================================================================== */
+/* CORRECCIÓN DE CONTRASTE NOCTURNO */
 #seccionMuroUsuarios h2,
 #seccionMuroUsuarios h3,
 #documentoMuroGeneralImprimible h3,
@@ -1663,7 +1769,7 @@ body.theme-nocturno #documentoMuroGeneralImprimible .reflexion-item {
   background: #16202B !important;
 }
 
-/* REGLAS RESPONSIVAS GLOBALES */
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .gestion-trabajo-botones {
     flex-direction: column;
