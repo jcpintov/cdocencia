@@ -5,7 +5,7 @@ if (window.pdfjsLib) {
 const SUPABASE_URL = "https://pwnnpjygnviyzyyvfxnq.supabase.co";
 const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF"; 
 
-// Inicialización forzando apikey y Authorization Bearer para evitar error 401
+// Inicialización forzando credenciales en headers globales para evitar error 401
 const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   global: {
     headers: {
@@ -510,12 +510,12 @@ async function mostrarMuroReflexionesUsuarios() {
           }
 
           return `
-            <div class="foro-comentario-item">
+            <div class="foro-comentario-item" id="comentario_item_${c.id}">
               <div class="foro-comentario-header">
                 <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
                 <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
               </div>
-              <div class="foro-comentario-cuerpo">${c.contenido}</div>
+              <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>
               ${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
             </div>
           `;
@@ -624,7 +624,14 @@ async function enviarComentarioForo(progresoId, moduloId) {
   } else {
     input.value = "";
     toggleFormularioComentario(progresoId);
-    await mostrarMuroReflexionesUsuarios();
+    
+    // Refrescar reactivamente la vista que se encuentra abierta
+    const seccionMuroUsuarios = document.getElementById('seccionMuroUsuarios');
+    if (seccionMuroUsuarios && !seccionMuroUsuarios.classList.contains('hidden')) {
+      await mostrarMuroReflexionesUsuarios();
+    } else {
+      await cargarMuroReflexiones();
+    }
   }
 }
 
@@ -654,7 +661,19 @@ async function guardarEdicionComentarioModal() {
     alert("Error al editar comentario: " + error.message);
   } else {
     cerrarModalUniversalDirecto('modalEditarComentarioForo');
-    await mostrarMuroReflexionesUsuarios();
+    
+    // Actualización reactiva instantánea en el nodo del DOM si existe
+    const cuerpoEl = document.getElementById(`comentario_cuerpo_${id}`);
+    if (cuerpoEl) {
+      cuerpoEl.innerText = texto;
+    }
+
+    const seccionMuroUsuarios = document.getElementById('seccionMuroUsuarios');
+    if (seccionMuroUsuarios && !seccionMuroUsuarios.classList.contains('hidden')) {
+      await mostrarMuroReflexionesUsuarios();
+    } else if (moduloActual) {
+      await cargarMuroReflexiones();
+    }
   }
 }
 
@@ -678,8 +697,25 @@ function eliminarComentarioForo(comentarioId) {
 
         if (error) {
           alert("Error al eliminar: " + error.message);
-        } else {
+          return;
+        }
+
+        // 1. Remover el nodo visual del DOM al instante
+        const nodo = document.getElementById(`comentario_item_${comentarioId}`);
+        if (nodo) {
+          nodo.remove();
+        }
+
+        // 2. Refrescar reactivamente la vista activa
+        const seccionMuroUsuarios = document.getElementById('seccionMuroUsuarios');
+        const seccionAdmin = document.getElementById('seccionAdmin');
+
+        if (seccionMuroUsuarios && !seccionMuroUsuarios.classList.contains('hidden')) {
           await mostrarMuroReflexionesUsuarios();
+        } else if (seccionAdmin && !seccionAdmin.classList.contains('hidden')) {
+          await cargarMuroGeneralAdmin();
+        } else if (moduloActual) {
+          await cargarMuroReflexiones();
         }
       } catch (err) {
         alert("Error de conexión: " + err.message);
@@ -1204,12 +1240,12 @@ async function cargarMuroReflexiones() {
         }
 
         return `
-          <div class="foro-comentario-item">
+          <div class="foro-comentario-item" id="comentario_item_${c.id}">
             <div class="foro-comentario-header">
               <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
               <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
             </div>
-            <div class="foro-comentario-cuerpo">${c.contenido}</div>
+            <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>
             ${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
           </div>
         `;
@@ -2347,12 +2383,12 @@ async function cargarMuroGeneralAdmin() {
           ? new Date(c.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
           : "";
         return `
-          <div class="foro-comentario-item" style="margin-top: 6px;">
+          <div class="foro-comentario-item" id="comentario_item_${c.id}" style="margin-top: 6px;">
             <div class="foro-comentario-header">
               <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
               <span class="foro-comentario-fecha">${cFecha}</span>
             </div>
-            <div class="foro-comentario-cuerpo">${c.contenido}</div>
+            <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>
             <div class="foro-comentario-acciones">
               <button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${(c.usuarios?.nombre || '').replace(/'/g, "\\'")}', '${cFecha}')">🔍 Ver Huella Original</button>
               <button class="foro-comentario-btn" style="color: var(--error);" onclick="eliminarComentarioForo('${c.id}')">🗑️ Eliminar</button>
