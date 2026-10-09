@@ -2067,3 +2067,24 @@ body:has(#seccionLogin:not(.hidden)) {
   #seccionLogin .logo-login-ofl{width:230px;margin:15px auto 18px}
   #seccionLogin h2{margin-bottom:8px!important;padding-bottom:15px}
 }
+
+/* HERO aprobado: encuadre centrado y emblema azul transparente. */
+body:has(#seccionLogin:not(.hidden)) {
+  background-position:50% 50%;
+  background-size:cover;
+  background-repeat:no-repeat;
+}
+#seccionLogin.login-wrapper {margin-left:auto;margin-right:auto}
+#seccionLogin .logo-login-ofl {
+  width:clamp(255px,33vw,365px);
+  max-width:88%;
+  aspect-ratio:1;
+  object-fit:contain;
+  margin-left:auto;
+  margin-right:auto;
+  filter:drop-shadow(0 3px 5px rgba(15,40,68,.11));
+}
+@media(max-width:640px) {
+  body:has(#seccionLogin:not(.hidden)){background-position:center center}
+  #seccionLogin .logo-login-ofl {width:min(72vw,290px);max-width:88%}
+}
