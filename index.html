@@ -262,20 +262,37 @@
     </div>
   </div>
 
-  <!-- PANTALLA 2: BIENVENIDA CENTRADA EN VERTICAL -->
-  <div id="seccionBienvenida" class="bienvenida-centrada-wrapper hidden">
-    <div class="card card-trazado bienvenida-tarjeta-limpia">
-      <div class="insignia-centro-wrapper">
-        <img src="https://cmaestros.ofl.cl/imgs/escuadra.png" class="img-escuadra-discreta" alt="Escuadra y Compás">
+  <!-- PANTALLA 2: BIENVENIDA INSTITUCIONAL -->
+  <div id="seccionBienvenida" class="bienvenida-portal hidden">
+    <aside class="portal-nav" aria-label="Navegación de la Cámara">
+      <div class="portal-nav-list">
+        <button class="portal-nav-link active" type="button" aria-current="page">⌂ &nbsp; Inicio</button>
+        <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia()">▤ &nbsp; Trabajos de la Cámara</button>
+        <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())">▣ &nbsp; Docencia para Maestros</button>
+        <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())">▢ &nbsp; Muro y Foro</button>
+        <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()">◷ &nbsp; Mis avances</button>
       </div>
-      <div class="bienvenida-lineas-contenedor">
-        <span class="bienvenida-subtitulo-linea">Bienvenido,</span>
-        <h1 id="bienvenidaNombreQH" class="bienvenida-nombre-linea">Q.·.H.·.</h1>
+      <div class="portal-nav-footer"><span>CÁMARA DE DOCENCIA</span><small>R.·.L.·. Orestes Frödden Lorenzen Nº 146<br>Valle de Talagante</small><button type="button" onclick="cerrarSesion()">↪ &nbsp; Cerrar sesión</button></div>
+    </aside>
+    <main class="portal-main">
+      <section class="portal-hero" aria-labelledby="portal-saludo">
+        <h1 id="portal-saludo">Bienvenido, V.·.M.·.</h1>
+        <p id="bienvenidaNombreQH" class="portal-nombre">Q.·.H.·.</p>
+        <div class="portal-divider" aria-hidden="true"><span>◆</span></div>
+        <p id="portal-frase" class="portal-frase" aria-live="polite">La reflexión fortalece el conocimiento y orienta la conducta.</p>
+      </section>
+      <div class="portal-panels">
+        <section class="portal-panel" aria-labelledby="portal-recientes-titulo">
+          <div class="portal-panel-heading"><h2 id="portal-recientes-titulo">Últimos trabajos publicados</h2><button type="button" onclick="irACatalogoDocencia()">Ver todos →</button></div>
+          <div id="portal-trabajos-recientes" class="portal-items"><p>Consultando trabajos disponibles…</p></div>
+        </section>
+        <section class="portal-panel" aria-labelledby="portal-destacados-titulo">
+          <div class="portal-panel-heading"><h2 id="portal-destacados-titulo">Temas destacados</h2></div>
+          <p class="portal-panel-caption">Ordenados por participación registrada (reflexiones y comentarios).</p>
+          <div id="portal-temas-destacados" class="portal-items"><p>Consultando participación…</p></div>
+        </section>
       </div>
-      <button class="btn-primary btn-ir-docencia-accion" onclick="irACatalogoDocencia()">
-        Ir a Docencia
-      </button>
-    </div>
+    </main>
   </div>
 
   <!-- PANTALLA 3: CATÁLOGO DE TRABAJOS -->
