@@ -986,43 +986,7 @@ body.theme-nocturno .foro-comentario-acciones {
 
 .admin-links-top { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
 .admin-nav-link-ext {
-/* Cámara de Docencia — interfaz 2.0, mejora aditiva sin alterar permisos */
-:root{--ui2-radius:12px;--ui2-shadow:0 6px 24px rgba(11,27,44,.08)}
-button,a,input,textarea,select{font-family:var(--font-ui,system-ui,sans-serif)}
-button,a[role="button"]{min-height:44px}
-button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #c39a4e;outline-offset:3px}
-.admin-layout{grid-template-columns:minmax(210px,240px) minmax(0,1fr)}
-.sidebar-admin{padding:24px 14px;gap:8px}
-.admin-brand{margin-bottom:24px}
-.admin-menu-list{gap:5px}
-.admin-side-btn{min-height:46px;border-radius:10px;padding:12px 14px;font-size:1rem;line-height:1.35}
-.admin-side-btn.active{box-shadow:inset 4px 0 0 #f2dfad}
-.admin-main-content{padding:clamp(18px,3vw,38px);min-width:0}
-.admin-main-content h2,.admin-main-content h3{letter-spacing:-.015em}
-.admin-card,.admin-main-content .card,.sidebar-box{border-radius:var(--ui2-radius);box-shadow:var(--ui2-shadow)}
-.admin-main-content input,.admin-main-content select,.admin-main-content textarea{min-height:44px;font-size:1rem}
-.admin-main-content table{width:100%;border-collapse:collapse}
-.admin-main-content th,.admin-main-content td{padding:12px 14px;vertical-align:middle}
-.admin-main-content th{text-align:left;white-space:nowrap}
-.sidebar-templo{gap:12px}
-.sidebar-templo .sidebar-box{margin-top:0!important}
-.sidebar-templo .btn-mis-avances{min-height:48px;font-size:1rem}
-.modulo-nav-item{padding:14px 12px;border-radius:10px;cursor:pointer}
-.modulo-nav-item:focus-visible{outline:3px solid #c39a4e}
-.nav-item-title{line-height:1.45}
-/* Mantener lectura adaptada; suprimir solamente la pestaña del visor original */
-#tabPdf,#vistaPdf{display:none!important}
-#tabTexto{min-height:44px}
-#btnDescargarTrazado{min-height:46px;align-items:center;justify-content:center;padding:12px 18px;font-size:1rem}
-.foro-comentario-item{border-radius:10px;padding:16px}
-.foro-comentario-cuerpo{font-size:1rem;line-height:1.7}
-.foro-comentario-btn{min-height:42px;padding:9px 12px;font-size:.95rem}
-.foro-comentar-input{font-size:1rem!important;line-height:1.6}
-@media(max-width:960px){.admin-layout{grid-template-columns:1fr}.sidebar-admin{border-right:0;border-bottom:3px solid var(--accent-gold)}.admin-menu-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}.admin-main-content{padding:18px}.templo-layout{grid-template-columns:1fr}}
-@media(max-width:600px){.admin-menu-list{grid-template-columns:1fr 1fr}.admin-side-btn{font-size:.95rem}.foro-comentarios-wrapper{padding-left:10px}.foro-comentario-item{padding:12px}.action-buttons-group>*{width:100%}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
-.logo-login-ofl {
-display: block;
+  display: block;
   padding: 8px 12px;
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.15);
@@ -1504,11 +1468,7 @@ body.theme-nocturno .mesa-puntos-box {
 .img-emblema-discreto {
   height: 56px;
   width: auto;
-  width: 110px;
-  height: auto;
-  max-width: 35%;
-  margin: 0 auto 20px;
-object-fit: contain;
+  object-fit: contain;
   opacity: 0.85;
 }
 
@@ -1841,17 +1801,6 @@ body.theme-nocturno #documentoMuroGeneralImprimible .reflexion-item {
   }
 }
 
-.logo-login-ofl {
-  display: block;
-  width: 110px;
-  max-width: 35%;
-  height: auto;
-  margin: 0 auto 20px;
-  object-fit: contain;
-}
-
-@media (max-width: 600px) {
-  .logo-login-ofl {
-    width: 95px;
-  }
-}
+/* Logotipo institucional en acceso */
+.logo-login-ofl{display:block;width:110px;max-width:35%;height:auto;margin:14px auto 20px;object-fit:contain}
+@media(max-width:600px){.logo-login-ofl{width:95px}}
