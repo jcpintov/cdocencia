@@ -2222,3 +2222,51 @@ body:has(#seccionLogin:not(.hidden)) #seccionLogin .card.card-trazado::after {
     margin-bottom:22px!important;
   }
 }
+
+/* Portal de bienvenida: identidad coherente con el acceso, sin modificar módulos internos. */
+body:has(#seccionBienvenida:not(.hidden)){background:#0b2035;overflow-x:hidden}
+body:has(#seccionBienvenida:not(.hidden))>header{position:relative;z-index:2;background:#071e33;border-bottom:2px solid #bb904d}
+#seccionBienvenida.bienvenida-portal{display:grid;grid-template-columns:225px minmax(0,1fr);width:100%;max-width:none;min-height:calc(100dvh - 77px);flex:1;margin:0;padding:0;color:#fff;font-family:Georgia,serif;line-height:1.45}
+#seccionBienvenida.bienvenida-portal.hidden{display:none!important}
+#seccionBienvenida .portal-nav{background:linear-gradient(155deg,#061c30,#09273e 70%,#07192c);padding:30px 12px 20px;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+#seccionBienvenida .portal-nav-list{display:grid;gap:8px}
+#seccionBienvenida .portal-nav-link{width:100%;border:0;border-left:3px solid transparent;border-radius:0 7px 7px 0;background:transparent;color:#f4f5f8;text-align:left;font:inherit;font-size:1rem;line-height:1.25;padding:14px 13px;cursor:pointer}
+#seccionBienvenida .portal-nav-link:hover,#seccionBienvenida .portal-nav-link.active{background:linear-gradient(90deg,#9c783f,#59462f);border-left-color:#e4bd73}
+#seccionBienvenida .portal-nav-footer{text-align:center;border-top:1px solid #607185;padding:20px 5px 0;display:grid;gap:10px;color:#e4e9ee;font-size:.8rem}
+#seccionBienvenida .portal-nav-footer small{font-size:.73rem;line-height:1.4}
+#seccionBienvenida .portal-nav-footer button{background:transparent;border:1px solid #7b91a7;border-radius:5px;color:#fff;padding:10px;cursor:pointer}
+#seccionBienvenida .portal-main{min-width:0;display:flex;flex-direction:column;justify-content:space-between;gap:28px;padding:clamp(25px,5vh,55px) clamp(16px,2vw,30px) 28px;background:linear-gradient(180deg,rgba(5,20,36,.12),rgba(7,23,39,.24)),url("imgs/hero-docencia.webp") center/cover no-repeat}
+#seccionBienvenida .portal-hero{text-align:center;max-width:830px;margin:auto;display:grid;justify-items:center;gap:9px;text-shadow:0 3px 12px #061727}
+#seccionBienvenida .portal-hero h1{color:#fff;font-size:clamp(2rem,4vw,3.3rem);line-height:1.15;margin:0}
+#seccionBienvenida .portal-nombre{font-size:clamp(1.3rem,2.3vw,2rem);color:#fff;margin:0}
+#seccionBienvenida .portal-divider{display:flex;align-items:center;gap:13px;width:min(460px,80%);color:#e5b257}
+#seccionBienvenida .portal-divider:before,#seccionBienvenida .portal-divider:after{content:"";height:1px;background:#c99c54;flex:1}
+#seccionBienvenida .portal-frase{font-style:italic;color:#fff;font-size:clamp(1.1rem,1.8vw,1.45rem);max-width:690px;line-height:1.4;margin:0}
+#seccionBienvenida .portal-panels{display:grid;grid-template-columns:1.15fr 1fr;gap:13px;align-items:stretch}
+#seccionBienvenida .portal-panel{background:rgba(250,251,252,.96);color:#112e4f;border-radius:11px;padding:17px 20px;box-shadow:0 12px 30px #071e3550;min-width:0}
+#seccionBienvenida .portal-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid #d7dfe8;padding-bottom:10px}
+#seccionBienvenida .portal-panel h2{font-size:clamp(1.12rem,1.8vw,1.45rem);line-height:1.2;color:#102d50;margin:0}
+#seccionBienvenida .portal-panel-heading button{border:0;background:none;color:#16476c;cursor:pointer;font:inherit;white-space:nowrap}
+#seccionBienvenida .portal-panel-caption{font-size:.78rem;color:#50647a;margin:8px 0 2px;line-height:1.35}
+#seccionBienvenida .portal-items{display:grid}
+#seccionBienvenida .portal-item{display:grid;text-align:left;gap:3px;padding:13px 5px;border:0;border-bottom:1px solid #dbe2e9;background:transparent;color:#0c2b4a;cursor:pointer;font:inherit}
+#seccionBienvenida .portal-item:last-child{border-bottom:0}
+#seccionBienvenida .portal-item:hover{background:#e8eff5}
+#seccionBienvenida .portal-item strong{font-size:1rem;line-height:1.2}
+#seccionBienvenida .portal-item span{font-size:.78rem;color:#4c6075}
+#seccionBienvenida button:focus-visible{outline:3px solid #c69a51;outline-offset:3px}
+@media(max-width:900px){
+ #seccionBienvenida.bienvenida-portal{grid-template-columns:175px minmax(0,1fr)}
+ #seccionBienvenida .portal-nav-link{font-size:.9rem;padding:12px 8px}
+ #seccionBienvenida .portal-panels{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+ #seccionBienvenida.bienvenida-portal{display:flex;flex-direction:column;min-height:calc(100dvh - 70px)}
+ #seccionBienvenida .portal-nav{padding:9px;display:block}
+ #seccionBienvenida .portal-nav-list{display:flex;overflow-x:auto;gap:5px;scrollbar-width:thin}
+ #seccionBienvenida .portal-nav-link{width:auto;flex:0 0 auto;white-space:nowrap;padding:10px;border-left:0;border-bottom:2px solid transparent;border-radius:5px;font-size:.86rem}
+ #seccionBienvenida .portal-nav-footer{display:none}
+ #seccionBienvenida .portal-main{padding:25px 12px;min-height:calc(100dvh - 140px);gap:32px}
+ #seccionBienvenida .portal-panel{padding:15px}
+ #seccionBienvenida .portal-hero{margin:35px auto}
+}
