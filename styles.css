@@ -2270,3 +2270,119 @@ body:has(#seccionBienvenida:not(.hidden))>header{position:relative;z-index:2;bac
  #seccionBienvenida .portal-panel{padding:15px}
  #seccionBienvenida .portal-hero{margin:35px auto}
 }
+
+/* RWD viewport 2.0: HERO empieza exactamente bajo el encabezado.
+   El menú de bienvenida queda fuera del lienzo fotográfico. */
+@supports selector(body:has(#seccionLogin:not(.hidden))) {
+  body:has(#seccionLogin:not(.hidden)) {
+    position:relative;
+    background:#0b2238!important;
+    background-image:none!important;
+    background-attachment:scroll!important;
+    grid-template-rows:auto minmax(0,1fr);
+    min-height:100dvh;
+    height:100dvh;
+    overflow-x:hidden;
+  }
+  body:has(#seccionLogin:not(.hidden))::before {
+    content:"";
+    position:fixed;
+    z-index:0;
+    top:var(--doc-header-height,68px);
+    left:0;right:0;bottom:0;
+    background:linear-gradient(90deg,rgba(12,29,49,.10),rgba(12,29,49,.12)),url("imgs/hero-docencia.webp") center center/cover no-repeat;
+    pointer-events:none;
+  }
+  body:has(#seccionLogin:not(.hidden)) > header {position:relative;z-index:2}
+  body:has(#seccionLogin:not(.hidden)) > #seccionLogin {position:relative;z-index:1}
+  body:has(#seccionBienvenida:not(.hidden)) {
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr);
+    height:100dvh;
+    min-height:100dvh;
+    overflow:hidden;
+  }
+  body:has(#seccionBienvenida:not(.hidden)) > header {
+    min-height:0;
+    padding:9px clamp(12px,2vw,24px);
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  #seccionBienvenida.bienvenida-portal {
+    min-height:0;
+    height:100%;
+    overflow:hidden;
+    grid-template-columns:clamp(175px,16vw,225px) minmax(0,1fr);
+  }
+  #seccionBienvenida .portal-nav {
+    overflow-y:auto;
+    padding:clamp(10px,2vh,22px) 10px;
+  }
+  #seccionBienvenida .portal-main {
+    min-height:0;
+    height:100%;
+    overflow-y:auto;
+    background-position:center center;
+    background-size:cover;
+    padding:clamp(12px,2vh,24px) clamp(12px,2vw,26px);
+    gap:clamp(10px,2vh,20px);
+  }
+  #seccionBienvenida .portal-hero {
+    margin:auto;
+    gap:clamp(3px,.8vh,9px);
+  }
+  #seccionBienvenida .portal-hero h1 {font-size:clamp(1.75rem,3.5vw,3.15rem)}
+  #seccionBienvenida .portal-nombre {font-size:clamp(1.1rem,2vw,1.8rem)}
+  #seccionBienvenida .portal-frase {font-size:clamp(.98rem,1.5vw,1.32rem)}
+  #seccionBienvenida .portal-panels {gap:12px;flex-shrink:0}
+  #seccionBienvenida .portal-panel {padding:clamp(9px,1.3vh,16px) clamp(12px,1.5vw,19px)}
+  #seccionBienvenida .portal-item {padding:clamp(6px,.85vh,10px) 4px}
+  #seccionBienvenida .portal-item strong {font-size:clamp(.86rem,1.1vw,1rem)}
+  #seccionBienvenida .portal-item span {font-size:.75rem}
+}
+@media(max-width:900px) and (min-width:641px) {
+  #seccionBienvenida .portal-panels{grid-template-columns:1fr 1fr}
+  #seccionBienvenida .portal-main{background-position:50% 50%}
+  #seccionBienvenida .portal-panel{padding:10px}
+  #seccionBienvenida .portal-item{padding:7px 3px}
+}
+@media(max-width:640px) {
+  body:has(#seccionBienvenida:not(.hidden)) {
+    display:flex;
+    flex-direction:column;
+    height:100dvh;
+    overflow:hidden;
+  }
+  #seccionBienvenida.bienvenida-portal {
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+    height:auto;
+    flex:1;
+    overflow:hidden;
+  }
+  #seccionBienvenida .portal-nav {
+    flex:0 0 auto;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:7px;
+  }
+  #seccionBienvenida .portal-main {
+    flex:1;
+    min-height:0;
+    height:auto;
+    overflow-y:auto;
+    background-position:center center;
+    padding:16px 12px;
+  }
+  #seccionBienvenida .portal-hero {margin:12px auto 20px}
+  #seccionBienvenida .portal-panels {grid-template-columns:1fr}
+  body:has(#seccionLogin:not(.hidden))::before {background-position:center center}
+}
+@media(max-height:700px) and (min-width:641px) {
+  #seccionBienvenida .portal-main {padding-top:8px;padding-bottom:8px;gap:7px}
+  #seccionBienvenida .portal-item {padding:4px 3px}
+  #seccionBienvenida .portal-hero h1 {font-size:clamp(1.5rem,3vw,2.5rem)}
+  #seccionBienvenida .portal-frase {font-size:1rem}
+  #seccionBienvenida .portal-nav-link {padding-top:8px;padding-bottom:8px}
+}
