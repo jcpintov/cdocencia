@@ -117,3 +117,17 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',iniciar);
   else iniciar();
 })();
+
+/* Medición exacta del encabezado para evitar recorte del HERO. */
+(function(){
+  function sincronizarEncabezado(){
+    const header=document.querySelector('body > header');
+    if(!header)return;
+    const aplicar=()=>document.documentElement.style.setProperty('--doc-header-height',header.getBoundingClientRect().height+'px');
+    aplicar();
+    if(typeof ResizeObserver!=='undefined')new ResizeObserver(aplicar).observe(header);
+    else window.addEventListener('resize',aplicar,{passive:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sincronizarEncabezado);
+  else sincronizarEncabezado();
+})();
