@@ -2187,3 +2187,38 @@ body:has(#seccionLogin:not(.hidden)) {
   #seccionLogin input[type=email],#seccionLogin input[type=password]{min-height:38px}
   #seccionLogin .btn-primary {min-height:42px}
 }
+
+/* Login compacto aprobado: sin emblema, tarjeta a media altura. */
+body:has(#seccionLogin:not(.hidden)) #seccionLogin.login-wrapper {
+  width:min(550px,calc(100% - 28px));
+  max-width:550px;
+  align-self:center;
+  justify-self:center;
+  margin:12px auto!important;
+}
+body:has(#seccionLogin:not(.hidden)) #seccionLogin .card.card-trazado {
+  padding:clamp(22px,3.4vh,34px) clamp(22px,3.2vw,40px) clamp(30px,4.5vh,44px);
+}
+body:has(#seccionLogin:not(.hidden)) #seccionLogin h2 {
+  margin:0 auto clamp(24px,4vh,38px)!important;
+  padding-bottom:clamp(14px,2.2vh,22px);
+}
+body:has(#seccionLogin:not(.hidden)) #seccionLogin .form-group {
+  margin-bottom:clamp(14px,2vh,20px);
+}
+body:has(#seccionLogin:not(.hidden)) #seccionLogin .card.card-trazado::after {
+  height:20px;
+  clip-path:polygon(0 38%,48% 100%,100% 22%,100% 100%,0 100%);
+}
+@media(max-width:640px) {
+  body:has(#seccionLogin:not(.hidden)) #seccionLogin.login-wrapper {
+    width:calc(100% - 24px);
+    margin:12px auto!important;
+  }
+  body:has(#seccionLogin:not(.hidden)) #seccionLogin .card.card-trazado {
+    padding:23px 19px 35px;
+  }
+  body:has(#seccionLogin:not(.hidden)) #seccionLogin h2 {
+    margin-bottom:22px!important;
+  }
+}
