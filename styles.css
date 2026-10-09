@@ -1979,3 +1979,91 @@ body:has(#seccionLogin:not(.hidden)) {
     transition-duration: .01ms !important;
   }
 }
+
+/* Cámara de Docencia — composición final aprobada, octubre 2026. */
+body:has(#seccionLogin:not(.hidden)) {
+  background-color:#24394f;
+  background-image:linear-gradient(90deg,rgba(238,227,211,.13),rgba(26,48,72,.20) 64%,rgba(13,34,57,.33)),url("imgs/hero-docencia.webp");
+  background-position:center center;
+  background-size:cover;
+}
+#seccionLogin.login-wrapper {
+  width:min(700px,calc(100% - 32px));
+  max-width:700px;
+  margin:clamp(22px,4vh,44px) auto 40px;
+}
+#seccionLogin .card.card-trazado {
+  position:relative;
+  isolation:isolate;
+  padding:clamp(28px,4vw,46px) clamp(24px,4vw,48px) 76px;
+  border:2px solid #bd914a;
+  border-radius:20px;
+  background:linear-gradient(128deg,rgba(249,249,248,.97),rgba(224,234,244,.96) 62%,rgba(180,201,222,.95));
+  box-shadow:0 20px 58px rgba(5,20,37,.34);
+  overflow:hidden;
+}
+#seccionLogin .card.card-trazado::after {
+  content:"";
+  position:absolute;
+  z-index:-1;
+  pointer-events:none;
+  left:0;right:0;bottom:0;height:64px;
+  background:linear-gradient(164deg,transparent 20%,#153a5d 21%,#08253f 85%);
+  border-top:3px solid #bd914a;
+  clip-path:polygon(0 0,38% 55%,100% 14%,100% 100%,0 100%);
+}
+#seccionLogin h2 {
+  text-align:center;
+  font-family:Georgia,serif;
+  font-size:clamp(1.85rem,3.4vw,2.7rem);
+  color:#0b2947;
+  margin:0 auto 22px!important;
+  padding-bottom:23px;
+  position:relative;
+}
+#seccionLogin h2::after {
+  content:"";
+  position:absolute;
+  bottom:0;left:13%;width:74%;height:2px;
+  background:linear-gradient(90deg,transparent,#c49646 24%,#c49646 76%,transparent);
+}
+#seccionLogin .login-sub {display:none}
+#seccionLogin .logo-login-ofl {
+  display:block;
+  width:clamp(245px,34vw,365px);
+  max-width:85%;
+  height:auto;
+  margin:34px auto 36px;
+  object-fit:contain;
+  filter:drop-shadow(0 3px 4px rgba(12,37,64,.12));
+}
+#seccionLogin .form-group{margin-bottom:19px}
+#seccionLogin .form-group label{font-family:Georgia,serif;font-size:1.06rem;font-weight:700;color:#102b49;margin-bottom:9px}
+#seccionLogin input[type=email],#seccionLogin input[type=password]{
+  min-height:55px;
+  border:1px solid #b9c7d6;
+  background:#fff;
+  font-size:1.05rem;
+}
+#seccionLogin .btn-primary {
+  min-height:62px;
+  font-family:Georgia,serif;
+  font-size:1.16rem;
+  background:linear-gradient(115deg,#09223a,#103b60);
+  border:1.5px solid #c69a51;
+  box-shadow:0 6px 13px rgba(10,28,47,.22);
+}
+@media(max-width:640px) {
+  #seccionLogin.login-wrapper {width:calc(100% - 22px);margin:14px auto 26px}
+  #seccionLogin .card.card-trazado {padding:24px 18px 64px;border-radius:15px}
+  #seccionLogin h2 {font-size:clamp(1.65rem,7vw,2.2rem);margin-bottom:14px!important}
+  #seccionLogin .logo-login-ofl {width:min(72vw,285px);max-width:85%;margin:22px auto 26px}
+  #seccionLogin .form-group label{font-size:1rem}
+  #seccionLogin .btn-primary{font-size:1.06rem;min-height:56px}
+}
+@media(max-height:740px) and (min-width:641px) {
+  #seccionLogin.login-wrapper {margin-top:16px}
+  #seccionLogin .card.card-trazado{padding-top:20px;padding-bottom:60px}
+  #seccionLogin .logo-login-ofl{width:230px;margin:15px auto 18px}
+  #seccionLogin h2{margin-bottom:8px!important;padding-bottom:15px}
+}
