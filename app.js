@@ -1272,15 +1272,18 @@ async function seleccionarModulo(idModulo) {
 
   if (rutaArchivo && rutaArchivo.trim() !== "") {
     btnDescargar.href = rutaArchivo;
+    btnDescargar.target = '_blank';
+    btnDescargar.rel = 'noopener noreferrer';
     
     const esWord = rutaArchivo.startsWith('data:application/vnd.openxmlformats') || rutaArchivo.endsWith('.docx');
     const extension = esWord ? '.docx' : '.pdf';
-    btnDescargar.download = `Trabajo_${moduloActual.numero_orden}_${moduloActual.titulo.replace(/[\s\W]+/g, '_')}${extension}`;
+    btnDescargar.removeAttribute('download'); // Abrir en pestaña nueva, permitir guardar desde el navegador.
     btnDescargar.classList.remove('hidden');
 
     if (!esWord && (rutaArchivo.startsWith('data:application/pdf') || rutaArchivo.endsWith('.pdf'))) {
-      tabPdf.classList.remove('hidden');
-      framePdf.src = rutaArchivo;
+      tabPdf.classList.add('hidden'); // Visor original retirado por decisión institucional.
+      framePdf.removeAttribute('src');
+      cambiarVistaDocencia('texto');
     } else {
       tabPdf.classList.add('hidden');
       cambiarVistaDocencia('texto');
@@ -1288,6 +1291,7 @@ async function seleccionarModulo(idModulo) {
   } else {
     tabPdf.classList.add('hidden');
     btnDescargar.classList.add('hidden');
+    btnDescargar.removeAttribute('href');
     cambiarVistaDocencia('texto');
   }
 
