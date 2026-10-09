@@ -1271,16 +1271,42 @@ async function seleccionarModulo(idModulo) {
   let rutaArchivo = moduloActual.archivo_pdf_base64 || moduloActual.archivo_url;
 
   if (rutaArchivo && rutaArchivo.trim() !== "") {
-    btnDescargar.href = rutaArchivo;
+    // Convertir documentos data: a blob: para abrirlos en una pestaña nueva.
+    // Revocar la URL anterior al seleccionar otro trabajo para evitar fugas de memoria.
+    if (btnDescargar.dataset.objectUrl) {
+      URL.revokeObjectURL(btnDescargar.dataset.objectUrl);
+      delete btnDescargar.dataset.objectUrl;
+    }
+    let enlaceDocumento = rutaArchivo;
+    if (rutaArchivo.startsWith('data:')) {
+      try {
+        const coma = rutaArchivo.indexOf(',');
+        const cabecera = rutaArchivo.slice(5, coma);
+        const mime = cabecera.split(';')[0] || 'application/octet-stream';
+        const contenido = rutaArchivo.slice(coma + 1);
+        const binario = cabecera.includes(';base64') ? atob(contenido) : decodeURIComponent(contenido);
+        const bytes = Uint8Array.from(binario, c => c.charCodeAt(0));
+        enlaceDocumento = URL.createObjectURL(new Blob([bytes], { type: mime }));
+        btnDescargar.dataset.objectUrl = enlaceDocumento;
+      } catch (errorDocumento) {
+        console.error('No fue posible preparar el documento original.', errorDocumento);
+        enlaceDocumento = '';
+      }
+    }
+    if (enlaceDocumento) btnDescargar.href = enlaceDocumento;
+    else btnDescargar.removeAttribute('href');
+    btnDescargar.target = '_blank';
+    btnDescargar.rel = 'noopener noreferrer';
     
     const esWord = rutaArchivo.startsWith('data:application/vnd.openxmlformats') || rutaArchivo.endsWith('.docx');
     const extension = esWord ? '.docx' : '.pdf';
-    btnDescargar.download = `Trabajo_${moduloActual.numero_orden}_${moduloActual.titulo.replace(/[\s\W]+/g, '_')}${extension}`;
-    btnDescargar.classList.remove('hidden');
+    btnDescargar.removeAttribute('download'); // Abrir en pestaña nueva, permitir guardar desde el navegador.
+    btnDescargar.classList.toggle('hidden', !enlaceDocumento);
 
     if (!esWord && (rutaArchivo.startsWith('data:application/pdf') || rutaArchivo.endsWith('.pdf'))) {
-      tabPdf.classList.remove('hidden');
-      framePdf.src = rutaArchivo;
+      tabPdf.classList.add('hidden'); // Visor original retirado por decisión institucional.
+      framePdf.removeAttribute('src');
+      cambiarVistaDocencia('texto');
     } else {
       tabPdf.classList.add('hidden');
       cambiarVistaDocencia('texto');
@@ -1288,6 +1314,7 @@ async function seleccionarModulo(idModulo) {
   } else {
     tabPdf.classList.add('hidden');
     btnDescargar.classList.add('hidden');
+    btnDescargar.removeAttribute('href');
     cambiarVistaDocencia('texto');
   }
 

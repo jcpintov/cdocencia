@@ -11,6 +11,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
+  <!-- Resguardo de visibilidad incluso si falla la carga de la hoja principal. -->
+  <style>
+    .hidden { display: none !important; }
+    .logo-login-ofl { display:block; width:110px; max-width:35%; height:auto; margin:14px auto 20px; object-fit:contain; }
+    @media (max-width:600px) { .logo-login-ofl { width:95px; } }
+  </style>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="ui-v2.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
