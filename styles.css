@@ -1960,3 +1960,22 @@ body:has(#seccionLogin:not(.hidden)) {
   #seccionLogin .login-sub{margin-bottom:10px}
   #seccionLogin .form-group{margin-bottom:10px}
 }
+
+/* Acceso HERO: mejoras de accesibilidad sin alterar el emblema pendiente. */
+#seccionLogin :is(input,button,a):focus-visible {
+  outline: 3px solid #2b658f;
+  outline-offset: 3px;
+}
+#seccionLogin input[type="email"],
+#seccionLogin input[type="password"] {
+  box-sizing: border-box;
+  color: #142c44;
+}
+#seccionLogin input::placeholder { color: #607287; opacity: 1; }
+#seccionLogin .error-msg { line-height: 1.5; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) {
+  #seccionLogin *, #seccionLogin *::before, #seccionLogin *::after {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
