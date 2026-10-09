@@ -1838,8 +1838,20 @@ body.theme-nocturno #documentoMuroGeneralImprimible .reflexion-item {
   .catalogo-botones-top {
     width: 100%;
     justify-content: space-between;
+  }
+}
+
+.logo-login-ofl {
+  display: block;
+  width: 110px;
+  max-width: 35%;
+  height: auto;
+  margin: 0 auto 20px;
+  object-fit: contain;
+}
+
 @media (max-width: 600px) {
   .logo-login-ofl {
     width: 95px;
-}
+  }
 }
