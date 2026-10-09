@@ -1885,3 +1885,78 @@ html, body { max-width: 100%; overflow-x: clip; }
   #seccionLogin .logo-login-ofl { width: 126px; margin: 5px auto 10px; }
   #seccionLogin .form-group { margin-bottom: 10px; }
 }
+
+
+/* HERO institucional — se activa exclusivamente durante el acceso. */
+body:has(#seccionLogin:not(.hidden)) {
+  background-color:#20364e;
+  background-image:linear-gradient(90deg,rgba(12,29,49,.10),rgba(12,29,49,.02) 50%,rgba(12,29,49,.16)),url("imgs/hero-docencia.webp");
+  background-position:center center;
+  background-size:cover;
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+}
+#seccionLogin.login-wrapper {
+  position:relative;
+  z-index:1;
+  width:min(440px,calc(100% - 32px));
+  max-width:440px;
+  margin:clamp(18px,3vh,34px) auto 30px;
+}
+#seccionLogin .card.card-trazado {
+  padding:clamp(22px,3vw,30px);
+  border:1px solid rgba(175,133,59,.9);
+  border-top:3px solid #b78e4c;
+  border-radius:14px;
+  background:linear-gradient(135deg,rgba(250,250,249,.96),rgba(226,233,241,.94) 70%,rgba(201,216,231,.94));
+  box-shadow:0 15px 48px rgba(8,26,44,.35);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+#seccionLogin h2 {
+  font-family:Georgia,serif;
+  color:#102941;
+  font-size:clamp(1.5rem,2.8vw,1.85rem);
+  line-height:1.25;
+  margin-bottom:15px!important;
+}
+#seccionLogin .login-sub {
+  color:#52647b;
+  line-height:1.45;
+  margin-bottom:15px;
+  font-size:.95rem;
+}
+#seccionLogin .logo-login-ofl {
+  display:block;
+  width:clamp(142px,14vw,174px);
+  max-width:50%;
+  height:auto;
+  margin:0 auto 21px;
+  object-fit:contain;
+  filter:drop-shadow(0 5px 7px rgba(12,37,64,.18));
+}
+#seccionLogin .form-group{margin-bottom:13px}
+#seccionLogin .form-group label{font-size:.95rem;font-weight:700;color:#142c44;line-height:1.4;margin-bottom:6px}
+#seccionLogin input[type=email],#seccionLogin input[type=password]{
+  width:100%;min-width:0;min-height:49px;font-size:1rem;
+  border-radius:8px;background:#fff;
+}
+#seccionLogin .btn-primary{
+  width:100%;min-height:52px;border:1px solid #b48a44;
+  background:linear-gradient(110deg,#0f2943,#173b5d);
+  color:#fff;border-radius:8px;font-size:1rem;font-weight:700;
+}
+#seccionLogin .btn-primary:hover{background:#1e4a70}
+@media(max-width:640px){
+  body:has(#seccionLogin:not(.hidden)){background-position:center center;background-attachment:scroll}
+  #seccionLogin.login-wrapper{width:calc(100% - 24px);margin:16px auto 22px}
+  #seccionLogin .card.card-trazado{padding:20px 18px}
+  #seccionLogin .logo-login-ofl{width:140px;margin-bottom:16px}
+}
+@media(max-height:760px) and (min-width:641px){
+  #seccionLogin.login-wrapper{margin-top:12px}
+  #seccionLogin .card.card-trazado{padding:17px 25px}
+  #seccionLogin .logo-login-ofl{width:120px;margin-bottom:12px}
+  #seccionLogin .login-sub{margin-bottom:10px}
+  #seccionLogin .form-group{margin-bottom:10px}
+}
