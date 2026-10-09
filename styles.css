@@ -2088,3 +2088,102 @@ body:has(#seccionLogin:not(.hidden)) {
   body:has(#seccionLogin:not(.hidden)){background-position:center center}
   #seccionLogin .logo-login-ofl {width:min(72vw,290px);max-width:88%}
 }
+
+/* Login viewport-fit: centro real, sin scroll en escritorio estándar.
+   En pantallas demasiado bajas se permite desplazamiento para no ocultar controles. */
+@supports selector(body:has(#seccionLogin:not(.hidden))) {
+  body:has(#seccionLogin:not(.hidden)) {
+    height:100vh;
+    height:100dvh;
+    min-height:0;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr);
+    overflow-x:hidden;
+    overflow-y:auto;
+  }
+  body:has(#seccionLogin:not(.hidden)) > header {
+    min-width:0;
+    padding:clamp(8px,1.3vh,13px) clamp(12px,2vw,24px);
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  body:has(#seccionLogin:not(.hidden)) .brand-title {
+    min-width:0;
+    font-size:clamp(.76rem,1.5vw,1.1rem);
+    line-height:1.25;
+  }
+  body:has(#seccionLogin:not(.hidden)) .header-controls {margin-left:auto}
+  #seccionLogin.login-wrapper {
+    align-self:center;
+    justify-self:center;
+    width:min(620px,calc(100% - 28px));
+    max-width:620px;
+    margin:10px auto !important;
+    min-height:0;
+  }
+  #seccionLogin .card.card-trazado {
+    padding:clamp(13px,2vh,23px) clamp(20px,3vw,38px) clamp(43px,6vh,56px);
+  }
+  #seccionLogin h2 {
+    font-size:clamp(1.45rem,3vw,2.25rem);
+    line-height:1.16;
+    margin:0 auto clamp(8px,1.5vh,14px)!important;
+    padding-bottom:clamp(9px,1.4vh,14px);
+  }
+  #seccionLogin .logo-login-ofl {
+    width:clamp(125px, min(29vw, 31vh), 275px);
+    max-width:78%;
+    height:auto;
+    aspect-ratio:1;
+    margin:clamp(8px,1.5vh,15px) auto clamp(10px,1.7vh,17px);
+  }
+  #seccionLogin .form-group {margin-bottom:clamp(7px,1.1vh,11px)}
+  #seccionLogin .form-group label {
+    font-size:clamp(.91rem,1.7vh,1.02rem);
+    line-height:1.2;
+    margin-bottom:5px;
+  }
+  #seccionLogin input[type=email],#seccionLogin input[type=password] {
+    min-height:clamp(40px,5.3vh,49px);
+  }
+  #seccionLogin .btn-primary {
+    min-height:clamp(43px,5.6vh,52px);
+    font-size:1.05rem;
+  }
+}
+@media(max-width:640px) {
+  body:has(#seccionLogin:not(.hidden)) {
+    min-height:100dvh;
+    height:auto;
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+  }
+  body:has(#seccionLogin:not(.hidden)) > header {
+    padding:9px 12px;
+    justify-content:center;
+  }
+  body:has(#seccionLogin:not(.hidden)) .brand-title {
+    font-size:clamp(.7rem,2.8vw,.95rem);
+  }
+  body:has(#seccionLogin:not(.hidden)) .header-controls {margin-left:auto}
+  #seccionLogin.login-wrapper {
+    flex:1 0 auto;
+    align-self:center;
+    width:calc(100% - 20px);
+    margin:12px auto !important;
+    display:flex;
+    align-items:center;
+  }
+  #seccionLogin .card.card-trazado {width:100%;padding:18px 17px 51px}
+  #seccionLogin .logo-login-ofl {width:clamp(140px,42vw,225px);max-width:70%;margin:12px auto 16px}
+  #seccionLogin h2 {font-size:clamp(1.5rem,6vw,2rem)}
+}
+@media(max-height:680px) and (min-width:641px) {
+  #seccionLogin .logo-login-ofl {width:clamp(100px,23vh,155px);margin:4px auto 7px}
+  #seccionLogin .card.card-trazado {padding-top:10px;padding-bottom:35px}
+  #seccionLogin h2 {font-size:1.5rem;margin-bottom:4px!important;padding-bottom:7px}
+  #seccionLogin .form-group {margin-bottom:5px}
+  #seccionLogin input[type=email],#seccionLogin input[type=password]{min-height:38px}
+  #seccionLogin .btn-primary {min-height:42px}
+}
