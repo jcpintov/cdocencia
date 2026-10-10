@@ -1,5 +1,6 @@
-name: Doctrina - Pruebas del extractor
+name: Doctrina - Pruebas del núcleo privado
 on:
+  workflow_dispatch:
   push:
     branches: [feature/doctrina-ingesta-v1]
     paths:
