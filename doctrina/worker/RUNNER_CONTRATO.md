@@ -2,7 +2,7 @@
 
 Estado: prototipo en rama feature. **No desplegar ni activar** sin autorización.
 
-`runner.run_once(connection_factory, fetch_private_object, worker_id)` ejecuta a lo sumo un trabajo.
+`runner.run_once(connection_factory, fetch_private_object, worker_id, authorize_local_analysis)` ejecuta a lo sumo un trabajo.
 
 ## Integraciones obligatorias
 
@@ -25,3 +25,11 @@ Estado: prototipo en rama feature. **No desplegar ni activar** sin autorización
 ## Criterio de aceptación
 
 Pruebas unitarias, integración transaccional con PostgreSQL aislado, almacenamiento privado de prueba, auditoría de privilegios, verificación de consentimiento y revisión humana documentada.
+
+## Autorización de análisis local (obligatoria)
+
+- `authorize_local_analysis(job)` debe consultar la fuente de verdad privada, vinculando `job.version_id` al documento y comprobando autorización activa `analisis_local`. Nunca inferir permiso de una bandera de procesamiento externo.
+- Solo el valor booleano exacto `True` autoriza. `False`, `None` y respuestas indeterminadas deniegan. Las excepciones de la comprobación se propagan y deben ser atendidas por el supervisor; nunca se permite la lectura.
+- Se comprueba antes de Storage y antes de persistir unidades. La denegación deja la reserva para cuarentena por vencimiento; no reintenta ni publica.
+- **Riesgo pendiente de carrera:** la segunda comprobación y la escritura aún no comparten una transacción con bloqueo de la fila de autorización. La revocación concurrente entre comprobación y commit podría permitir persistir unidades. Antes de activar, exigir validación transaccional en PostgreSQL con bloqueo de autorización o un mecanismo equivalente.
+- **No es un servicio operativo:** falta adaptador autenticado y pruebas de revocación concurrente reales.
