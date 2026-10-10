@@ -13,7 +13,7 @@ def quarantine_expired(connection, limit=50):
         from doctrina.trabajos t
         join doctrina.versiones v on v.id = t.version_id
         where t.estado = 'procesando' and v.estado = 'procesando'
-          and t.arrendado_hasta is not null and t.arrendado_hasta < now()
+          and t.arrendado_hasta is not null and t.arrendado_hasta < clock_timestamp()
         order by t.arrendado_hasta, t.id
         limit %s
         for update of t, v skip locked
