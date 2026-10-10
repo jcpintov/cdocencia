@@ -10,25 +10,30 @@
   const close=document.createElement('button');close.type='button';close.textContent='Cerrar';
   const info=document.createElement('p');info.textContent='Acceso reservado. Sin autorización del servidor no se habilitan funciones administrativas.';
   close.addEventListener('click',()=>{panel.hidden=true;tab.focus();});
-  tab.addEventListener('click',()=>{panel.hidden=false;close.focus();});
+  tab.addEventListener('click',()=>{if(tab.hidden)return;panel.hidden=false;close.focus();});
   panel.append(title,close,info); document.head.append(style);document.body.append(tab,panel);
   // Consultar RPC del servidor con sesión Auth válida. Fallo = denegación.
   // La función SQL pública doctrina_es_superadmin() valida auth.uid() en servidor.
+  let revision = 0;
+  function hide() { revision += 1; tab.hidden = true; panel.hidden = true; }
   async function refreshFromSupabase(client) {
-    tab.hidden=true; panel.hidden=true;
-    if (!client || !client.auth || typeof client.rpc !== 'function') return false;
+    hide();
+    const current = revision;
+    if (!client || !client.auth || typeof client.auth.getUser !== 'function' || typeof client.rpc !== 'function') return false;
     try {
-      const {data: userData, error: userError}=await client.auth.getUser();
-      if(userError || !userData || !userData.user) return false;
-      const {data, error}=await client.rpc('doctrina_es_superadmin');
-      if(error || data!==true) return false;
-      tab.hidden=false;
+      const {data: userData, error: userError} = await client.auth.getUser();
+      if (current !== revision || userError || !userData?.user?.id) return false;
+      const userId = userData.user.id;
+      const {data, error} = await client.rpc('doctrina_es_superadmin');
+      if (current !== revision || error || data !== true) return false;
+      const {data: after, error: afterError} = await client.auth.getUser();
+      if (current !== revision || afterError || after?.user?.id !== userId) return false;
+      tab.hidden = false;
       return true;
-    } catch (_) {return false;}
+    } catch (_) { if (current === revision) hide(); return false; }
   }
-  // Only the host can provide a server-verified boolean. Never trust localStorage or a role string.
   window.DoctrinaSuperadminShell=Object.freeze({
     refreshFromSupabase: refreshFromSupabase,
-    hide: function(){tab.hidden=true;panel.hidden=true;}
+    hide: hide
   });
 })();
