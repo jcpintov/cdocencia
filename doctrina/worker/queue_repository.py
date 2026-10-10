@@ -122,3 +122,20 @@ def mark_failure(connection: Any, job: ReservedJob, worker_id: str,
             actualizado_en = now()
         where id = %s and procesador_id = %s and estado = 'procesando'
     """, (job.id, worker_id))
+
+
+def renew_lease(connection: Any, job: ReservedJob, worker_id: str) -> bool:
+    """Renovar únicamente la reserva propia todavía vigente.
+
+    Invocar dentro de transacción. Una reserva expirada no puede revivirse.
+    """
+    row = connection.execute("""
+        update doctrina.trabajos
+        set arrendado_hasta = now() + interval '10 minutes',
+            actualizado_en = now()
+        where id = %s and version_id = %s
+          and procesador_id = %s and estado = 'procesando'
+          and arrendado_hasta > now()
+        returning id
+    """, (job.id, job.version_id, worker_id)).fetchone()
+    return row is not None
