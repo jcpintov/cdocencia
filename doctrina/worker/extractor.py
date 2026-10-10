@@ -74,6 +74,8 @@ def _unit(text: str, page: int | None, order: int) -> Unit:
     # No se normaliza el contenido: la fuente fiel prevalece sobre la estética.
     label_match = re.match(r"^\s*((?:Art(?:ículo|iculo)?\.?|Cap(?:ítulo|itulo)?\.?)\s*[\dIVXLCDM]+)", text, re.I)
     label = label_match.group(1) if label_match else ""
+    if order > MAX_UNITS:
+        raise ExtractionError("Excede máximo de unidades")
     return Unit(order, "articulo" if label.lower().startswith("art") else "bloque",
                 label, text, page, page, sha256(text.encode("utf-8")).hexdigest())
 
