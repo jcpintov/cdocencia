@@ -88,7 +88,7 @@ begin
     end if;
     if exists (
       select 1 from doctrina.dependencias_conocimiento d
-      where d.publicacion_id = new.id and d.estado_revision <> 'vigente'
+      where d.publicacion_id = new.id and d.estado_revision is distinct from 'vigente'
     ) then
       raise exception 'Publicación con dependencias pendientes';
     end if;
