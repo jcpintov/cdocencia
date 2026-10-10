@@ -90,7 +90,7 @@ class RunnerTests(unittest.TestCase):
 
     def test_invalid_worker_id(self):
         with self.assertRaises(ValueError):
-            runner.run_once(connection, lambda key: b"data", "")
+            runner.run_once(connection, lambda key: b"data", "", lambda job: True)
 
 
 if __name__ == "__main__":
