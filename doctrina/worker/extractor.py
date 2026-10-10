@@ -79,14 +79,21 @@ def extract(data: bytes, filename: str) -> dict[str, Any]:
         try:
             from docx import Document
             doc = Document(BytesIO(data))
-            for para in doc.paragraphs:
-                if para.text.strip():
-                    units.append(_unit(para.text, None, len(units) + 1))
-            for table in doc.tables:
-                for row in table.rows:
-                    text = "\t".join(cell.text for cell in row.cells)
+            from docx.oxml.ns import qn
+            from docx.text.paragraph import Paragraph
+            from docx.table import Table
+            # Iterar el XML en orden real: párrafos y tablas pueden intercalarse.
+            for child in doc.element.body.iterchildren():
+                if child.tag == qn("w:p"):
+                    text = Paragraph(child, doc).text
                     if text.strip():
                         units.append(_unit(text, None, len(units) + 1))
+                elif child.tag == qn("w:tbl"):
+                    table = Table(child, doc)
+                    for row in table.rows:
+                        text = "\t".join(cell.text for cell in row.cells)
+                        if text.strip():
+                            units.append(_unit(text, None, len(units) + 1))
         except Exception as exc:
             raise ExtractionError("No se pudo extraer DOCX; requiere revisión") from exc
     else:
@@ -94,9 +101,9 @@ def extract(data: bytes, filename: str) -> dict[str, Any]:
             text = data.decode("utf-8-sig")
         except UnicodeError as exc:
             raise ExtractionError("TXT debe estar codificado en UTF-8") from exc
-        units.extend(_unit(block, None, i + 1)
-                     for i, block in enumerate(re.split(r"\n\s*\n", text))
-                     if block.strip())
+        for block in re.split(r"\n\s*\n", text):
+            if block.strip():
+                units.append(_unit(block, None, len(units) + 1))
     if not units or len(units) > MAX_UNITS:
         raise ExtractionError("Sin unidades válidas o demasiadas unidades")
     return {
