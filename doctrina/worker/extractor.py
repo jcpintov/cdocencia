@@ -118,6 +118,8 @@ def extract(data: bytes, filename: str) -> dict[str, Any]:
                         text = "\t".join(cell.text for cell in row.cells)
                         if text.strip():
                             units.append(_unit(text, None, len(units) + 1))
+        except ExtractionError:
+            raise
         except Exception as exc:
             raise ExtractionError("No se pudo extraer DOCX; requiere revisión") from exc
     else:
