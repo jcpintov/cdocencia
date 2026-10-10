@@ -61,12 +61,12 @@
       </div>
 
       <div style="display: flex; justify-content: flex-end; margin-top: -10px; margin-bottom: 16px;">
-        <a href="javascript:void(0)" onclick="abrirModalRecuperarClave()" style="font-family: var(--font-ui); font-size: 0.85rem; color: var(--accent-gold-dark); text-decoration: underline;">
+        <a href="#" class="login-recuperar-enlace" onclick="event.preventDefault(); abrirModalRecuperarClave()" style="font-family: var(--font-ui); font-size: 0.9rem; text-decoration: underline;">
           ¿Olvidó su contraseña?
         </a>
       </div>
 
-      <button class="btn-primary" onclick="iniciarSesion()">Acceder a la Cámara</button>
+      <button class="btn-primary" type="submit">Acceder a la Cámara</button>
       <p id="errorLogin" class="error-msg"></p>
     </div>
   </main>
