@@ -33,3 +33,5 @@ jobs:
         run: |
           node --check doctrina/superadmin/floating-tab.js
           node --check doctrina/superadmin/bootstrap.js
+      - name: Pruebas de seguridad de Superadmin
+        run: node --test doctrina/superadmin/tests/*.test.cjs
