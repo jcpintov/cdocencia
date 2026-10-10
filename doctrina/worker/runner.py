@@ -35,6 +35,8 @@ def run_once(connection_factory: Callable[[], Any],
     # Denegación previa a Storage: no acceder a bytes protegidos.
     # El supervisor recuperará reservas vencidas si no hay autorización.
     if authorize_local_analysis(job) is not True:
+        with connection_factory() as conn:
+            mark_failure(conn, job, worker_id, needs_review=True)
         return RunResult("autorizacion_denegada", str(job.id))
     try:
         data = fetch_private_object(job.objeto_storage)
@@ -49,6 +51,8 @@ def run_once(connection_factory: Callable[[], Any],
                          else "error_controlado", str(job.id))
     # Verificar nuevamente el consentimiento ante revocaciones durante extracción.
     if authorize_local_analysis(job) is not True:
+        with connection_factory() as conn:
+            mark_failure(conn, job, worker_id, needs_review=True)
         return RunResult("autorizacion_revocada", str(job.id))
     # Fallos de escritura o commit no deben convertirse en falsos
     # errores de extracción ni en una segunda transición de estado.
