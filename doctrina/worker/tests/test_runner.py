@@ -67,22 +67,26 @@ class RunnerTests(unittest.TestCase):
                 runner.run_once(connection, lambda key: b"data", "worker-1", lambda job: True)
 
     def test_denied_consent_never_fetches(self):
-        with patch.object(runner, "reserve_next", return_value=self.job):
+        with patch.object(runner, "reserve_next", return_value=self.job), \
+             patch.object(runner, "mark_failure") as fail:
             fetched = []
             result = runner.run_once(connection, lambda key: fetched.append(key),
                                      "worker-1", lambda job: False)
         self.assertEqual(result.status, "autorizacion_denegada")
         self.assertEqual(fetched, [])
+        self.assertTrue(fail.call_args.kwargs["needs_review"])
 
     def test_revoked_consent_prevents_persistence(self):
         checks = iter([True, False])
         with patch.object(runner, "reserve_next", return_value=self.job), \
              patch.object(runner, "verify_and_extract", return_value={"unidades": [{"orden": 1}]}), \
-             patch.object(runner, "finish_extraction") as finish:
+             patch.object(runner, "finish_extraction") as finish, \
+             patch.object(runner, "mark_failure") as fail:
             result = runner.run_once(connection, lambda key: b"data",
                                      "worker-1", lambda job: next(checks))
         self.assertEqual(result.status, "autorizacion_revocada")
         finish.assert_not_called()
+        self.assertTrue(fail.call_args.kwargs["needs_review"])
 
     def test_invalid_worker_id(self):
         with self.assertRaises(ValueError):
