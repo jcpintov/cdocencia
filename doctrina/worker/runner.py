@@ -32,15 +32,16 @@ def run_once(connection_factory: Callable[[], Any],
     try:
         data = fetch_private_object(job.objeto_storage)
         extracted = verify_and_extract(data, job)
-        # La inserción de unidades y el cambio de estados son atómicos.
-        with connection_factory() as conn:
-            finish_extraction(conn, job, worker_id, extracted["unidades"])
-        return RunResult("pendiente_revision", str(job.id))
     except Exception as exc:
-        # Nunca persistir excepciones ni fragmentos de documentos.
-        # Una reserva perdida o una falla de BD se propaga al supervisor.
+        # Solo fallos de lectura y extracción pueden clasificarse aquí.
+        # Errores transaccionales y reservas perdidas deben propagarse.
         with connection_factory() as conn:
             mark_failure(conn, job, worker_id,
                          needs_review=isinstance(exc, ExtractionError))
         return RunResult("revision_requerida" if isinstance(exc, ExtractionError)
                          else "error_controlado", str(job.id))
+    # Fallos de escritura o commit no deben convertirse en falsos
+    # errores de extracción ni en una segunda transición de estado.
+    with connection_factory() as conn:
+        finish_extraction(conn, job, worker_id, extracted["unidades"])
+    return RunResult("pendiente_revision", str(job.id))
