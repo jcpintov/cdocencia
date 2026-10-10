@@ -57,7 +57,8 @@ def _check(data: bytes, filename: str) -> str:
                     raise ExtractionError("DOCX excede el límite descomprimido")
                 if any(entry.file_size > 50 * 1024 * 1024 for entry in entries):
                     raise ExtractionError("DOCX contiene un componente excesivo")
-                if any(entry.compress_size and entry.file_size > entry.compress_size * 200
+                if any(entry.file_size > 0 and (entry.compress_size == 0 or
+                       entry.file_size > entry.compress_size * 200)
                        for entry in entries):
                     raise ExtractionError("DOCX contiene compresión sospechosa")
                 names = {entry.filename for entry in entries}
