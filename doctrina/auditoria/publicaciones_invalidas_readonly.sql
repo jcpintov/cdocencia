@@ -17,7 +17,15 @@ with fuentes as (
                and d.fuente_version_id = u.version_id
                and d.estado_revision = 'vigente'
            )
-         ) as sin_dependencia
+         ) as sin_dependencia,
+         count(*) filter (
+           where not exists (
+             select 1 from doctrina.autorizaciones_fuente au
+             where au.documento_id = v.documento_id
+               and au.alcance = 'publicacion_derivados'
+               and au.revocado_en is null
+           )
+         ) as sin_autorizacion
   from doctrina.publicacion_fuentes pf
   left join doctrina.afirmaciones a on a.id = pf.afirmacion_id
   left join doctrina.unidades u on u.id = a.unidad_id
@@ -33,6 +41,7 @@ select p.id as publicacion_id,
        coalesce(f.total, 0) = 0 as sin_fuentes,
        coalesce(f.total, 0) <> coalesce(f.validadas, 0) as fuentes_no_validadas,
        coalesce(f.sin_dependencia, 0) > 0 as dependencias_faltantes,
+       coalesce(f.sin_autorizacion, 0) > 0 as autorizaciones_faltantes,
        coalesce(d.no_vigentes, 0) > 0 as dependencias_no_vigentes,
        (p.aprobado_por is null or p.publicado_en is null) as aprobacion_incompleta,
        nullif(btrim(p.contenido), '') is null as contenido_vacio,
@@ -48,6 +57,7 @@ where p.estado = 'publicado'
     coalesce(f.total, 0) = 0
     or coalesce(f.total, 0) <> coalesce(f.validadas, 0)
     or coalesce(f.sin_dependencia, 0) > 0
+    or coalesce(f.sin_autorizacion, 0) > 0
     or coalesce(d.no_vigentes, 0) > 0
     or nullif(btrim(p.contenido), '') is null
     or p.aprobado_por is null or p.publicado_en is null
