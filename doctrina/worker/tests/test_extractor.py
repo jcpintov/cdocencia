@@ -16,6 +16,21 @@ class ExtractorTests(unittest.TestCase):
         self.assertEqual(result["unidades"][0]["texto_fiel"], "Artículo 1. Deber\nContenido exacto.")
         self.assertEqual(result["estado"], "pendiente_revision")
 
+    def test_docx_respeta_orden_de_parrafos_y_tablas(self):
+        from docx import Document
+        from io import BytesIO
+        documento = Document()
+        documento.add_paragraph("Primero")
+        tabla = documento.add_table(rows=1, cols=1)
+        tabla.cell(0, 0).text = "Segundo"
+        documento.add_paragraph("Tercero")
+        archivo = BytesIO()
+        documento.save(archivo)
+        unidades = extract(archivo.getvalue(), "intercalado.docx")["unidades"]
+        self.assertEqual([u["texto_fiel"] for u in unidades],
+                         ["Primero", "Segundo", "Tercero"])
+        self.assertEqual([u["orden"] for u in unidades], [1, 2, 3])
+
     def test_rechaza_pdf_falso(self):
         with self.assertRaises(ExtractionError):
             extract(b"no es PDF", "falso.pdf")
