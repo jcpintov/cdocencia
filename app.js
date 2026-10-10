@@ -701,6 +701,30 @@ async function irACatalogoDocencia() {
   await renderizarCatalogoTrabajos();
 }
 
+function obtenerIconoTrabajo(titulo) {
+  const t=String(titulo||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  const reglas=[
+    [/escuadra|compas|geometr|herramientas/, 'escuadra_compas'],
+    [/exaltacion|tercer grado|ritual|templo|ceremonia/, 'templo'],
+    [/juramento|obligacion|promesa|compromiso|constitucion|reglamento/, 'pergamino'],
+    [/columna|jakin|boaz/, 'columnas'],
+    [/piedra|cubic|desbast|perfeccionamiento/, 'mallete_piedra'],
+    [/acacia|inmortalidad/, 'acacia'],
+    [/plomada|rectitud|vertical/, 'plomada'],
+    [/nivel|igualdad|fraternidad|hermandad/, 'saludo_fraterno'],
+    [/pavimento|mosaico|dualidad/, 'pavimento_mosaico'],
+    [/luz|sol|iluminacion/, 'sol'],
+    [/luna|noche|estrella/, 'luna_estrellas'],
+    [/plancha|trazado|arquitectura|plano/, 'planos_compas'],
+    [/libro|lectura|conocimiento|sabiduria|verdad|estudio|docencia/, 'libro_abierto'],
+    [/moral|etica|virtud|servicio|tolerancia/, 'rama_olivo'],
+    [/trabajo|labor|voluntad|esfuerzo/, 'mallete'],
+    [/construccion|argamasa|union/, 'paleta']
+  ];
+  for(const [re,icono] of reglas)if(re.test(t))return icono;
+  return 'libro_abierto';
+}
+
 async function renderizarCatalogoTrabajos() {
   const { data: dataModulos, error } = await sbApp
     .from('modulos')
@@ -762,7 +786,13 @@ async function renderizarCatalogoTrabajos() {
             <span class="grid-card-orden">Trabajo N° ${m.numero_orden}</span>
             <span>📅 ${fechaCreacion}</span>
           </div>
-          <h4 class="grid-card-titulo">${m.titulo}</h4>
+          <div class="grid-card-cuerpo">
+            <img class="grid-card-icono" src="imgs/iconos/${obtenerIconoTrabajo(m.titulo)}.webp" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">
+            <div class="grid-card-textos">
+              <h4 class="grid-card-titulo">${m.titulo}</h4>
+              <p class="grid-card-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara de Docencia"}</p>
+            </div>
+          </div>
           <p class="grid-card-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara de Docencia"}</p>
         </div>
         <div class="grid-card-footer">
