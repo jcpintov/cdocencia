@@ -10,6 +10,7 @@ from typing import Callable, Any
 from extractor import ExtractionError
 from integrity import verify_and_extract
 from queue_repository import reserve_next, finish_extraction, mark_failure
+from storage_preflight import validate_private_key
 
 
 @dataclass(frozen=True)
@@ -39,6 +40,7 @@ def run_once(connection_factory: Callable[[], Any],
             mark_failure(conn, job, worker_id, needs_review=True)
         return RunResult("autorizacion_denegada", str(job.id))
     try:
+        validate_private_key(job.objeto_storage)
         data = fetch_private_object(job.objeto_storage)
         extracted = verify_and_extract(data, job)
     except Exception as exc:
