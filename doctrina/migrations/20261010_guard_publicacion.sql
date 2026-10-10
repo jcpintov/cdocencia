@@ -38,6 +38,22 @@ begin
     ) then
       raise exception 'Publicación contiene evidencia no validada';
     end if;
+    -- Consentimiento específico, activo y revocable por documento fuente.
+    if exists (
+      select 1 from doctrina.publicacion_fuentes pf
+      join doctrina.afirmaciones a on a.id = pf.afirmacion_id
+      join doctrina.unidades u on u.id = a.unidad_id
+      join doctrina.versiones v on v.id = u.version_id
+      where pf.publicacion_id = new.id
+        and not exists (
+          select 1 from doctrina.autorizaciones_fuente au
+          where au.documento_id = v.documento_id
+            and au.alcance = 'publicacion_derivados'
+            and au.revocado_en is null
+        )
+    ) then
+      raise exception 'Publicación sin autorización vigente de derivados';
+    end if;
     -- Cada versión efectivamente citada requiere una dependencia vigente.
     -- Sin esta correspondencia, una revisión posterior podría pasar inadvertida.
     if exists (
