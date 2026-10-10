@@ -34,7 +34,8 @@ select p.id as publicacion_id,
        coalesce(f.total, 0) <> coalesce(f.validadas, 0) as fuentes_no_validadas,
        coalesce(f.sin_dependencia, 0) > 0 as dependencias_faltantes,
        coalesce(d.no_vigentes, 0) > 0 as dependencias_no_vigentes,
-       p.aprobado_por is null or p.publicado_en is null as aprobacion_incompleta,
+       (p.aprobado_por is null or p.publicado_en is null) as aprobacion_incompleta,
+       nullif(btrim(p.contenido), '') is null as contenido_vacio,
        not exists (
          select 1 from doctrina.superadmins s
          where s.auth_user_id = p.aprobado_por and s.activo
@@ -48,6 +49,7 @@ where p.estado = 'publicado'
     or coalesce(f.total, 0) <> coalesce(f.validadas, 0)
     or coalesce(f.sin_dependencia, 0) > 0
     or coalesce(d.no_vigentes, 0) > 0
+    or nullif(btrim(p.contenido), '') is null
     or p.aprobado_por is null or p.publicado_en is null
     or not exists (
       select 1 from doctrina.superadmins s
