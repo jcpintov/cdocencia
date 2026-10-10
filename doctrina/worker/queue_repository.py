@@ -45,10 +45,13 @@ def reserve_next(connection: Any, worker_id: str) -> ReservedJob | None:
     """, (worker_id, row["id"])).fetchone()
     if updated is None:
         raise RuntimeError("Reserva concurrente inválida")
-    connection.execute("""
+    version_updated = connection.execute("""
         update doctrina.versiones set estado = 'procesando'
         where id = %s and estado = 'pendiente'
-    """, (row["version_id"],))
+        returning id
+    """, (row["version_id"],)).fetchone()
+    if version_updated is None:
+        raise RuntimeError("Versión no disponible para reserva")
     return ReservedJob(**{key: row[key] for key in
                           ("id", "version_id", "sha256", "objeto_storage", "mime", "bytes")})
 
