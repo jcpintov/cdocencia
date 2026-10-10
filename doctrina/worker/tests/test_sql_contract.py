@@ -13,7 +13,7 @@ import recovery
 class SqlContractTests(unittest.TestCase):
     def test_reserva_limit_antes_de_for_update(self):
         source = inspect.getsource(queue_repository.reserve_next).lower()
-        self.assertRegex(source, r"limit 1\s+for update of t skip locked")
+        self.assertRegex(source, r"limit 1\s+for update of t, v skip locked")
 
     def test_recuperacion_limit_antes_de_for_update(self):
         source = inspect.getsource(recovery.quarantine_expired).lower()
@@ -28,11 +28,11 @@ class SqlContractTests(unittest.TestCase):
 
     def test_finalizacion_exige_reserva_vigente(self):
         source = inspect.getsource(queue_repository.finish_extraction).lower()
-        self.assertIn("arrendado_hasta > now()", source)
+        self.assertIn("arrendado_hasta > clock_timestamp()", source)
 
     def test_fallo_exige_reserva_vigente(self):
         source = inspect.getsource(queue_repository.mark_failure).lower()
-        self.assertIn("arrendado_hasta > now()", source)
+        self.assertIn("arrendado_hasta > clock_timestamp()", source)
 
 
 if __name__ == "__main__":
