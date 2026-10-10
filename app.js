@@ -686,6 +686,14 @@ async function guardarResetConToken() {
 /* ==========================================================================
    CATÁLOGO DE TRABAJOS Y ENTORNO
    ========================================================================== */
+function volverAInicioPortal() {
+  ['seccionCatalogoTrabajos','seccionDocencia','seccionDocenciaInstitucional','seccionMuroUsuarios'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.classList.add('hidden');
+  });
+  const inicio=document.getElementById('seccionBienvenida');
+  if(inicio)inicio.classList.remove('hidden');
+}
+
 async function irACatalogoDocencia() {
   document.getElementById('seccionBienvenida').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
