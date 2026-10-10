@@ -6,7 +6,8 @@ with fuentes as (
   select pf.publicacion_id,
          count(*) as total,
          count(*) filter (
-           where a.estado_revision = 'aprobado'
+           where a.id is not null and u.id is not null and v.id is not null
+             and a.estado_revision = 'aprobado'
              and u.estado_revision = 'validado'
              and v.estado = 'listo'
          ) as validadas,
@@ -33,7 +34,7 @@ with fuentes as (
   group by pf.publicacion_id
 ), dependencias as (
   select publicacion_id,
-         count(*) filter (where estado_revision <> 'vigente') as no_vigentes
+         count(*) filter (where estado_revision is distinct from 'vigente') as no_vigentes
   from doctrina.dependencias_conocimiento
   group by publicacion_id
 )
