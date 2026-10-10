@@ -54,6 +54,23 @@ class ExtractorTests(unittest.TestCase):
         with self.assertRaises(ExtractionError):
             extract(archivo.getvalue(), "compresion.docx")
 
+    def test_rechaza_mas_de_diez_mil_unidades_txt(self):
+        texto = ("Bloque\n\n" * 10001).encode("utf-8")
+        with self.assertRaisesRegex(ExtractionError, "máximo de unidades"):
+            extract(texto, "demasiados.txt")
+
+    def test_rechaza_docx_con_demasiados_componentes(self):
+        from io import BytesIO
+        from zipfile import ZipFile
+        archivo = BytesIO()
+        with ZipFile(archivo, "w") as z:
+            z.writestr("[Content_Types].xml", "contenido")
+            z.writestr("word/document.xml", "contenido")
+            for i in range(2000):
+                z.writestr(f"extra/{i}.xml", "x")
+        with self.assertRaisesRegex(ExtractionError, "demasiados componentes"):
+            extract(archivo.getvalue(), "excesivo.docx")
+
     def test_rechaza_pdf_falso(self):
         with self.assertRaises(ExtractionError):
             extract(b"no es PDF", "falso.pdf")
