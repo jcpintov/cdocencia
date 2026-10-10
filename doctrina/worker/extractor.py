@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from hashlib import sha256
 from io import BytesIO
+from zipfile import ZipFile, BadZipFile
 from pathlib import PurePath
 import re
 from typing import Any
@@ -44,6 +45,27 @@ def _check(data: bytes, filename: str) -> str:
         raise ExtractionError("Firma PDF inválida")
     if suffix == ".docx" and not data.startswith(b"PK"):
         raise ExtractionError("Firma DOCX inválida")
+    if suffix == ".docx":
+        # Limitar el contenido descomprimido antes de abrir el paquete OOXML.
+        try:
+            with ZipFile(BytesIO(data)) as archive:
+                entries = archive.infolist()
+                if len(entries) > 2000:
+                    raise ExtractionError("DOCX contiene demasiados componentes")
+                total = sum(entry.file_size for entry in entries)
+                if total > 100 * 1024 * 1024:
+                    raise ExtractionError("DOCX excede el límite descomprimido")
+                if any(entry.file_size > 50 * 1024 * 1024 for entry in entries):
+                    raise ExtractionError("DOCX contiene un componente excesivo")
+                if any(entry.compress_size and entry.file_size > entry.compress_size * 200
+                       for entry in entries):
+                    raise ExtractionError("DOCX contiene compresión sospechosa")
+                names = {entry.filename for entry in entries}
+                if "[Content_Types].xml" not in names or "word/document.xml" not in names:
+                    raise ExtractionError("Paquete DOCX incompleto")
+        except (BadZipFile, OSError) as exc:
+            raise ExtractionError("Paquete DOCX inválido") from exc
+
     if suffix == ".txt" and b"\x00" in data[:4096]:
         raise ExtractionError("TXT contiene bytes nulos")
     return suffix
