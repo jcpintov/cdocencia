@@ -23,6 +23,13 @@ class FakeConnection:
 
 
 class QueueTests(unittest.TestCase):
+    def test_registro_fallo_exige_reserva_vigente(self):
+        job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
+        db = FakeConnection([None])
+        with self.assertRaises(RuntimeError):
+            mark_failure(db, job, "worker-test", needs_review=True)
+        self.assertIn("arrendado_hasta > now()", db.queries[0][0])
+
     def test_renovacion_reserva_vigente(self):
         job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
         db = FakeConnection([{"id": "t1"}])
