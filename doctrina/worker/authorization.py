@@ -24,3 +24,19 @@ def authorize_local_analysis(connection, job) -> bool:
         limit 1
     """, (job.version_id, job.sha256, job.objeto_storage)).fetchone()
     return row is not None
+
+
+def make_authorizer(connection_factory):
+    """Adaptar la consulta privada al contrato del runner.
+
+    Cada llamada usa una transacción corta independiente. El bloqueo
+    transaccional definitivo se realiza en finish_extraction.
+    """
+    if not callable(connection_factory):
+        raise ValueError("Fábrica de conexión obligatoria")
+
+    def check(job):
+        with connection_factory() as connection:
+            return authorize_local_analysis(connection, job)
+
+    return check
