@@ -2625,3 +2625,43 @@ body.theme-nocturno #seccionDocencia #vistaTexto,body.theme-nocturno #seccionDoc
 body.theme-nocturno #seccionDocencia .sidebar-box{background:#edf3f8;color:#183550}
 @media(max-width:900px){#seccionDocencia.templo-layout{grid-template-columns:195px minmax(0,1fr);padding:11px;gap:10px}}
 @media(max-width:700px){#seccionDocencia.templo-layout{grid-template-columns:1fr;padding:10px}#seccionDocencia .sidebar-templo{position:static;max-height:none}#seccionDocencia .sidebar-info{display:none}#seccionDocencia>main>.card{padding:15px}#seccionDocencia #vistaTexto{max-width:100%}}
+
+/* Revisión de estudio y foro — compactación y contraste (2026-10). */
+#seccionDocencia.templo-layout{grid-template-columns:clamp(210px,18vw,255px) minmax(0,1fr);gap:12px}
+#seccionDocencia .sidebar-templo{min-width:0;overflow-x:hidden;max-height:calc(100dvh - 105px);padding-right:2px}
+#seccionDocencia .sidebar-box{min-width:0;padding:8px 9px;border-radius:7px}
+#seccionDocencia .sidebar-avances-box{padding:3px!important;border:0;box-shadow:none;background:transparent!important}
+#seccionDocencia .sidebar-avances-box[style]{margin-top:0!important}
+#seccionDocencia .btn-mis-avances{min-height:34px;width:100%;padding:7px 8px;font-size:.75rem;text-align:left;white-space:normal;overflow-wrap:anywhere}
+#seccionDocencia #listaModulosNav{min-width:0;overflow-x:hidden}
+#seccionDocencia .modulo-nav-item{width:100%;max-width:100%;box-sizing:border-box;min-width:0;padding:9px 10px;margin-bottom:6px;border-radius:6px}
+#seccionDocencia .nav-item-header{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-bottom:3px}
+#seccionDocencia .nav-item-num{font-size:.69rem;white-space:normal}
+#seccionDocencia .nav-item-title{font-size:.79rem;line-height:1.3;overflow-wrap:anywhere;word-break:normal}
+#seccionDocencia .badge-estado{font-size:.62rem;padding:3px 5px}
+#seccionDocencia .sidebar-title{font-size:.75rem;flex-wrap:wrap;gap:4px}
+#seccionDocencia .doc-actions-bar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:9px 0}
+#seccionDocencia .action-buttons-group{display:flex;flex-wrap:wrap;gap:6px}
+#seccionDocencia .btn-descargar,#seccionDocencia .btn-certificado{font-size:.74rem!important;padding:7px 10px!important;min-height:34px;max-width:100%;white-space:normal;line-height:1.25}
+#seccionDocencia .tabs-container{max-width:100%;flex-wrap:wrap}
+#seccionDocencia .tab-btn{font-size:.78rem;padding:7px 9px}
+#seccionDocencia #vistaTexto{max-width:76ch;line-height:1.7}
+#seccionDocencia .reflexion-item,#seccionMuroUsuarios .reflexion-item{background:#f1f5f9;color:#1b354c;border-left:4px solid #b78d48;border-radius:5px;padding:13px 16px;margin-bottom:10px}
+#seccionDocencia .reflexion-item p,#seccionMuroUsuarios .reflexion-item p{color:inherit;line-height:1.6}
+body.theme-nocturno #seccionDocencia .reflexion-item,
+body.theme-nocturno #seccionMuroUsuarios .reflexion-item{background:#172735!important;color:#edf3f8!important;border-left-color:#d7aa55}
+body.theme-nocturno #seccionDocencia .reflexion-item p,
+body.theme-nocturno #seccionMuroUsuarios .reflexion-item p,
+body.theme-nocturno #seccionDocencia .reflexion-item blockquote,
+body.theme-nocturno #seccionMuroUsuarios .reflexion-item blockquote,
+body.theme-nocturno #seccionDocencia .reflexion-item em,
+body.theme-nocturno #seccionMuroUsuarios .reflexion-item em{color:#edf3f8!important;opacity:1!important}
+body.theme-nocturno #seccionDocencia .reflexion-autor,
+body.theme-nocturno #seccionMuroUsuarios .reflexion-autor{color:#f0c76b!important}
+body.theme-nocturno #seccionDocencia .foro-comentario-item,
+body.theme-nocturno #seccionMuroUsuarios .foro-comentario-item{background:#24394b;color:#edf3f8;border-color:#496073}
+body.theme-nocturno #seccionDocencia .foro-comentario-item p,
+body.theme-nocturno #seccionMuroUsuarios .foro-comentario-item p{color:#edf3f8!important}
+body.theme-nocturno #seccionDocencia .modulo-nav-item{background:#172735!important;color:#f0f4f8!important;border-color:#42586a}
+body.theme-nocturno #seccionDocencia .nav-item-title{color:#f0f4f8!important}
+@media(max-width:700px){#seccionDocencia.templo-layout{grid-template-columns:1fr}#seccionDocencia .sidebar-templo{max-height:240px;overflow-y:auto}#seccionDocencia .sidebar-info{display:none}}
