@@ -57,11 +57,19 @@ class QueueTests(unittest.TestCase):
     def test_reserva_tarea_pendiente(self):
         row = dict(id="t1", version_id="v1", sha256="a" * 64,
                    objeto_storage="v1/original.txt", mime="text/plain", bytes=5)
-        db = FakeConnection([row, {"id": "t1"}, None])
+        db = FakeConnection([row, {"id": "t1"}, {"id": "v1"}])
         job = reserve_next(db, "worker-test")
         self.assertEqual(job.version_id, "v1")
         self.assertEqual(len(db.queries), 3)
         self.assertIn("skip locked", db.queries[0][0].lower())
+
+    def test_reserva_falla_si_version_no_cambia(self):
+        row = dict(id="t1", version_id="v1", sha256="a" * 64,
+                   objeto_storage="v1/original.txt", mime="text/plain", bytes=5)
+        db = FakeConnection([row, {"id": "t1"}, None])
+        with self.assertRaises(RuntimeError):
+            reserve_next(db, "worker-test")
+        self.assertEqual(len(db.queries), 3)
 
     def test_fallo_rechaza_procesador_ajeno(self):
         job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
