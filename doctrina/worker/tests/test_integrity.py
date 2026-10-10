@@ -18,3 +18,27 @@ class IntegrityTests(unittest.TestCase):
         job = SimpleNamespace(bytes=len(data), sha256='0'*64, objeto_storage='sample.txt', mime='text/plain')
         with self.assertRaises(ExtractionError):
             verify_and_extract(data, job)
+
+    def test_rejects_wrong_size(self):
+        data = b'example'
+        job = SimpleNamespace(bytes=len(data)+1, sha256=hashlib.sha256(data).hexdigest(), objeto_storage='sample.txt', mime='text/plain')
+        with self.assertRaises(ExtractionError):
+            verify_and_extract(data, job)
+
+    def test_rejects_wrong_mime(self):
+        data = b'example'
+        job = SimpleNamespace(bytes=len(data), sha256=hashlib.sha256(data).hexdigest(), objeto_storage='sample.txt', mime='application/pdf')
+        with self.assertRaises(ExtractionError):
+            verify_and_extract(data, job)
+
+    def test_rejects_parent_path(self):
+        data = b'example'
+        job = SimpleNamespace(bytes=len(data), sha256=hashlib.sha256(data).hexdigest(), objeto_storage='../sample.txt', mime='text/plain')
+        with self.assertRaises(ExtractionError):
+            verify_and_extract(data, job)
+
+    def test_rejects_absolute_path(self):
+        data = b'example'
+        job = SimpleNamespace(bytes=len(data), sha256=hashlib.sha256(data).hexdigest(), objeto_storage='/sample.txt', mime='text/plain')
+        with self.assertRaises(ExtractionError):
+            verify_and_extract(data, job)
