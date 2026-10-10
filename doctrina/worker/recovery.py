@@ -15,8 +15,8 @@ def quarantine_expired(connection, limit=50):
         where t.estado = 'procesando' and v.estado = 'procesando'
           and t.arrendado_hasta is not null and t.arrendado_hasta < now()
         order by t.arrendado_hasta, t.id
-        for update of t, v skip locked
         limit %s
+        for update of t, v skip locked
     """, (limit,)).fetchall()
     for row in rows:
         connection.execute("""
