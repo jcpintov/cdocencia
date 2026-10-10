@@ -117,10 +117,10 @@ class QueueTests(unittest.TestCase):
     def test_finalizacion_rechaza_unidades_vacias(self):
         job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
         db = FakeConnection([{"trabajo_estado": "procesando",
-                              "version_estado": "procesando"}])
+                              "version_estado": "procesando"}, {"id": "autorizacion-test"}])
         with self.assertRaises(ValueError):
             finish_extraction(db, job, "worker-test", [])
-        self.assertEqual(len(db.queries), 1)
+        self.assertEqual(len(db.queries), 2)
 
 
 if __name__ == "__main__":
