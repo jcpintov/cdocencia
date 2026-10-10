@@ -61,6 +61,7 @@ def finish_extraction(connection: Any, job: ReservedJob, worker_id: str,
         from doctrina.trabajos t
         join doctrina.versiones v on v.id = t.version_id
         where t.id = %s and t.procesador_id = %s
+          and t.arrendado_hasta > now()
         for update of t, v
     """, (job.id, worker_id)).fetchone()
     if lock is None:
