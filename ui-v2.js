@@ -51,13 +51,35 @@
     if(el)el.textContent='“'+frases[n]+'”';
   }
   function textoSeguro(value){return String(value==null?'':value);}
-  function item(modulo,extra){
+  const iconos=['templo','escuadra_compas','libro_abierto','mallete_piedra','columnas','rama_olivo','plomada','mallete','paleta','planos_compas','sol','luna_estrellas','pavimento_mosaico','acacia','saludo_fraterno','pergamino'];
+  function iconoModulo(modulo){
+    const t=String(modulo.titulo||'').toLocaleLowerCase('es');
+    if(/escuadra|compás|compas/.test(t))return 'escuadra_compas';
+    if(/ritual|exaltaci[oó]n|templo/.test(t))return 'templo';
+    if(/juramento|obligaci[oó]n/.test(t))return 'pergamino';
+    if(/libro|lectura|escritura/.test(t))return 'libro_abierto';
+    if(/columna/.test(t))return 'columnas';
+    if(/piedra|pulir/.test(t))return 'mallete_piedra';
+    if(/acacia/.test(t))return 'acacia';
+    if(/plomada/.test(t))return 'plomada';
+    if(/luz|sol/.test(t))return 'sol';
+    if(/luna/.test(t))return 'luna_estrellas';
+    const seed=String(modulo.id||modulo.numero_orden||t);
+    let hash=0;for(let i=0;i<seed.length;i++)hash=(hash*31+seed.charCodeAt(i))>>>0;
+    return iconos[hash%iconos.length];
+  }
+  function item(modulo){
     const btn=document.createElement('button');
     btn.type='button';btn.className='portal-item';
+    const img=document.createElement('img');
+    img.className='portal-item-icon';
+    img.src='imgs/iconos/'+iconoModulo(modulo)+'.webp';
+    img.alt='';img.loading='lazy';img.decoding='async';
+    img.addEventListener('error',()=>{img.hidden=true;btn.classList.add('sin-icono');},{once:true});
     const titulo=document.createElement('strong');
     titulo.textContent=textoSeguro(modulo.titulo)||'Trabajo de la Cámara';
-    const sub=document.createElement('span');sub.textContent=extra||'Abrir trabajo de la Cámara';
-    btn.append(titulo,sub);
+    const flecha=document.createElement('span');flecha.className='portal-item-arrow';flecha.textContent='›';flecha.setAttribute('aria-hidden','true');
+    btn.append(img,titulo,flecha);
     btn.addEventListener('click',async function(){
       if(typeof window.irACatalogoDocencia!=='function')return;
       await window.irACatalogoDocencia();
@@ -76,7 +98,7 @@
       const modulos=res.data||[];
       recientes.replaceChildren();
       if(!modulos.length){recientes.textContent='No hay trabajos publicados disponibles.';destacados.textContent='No hay temas disponibles.';return;}
-      modulos.slice(0,4).forEach(m=>recientes.appendChild(item(m,'Trabajo disponible para estudio')));
+      modulos.slice(0,4).forEach(m=>recientes.appendChild(item(m)));
       const ids=new Set(modulos.map(m=>String(m.id)));
       const conteos=new Map();
       const [progresos,comentarios]=await Promise.all([
@@ -96,7 +118,7 @@
       });
       destacados.replaceChildren();
       const ordenados=[...modulos].sort((a,b)=>(conteos.get(String(b.id))||0)-(conteos.get(String(a.id))||0));
-      ordenados.slice(0,4).forEach(m=>destacados.appendChild(item(m,(conteos.get(String(m.id))||0)+' aportes y comentarios registrados')));
+      ordenados.slice(0,4).forEach(m=>destacados.appendChild(item(m)));
     }catch(e){
       if(!recientes.children.length)recientes.textContent='No fue posible cargar los trabajos.';
       destacados.textContent='La clasificación por participación no está disponible en este momento.';
