@@ -5,7 +5,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from authorization import authorize_local_analysis
+from authorization import authorize_local_analysis, make_authorizer
+from contextlib import contextmanager
 
 
 class Cursor:
@@ -45,6 +46,20 @@ class AuthorizationTests(unittest.TestCase):
         self.assertIn("a.revocado_en is null", db.sql)
         self.assertIn("a.alcance = 'analisis_local'", db.sql)
         self.assertIn("v.estado = 'procesando'", db.sql)
+
+    def test_adapter_opens_private_connection(self):
+        calls = []
+        @contextmanager
+        def factory():
+            calls.append("opened")
+            yield Connection({"permitido": 1})
+            calls.append("closed")
+        self.assertTrue(make_authorizer(factory)(self.job))
+        self.assertEqual(calls, ["opened", "closed"])
+
+    def test_adapter_requires_connection_factory(self):
+        with self.assertRaises(ValueError):
+            make_authorizer(None)
 
     def test_database_failure_is_not_permission(self):
         class BrokenConnection:
