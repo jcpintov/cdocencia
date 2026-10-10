@@ -38,6 +38,22 @@ begin
     ) then
       raise exception 'Publicación contiene evidencia no validada';
     end if;
+    -- Una referencia huérfana no debe desaparecer por un INNER JOIN.
+    if exists (
+      select 1 from doctrina.publicacion_fuentes pf
+      left join doctrina.afirmaciones a on a.id = pf.afirmacion_id
+      left join doctrina.unidades u on u.id = a.unidad_id
+      left join doctrina.versiones v on v.id = u.version_id
+      where pf.publicacion_id = new.id
+        and (
+          a.id is null or u.id is null or v.id is null
+          or a.estado_revision is distinct from 'aprobado'
+          or u.estado_revision is distinct from 'validado'
+          or v.estado is distinct from 'listo'
+        )
+    ) then
+      raise exception 'Publicación contiene referencia incompleta o no validada';
+    end if;
     -- Consentimiento específico, activo y revocable por documento fuente.
     if exists (
       select 1 from doctrina.publicacion_fuentes pf
