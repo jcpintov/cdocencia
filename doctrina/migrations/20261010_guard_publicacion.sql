@@ -11,6 +11,9 @@ begin
     if new.aprobado_por is null or new.publicado_en is null then
       raise exception 'Publicación sin aprobación humana';
     end if;
+    if nullif(btrim(new.contenido), '') is null then
+      raise exception 'Publicación sin contenido';
+    end if;
     if not exists (
       select 1 from doctrina.publicacion_fuentes pf
       join doctrina.afirmaciones a on a.id = pf.afirmacion_id
@@ -34,6 +37,22 @@ begin
              or v.estado <> 'listo')
     ) then
       raise exception 'Publicación contiene evidencia no validada';
+    end if;
+    -- Cada versión efectivamente citada requiere una dependencia vigente.
+    -- Sin esta correspondencia, una revisión posterior podría pasar inadvertida.
+    if exists (
+      select 1 from doctrina.publicacion_fuentes pf
+      join doctrina.afirmaciones a on a.id = pf.afirmacion_id
+      join doctrina.unidades u on u.id = a.unidad_id
+      where pf.publicacion_id = new.id
+        and not exists (
+          select 1 from doctrina.dependencias_conocimiento d
+          where d.publicacion_id = new.id
+            and d.fuente_version_id = u.version_id
+            and d.estado_revision = 'vigente'
+        )
+    ) then
+      raise exception 'Publicación sin dependencia vigente para cada fuente';
     end if;
     if exists (
       select 1 from doctrina.dependencias_conocimiento d
