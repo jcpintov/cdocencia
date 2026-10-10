@@ -93,9 +93,21 @@ def finish_extraction(connection: Any, job: ReservedJob, worker_id: str,
 
 def mark_failure(connection: Any, job: ReservedJob, worker_id: str,
                  needs_review: bool) -> None:
-    """Invocar dentro de transacción. Nunca almacenar errores crudos."""
+    """Registrar error solo si la reserva sigue perteneciendo al procesador.
+
+    El llamador debe iniciar una transacción; nunca conservar errores crudos.
+    """
+    lock = connection.execute("""
+        select t.estado as trabajo_estado, v.estado as version_estado
+        from doctrina.trabajos t
+        join doctrina.versiones v on v.id = t.version_id
+        where t.id = %s and t.procesador_id = %s
+        for update of t, v
+    """, (job.id, worker_id)).fetchone()
+    if lock is None:
+        raise RuntimeError("Trabajo no pertenece al procesador")
     transition = REVIEW_REQUIRED if needs_review else FAILED
-    validate_transition("procesando", "procesando", transition)
+    validate_transition(lock["trabajo_estado"], lock["version_estado"], transition)
     version_state = "revision" if needs_review else "error"
     connection.execute("""
         update doctrina.versiones set estado = %s,
