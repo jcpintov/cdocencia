@@ -3,7 +3,7 @@ import sys
 import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from queue_repository import reserve_next, finish_extraction, ReservedJob
+from queue_repository import reserve_next, finish_extraction, mark_failure, ReservedJob
 
 
 class Cursor:
@@ -36,6 +36,28 @@ class QueueTests(unittest.TestCase):
         self.assertEqual(job.version_id, "v1")
         self.assertEqual(len(db.queries), 3)
         self.assertIn("skip locked", db.queries[0][0].lower())
+
+    def test_fallo_rechaza_procesador_ajeno(self):
+        job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
+        db = FakeConnection([None])
+        with self.assertRaises(RuntimeError):
+            mark_failure(db, job, "procesador-ajeno", needs_review=False)
+        self.assertEqual(len(db.queries), 1)
+
+    def test_fallo_exige_estado_vigente(self):
+        job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
+        db = FakeConnection([{"trabajo_estado": "listo", "version_estado": "revision"}])
+        with self.assertRaises(ValueError):
+            mark_failure(db, job, "worker-test", needs_review=True)
+        self.assertEqual(len(db.queries), 1)
+
+    def test_fallo_controlado_sin_error_crudo(self):
+        job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
+        db = FakeConnection([{"trabajo_estado": "procesando", "version_estado": "procesando"}])
+        mark_failure(db, job, "worker-test", needs_review=True)
+        self.assertEqual(len(db.queries), 3)
+        self.assertEqual(db.queries[1][1][0], "revision")
+        self.assertNotIn("traceback", repr(db.queries).lower())
 
     def test_finalizacion_rechaza_procesador_ajeno(self):
         job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
