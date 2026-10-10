@@ -71,6 +71,22 @@ def finish_extraction(connection: Any, job: ReservedJob, worker_id: str,
     if lock is None:
         raise RuntimeError("Trabajo no pertenece al procesador")
     validate_transition(lock["trabajo_estado"], lock["version_estado"], EXTRACTED)
+    # Comprobar consentimiento en la MISMA transacción que inserta unidades.
+    # FOR SHARE bloquea la revocación de la autorización hasta el commit.
+    consent = connection.execute("""
+        select au.id
+        from doctrina.versiones v
+        join doctrina.autorizaciones_fuente au
+          on au.documento_id = v.documento_id
+        where v.id = %s
+          and au.alcance = 'analisis_local'
+          and au.revocado_en is null
+        order by au.concedido_en desc, au.id
+        limit 1
+        for share of au
+    """, (job.version_id,)).fetchone()
+    if consent is None:
+        raise PermissionError("Autorización local ausente o revocada")
     if not units:
         raise ValueError("Extracción sin unidades")
     for unit in units:
