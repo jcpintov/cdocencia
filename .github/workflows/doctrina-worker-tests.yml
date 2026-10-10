@@ -1,0 +1,28 @@
+name: Doctrina - Pruebas del extractor
+on:
+  push:
+    branches: [feature/doctrina-ingesta-v1]
+    paths:
+      - 'doctrina/worker/**'
+      - '.github/workflows/doctrina-worker-tests.yml'
+  pull_request:
+    paths:
+      - 'doctrina/worker/**'
+      - '.github/workflows/doctrina-worker-tests.yml'
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Instalar dependencias
+        run: python -m pip install -r doctrina/worker/requirements.txt
+      - name: Compilar
+        run: python -m compileall -q doctrina/worker
+      - name: Ejecutar pruebas
+        run: python -m unittest discover -s doctrina/worker/tests -v
