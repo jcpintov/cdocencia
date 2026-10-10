@@ -17,10 +17,13 @@
     const client=getClient();
     if (!client) return;
     refresh();
+    document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') refresh(); });
     if (client.auth && typeof client.auth.onAuthStateChange==='function') {
-      client.auth.onAuthStateChange(function () {
-        // Defer Auth queries outside Supabase auth state callback.
-        Promise.resolve().then(refresh);
+      client.auth.onAuthStateChange(function (event) {
+        const shell = window.DoctrinaSuperadminShell;
+        if (shell) shell.hide();
+        if (event === 'SIGNED_OUT') return;
+        setTimeout(refresh, 0);
       });
     }
   });
