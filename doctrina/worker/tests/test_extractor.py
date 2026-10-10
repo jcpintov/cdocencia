@@ -31,6 +31,29 @@ class ExtractorTests(unittest.TestCase):
                          ["Primero", "Segundo", "Tercero"])
         self.assertEqual([u["orden"] for u in unidades], [1, 2, 3])
 
+    def test_rechaza_zip_falso_con_firma_pk(self):
+        with self.assertRaises(ExtractionError):
+            extract(b"PK" + b"basura", "falso.docx")
+
+    def test_rechaza_zip_sin_estructura_docx(self):
+        from io import BytesIO
+        from zipfile import ZipFile
+        archivo = BytesIO()
+        with ZipFile(archivo, "w") as z:
+            z.writestr("archivo.txt", "texto")
+        with self.assertRaises(ExtractionError):
+            extract(archivo.getvalue(), "incompleto.docx")
+
+    def test_rechaza_zip_bomb_sintetico(self):
+        from io import BytesIO
+        from zipfile import ZipFile, ZIP_DEFLATED
+        archivo = BytesIO()
+        with ZipFile(archivo, "w", compression=ZIP_DEFLATED) as z:
+            z.writestr("[Content_Types].xml", "contenido")
+            z.writestr("word/document.xml", "A" * (2 * 1024 * 1024))
+        with self.assertRaises(ExtractionError):
+            extract(archivo.getvalue(), "compresion.docx")
+
     def test_rechaza_pdf_falso(self):
         with self.assertRaises(ExtractionError):
             extract(b"no es PDF", "falso.pdf")
