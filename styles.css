@@ -2573,3 +2573,11 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-autor{color:#52667b!impo
  #seccionCatalogoTrabajos .trabajos-grid{grid-template-columns:1fr}
  #seccionCatalogoTrabajos .card-trabajo-grid{min-height:125px}
 }
+
+/* Iconografía contextual: miniaturas integradas sin aumentar el alto del catálogo. */
+#seccionCatalogoTrabajos .grid-card-cuerpo{display:grid;grid-template-columns:49px minmax(0,1fr);gap:10px;align-items:center;margin:9px 0 8px;min-width:0}
+#seccionCatalogoTrabajos .grid-card-icono{display:block;width:49px;height:49px;object-fit:cover;border-radius:7px;border:1px solid #c6b28e;box-shadow:0 2px 7px #081e3226}
+#seccionCatalogoTrabajos .grid-card-textos{min-width:0}
+#seccionCatalogoTrabajos .grid-card-cuerpo .grid-card-titulo{margin:0 0 5px}
+#seccionCatalogoTrabajos .grid-card-cuerpo .grid-card-autor{margin:0}
+@media(max-width:680px){#seccionCatalogoTrabajos .grid-card-cuerpo{grid-template-columns:45px minmax(0,1fr)}#seccionCatalogoTrabajos .grid-card-icono{width:45px;height:45px}}
