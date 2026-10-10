@@ -2581,3 +2581,16 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-autor{color:#52667b!impo
 #seccionCatalogoTrabajos .grid-card-cuerpo .grid-card-titulo{margin:0 0 5px}
 #seccionCatalogoTrabajos .grid-card-cuerpo .grid-card-autor{margin:0}
 @media(max-width:680px){#seccionCatalogoTrabajos .grid-card-cuerpo{grid-template-columns:45px minmax(0,1fr)}#seccionCatalogoTrabajos .grid-card-icono{width:45px;height:45px}}
+
+/* Accesibilidad de login: enlace recuperacion con contraste WCAG sobre marfil. */
+#seccionLogin .login-recuperar-enlace,
+body.theme-nocturno #seccionLogin .login-recuperar-enlace{
+ color:#173f64!important;
+ font-size:clamp(.9rem,1.35vw,.99rem)!important;
+ font-weight:700;
+ text-decoration-color:#a57c39!important;
+ text-decoration-thickness:1.5px;
+ text-underline-offset:3px;
+}
+#seccionLogin .login-recuperar-enlace:hover{color:#092a48!important;text-decoration-thickness:2px}
+#seccionLogin .login-recuperar-enlace:focus-visible{outline:3px solid #b98b45;outline-offset:4px;border-radius:2px}
