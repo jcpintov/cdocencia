@@ -44,7 +44,7 @@
 
   <!-- PANTALLA 1: ACCESO -->
   <main id="seccionLogin" class="login-wrapper">
-    <div class="card card-trazado">
+    <form id="formAccesoCamara" class="card card-trazado" onsubmit="event.preventDefault(); iniciarSesion();">
       <h2 style="text-align: center; margin-bottom: 6px;">Cámara de Docencia</h2>
       <p class="login-sub">Espacio docente reservado para Maestros Masones.</p>
       <div class="form-group">
@@ -68,7 +68,7 @@
 
       <button class="btn-primary" type="submit">Acceder a la Cámara</button>
       <p id="errorLogin" class="error-msg"></p>
-    </div>
+    </form>
   </main>
 
   <!-- MODAL SIGILO Y ADVERTENCIA -->
