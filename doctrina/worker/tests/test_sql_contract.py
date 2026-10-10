@@ -19,6 +19,13 @@ class SqlContractTests(unittest.TestCase):
         source = inspect.getsource(recovery.quarantine_expired).lower()
         self.assertRegex(source, r"limit %s\s+for update of t, v skip locked")
 
+    def test_transiciones_vinculadas_a_version_reservada(self):
+        for method in (queue_repository.finish_extraction,
+                       queue_repository.mark_failure):
+            source = inspect.getsource(method).lower()
+            self.assertIn("t.version_id = %s", source)
+            self.assertIn("job.version_id, worker_id", source)
+
     def test_finalizacion_exige_reserva_vigente(self):
         source = inspect.getsource(queue_repository.finish_extraction).lower()
         self.assertIn("arrendado_hasta > now()", source)
