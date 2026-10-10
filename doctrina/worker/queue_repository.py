@@ -29,7 +29,7 @@ def reserve_next(connection: Any, worker_id: str) -> ReservedJob | None:
           and v.estado = 'pendiente'
         order by t.creado_en, t.id
         limit 1
-        for update of t skip locked
+        for update of t, v skip locked
     """).fetchone()
     if row is None:
         return None
