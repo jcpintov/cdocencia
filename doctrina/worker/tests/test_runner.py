@@ -50,6 +50,22 @@ class RunnerTests(unittest.TestCase):
         self.assertEqual(result.status, "error_controlado")
         self.assertFalse(fail.call_args.kwargs["needs_review"])
 
+    def test_database_failure_propagates_without_marking_extraction_error(self):
+        with patch.object(runner, "reserve_next", return_value=self.job), \
+             patch.object(runner, "verify_and_extract", return_value={"unidades": [{"orden": 1}]}), \
+             patch.object(runner, "finish_extraction", side_effect=RuntimeError("database failure")), \
+             patch.object(runner, "mark_failure") as fail:
+            with self.assertRaises(RuntimeError):
+                runner.run_once(connection, lambda key: b"data", "worker-1")
+        fail.assert_not_called()
+
+    def test_failure_recording_error_propagates(self):
+        with patch.object(runner, "reserve_next", return_value=self.job), \
+             patch.object(runner, "verify_and_extract", side_effect=ExtractionError("invalid")), \
+             patch.object(runner, "mark_failure", side_effect=RuntimeError("lease lost")):
+            with self.assertRaises(RuntimeError):
+                runner.run_once(connection, lambda key: b"data", "worker-1")
+
     def test_invalid_worker_id(self):
         with self.assertRaises(ValueError):
             runner.run_once(connection, lambda key: b"data", "")
