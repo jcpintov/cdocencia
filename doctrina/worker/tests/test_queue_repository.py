@@ -3,7 +3,7 @@ import sys
 import unittest
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from queue_repository import reserve_next, finish_extraction, mark_failure, ReservedJob
+from queue_repository import reserve_next, finish_extraction, mark_failure, renew_lease, ReservedJob
 
 
 class Cursor:
@@ -23,6 +23,25 @@ class FakeConnection:
 
 
 class QueueTests(unittest.TestCase):
+    def test_renovacion_reserva_vigente(self):
+        job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
+        db = FakeConnection([{"id": "t1"}])
+        self.assertTrue(renew_lease(db, job, "worker-test"))
+        self.assertIn("arrendado_hasta > now()", db.queries[0][0])
+        self.assertEqual(db.queries[0][1], ("t1", "v1", "worker-test"))
+
+    def test_reserva_vencida_no_se_renueva(self):
+        job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
+        db = FakeConnection([None])
+        self.assertFalse(renew_lease(db, job, "worker-test"))
+
+    def test_finalizacion_exige_reserva_vigente(self):
+        job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
+        db = FakeConnection([None])
+        with self.assertRaises(RuntimeError):
+            finish_extraction(db, job, "worker-test", [])
+        self.assertIn("arrendado_hasta > now()", db.queries[0][0])
+
     def test_no_reserva_cuando_cola_vacia(self):
         db = FakeConnection([None])
         self.assertIsNone(reserve_next(db, "worker-test"))
