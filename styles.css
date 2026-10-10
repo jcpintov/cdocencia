@@ -2524,3 +2524,52 @@ body:has(#seccionCatalogoTrabajos:not(.hidden))>header{
  #seccionCatalogoTrabajos .card-trabajo-grid:hover,
  #seccionCatalogoTrabajos .btn-gemelo:hover{transform:none}
 }
+
+/* Catálogo v2: sidebar persistente, cuadrícula compacta y contraste garantizado. */
+body:has(#seccionCatalogoTrabajos:not(.hidden)){height:100dvh;min-height:100dvh;overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr);background:#071d30}
+body:has(#seccionCatalogoTrabajos:not(.hidden))>header{min-height:0;padding:9px clamp(12px,2vw,24px)}
+#seccionCatalogoTrabajos.catalogo-portal{display:grid;grid-template-columns:clamp(175px,16vw,225px) minmax(0,1fr);height:100%;min-height:0;width:100%;margin:0;overflow:hidden}
+#seccionCatalogoTrabajos.catalogo-portal.hidden{display:none!important}
+#seccionCatalogoTrabajos .portal-nav{background:linear-gradient(155deg,#061c30,#09273e 70%,#07192c);padding:clamp(10px,2vh,22px) 10px;display:flex;flex-direction:column;justify-content:space-between;min-width:0;overflow-y:auto}
+#seccionCatalogoTrabajos .portal-nav-list{display:grid;gap:6px}
+#seccionCatalogoTrabajos .portal-nav-link{width:100%;border:0;border-left:3px solid transparent;border-radius:0 7px 7px 0;background:transparent;color:#f4f5f8;text-align:left;font:inherit;font-family:Georgia,serif;font-size:.96rem;line-height:1.2;padding:12px 10px;cursor:pointer}
+#seccionCatalogoTrabajos .portal-nav-link:hover,#seccionCatalogoTrabajos .portal-nav-link.active{background:linear-gradient(90deg,#9c783f,#59462f);border-left-color:#e4bd73}
+#seccionCatalogoTrabajos .portal-nav-footer{display:grid;justify-items:center;gap:7px;text-align:center;border-top:1px solid #607185;padding:14px 5px 0;color:#e4e9ee;font-size:.75rem}
+#seccionCatalogoTrabajos .portal-nav-footer small{font-size:.7rem;line-height:1.35}
+#seccionCatalogoTrabajos .portal-nav-footer button{background:transparent;border:1px solid #7b91a7;border-radius:5px;color:#fff;padding:8px;cursor:pointer;width:100%}
+#seccionBienvenida .portal-logia-logo,#seccionCatalogoTrabajos .portal-logia-logo{display:block;width:clamp(65px,7.5vw,110px);height:auto;max-height:110px;object-fit:contain;filter:drop-shadow(0 2px 5px #0005)}
+#seccionCatalogoTrabajos .catalogo-contenido.bienvenida-container{width:100%;max-width:none;height:100%;min-height:0;overflow-y:auto;overflow-x:hidden;margin:0;padding:clamp(12px,2vh,24px) clamp(12px,2vw,26px);background:linear-gradient(180deg,rgba(7,23,39,.45),rgba(7,23,39,.6)),url("imgs/hero-docencia.webp") center/cover no-repeat}
+#seccionCatalogoTrabajos .seccion-trabajos-header{padding:13px 18px;margin-bottom:13px;border-top-width:2px;border-radius:9px;display:flex;align-items:center;justify-content:space-between}
+#seccionCatalogoTrabajos .titulo-catalogo-temas,#seccionCatalogoTrabajos .seccion-trabajos-header .titulo-catalogo-temas{color:#102f50!important;font-size:clamp(1.25rem,1.9vw,1.7rem);margin:0 0 3px}
+#seccionCatalogoTrabajos .seccion-trabajos-header p{font-size:.78rem!important;color:#52667b!important;line-height:1.3}
+#seccionCatalogoTrabajos .catalogo-botones-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#seccionCatalogoTrabajos .catalogo-botones-top button{border:1px solid #b5c7d5;background:#edf2f7;color:#123b5d;border-radius:5px;padding:6px 9px;font-size:.78rem;cursor:pointer}
+#seccionCatalogoTrabajos .catalogo-botones-top button.hidden{display:none!important}
+#seccionCatalogoTrabajos .trabajos-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+#seccionCatalogoTrabajos .card-trabajo-grid{padding:12px 13px;border-radius:8px;border-top-width:2px;min-height:150px;box-shadow:0 4px 13px #061c3030}
+#seccionCatalogoTrabajos .grid-card-meta{font-size:.7rem;gap:5px}
+#seccionCatalogoTrabajos .grid-card-orden{padding:2px 6px;font-size:.7rem}
+#seccionCatalogoTrabajos .grid-card-titulo{font-size:clamp(.91rem,1.05vw,1.06rem);line-height:1.23;margin:9px 0 5px;color:#102f50!important}
+#seccionCatalogoTrabajos .grid-card-autor{font-size:.76rem;line-height:1.3;margin:0 0 9px;color:#52667b!important}
+#seccionCatalogoTrabajos .grid-card-footer{padding-top:8px}
+#seccionCatalogoTrabajos .badge-estado{font-size:.69rem;padding:4px 7px}
+#seccionCatalogoTrabajos .btn-grid-ir{min-width:48px;padding:6px 9px;font-size:.78rem}
+body.theme-nocturno #seccionCatalogoTrabajos .seccion-trabajos-header,
+body.theme-nocturno #seccionCatalogoTrabajos .card-trabajo-grid{background:linear-gradient(140deg,#f9fafb,#e9eff5)!important;color:#102f50!important}
+body.theme-nocturno #seccionCatalogoTrabajos .titulo-catalogo-temas,
+body.theme-nocturno #seccionCatalogoTrabajos .grid-card-titulo{color:#102f50!important}
+body.theme-nocturno #seccionCatalogoTrabajos .grid-card-meta,
+body.theme-nocturno #seccionCatalogoTrabajos .grid-card-autor{color:#52667b!important}
+@media(max-width:1350px){#seccionCatalogoTrabajos .trabajos-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:980px){#seccionCatalogoTrabajos .trabajos-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){
+ #seccionCatalogoTrabajos.catalogo-portal{display:flex;flex-direction:column}
+ #seccionCatalogoTrabajos .portal-nav{flex:0 0 auto;display:block;padding:7px;overflow-x:auto;overflow-y:hidden}
+ #seccionCatalogoTrabajos .portal-nav-list{display:flex;gap:5px}
+ #seccionCatalogoTrabajos .portal-nav-link{flex:0 0 auto;width:auto;white-space:nowrap;padding:9px;border-left:0;border-bottom:2px solid transparent;font-size:.82rem}
+ #seccionCatalogoTrabajos .portal-nav-footer{display:none}
+ #seccionCatalogoTrabajos .catalogo-contenido.bienvenida-container{flex:1;padding:12px}
+ #seccionCatalogoTrabajos .seccion-trabajos-header{padding:11px;align-items:flex-start}
+ #seccionCatalogoTrabajos .trabajos-grid{grid-template-columns:1fr}
+ #seccionCatalogoTrabajos .card-trabajo-grid{min-height:125px}
+}
