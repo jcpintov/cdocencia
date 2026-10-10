@@ -28,13 +28,13 @@ class QueueTests(unittest.TestCase):
         db = FakeConnection([None])
         with self.assertRaises(RuntimeError):
             mark_failure(db, job, "worker-test", needs_review=True)
-        self.assertIn("arrendado_hasta > now()", db.queries[0][0])
+        self.assertIn("arrendado_hasta > clock_timestamp()", db.queries[0][0])
 
     def test_renovacion_reserva_vigente(self):
         job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
         db = FakeConnection([{"id": "t1"}])
         self.assertTrue(renew_lease(db, job, "worker-test"))
-        self.assertIn("arrendado_hasta > now()", db.queries[0][0])
+        self.assertIn("arrendado_hasta > clock_timestamp()", db.queries[0][0])
         self.assertEqual(db.queries[0][1], ("t1", "v1", "worker-test"))
 
     def test_reserva_vencida_no_se_renueva(self):
@@ -47,7 +47,7 @@ class QueueTests(unittest.TestCase):
         db = FakeConnection([None])
         with self.assertRaises(RuntimeError):
             finish_extraction(db, job, "worker-test", [])
-        self.assertIn("arrendado_hasta > now()", db.queries[0][0])
+        self.assertIn("arrendado_hasta > clock_timestamp()", db.queries[0][0])
 
     def test_no_reserva_cuando_cola_vacia(self):
         db = FakeConnection([None])
