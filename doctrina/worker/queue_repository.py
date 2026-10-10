@@ -63,10 +63,11 @@ def finish_extraction(connection: Any, job: ReservedJob, worker_id: str,
         select t.estado as trabajo_estado, v.estado as version_estado
         from doctrina.trabajos t
         join doctrina.versiones v on v.id = t.version_id
-        where t.id = %s and t.procesador_id = %s
+        where t.id = %s and t.version_id = %s
+          and t.procesador_id = %s
           and t.arrendado_hasta > now()
         for update of t, v
-    """, (job.id, worker_id)).fetchone()
+    """, (job.id, job.version_id, worker_id)).fetchone()
     if lock is None:
         raise RuntimeError("Trabajo no pertenece al procesador")
     validate_transition(lock["trabajo_estado"], lock["version_estado"], EXTRACTED)
@@ -105,10 +106,11 @@ def mark_failure(connection: Any, job: ReservedJob, worker_id: str,
         select t.estado as trabajo_estado, v.estado as version_estado
         from doctrina.trabajos t
         join doctrina.versiones v on v.id = t.version_id
-        where t.id = %s and t.procesador_id = %s
+        where t.id = %s and t.version_id = %s
+          and t.procesador_id = %s
           and t.arrendado_hasta > now()
         for update of t, v
-    """, (job.id, worker_id)).fetchone()
+    """, (job.id, job.version_id, worker_id)).fetchone()
     if lock is None:
         raise RuntimeError("Trabajo no pertenece al procesador")
     transition = REVIEW_REQUIRED if needs_review else FAILED
