@@ -20,15 +20,22 @@ class RunResult:
 
 def run_once(connection_factory: Callable[[], Any],
              fetch_private_object: Callable[[str], bytes],
-             worker_id: str) -> RunResult:
+             worker_id: str,
+             authorize_local_analysis: Callable[[Any], bool]) -> RunResult:
     """Una reserva por ejecución; la revisión humana es siempre obligatoria."""
     if not isinstance(worker_id, str) or not worker_id.strip() or len(worker_id) > 128:
         raise ValueError("Identificador de procesador inválido")
+    if not callable(authorize_local_analysis):
+        raise ValueError("Control de autorización local obligatorio")
     # La reserva debe confirmarse antes de realizar operaciones de Storage.
     with connection_factory() as conn:
         job = reserve_next(conn, worker_id)
     if job is None:
         return RunResult("sin_trabajo")
+    # Denegación previa a Storage: no acceder a bytes protegidos.
+    # El supervisor recuperará reservas vencidas si no hay autorización.
+    if authorize_local_analysis(job) is not True:
+        return RunResult("autorizacion_denegada", str(job.id))
     try:
         data = fetch_private_object(job.objeto_storage)
         extracted = verify_and_extract(data, job)
@@ -40,6 +47,9 @@ def run_once(connection_factory: Callable[[], Any],
                          needs_review=isinstance(exc, ExtractionError))
         return RunResult("revision_requerida" if isinstance(exc, ExtractionError)
                          else "error_controlado", str(job.id))
+    # Verificar nuevamente el consentimiento ante revocaciones durante extracción.
+    if authorize_local_analysis(job) is not True:
+        return RunResult("autorizacion_revocada", str(job.id))
     # Fallos de escritura o commit no deben convertirse en falsos
     # errores de extracción ni en una segunda transición de estado.
     with connection_factory() as conn:
