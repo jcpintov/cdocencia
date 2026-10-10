@@ -100,6 +100,20 @@ class QueueTests(unittest.TestCase):
             finish_extraction(db, job, "otro-worker", [])
         self.assertEqual(len(db.queries), 1)
 
+    def test_finalizacion_exige_autorizacion_en_misma_transaccion(self):
+        job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
+        db = FakeConnection([
+            {"trabajo_estado": "procesando", "version_estado": "procesando"},
+            None,
+        ])
+        unit = dict(orden=1, tipo="bloque", rotulo="", texto_fiel="x",
+                    pagina_inicio=None, pagina_fin=None, huella="a" * 64)
+        with self.assertRaises(PermissionError):
+            finish_extraction(db, job, "worker-test", [unit])
+        self.assertEqual(len(db.queries), 2)
+        self.assertIn("for share of au", db.queries[1][0].lower())
+        self.assertEqual(db.queries[1][1], ("v1",))
+
     def test_finalizacion_rechaza_unidades_vacias(self):
         job = ReservedJob("t1", "v1", "a" * 64, "v1/file.txt", "text/plain", 5)
         db = FakeConnection([{"trabajo_estado": "procesando",
