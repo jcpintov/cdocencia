@@ -266,7 +266,7 @@
   <div id="seccionBienvenida" class="bienvenida-portal hidden">
     <aside class="portal-nav" aria-label="Navegación de la Cámara">
       <div class="portal-nav-list">
-        <button class="portal-nav-link active" type="button" aria-current="page">⌂ &nbsp; Inicio</button>
+        <button class="portal-nav-link active" type="button" aria-current="page" onclick="volverAInicioPortal()">⌂ &nbsp; Inicio</button>
         <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia()">▤ &nbsp; Trabajos de la Cámara</button>
         <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())">▣ &nbsp; Docencia para Maestros</button>
         <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())">▢ &nbsp; Muro y Foro</button>
@@ -311,7 +311,7 @@
         <h2 class="titulo-catalogo-temas">Trabajos Disponibles de la Cámara</h2>
         <p style="font-size: 0.9rem; color: var(--text-muted); font-family: var(--font-ui); margin: 0;">Seleccione un trabajo para su estudio doctrinal.</p>
       </div>
-      <div class="catalogo-botones-top"><span id="catalogoContadorModulos" class="badge-contador-temas"></span><button type="button" class="catalogo-inicio" onclick="volverAInicioPortal()">← Inicio</button><button id="btnMuroHome" class="hidden" type="button" onclick="mostrarMuroReflexionesUsuarios()">Muro y Foro</button></div>
+      <div class="catalogo-botones-top"><span id="catalogoContadorModulos" class="badge-contador-temas"></span></div>
     </div>
 
     <div id="gridTrabajosBienvenida" class="trabajos-grid"></div>
