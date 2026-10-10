@@ -38,7 +38,7 @@ def reserve_next(connection: Any, worker_id: str) -> ReservedJob | None:
         update doctrina.trabajos
         set estado = 'procesando', intentos = intentos + 1,
             procesador_id = %s, iniciado_en = now(),
-            arrendado_hasta = now() + interval '10 minutes',
+            arrendado_hasta = clock_timestamp() + interval '10 minutes',
             actualizado_en = now()
         where id = %s and estado = 'pendiente'
         returning id
@@ -65,7 +65,7 @@ def finish_extraction(connection: Any, job: ReservedJob, worker_id: str,
         join doctrina.versiones v on v.id = t.version_id
         where t.id = %s and t.version_id = %s
           and t.procesador_id = %s
-          and t.arrendado_hasta > now()
+          and t.arrendado_hasta > clock_timestamp()
         for update of t, v
     """, (job.id, job.version_id, worker_id)).fetchone()
     if lock is None:
@@ -124,7 +124,7 @@ def mark_failure(connection: Any, job: ReservedJob, worker_id: str,
         join doctrina.versiones v on v.id = t.version_id
         where t.id = %s and t.version_id = %s
           and t.procesador_id = %s
-          and t.arrendado_hasta > now()
+          and t.arrendado_hasta > clock_timestamp()
         for update of t, v
     """, (job.id, job.version_id, worker_id)).fetchone()
     if lock is None:
@@ -153,11 +153,11 @@ def renew_lease(connection: Any, job: ReservedJob, worker_id: str) -> bool:
     """
     row = connection.execute("""
         update doctrina.trabajos
-        set arrendado_hasta = now() + interval '10 minutes',
+        set arrendado_hasta = clock_timestamp() + interval '10 minutes',
             actualizado_en = now()
         where id = %s and version_id = %s
           and procesador_id = %s and estado = 'procesando'
-          and arrendado_hasta > now()
+          and arrendado_hasta > clock_timestamp()
         returning id
     """, (job.id, job.version_id, worker_id)).fetchone()
     return row is not None
