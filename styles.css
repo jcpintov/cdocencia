@@ -2594,3 +2594,34 @@ body.theme-nocturno #seccionLogin .login-recuperar-enlace{
 }
 #seccionLogin .login-recuperar-enlace:hover{color:#092a48!important;text-decoration-thickness:2px}
 #seccionLogin .login-recuperar-enlace:focus-visible{outline:3px solid #b98b45;outline-offset:4px;border-radius:2px}
+
+/* Etapa III: estudio individual — navegación lateral, lectura protagonista. */
+body:has(#seccionDocencia:not(.hidden)){background:#0a2238;overflow-x:hidden}
+body:has(#seccionDocencia:not(.hidden))>header{background:#071e33;border-bottom:2px solid #bd934e}
+#seccionDocencia.templo-layout{display:grid;grid-template-columns:clamp(205px,19vw,265px) minmax(0,1fr);gap:clamp(12px,1.5vw,20px);width:min(1600px,100%);max-width:1600px;margin:0 auto;padding:clamp(12px,1.5vw,20px);align-items:start;min-width:0}
+#seccionDocencia .sidebar-templo{position:sticky;top:12px;align-self:start;max-height:calc(100dvh - 100px);overflow-y:auto;scrollbar-width:thin;gap:8px}
+#seccionDocencia .sidebar-box{padding:12px 13px;border-radius:8px;border-color:#c7d4e0;background:#f0f4f8;box-shadow:0 3px 12px #051c3030}
+#seccionDocencia .sidebar-avances-box{padding:5px!important;background:#eaf0f5}
+#seccionDocencia .sidebar-avances-box[style]{margin-top:0!important}
+#seccionDocencia .btn-mis-avances{padding:8px 10px;font-size:.79rem;min-height:35px;border:1px solid #bb995d;background:#f9f6ef;color:#123551;line-height:1.25}
+#seccionDocencia .sidebar-title{color:#0e304f;font-size:.8rem}
+#seccionDocencia .sidebar-info{font-size:.76rem;line-height:1.45}
+#seccionDocencia .sidebar-info h4{font-size:.85rem;color:#153654}
+#seccionDocencia>main{min-width:0;width:100%;max-width:none;display:grid;gap:13px}
+#seccionDocencia>main>.card,#seccionDocencia>main>#bloqueFaseTres .card{background:linear-gradient(145deg,#fffefa,#f1f5f8);color:#1c3247;border:1px solid #d1dce5;border-top:3px solid #bd9657;border-radius:10px;box-shadow:0 7px 22px #041a2c36;padding:clamp(16px,2vw,27px)}
+#seccionDocencia .card-fase-header{margin-bottom:12px;padding-bottom:9px;border-color:#d5dee6}
+#seccionDocencia #temaTitulo{font-family:Georgia,serif;font-size:clamp(1.4rem,2.2vw,2rem);line-height:1.22;color:#103252!important;margin-bottom:7px}
+#seccionDocencia #temaAutor{color:#52677b!important;font-size:.88rem!important;margin-bottom:12px!important}
+#seccionDocencia .fase-badge{background:#123958;color:#fff;border:1px solid #c2a06c;font-size:.74rem}
+#seccionDocencia .doc-actions-bar{gap:8px;flex-wrap:wrap}
+#seccionDocencia .tab-btn,#seccionDocencia .btn-descargar,#seccionDocencia .btn-certificado{font-size:.82rem;line-height:1.25}
+#seccionDocencia #vistaTexto{max-width:78ch;margin:15px auto 0;font-size:clamp(.98rem,1.18vw,1.12rem);line-height:1.75;color:#1a2e42}
+#seccionDocencia #vistaTexto .trazado-parrafo{line-height:1.75;margin-bottom:1.15em}
+#seccionDocencia #vistaTexto .trazado-subtitulo{color:#153e5e}
+#seccionDocencia #bloqueFaseDos h2,#seccionDocencia #bloqueFaseTres h2{color:#103252!important}
+body.theme-nocturno #seccionDocencia>main>.card,body.theme-nocturno #seccionDocencia>main>#bloqueFaseTres .card{background:linear-gradient(145deg,#fefdfa,#eaf1f7)!important;color:#1c3247!important}
+body.theme-nocturno #seccionDocencia #temaTitulo,body.theme-nocturno #seccionDocencia #bloqueFaseDos h2,body.theme-nocturno #seccionDocencia #bloqueFaseTres h2{color:#103252!important}
+body.theme-nocturno #seccionDocencia #vistaTexto,body.theme-nocturno #seccionDocencia #vistaTexto p{color:#1a2e42!important}
+body.theme-nocturno #seccionDocencia .sidebar-box{background:#edf3f8;color:#183550}
+@media(max-width:900px){#seccionDocencia.templo-layout{grid-template-columns:195px minmax(0,1fr);padding:11px;gap:10px}}
+@media(max-width:700px){#seccionDocencia.templo-layout{grid-template-columns:1fr;padding:10px}#seccionDocencia .sidebar-templo{position:static;max-height:none}#seccionDocencia .sidebar-info{display:none}#seccionDocencia>main>.card{padding:15px}#seccionDocencia #vistaTexto{max-width:100%}}
