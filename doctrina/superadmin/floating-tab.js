@@ -12,9 +12,23 @@
   close.addEventListener('click',()=>{panel.hidden=true;tab.focus();});
   tab.addEventListener('click',()=>{panel.hidden=false;close.focus();});
   panel.append(title,close,info); document.head.append(style);document.body.append(tab,panel);
+  // Consultar RPC del servidor con sesión Auth válida. Fallo = denegación.
+  // La función SQL pública doctrina_es_superadmin() valida auth.uid() en servidor.
+  async function refreshFromSupabase(client) {
+    tab.hidden=true; panel.hidden=true;
+    if (!client || !client.auth || typeof client.rpc !== 'function') return false;
+    try {
+      const {data: userData, error: userError}=await client.auth.getUser();
+      if(userError || !userData || !userData.user) return false;
+      const {data, error}=await client.rpc('doctrina_es_superadmin');
+      if(error || data!==true) return false;
+      tab.hidden=false;
+      return true;
+    } catch (_) {return false;}
+  }
   // Only the host can provide a server-verified boolean. Never trust localStorage or a role string.
   window.DoctrinaSuperadminShell=Object.freeze({
-    showAfterServerVerification: function (authorized) {if(authorized!==true)return;tab.hidden=false;},
+    refreshFromSupabase: refreshFromSupabase,
     hide: function(){tab.hidden=true;panel.hidden=true;}
   });
 })();
