@@ -14,3 +14,11 @@ test('login form remains mounted within the modal dialog', () => {
 test('OTP sign-in must not create unauthorized users', () => {
   assert.match(source, /shouldCreateUser:\s*false/);
 });
+
+test('authentication modal opens only from the existing admin sidebar button', () => {
+  const html = fs.readFileSync(path.join(__dirname, '..', '..', '..', 'index.html'), 'utf8');
+  assert.match(html, /id="doctrina-auth-login"[^>]*aria-controls="doctrina-auth-modal"/);
+  assert.match(source, /document\.getElementById\('doctrina-auth-login'\)/);
+  assert.doesNotMatch(source, /document\.createElement\('button'\);trigger\.id='doctrina-auth-login'/);
+  assert.match(source, /document\.body\.append\(modal\)/);
+});
