@@ -50,6 +50,5 @@
       } catch (_) {status.textContent='No fue posible solicitar el acceso.';}
       finally {send.disabled=false;}
     });
-    form.append(label,send,close,status);document.body.append(trigger,form);
   });
 })();
