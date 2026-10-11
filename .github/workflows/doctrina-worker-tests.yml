@@ -12,6 +12,9 @@ on:
   pull_request:
     paths:
       - 'doctrina/worker/**'
+      - 'doctrina/superadmin/**'
+      - 'doctrina/security/**'
+      - 'index.html'
       - '.github/workflows/doctrina-worker-tests.yml'
 permissions:
   contents: read
