@@ -46,3 +46,5 @@ jobs:
           node --check doctrina/superadmin/auth-login.js
       - name: Pruebas de seguridad de Superadmin
         run: node --test doctrina/superadmin/tests/*.test.cjs
+      - name: Pruebas de contrato de recuperación de Docencia
+        run: node --test doctrina/security/tests/*.test.cjs
