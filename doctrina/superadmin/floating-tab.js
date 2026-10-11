@@ -61,11 +61,11 @@
   const recent=el('article','ds-card');recent.append(el('h3','','Actividad reciente'));const recentList=el('div');recent.append(recentList);grid.append(overview,recent);views.dashboard.append(kpis,grid);
   const userCard=el('article','ds-card');userCard.append(el('h3','','Administradores autorizados'));const list=el('div');userCard.append(list);
   const formCard=el('article','ds-card');formCard.append(el('h3','','Gestionar autorización'),el('p','ds-note','Solo cuentas verificadas en Supabase Auth. Los cambios requieren fundamento y confirmación.'));
-  const form=el('form');const email=el('input');email.type='email';email.required=true;email.autocomplete='off';
+  const form=el('form');const email=el('input');email.type='email';email.id='doctrina-admin-email';email.name='admin_email';email.required=true;email.autocomplete='off';
   const emailLabel=el('label','','Correo electrónico');emailLabel.append(email);
-  const choice=el('select');[['true','Activar acceso'],['false','Revocar acceso']].forEach(([v,t])=>{const o=el('option','',t);o.value=v;choice.append(o);});
+  const choice=el('select');choice.id='doctrina-admin-operation';choice.name='admin_operation';[['true','Activar acceso'],['false','Revocar acceso']].forEach(([v,t])=>{const o=el('option','',t);o.value=v;choice.append(o);});
   const choiceLabel=el('label','','Operación');choiceLabel.append(choice);
-  const motive=el('textarea');motive.required=true;motive.minLength=10;motive.maxLength=1000;
+  const motive=el('textarea');motive.id='doctrina-admin-reason';motive.name='admin_reason';motive.required=true;motive.minLength=10;motive.maxLength=1000;
   const motiveLabel=el('label','','Fundamento documentado (mínimo 10 caracteres)');motiveLabel.append(motive);
   const apply=el('button','ds-primary','Confirmar operación');apply.type='submit';const feedback=el('p','ds-note');feedback.setAttribute('role','status');
   form.append(emailLabel,choiceLabel,motiveLabel,apply,feedback);formCard.append(form);
