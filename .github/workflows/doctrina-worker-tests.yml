@@ -8,6 +8,8 @@ on:
       - 'doctrina/superadmin/**'
       - 'doctrina/security/**'
       - 'index.html'
+      - 'ui-v2.css'
+      - 'styles.css'
       - '.github/workflows/doctrina-worker-tests.yml'
   pull_request:
     paths:
@@ -15,6 +17,8 @@ on:
       - 'doctrina/superadmin/**'
       - 'doctrina/security/**'
       - 'index.html'
+      - 'ui-v2.css'
+      - 'styles.css'
       - '.github/workflows/doctrina-worker-tests.yml'
 permissions:
   contents: read
