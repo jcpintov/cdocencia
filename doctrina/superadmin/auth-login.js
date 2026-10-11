@@ -2,9 +2,9 @@
 (function () {
   'use strict';
   document.addEventListener('DOMContentLoaded', function () {
-    if (document.getElementById('doctrina-auth-login')) return;
+    const trigger=document.getElementById('doctrina-auth-login');
+    if (!trigger || document.getElementById('doctrina-auth-modal')) return;
     const css=document.createElement('style');css.textContent=`
-#doctrina-auth-login{position:fixed;right:18px;bottom:18px;z-index:8999;padding:13px 19px;border:1px solid #c7a174;border-radius:999px;background:linear-gradient(125deg,#1c364a,#0c1927);color:#f5e8d7;box-shadow:0 12px 35px #0005;font:700 12px Inter,system-ui;letter-spacing:.09em;cursor:pointer}
 #doctrina-auth-modal[hidden]{display:none!important}
 #doctrina-auth-modal{position:fixed;inset:0;z-index:9003;background:#030a12c9;backdrop-filter:blur(10px);display:grid;place-items:center;padding:18px;font-family:Inter,system-ui,sans-serif}
 #doctrina-auth-modal .da-dialog{position:relative;width:min(460px,100%);padding:clamp(28px,5vw,44px);border:1px solid #d0a56d66;border-radius:23px;background:radial-gradient(circle at 85% 0%,#39414a 0%,transparent 42%),linear-gradient(145deg,#1c3549,#0d1825 72%);box-shadow:0 30px 100px #000a;color:#f6f1e8}
@@ -19,7 +19,6 @@
 #doctrina-auth-modal .da-foot{border-top:1px solid #ffffff20;padding-top:17px;margin-top:24px;color:#8da0b2;font-size:11px;line-height:1.5}
 #doctrina-auth-modal :focus-visible,#doctrina-auth-login:focus-visible{outline:2px solid #f0ca92;outline-offset:3px}
 `;document.head.append(css);
-    const trigger=document.createElement('button');trigger.id='doctrina-auth-login';trigger.type='button';trigger.textContent='✦  ACCESO DOCTRINA';trigger.setAttribute('aria-label','Acceso autenticado a Doctrina');
     const modal=document.createElement('div');modal.id='doctrina-auth-modal';modal.hidden=true;
     const dialog=document.createElement('section');dialog.className='da-dialog';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Acceso seguro a Doctrina');
     const mark=document.createElement('div');mark.className='da-mark';mark.textContent='D';
@@ -38,7 +37,7 @@
     modal.addEventListener('click',e=>{if(e.target===modal)hide();});
     modal.addEventListener('keydown',e=>{if(e.key==='Escape')hide();if(e.key==='Tab'){const focusable=[close,email,send];const i=focusable.indexOf(document.activeElement);if(e.shiftKey&&i===0){e.preventDefault();send.focus();}else if(!e.shiftKey&&i===2){e.preventDefault();close.focus();}}});
     trigger.addEventListener('click',()=>{modal.hidden=false;email.focus();});
-    form.append(label,send,status);dialog.append(close,mark,eyebrow,title,desc,form,foot);modal.append(dialog);document.body.append(trigger,modal);
+    form.append(label,send,status);dialog.append(close,mark,eyebrow,title,desc,form,foot);modal.append(dialog);document.body.append(modal);
     form.addEventListener('submit',async function(event){
       event.preventDefault();
       const client = typeof sbApp !== 'undefined' ? sbApp : null;
