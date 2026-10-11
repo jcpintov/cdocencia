@@ -58,7 +58,7 @@
 #doctrina-superadmin-panel :focus-visible{outline:2px solid #e8c18b;outline-offset:3px}
 @media(max-width:680px){#doctrina-superadmin-panel .ds-header{padding:22px}#doctrina-superadmin-panel .ds-content{padding:20px}#doctrina-superadmin-panel .ds-kpis{grid-template-columns:1fr 1fr}#doctrina-superadmin-panel .ds-grid{grid-template-columns:1fr}#doctrina-superadmin-panel .ds-kpi strong{font-size:27px}}
 `;
-  const tab = document.createElement('button'); tab.id='doctrina-superadmin-tab'; tab.type='button'; tab.textContent='Superadmin'; tab.hidden=true;
+  const tab = document.createElement('button'); tab.id='doctrina-superadmin-tab'; tab.type='button'; tab.textContent='Superadmin'; tab.hidden=true; tab.setAttribute('aria-controls','doctrina-superadmin-panel'); tab.setAttribute('aria-expanded','false');
   const panel = document.createElement('aside'); panel.id='doctrina-superadmin-panel'; panel.hidden=true; panel.setAttribute('aria-label','Superadmin Doctrina');
   const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
   const header=el('header','ds-header');
@@ -92,8 +92,9 @@
   const reload=el('button','ds-secondary','↻ Actualizar datos');reload.type='button';reload.style.marginBottom='16px';
   content.append(nav,reload,views.dashboard,views.users,views.audit);panel.append(header,content);document.head.append(style);document.body.append(tab,panel);
   let authorizedClient=null;let generation=0;
-  close.addEventListener('click',()=>{panel.hidden=true;tab.focus();});
-  tab.addEventListener('click',()=>{if(tab.hidden)return;panel.hidden=false;close.focus();});
+  close.addEventListener('click',()=>{panel.hidden=true;tab.setAttribute('aria-expanded','false');tab.focus();});
+  tab.addEventListener('click',()=>{if(tab.hidden)return;panel.hidden=false;tab.setAttribute('aria-expanded','true');close.focus();});
+  document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&!panel.hidden){panel.hidden=true;tab.setAttribute('aria-expanded','false');if(!tab.hidden)tab.focus();}});
   function resetAdmin(){generation++;authorizedClient=null;list.replaceChildren();audit.replaceChildren();recentList.replaceChildren();totalKpi.textContent=activeKpi.textContent=auditKpi.textContent='—';feedback.textContent='';}
   async function loadAdmin(){
     const client=authorizedClient;const current=generation;if(!client)return;
@@ -132,7 +133,7 @@
   // Consultar RPC del servidor con sesión Auth válida. Fallo = denegación.
   // La función SQL pública doctrina_es_superadmin() valida auth.uid() en servidor.
   let revision = 0;
-  function hide() { revision += 1; tab.hidden = true; panel.hidden = true; resetAdmin(); }
+  function hide() { revision += 1; tab.hidden = true; panel.hidden = true; tab.setAttribute('aria-expanded','false'); resetAdmin(); }
   async function refreshFromSupabase(client) {
     hide();
     const current = revision;
