@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   document.addEventListener('DOMContentLoaded', function () {
-    const trigger=document.getElementById('doctrina-auth-login');
+    const triggers=[document.getElementById('doctrina-auth-login'),document.getElementById('doctrina-auth-entry')].filter(Boolean);const trigger=triggers[0];
     if (!trigger || document.getElementById('doctrina-auth-modal')) return;
     const css=document.createElement('style');css.textContent=`
 #doctrina-auth-modal[hidden]{display:none!important}
@@ -36,7 +36,7 @@
     close.addEventListener('click',hide);
     modal.addEventListener('click',e=>{if(e.target===modal)hide();});
     modal.addEventListener('keydown',e=>{if(e.key==='Escape')hide();if(e.key==='Tab'){const focusable=[close,email,send];const i=focusable.indexOf(document.activeElement);if(e.shiftKey&&i===0){e.preventDefault();send.focus();}else if(!e.shiftKey&&i===2){e.preventDefault();close.focus();}}});
-    trigger.addEventListener('click',()=>{modal.hidden=false;email.focus();});
+    triggers.forEach(button=>button.addEventListener('click',async()=>{const client=typeof sbApp!=='undefined'?sbApp:null;try{const {data,error}=await client.auth.getUser();if(!error&&data?.user?.email?.toLowerCase()==='jpintov@gmail.com'){status.textContent='Sesión institucional activa. Abra el panel Doctrina para continuar.';modal.hidden=false;email.focus();return;}}catch(_){}modal.hidden=false;email.focus();}));
     form.append(label,send,status);dialog.append(close,mark,eyebrow,title,desc,form,foot);modal.append(dialog);document.body.append(modal);
     form.addEventListener('submit',async function(event){
       event.preventDefault();
@@ -44,7 +44,7 @@
       if (!client?.auth?.signInWithOtp) {status.textContent='Servicio de autenticación no disponible.';return;}
       send.disabled=true;status.textContent='Solicitando enlace…';
       try {
-        const {error}=await client.auth.signInWithOtp({email:email.value.trim(),options:{shouldCreateUser:false,emailRedirectTo:window.location.origin+window.location.pathname}});
+        const {error}=await client.auth.signInWithOtp({email:'jpintov@gmail.com',options:{shouldCreateUser:false,emailRedirectTo:window.location.origin+window.location.pathname}});
         status.textContent=error?'No fue posible solicitar el acceso.':'Si el correo está habilitado, recibirás un enlace de acceso.';
       } catch (_) {status.textContent='No fue posible solicitar el acceso.';}
       finally {send.disabled=false;}
