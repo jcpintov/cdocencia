@@ -8,11 +8,11 @@ import unittest
 
 
 def findings(definition: str):
-    sql = re.sub(r"--[^\\n]*", "", definition).lower()
+    sql = re.sub(r"--[^\n]*", "", definition).lower()
     result = []
     if "security definer" in sql and "set search_path" not in sql:
         result.append("missing_search_path")
-    if "security definer" in sql and re.search(r"\\b(p_admin_id|p_usuario_id)\\b", sql):
+    if "security definer" in sql and re.search(r"\b(p_admin_id|p_usuario_id)\b", sql):
         if "auth.uid()" not in sql and "auth.jwt()" not in sql:
             result.append("client_id_without_auth_binding")
     if "update public.usuarios" in sql and "clave_hash" in sql:
