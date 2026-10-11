@@ -1,0 +1,11 @@
+'use strict';
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const {loadOflSmtpConfig,sendRecoveryMail}=require('../smtp-ofl-adapter.cjs');
+const env={RECOVERY_MODE:'preview',VERCEL_ENV:'preview',SMTP_HOST:'mail.ofl.cl',SMTP_PORT:'465',SMTP_SECURE:'true',SMTP_USER:'no-reply@ofl.cl',SMTP_FROM:'no-reply@ofl.cl',SMTP_PASSWORD:'synthetic-test-only'};
+test('loads verified cPanel TLS settings',()=>{const c=loadOflSmtpConfig(env);assert.equal(c.port,465);assert.equal(c.secure,true);});
+test('rejects production environment',()=>assert.throws(()=>loadOflSmtpConfig({...env,VERCEL_ENV:'production'})));
+test('rejects insecure transport',()=>assert.throws(()=>loadOflSmtpConfig({...env,SMTP_SECURE:'false'})));
+test('rejects missing credentials',()=>assert.throws(()=>loadOflSmtpConfig({...env,SMTP_PASSWORD:''})));
+test('rejects unapproved sender',()=>assert.throws(()=>loadOflSmtpConfig({...env,SMTP_FROM:'someone@example.com'})));
+test('sends through injected mock with certificate verification',async()=>{let options,delivered;const config=loadOflSmtpConfig(env);await sendRecoveryMail({config,mail:{to:'recipient@example.com',subject:'Recovery',text:'Test'},createTransport:x=>{options=x;return {sendMail:async m=>{delivered=m;}};}});assert.equal(options.tls.rejectUnauthorized,true);assert.equal(delivered.from,'no-reply@ofl.cl');});
