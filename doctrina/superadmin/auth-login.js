@@ -28,7 +28,7 @@
     const desc=document.createElement('p');desc.className='da-desc';desc.textContent='Accede al espacio de gobierno de Doctrina mediante un enlace privado enviado a tu correo autorizado.';
     const form=document.createElement('form');form.setAttribute('aria-label','Ingreso independiente Doctrina');
     const label=document.createElement('label');label.textContent='CORREO ELECTRÓNICO';
-    const email=document.createElement('input');email.type='email';email.required=true;email.autocomplete='email';email.placeholder='nombre@correo.cl';label.append(email);
+    const email=document.createElement('input');email.type='email';email.id='doctrina-login-email';email.name='email';email.required=true;email.autocomplete='email';email.placeholder='nombre@correo.cl';label.append(email);
     const send=document.createElement('button');send.className='da-submit';send.type='submit';send.textContent='Solicitar acceso seguro  →';
     const close=document.createElement('button');close.className='da-close';close.type='button';close.textContent='×';close.setAttribute('aria-label','Cerrar acceso');
     const status=document.createElement('p');status.setAttribute('role','status');status.style.cssText='font-size:12px;line-height:1.5';
