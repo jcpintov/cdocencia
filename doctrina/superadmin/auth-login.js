@@ -45,7 +45,7 @@
       if (!client?.auth?.signInWithOtp) {status.textContent='Servicio de autenticación no disponible.';return;}
       send.disabled=true;status.textContent='Solicitando enlace…';
       try {
-        const {error}=await client.auth.signInWithOtp({email:email.value.trim(),options:{shouldCreateUser:false}});
+        const {error}=await client.auth.signInWithOtp({email:email.value.trim(),options:{shouldCreateUser:false,emailRedirectTo:window.location.origin+window.location.pathname}});
         status.textContent=error?'No fue posible solicitar el acceso.':'Si el correo está habilitado, recibirás un enlace de acceso.';
       } catch (_) {status.textContent='No fue posible solicitar el acceso.';}
       finally {send.disabled=false;}
