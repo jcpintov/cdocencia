@@ -20,12 +20,24 @@
 #doctrina-superadmin-panel .ds-nav{display:flex;gap:8px;border-bottom:1px solid #ffffff1c;margin-bottom:24px;overflow-x:auto}
 #doctrina-superadmin-panel .ds-nav button{background:transparent;border:0;border-bottom:2px solid transparent;color:#9caab9;padding:13px 17px;font-weight:650;white-space:nowrap}
 #doctrina-superadmin-panel .ds-nav button[aria-selected=true]{color:#edc78f;border-bottom-color:#d6a86c}
+/* Editorial executive styling: visual-only, no permission changes */
+#doctrina-superadmin-panel{background:#f6f3ee;color:#152538}
+#doctrina-superadmin-panel .ds-header{background:linear-gradient(115deg,#102439,#20384c);border-bottom:3px solid #ad8659}
+#doctrina-superadmin-panel .ds-content{background:#f6f3ee}
+#doctrina-superadmin-panel .ds-nav{border-bottom:1px solid #d8d3ca}
+#doctrina-superadmin-panel .ds-nav button{color:#526174}
+#doctrina-superadmin-panel .ds-nav button[aria-selected=true]{color:#78552e;border-bottom-color:#a47b4d}
 #doctrina-superadmin-panel .ds-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:20px}
-#doctrina-superadmin-panel .ds-kpi,#doctrina-superadmin-panel .ds-card{border:1px solid #ffffff16;background:linear-gradient(150deg,#1a2b3c,#111e2d);border-radius:15px;padding:22px}
-#doctrina-superadmin-panel .ds-kpi span{color:#aeb9c6;font-size:12px}
-#doctrina-superadmin-panel .ds-kpi strong{display:block;color:#f2d6ad;font-size:36px;margin-top:9px;font-weight:650}
+#doctrina-superadmin-panel .ds-kpi,#doctrina-superadmin-panel .ds-card{background:#fff;border:1px solid #e2ddd5;border-radius:12px;padding:22px;box-shadow:0 5px 22px #14253b0a}
+#doctrina-superadmin-panel .ds-kpi span{color:#526174;font-size:12px}
+#doctrina-superadmin-panel .ds-kpi strong{display:block;color:#173149;font:500 36px Georgia,serif;margin-top:9px}
 #doctrina-superadmin-panel .ds-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 #doctrina-superadmin-panel .ds-table{width:100%;border-collapse:collapse;font-size:13px}
+#doctrina-superadmin-panel h3{font:600 19px Georgia,serif;color:#142a40}
+#doctrina-superadmin-panel .ds-note,#doctrina-superadmin-panel .ds-activity,#doctrina-superadmin-panel .ds-activity time{color:#526174}
+#doctrina-superadmin-panel label{color:#405369}
+#doctrina-superadmin-panel input,#doctrina-superadmin-panel select,#doctrina-superadmin-panel textarea{background:#fff;color:#142a40;border-color:#cfc9c0}
+#doctrina-superadmin-panel .ds-table td{border-bottom-color:#e7e2db}
 #doctrina-superadmin-panel .ds-table th{text-align:left;color:#9bafc0;font-weight:600;border-bottom:1px solid #ffffff23;padding:10px 7px}
 #doctrina-superadmin-panel .ds-table td{border-bottom:1px solid #ffffff13;padding:12px 7px;overflow-wrap:anywhere}
 #doctrina-superadmin-panel .ds-chip{display:inline-block;border-radius:50px;padding:5px 9px;background:#1d5547;color:#b9f3dc;font-size:11px}
