@@ -49,6 +49,12 @@
 #doctrina-superadmin-panel .ds-note{color:#9bafc0;font-size:12px;line-height:1.6}
 #doctrina-superadmin-panel .ds-activity{padding:12px 0;border-bottom:1px solid #ffffff15;font-size:12px;line-height:1.5}
 #doctrina-superadmin-panel .ds-activity time{color:#aebdca;display:block;margin-top:4px}
+/* Final editorial overrides: only Doctrina Superadmin visual scope. */
+#doctrina-superadmin-panel .ds-note,#doctrina-superadmin-panel .ds-activity,#doctrina-superadmin-panel .ds-activity time{color:#526174}
+#doctrina-superadmin-panel label{color:#405369}
+#doctrina-superadmin-panel input,#doctrina-superadmin-panel select,#doctrina-superadmin-panel textarea{background:#fff;color:#142a40;border-color:#cfc9c0}
+#doctrina-superadmin-panel .ds-table th{color:#526174;border-bottom-color:#ddd6cd}
+#doctrina-superadmin-panel .ds-table td,#doctrina-superadmin-panel .ds-activity{border-bottom-color:#e7e2db}
 #doctrina-superadmin-panel :focus-visible{outline:2px solid #e8c18b;outline-offset:3px}
 @media(max-width:680px){#doctrina-superadmin-panel .ds-header{padding:22px}#doctrina-superadmin-panel .ds-content{padding:20px}#doctrina-superadmin-panel .ds-kpis{grid-template-columns:1fr 1fr}#doctrina-superadmin-panel .ds-grid{grid-template-columns:1fr}#doctrina-superadmin-panel .ds-kpi strong{font-size:27px}}
 `;
