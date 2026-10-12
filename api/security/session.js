@@ -57,7 +57,7 @@ async function handler(req, res) {
       headers: { apikey: conf.publishableKey, Authorization: 'Bearer ' + match[1] }
     });
     if (!authResponse.ok || !UUID.test(authResponse.data?.id || '') ||
-        typeof authResponse.data?.email !== 'string') {
+        typeof authResponse.data?.email !== 'string' || !authResponse.data?.email_confirmed_at) {
       return reply(res, 401, {error: 'invalid_session'});
     }
     // La correspondencia al padrón se obtiene desde la base confiable,
@@ -65,7 +65,7 @@ async function handler(req, res) {
     const user = authResponse.data;
     const endpoint = new URL(conf.url + '/rest/v1/usuarios');
     endpoint.searchParams.set('select', 'id,email,es_admin');
-    endpoint.searchParams.set('email', 'eq.' + user.email);
+    endpoint.searchParams.set('email', 'eq.' + user.email.trim().toLowerCase());
     endpoint.searchParams.set('limit', '2');
     const padronResponse = await getJson(endpoint.toString(), {
       headers: {
@@ -76,7 +76,8 @@ async function handler(req, res) {
     if (!padronResponse.ok) return reply(res, 502, {error: 'directory_unavailable'});
     const matches = padronResponse.data;
     if (!Array.isArray(matches) || matches.length !== 1 ||
-        !UUID.test(matches[0]?.id || '') || typeof matches[0]?.es_admin !== 'boolean') {
+        !UUID.test(matches[0]?.id || '') || typeof matches[0]?.es_admin !== 'boolean' ||
+        String(matches[0]?.email || '').trim().toLowerCase() !== user.email.trim().toLowerCase()) {
       return reply(res, 403, {error: 'member_not_authorized'});
     }
     const isDesignatedAdmin = user.id.toLowerCase() === conf.superadminUid.toLowerCase();
