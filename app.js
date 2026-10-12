@@ -470,7 +470,7 @@ async function guardarAdminUsuario() {
   const targetId = document.getElementById('adminUsuarioTargetId').value;
   const nombre = document.getElementById('adminUsuarioNombre').value.trim();
   const email = document.getElementById('adminUsuarioEmail').value.trim().toLowerCase();
-  const esAdmin = document.getElementById('adminUsuarioEsAdmin').checked;
+  const esAdmin = false; // El padrón no puede otorgar privilegios administrativos.
   const err = document.getElementById('errorAdminUsuario');
 
   if (!nombre || !email) {
