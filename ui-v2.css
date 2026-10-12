@@ -114,3 +114,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 #adminSeccionDoctrinaDocumental #estadoRecepcionDoctrina{padding:12px 14px;border-left:3px solid #a8794d;background:#f4f7f9;border-radius:0 6px 6px 0}
 #adminSeccionDoctrinaDocumental #tablaRecepcionDoctrina td:nth-child(3){font-family:ui-monospace,Consolas,monospace;font-size:.73rem;overflow-wrap:anywhere;max-width:210px}
 @media(max-width:740px){#adminSeccionDoctrinaDocumental .doctrina-form-grid{grid-template-columns:1fr}#adminSeccionDoctrinaDocumental .doctrina-form-actions button{width:100%}}
+
+/* Doctrina y Reglamentos — área privada de análisis Superadmin */
+#adminSeccionDoctrinaReglamentos .admin-card-header{margin-bottom:18px}
+#adminSeccionDoctrinaReglamentos .admin-overline{margin:0 0 8px;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:#a8794d;font-weight:700}
+#adminSeccionDoctrinaReglamentos .doctrina-form-grid{display:grid;grid-template-columns:1fr;gap:18px;margin:20px 0 14px}
+#adminSeccionDoctrinaReglamentos .form-group{min-width:0}
+#adminSeccionDoctrinaReglamentos .form-group>label{display:block;font-size:.9rem;font-weight:650;margin:0 0 8px}
+#adminSeccionDoctrinaReglamentos input[type="search"],#adminSeccionDoctrinaReglamentos input[type="file"]{width:100%;min-height:47px;max-width:100%}
+#adminSeccionDoctrinaReglamentos .form-group small{display:block;color:#607183;line-height:1.6;margin-top:8px}
+#adminSeccionDoctrinaReglamentos .doctrina-form-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+#adminSeccionDoctrinaReglamentos .doctrina-form-actions button{width:auto;min-height:42px;padding:8px 14px}
+#adminSeccionDoctrinaReglamentos .doctrina-form-actions button:disabled{opacity:.55;cursor:wait}
+#adminSeccionDoctrinaReglamentos .doctrina-consulta-contexto{background:#f5f8fb;border-left:3px solid #a8794d;border-radius:0 7px 7px 0;padding:15px 18px;margin:16px 0}
+#adminSeccionDoctrinaReglamentos .doctrina-consulta-contexto>strong{color:#1c344a;font-weight:700}
+#adminSeccionDoctrinaReglamentos .doctrina-consulta-contexto p{margin:7px 0 0;line-height:1.55;color:#52667a}
+#adminSeccionDoctrinaReglamentos #estadoConsultaDoctrina{line-height:1.7;margin:12px 0}
+#adminSeccionDoctrinaReglamentos .doctrina-consulta-resultados{display:grid;gap:12px}
+#adminSeccionDoctrinaReglamentos .doctrina-consulta-hallazgo{padding:18px;border-radius:9px;border:1px solid #dfe6ed;background:#fff}
+#adminSeccionDoctrinaReglamentos .doctrina-consulta-hallazgo h3{font-size:.99rem;line-height:1.4;margin:0 0 7px;font-weight:650;color:#1c344a;overflow-wrap:anywhere}
+#adminSeccionDoctrinaReglamentos .doctrina-consulta-hallazgo small{font-size:.76rem;color:#97693f;line-height:1.5}
+#adminSeccionDoctrinaReglamentos .doctrina-consulta-hallazgo p{margin:11px 0 0;font-size:.88rem;line-height:1.72;color:#52667a;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:620px){#adminSeccionDoctrinaReglamentos .doctrina-form-actions button{width:100%}}
