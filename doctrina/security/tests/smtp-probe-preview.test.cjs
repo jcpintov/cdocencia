@@ -16,3 +16,6 @@ test('probe refuses missing preview mode',async()=>assert.rejects(runSmtpProbe({
 
 test('probe refuses missing explicit test recipient',async()=>assert.rejects(runSmtpProbe({env:{...env,SMTP_TEST_TO:''},createTransport:()=>({sendMail:async()=>{}})})));
 test('probe refuses absent environment',async()=>assert.rejects(runSmtpProbe({env:null,createTransport:()=>({sendMail:async()=>{}})})));
+
+test('probe refuses missing SMTP password',async()=>assert.rejects(runSmtpProbe({env:{...env,SMTP_PASSWORD:''},createTransport:()=>({sendMail:async()=>{}})})));
+test('probe refuses insecure SMTP transport',async()=>assert.rejects(runSmtpProbe({env:{...env,SMTP_SECURE:'false'},createTransport:()=>({sendMail:async()=>{}})})));
