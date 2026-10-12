@@ -1,73 +1,67 @@
 #!/usr/bin/env node
 'use strict';
-const assert = require('node:assert/strict');
-const handler = require('../api/security/session.js');
-
-const authUID = '11111111-2222-4333-8444-555555555555';
-const anotherUID = 'bbbbbbbb-cccc-4ddd-8eee-ffffffffffff';
-const legacyUID = '99999999-8888-4777-8666-555555555555';
-const vars=['SUPABASE_URL','SUPABASE_PUBLISHABLE_KEY','SUPABASE_SERVICE_ROLE_KEY','SUPERADMIN_AUTH_USER_ID'];
-const before=Object.fromEntries(vars.map(v=>[v,process.env[v]]));
-const oldFetch=global.fetch;
-const oldAbortSignal=global.AbortSignal;
-function req(authorization,method='GET'){return {method,headers: authorization?{authorization}:{}};}
-function response(){
- return {statusCode:0,headers:{},setHeader(k,v){this.headers[k]=v},end(body){this.body=JSON.parse(body);}};
-}
-async function hit(request){const res=response();await handler(request,res);return res;}
-function stub(uid,admin,verified=true,dbOK=true) {
- const calls=[];
- global.fetch=async(url,options)=>{
-  calls.push({url:String(url),options});
-  if(String(url).includes('/auth/v1/user')) {
-   return {ok:true,json:async()=>({id:uid,email:'usuario@ofl.cl',email_confirmed_at:verified?'2026-10-12T00:00:00Z':null})};
-  }
-  return dbOK?{ok:true,json:async()=>[{id:legacyUID,email:'usuario@ofl.cl',es_admin:admin}]}:{ok:false,status:503};
- };
- return calls;
-}
+const assert=require('node:assert/strict');
+const handler=require('../api/security/session.js');
+const AUTH_ADMIN='11111111-2222-4333-8444-555555555555';
+const AUTH_USER='bbbbbbbb-cccc-4ddd-8eee-ffffffffffff';
+const LEGACY='99999999-8888-4777-8666-555555555555';
+const keys=['SUPABASE_URL','SUPABASE_PUBLISHABLE_KEY'];
+const previous=Object.fromEntries(keys.map(k=>[k,process.env[k]]));
+const fetchOriginal=global.fetch;
+let mode='admin', requests=[];
+const bearer='Bearer eyJhbGciOi.e30.ValidSignature';
+const response=()=>({statusCode:0,headers:{},setHeader(k,v){this.headers[k]=v},
+ end(body){this.body=JSON.parse(body)}});
+const call=async(auth=bearer,method='GET')=>{
+ const res=response();
+ await handler({method,headers:auth?{authorization:auth}:{}},res);
+ return res;
+};
+global.fetch=async (url,options)=>{
+ requests.push({url:String(url),options});
+ if(String(url).endsWith('/auth/v1/user')){
+  if(mode==='badtoken')return {ok:false,status:401};
+  const id=['user','forged'].includes(mode)?AUTH_USER:AUTH_ADMIN;
+  return {ok:true,json:async()=>({id,email:'usuario@ofl.cl',
+    email_confirmed_at:mode==='unconfirmed'?null:'2026-10-12T00:00:00Z'})};
+ }
+ if(!String(url).endsWith('/rest/v1/rpc/maestro_identidad_actual'))
+   throw Error('El servidor no debe consultar otras rutas REST');
+ if(mode==='backenderror')return {ok:false,status:503};
+ if(mode==='empty')return {ok:true,json:async()=>[]};
+ return {ok:true,json:async()=>[{
+   auth_user_id: mode==='forged'?AUTH_ADMIN:['user'].includes(mode)?AUTH_USER:AUTH_ADMIN,
+   legacy_user_id:LEGACY,
+   rol:mode==='user'?'USER':mode==='unknownrole'?'ADMIN':'SUPERADMIN'
+ }]};
+};
 (async()=>{
-  assert.equal((await hit(req('Bearer e30.e30.valid','POST'))).statusCode,405);
-  assert.equal((await hit(req())).statusCode,401);
-  assert.equal((await hit(req('Bearer 123'))).statusCode,401);
-  assert.equal((await hit(req('Bearer e30.e30.valid'))).statusCode,503);
-  Object.assign(process.env,{
-   SUPABASE_URL:'https://unit-test.supabase.co',
-   SUPABASE_PUBLISHABLE_KEY:'public-test-key',
-   SUPABASE_SERVICE_ROLE_KEY:'server-only-test-secret',
-   SUPERADMIN_AUTH_USER_ID:authUID
-  });
-  let calls=stub(authUID,true);
-  let result=await hit(req('Bearer e30.e30.valid'));
-  assert.equal(result.statusCode,200);
-  assert.equal(result.body.role,'SUPERADMIN');
-  assert(!JSON.stringify(result.body).includes('server-only-test-secret'));
-  assert.equal(calls.length,2);
-  assert.equal(calls[0].options.headers.apikey,'public-test-key');
-  assert.equal(calls[1].options.headers.apikey,'server-only-test-secret');
-  assert.equal(result.headers['Cache-Control'],'no-store, max-age=0');
-
-  stub(anotherUID,false);
-  result=await hit(req('Bearer e30.e30.valid'));
-  assert.equal(result.statusCode,200);
-  assert.equal(result.body.role,'USER');
-
-  stub(anotherUID,true);
-  assert.equal((await hit(req('Bearer e30.e30.valid'))).statusCode,403);
-
-  stub(authUID,false);
-  assert.equal((await hit(req('Bearer e30.e30.valid'))).statusCode,403);
-
-  stub(authUID,true,false);
-  assert.equal((await hit(req('Bearer e30.e30.valid'))).statusCode,401);
-
-  stub(authUID,true,true,false);
-  assert.equal((await hit(req('Bearer e30.e30.valid'))).statusCode,502);
-
-  process.env.SUPABASE_URL='http://unit-test.supabase.co';
-  assert.equal((await hit(req('Bearer e30.e30.valid'))).statusCode,503);
-  console.log('PASS: sesión servidor, rol único, fallo cerrado, no secretos ni acceso anónimo');
-})().catch(err=>{console.error(err);process.exitCode=1;}).finally(()=>{
- for(const v of vars){if(before[v]===undefined)delete process.env[v];else process.env[v]=before[v];}
- global.fetch=oldFetch;global.AbortSignal=oldAbortSignal;
+ assert.equal((await call(bearer,'POST')).statusCode,405);
+ assert.equal((await call(null)).statusCode,401);
+ assert.equal((await call('Bearer invalid')).statusCode,401);
+ assert.equal((await call()).statusCode,503);
+ Object.assign(process.env,{SUPABASE_URL:'https://unit-test.supabase.co',SUPABASE_PUBLISHABLE_KEY:'safe-public-test-key'});
+ mode='admin';requests=[];
+ let result=await call();
+ assert.equal(result.statusCode,200);
+ assert.equal(result.body.role,'SUPERADMIN');
+ assert.equal(requests.length,2);
+ assert.equal(requests[1].options.method,'POST');
+ assert.equal(requests[1].options.body,'{}');
+ assert.equal(requests[1].options.headers.apikey,'safe-public-test-key');
+ assert.equal(result.headers['Cache-Control'],'no-store, max-age=0');
+ assert(!JSON.stringify(result).includes('service_role'));
+ mode='user';result=await call();assert.equal(result.body.role,'USER');
+ mode='forged';assert.equal((await call()).statusCode,403);
+ mode='unknownrole';assert.equal((await call()).statusCode,403);
+ mode='empty';assert.equal((await call()).statusCode,403);
+ mode='unconfirmed';assert.equal((await call()).statusCode,401);
+ mode='badtoken';assert.equal((await call()).statusCode,401);
+ mode='backenderror';assert.equal((await call()).statusCode,502);
+ process.env.SUPABASE_URL='http://unit-test.supabase.co';
+ assert.equal((await call()).statusCode,503);
+ console.log('PASS: roles JWT/RPC comprobados, 401/403/502/503, sin clave de servicio');
+})().catch(e=>{console.error(e);process.exitCode=1}).finally(()=>{
+ for(const k of keys){if(previous[k]===undefined)delete process.env[k];else process.env[k]=previous[k]}
+ global.fetch=fetchOriginal;
 });
