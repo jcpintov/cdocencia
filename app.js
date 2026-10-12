@@ -427,7 +427,7 @@ async function cargarListadoUsuariosAdmin() {
         <td>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
             ${u.es_admin ? '<span class="admin-profile-protected" title="Cuenta Superadmin protegida">Perfil protegido</span>' : `<button class="admin-link-btn" onclick="abrirModalEditarUsuario('${u.id}', '${nombreEscapado}', '${emailEscapado}', false)">Editar</button>`}
-            <button class="admin-link-btn" style="color: var(--accent-gold-dark);" onclick="abrirModalAdminClaveHermano('${u.id}', '${nombreEscapado}')">🔑 Clave</button>
+            ${!u.es_admin ? `<button class="admin-link-btn" style="color: var(--accent-gold-dark);" onclick="abrirModalAdminClaveHermano('${u.id}', '${nombreEscapado}')">Cambiar clave</button>` : ''}
             ${!u.es_admin && u.id !== usuarioActual.id ? `<button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="confirmarEliminarUsuario('${u.id}', '${nombreEscapado}')">Eliminar</button>` : ''}
           </div>
         </td>
