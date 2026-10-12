@@ -68,3 +68,19 @@ test('modal traps focus only while open and hides on revoked authorization',asyn
   assert.equal(x.tab.hidden,true);
   assert.equal(x.panel.hidden,true);
 });
+
+test('the sole-owner governance UI cannot grant another Superadmin',async()=>{
+  const x=setup();
+  assert.equal(x.shell.open(),false);
+  await x.shell.refreshFromSupabase(client('authorized-owner',false));
+  assert.equal(x.shell.open(),false);
+  assert.doesNotMatch(source,/client\.rpc\('doctrina_admin_cambiar'/);
+  assert.match(source,/La plataforma reconoce una sola identidad titular autorizada/);
+});
+test('verified user can reuse existing session without a second login',async()=>{
+  const x=setup();await x.shell.refreshFromSupabase(client('authorized-owner'));
+  assert.equal(x.shell.open(),true);
+  assert.equal(x.panel.hidden,false);
+  x.shell.hide();
+  assert.equal(x.shell.open(),false);
+});
