@@ -40,6 +40,7 @@ test('raw token is sent only by mail; persistence sees SHA-256',async()=>{
   const hash=crypto.createHash('sha256').update(token).digest('hex');
   assert.equal(h.records.has(hash),true);assert.equal(h.records.has(token),false);
   assert.equal(h.messages[0].to,'member@example.test');
+  assert.equal(new URL(h.messages[0].text.match(/https:\/\/\S+/)[0]).pathname,'/docencia-restablecer.html');
 });
 test('tokens expire after thirty minutes',async()=>{
   const h=harness();await h.service.request({email:'member@example.test'},context);
