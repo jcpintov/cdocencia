@@ -499,7 +499,7 @@
     <aside class="sidebar-admin">
       <div class="admin-brand">
         <span class="admin-monogram" aria-hidden="true">O</span>
-        <h3>Consola Superadmin</h3>
+        <h3>Administración Docencia</h3>
       </div>
 
       <div class="admin-links-top">
@@ -513,7 +513,7 @@
 
       <hr class="admin-divider">
 
-      <button id="doctrina-auth-login" type="button" class="admin-side-btn admin-doctrina-entry" aria-haspopup="dialog" aria-controls="doctrina-auth-modal">Acceso seguro a Doctrina</button>
+      <button id="doctrina-auth-login" type="button" class="admin-side-btn admin-doctrina-entry" aria-haspopup="dialog" aria-controls="doctrina-auth-modal">Identidad Doctrina</button>
 
       <nav class="admin-menu-list">
         <button id="tabNavUsuarios" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('usuarios')">
@@ -558,8 +558,8 @@
             <p class="text-instruccion" style="margin: 0;">Gestione altas, bajas, roles y contraseñas de los integrantes de la Cámara.</p>
           </div>
           <div class="admin-header-actions">
-            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="abrirModalCrearUsuario()">➕ Nuevo Hermano</button>
-            <button class="admin-link-btn" onclick="cargarListadoUsuariosAdmin()">🔄 Refrescar Padrón</button>
+            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="abrirModalCrearUsuario()"> Nuevo Hermano</button>
+            <button class="admin-link-btn" onclick="cargarListadoUsuariosAdmin()"> Refrescar Padrón</button>
           </div>
         </div>
 
@@ -598,7 +598,7 @@
 
         <div class="upload-box">
           <label for="archivoDocAdjunto" style="font-weight: 700; color: var(--text-main); cursor: pointer; display: block; margin-bottom: 8px;">
-            📄 Seleccionar Archivo Original (PDF o Word .docx)
+             Seleccionar Archivo Original (PDF o Word .docx)
           </label>
           <input type="file" id="archivoDocAdjunto" name="archivoDocAdjunto" accept=".docx, .pdf" onchange="procesarArchivoParaAdjuntar(event)">
           <p id="archivoAdjuntoStatus" style="font-size: 0.85rem; color: var(--accent-gold); margin-top: 8px; font-weight: 600;"></p>
@@ -606,7 +606,7 @@
 
         <div style="max-width: 320px; margin: 0 auto;">
           <button id="btnGuardarArchivoOriginal" class="btn-primary" onclick="guardarArchivoOriginalEnBD()">
-            💾 Guardar y Habilitar Descarga
+             Guardar y Habilitar Descarga
           </button>
         </div>
         
@@ -621,7 +621,7 @@
             <p class="text-instruccion" style="margin: 0;">Edite títulos, autor, orden, textos, batería de 8 preguntas o elimine trabajos.</p>
           </div>
           <div class="admin-header-actions">
-            <button class="admin-link-btn" onclick="cargarGestionTrabajosAdmin()">🔄 Refrescar Lista</button>
+            <button class="admin-link-btn" onclick="cargarGestionTrabajosAdmin()"> Refrescar Lista</button>
           </div>
         </div>
         <div id="listaGestionTrabajosAdmin" class="gestion-trabajos-lista"></div>
@@ -636,7 +636,7 @@
           </div>
           <div class="admin-header-actions">
             <button class="btn-primary" style="padding: 8px 18px; font-size: 0.9rem;" onclick="generarDinamicaPresencial()">
-              🎲 Generar Dinámica Presencial
+               Generar Dinámica Presencial
             </button>
           </div>
         </div>
@@ -674,7 +674,7 @@
           <div id="mesasTrabajoDinamica" class="mesas-trabajo-grid"></div>
 
           <div class="cierre-reglas-fraternales">
-            <h4 style="margin-bottom: 6px; color: var(--accent-gold-dark);">⚖️ Puntos de Aplomo:</h4>
+            <h4 style="margin-bottom: 6px; color: var(--accent-gold-dark);"> Puntos de Aplomo:</h4>
             <p style="margin: 0; font-size: 0.88rem; line-height: 1.5;">
               • Bonificaciones: <strong>+15 Precisión</strong> y <strong>+20 Aporte Lúcido</strong>.<br>
               • Penalizaciones: <strong>-10 Divagación</strong>, <strong>-15 Sin Acuerdo</strong> y <strong>-10 Ruido</strong>.
@@ -691,8 +691,8 @@
             <p class="text-instruccion" style="margin: 0;">Reflexiones aportadas por los Hermanos con moderación y exportación.</p>
           </div>
           <div class="admin-header-actions">
-            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="imprimirMuroGeneralPDF()">🖨️ Descargar Muro en PDF</button>
-            <button class="admin-link-btn" onclick="cargarMuroGeneralAdmin()">🔄 Actualizar Muro</button>
+            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="imprimirMuroGeneralPDF()"> Descargar Muro en PDF</button>
+            <button class="admin-link-btn" onclick="cargarMuroGeneralAdmin()"> Actualizar Muro</button>
           </div>
         </div>
 
@@ -727,8 +727,8 @@
           <div class="admin-header-actions">
             <label for="selectMetricasModulo">Trabajo:</label>
             <select id="selectMetricasModulo" name="selectMetricasModulo" onchange="cargarMetricasAvance(this.value)"></select>
-            <button class="admin-link-btn" onclick="recargarMetricasActuales()">🔄 Actualizar</button>
-            <button class="admin-link-btn" onclick="exportarRespaldoCompletoJSON()">💾 Backup JSON</button>
+            <button class="admin-link-btn" onclick="recargarMetricasActuales()"> Actualizar</button>
+            <button class="admin-link-btn" onclick="exportarRespaldoCompletoJSON()"> Backup JSON</button>
           </div>
         </div>
 
@@ -757,8 +757,8 @@
             <p class="text-instruccion" style="margin: 0;">Edite los bloques de texto institucional.</p>
           </div>
           <div class="admin-header-actions">
-            <button class="admin-link-btn" onclick="agregarBloqueDoctrinaAdmin()">➕ Agregar Nuevo Bloque</button>
-            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="guardarDoctrinaAdmin()">💾 Guardar Cambios</button>
+            <button class="admin-link-btn" onclick="agregarBloqueDoctrinaAdmin()"> Agregar Nuevo Bloque</button>
+            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="guardarDoctrinaAdmin()"> Guardar Cambios</button>
           </div>
         </div>
         <div id="contenedorEditorDoctrinaAdmin"></div>
@@ -774,9 +774,9 @@
           <div class="admin-header-actions">
             <label for="filtroUsuarioAcceso">Filtrar Hermano:</label>
             <select id="filtroUsuarioAcceso" name="filtroUsuarioAcceso" onchange="cargarBitacoraAccesos(this.value)">
-              <option value="todos">👥 Todos los Hermanos</option>
+              <option value="todos"> Todos los Hermanos</option>
             </select>
-            <button class="admin-link-btn" onclick="cargarBitacoraAccesos()">🔄 Actualizar</button>
+            <button class="admin-link-btn" onclick="cargarBitacoraAccesos()"> Actualizar</button>
           </div>
         </div>
 
@@ -802,7 +802,7 @@
   <!-- MODAL: CONFIRMACIÓN DE ACCIONES DESTRUCTIVAS -->
   <div id="modalConfirmarAccion" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalConfirmarAccion')">
     <div class="modal-content" style="max-width: 480px; text-align: center;">
-      <span style="font-size: 2.2rem; display: block; margin-bottom: 10px;">⚠</span>
+      <span style="font-size: 2.2rem; display: block; margin-bottom: 10px;"></span>
       <h3 id="modalConfirmarTitulo" style="color: var(--primary); margin-bottom: 10px; font-family: var(--font-ui);">Confirmar Acción</h3>
       <p id="modalConfirmarMensaje" style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;"></p>
 
@@ -817,7 +817,7 @@
   <div id="modalParametrosHermano" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalParametrosHermano')">
     <div class="modal-content" style="max-width: 650px; text-align: left;">
       <h3 style="color: var(--accent-gold); margin-bottom: 12px; font-family: var(--font-ui);">
-        ⚙️ Modificar Parámetros de Avance del Hermano
+         Modificar Parámetros de Avance del Hermano
       </h3>
       <p id="subParamHermano" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;"></p>
 
@@ -849,7 +849,7 @@
       </div>
 
       <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button class="btn-primary" onclick="guardarParametrosHermanoBD()">💾 Actualizar Registro</button>
+        <button class="btn-primary" onclick="guardarParametrosHermanoBD()"> Actualizar Registro</button>
         <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalParametrosHermano')">Cancelar</button>
       </div>
     </div>
@@ -859,7 +859,7 @@
   <div id="modalAuditoriaModulo" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAuditoriaModulo')">
     <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto; text-align: left;">
       <h3 style="color: var(--accent-gold); margin-bottom: 12px; font-family: var(--font-ui);">
-        🔍 Auditoría y Edición Integral del Trabajo
+         Auditoría y Edición Integral del Trabajo
       </h3>
       
       <div class="admin-grid">
@@ -883,14 +883,14 @@
       </div>
 
       <div style="margin-bottom: 24px;">
-        <button class="btn-primary" onclick="guardarEdicionModuloAdmin()">💾 Guardar Encabezado y Texto</button>
+        <button class="btn-primary" onclick="guardarEdicionModuloAdmin()"> Guardar Encabezado y Texto</button>
       </div>
 
       <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 16px; margin-bottom: 14px;">
         <h4 style="color: var(--primary); font-family: var(--font-ui); margin: 0;">
           Batería de 8 Preguntas Pedagógicas (Con Dilema Ético)
         </h4>
-        <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="guardarTodasPreguntasAuditoria()">💾 Guardar Cambios en Preguntas</button>
+        <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="guardarTodasPreguntasAuditoria()"> Guardar Cambios en Preguntas</button>
       </div>
 
       <div id="cuerpoPreguntasAuditoria"></div>
@@ -906,7 +906,7 @@
     <div class="modal-certificado-wrapper">
       <div class="modal-cert-actions">
         <button class="btn-cert-descargar" onclick="imprimirInformeAvanceNativo()">
-          🖨️ Descargar / Imprimir Informe en PDF
+           Descargar / Imprimir Informe en PDF
         </button>
         <button class="btn-cert-cerrar" onclick="cerrarModalMisAvances()">
           ✕ Cerrar
@@ -968,7 +968,7 @@
 
         <div id="seccionCertificadosDisponibles" class="certificados-lista-inline no-print">
           <h4 style="font-family: var(--font-ui); font-size: 0.95rem; margin-bottom: 8px;">
-            📜 Certificados Oficiales Disponibles:
+             Certificados Oficiales Disponibles:
           </h4>
           <div id="contenedorBotonesCertificados" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
         </div>
@@ -986,7 +986,7 @@
     <div class="modal-certificado-wrapper">
       <div class="modal-cert-actions">
         <button class="btn-cert-descargar" onclick="descargarCertificadoPDF()">
-          📥 Descargar en PDF
+           Descargar en PDF
         </button>
         <button class="btn-cert-cerrar" onclick="cerrarModalCertificado()">
           ✕ Cerrar
