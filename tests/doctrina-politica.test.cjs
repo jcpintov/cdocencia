@@ -25,6 +25,9 @@ assert(etiquetas('aumento de salario y compañero').some(t => t.includes('Compa�
 assert(etiquetas('exaltación a maestro').some(t => t.includes('Maestro')));
 assert.equal(etiquetas('conducta, virtud y justicia').length, 0);
 assert.equal(etiquetas('iniciación, aumento y exaltación').length, 3);
+assert(etiquetas('aprendices').some(t => t.includes('Aprendiz')));
+assert(etiquetas('compañeros').some(t => t.includes('Compañero')));
+assert(etiquetas('maestros').some(t => t.includes('Maestro')));
 
 // El módulo normativo-administrativo está únicamente dentro de la consola Superadmin.
 const admin = html.indexOf('id="seccionAdmin"');
