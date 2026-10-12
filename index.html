@@ -836,14 +836,53 @@
           <div>
             <p class="admin-overline">Módulo documental · Preparación segura</p>
             <h2 id="tituloDoctrinaDocumental">Recepción de documentos doctrinales</h2>
-            <p class="text-instruccion">Clasificación y verificación de integridad en el navegador. Esta fase <strong>no sube documentos a Supabase</strong> ni los publica.</p>
+            <p class="text-instruccion">El Superadmin puede preparar nuevos originales oficiales de la Gran Logia de Chile o literatura REAA de fuentes confiables. Se valida la estructura e integridad localmente; <strong>no se transfieren documentos a Supabase ni se autoriza consulta pública o de usuarios</strong>.</p>
           </div>
         </div>
         <div class="doctrina-form-grid">
           <div class="form-group doctrina-form-wide">
-            <label for="doctrinaArchivos">Originales por clasificar (PDF, Word, TXT, Markdown)</label>
-            <input id="doctrinaArchivos" type="file" accept=".pdf,.doc,.docx,.txt,.md" multiple>
-            <small>Máximo 128 MB por archivo para verificación local. Archivos grandes pueden consumir memoria. El contexto del grado es solo temático; valida cada documento antes de publicarlo.</small>
+            <label for="doctrinaArchivos">Originales PDF para revisión institucional</label>
+            <input id="doctrinaArchivos" type="file" accept=".pdf,application/pdf" multiple>
+            <small>Solo PDF, hasta 128 MB por original (verificación local). Prepara un lote por procedencia editorial; la calidad de una fuente no queda acreditada por la extensión del archivo.</small>
+          </div>
+          <div class="form-group">
+            <label for="doctrinaFuenteTipo">Origen documental declarado</label>
+            <select id="doctrinaFuenteTipo" required>
+              <option value="" selected>Seleccione procedencia</option>
+              <option value="oficial_gran_logia_chile">Documento oficial — Gran Logia de Chile</option>
+              <option value="literatura_reaa_confiable">Literatura REAA — fuente confiable identificada</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="doctrinaEmisorAutor">Emisor o autor</label>
+            <input id="doctrinaEmisorAutor" type="text" maxlength="220" placeholder="Identidad de quien emite o escribe" required>
+          </div>
+          <div class="form-group">
+            <label for="doctrinaInstitucion">Institución o editorial</label>
+            <input id="doctrinaInstitucion" type="text" maxlength="220" placeholder="Gran Logia de Chile, editorial o institución" required>
+          </div>
+          <div class="form-group">
+            <label for="doctrinaReferenciaFuente">Referencia comprobable de la fuente</label>
+            <input id="doctrinaReferenciaFuente" type="text" maxlength="500" placeholder="Decreto, publicación, catálogo, archivo institucional o URL verificable" required>
+          </div>
+          <div class="form-group">
+            <label for="doctrinaEdicion">Edición / versión</label>
+            <input id="doctrinaEdicion" type="text" maxlength="160" placeholder="Año, edición, número de decreto o revisión">
+          </div>
+          <div class="form-group">
+            <label for="doctrinaFechaFuente">Fecha declarada (si se conoce)</label>
+            <input id="doctrinaFechaFuente" type="text" maxlength="90" placeholder="AAAA o AAAA-MM-DD">
+          </div>
+          <div class="form-group doctrina-form-wide">
+            <label for="doctrinaFundamento">Fundamento de confiabilidad y relación con el REAA</label>
+            <textarea id="doctrinaFundamento" rows="3" maxlength="1200" placeholder="Por qué se considera fiable, qué relación tiene con el REAA y dónde contrastar su autenticidad." required></textarea>
+          </div>
+          <div class="form-group doctrina-form-wide">
+            <label for="doctrinaDerechos">Derechos y posibilidad de uso institucional</label>
+            <textarea id="doctrinaDerechos" rows="2" maxlength="900" placeholder="Titular, autorización o estado pendiente de verificar. No asumir redistribución permitida."></textarea>
+          </div>
+          <div class="form-group doctrina-form-wide">
+            <p class="text-instruccion" style="margin:0">La procedencia declarada no implica verificación. Cada archivo pasa por revisión individual de autenticidad, correlación, fiabilidad de respuestas, derechos y seguridad. Ninguno queda aprobado ni disponible para usuarios por preparar este lote.</p>
           </div>
           <div class="form-group">
             <label for="doctrinaClase">Clase documental</label>
