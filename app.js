@@ -2143,9 +2143,135 @@ async function cargarResumenSuperadmin() {
   }
 }
 
+/* ==========================================================================
+   DOCTRINA DOCUMENTAL — RECEPCIÓN LOCAL SIN TRANSFERENCIA DE ARCHIVOS
+   ========================================================================== */
+let manifiestoDoctrinaPendiente = [];
+let secuenciaRecepcionDoctrina = 0;
+
+function limpiarRecepcionDoctrina() {
+  ++secuenciaRecepcionDoctrina;
+  manifiestoDoctrinaPendiente = [];
+  const input = document.getElementById('doctrinaArchivos');
+  if (input) input.value = '';
+  const tabla = document.getElementById('tablaRecepcionDoctrina');
+  if (tabla) {
+    tabla.replaceChildren();
+    const row = tabla.insertRow();
+    const cell = row.insertCell();
+    cell.colSpan = 4;
+    cell.textContent = 'Selecciona archivos para iniciar la recepción local.';
+  }
+  const exportar = document.getElementById('btnExportarManifiestoDoctrina');
+  if (exportar) exportar.disabled = true;
+  const estado = document.getElementById('estadoRecepcionDoctrina');
+  if (estado) estado.textContent = 'Recepción local reiniciada. Ningún archivo fue transferido.';
+}
+
+async function prepararLoteDoctrinal() {
+  const input = document.getElementById('doctrinaArchivos');
+  const tabla = document.getElementById('tablaRecepcionDoctrina');
+  const estado = document.getElementById('estadoRecepcionDoctrina');
+  const exportar = document.getElementById('btnExportarManifiestoDoctrina');
+  if (!input || !tabla || !estado) return;
+  const archivos = Array.from(input.files || []);
+  const secuenciaActual = ++secuenciaRecepcionDoctrina;
+  manifiestoDoctrinaPendiente = [];
+  if (exportar) exportar.disabled = true;
+  tabla.replaceChildren();
+  if (!archivos.length) {
+    estado.textContent = 'Selecciona al menos un archivo antes de preparar el lote.';
+    return;
+  }
+  if (!globalThis.crypto?.subtle) {
+    estado.textContent = 'La verificación SHA-256 requiere un contexto HTTPS compatible.';
+    return;
+  }
+  const etiquetasPermitidas = /\.(pdf|doc|docx|txt|md)$/i;
+  const maximo = 50 * 1024 * 1024;
+  const metadatos = {
+    clase: document.getElementById('doctrinaClase')?.value || 'doctrina',
+    grado_minimo: document.getElementById('doctrinaGrado')?.value || 'M',
+    clasificacion_acceso: document.getElementById('doctrinaClasificacion')?.value || 'reservado',
+    autorizacion_procesamiento_externo: Boolean(document.getElementById('doctrinaAutorizaExterno')?.checked),
+    referencia_origen: (document.getElementById('doctrinaReferencia')?.value || '').trim()
+  };
+  estado.textContent = 'Preparando ' + archivos.length + ' archivo(s), sin transferencia de datos...';
+  let rechazados = 0;
+  for (const archivo of archivos) {
+    if (secuenciaActual !== secuenciaRecepcionDoctrina) return;
+    const fila = tabla.insertRow();
+    fila.insertCell().textContent = archivo.name;
+    fila.insertCell().textContent = (archivo.size / (1024 * 1024)).toLocaleString('es-CL', { maximumFractionDigits: 2 }) + ' MB';
+    const celdaHash = fila.insertCell();
+    const celdaEstado = fila.insertCell();
+    if (!etiquetasPermitidas.test(archivo.name) || archivo.size < 1 || archivo.size > maximo) {
+      celdaHash.textContent = '—';
+      celdaEstado.textContent = 'No admitido: formato vacío, extensión o tamaño fuera de límite';
+      rechazados++;
+      continue;
+    }
+    try {
+      const contenido = await archivo.arrayBuffer();
+      if (secuenciaActual !== secuenciaRecepcionDoctrina) return;
+      const huella = await crypto.subtle.digest('SHA-256', contenido);
+      if (secuenciaActual !== secuenciaRecepcionDoctrina) return;
+      const sha256 = Array.from(new Uint8Array(huella), b => b.toString(16).padStart(2, '0')).join('');
+      celdaHash.textContent = sha256;
+      celdaHash.title = sha256;
+      celdaEstado.textContent = 'Listo para catalogación';
+      manifiestoDoctrinaPendiente.push({
+        titulo: archivo.name.replace(/\.[^.]+$/, ''),
+        archivo_original: archivo.name,
+        bytes: archivo.size,
+        mime: archivo.type || 'application/octet-stream',
+        sha256,
+        ...metadatos,
+        estado: 'borrador',
+        objeto_storage: null
+      });
+    } catch (error) {
+      if (secuenciaActual !== secuenciaRecepcionDoctrina) return;
+      celdaHash.textContent = '—';
+      celdaEstado.textContent = 'Error al calcular huella';
+      rechazados++;
+      console.error('Error al verificar original:', error);
+    }
+  }
+  if (secuenciaActual !== secuenciaRecepcionDoctrina) return;
+  if (exportar) exportar.disabled = !manifiestoDoctrinaPendiente.length;
+  estado.textContent = manifiestoDoctrinaPendiente.length + ' archivo(s) preparado(s); ' +
+    rechazados + ' rechazado(s). Ningún original ha sido subido ni enviado a servicios externos.';
+}
+
+function exportarManifiestoDoctrina() {
+  if (!manifiestoDoctrinaPendiente.length) {
+    document.getElementById('estadoRecepcionDoctrina').textContent = 'Prepara archivos válidos antes de exportar.';
+    return;
+  }
+  const exportacion = {
+    formato: 'doctrina-manifiesto-v1',
+    generado_en: new Date().toISOString(),
+    destino_previsto: 'Supabase Storage privado — pendiente de autorización y políticas',
+    transferencia_realizada: false,
+    documentos: manifiestoDoctrinaPendiente
+  };
+  const bytes = new Blob([JSON.stringify(exportacion, null, 2)], { type: 'application/json;charset=utf-8' });
+  const enlace = URL.createObjectURL(bytes);
+  const a = document.createElement('a');
+  a.href = enlace;
+  a.download = 'doctrina-manifiesto-' + new Date().toISOString().slice(0, 10) + '.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(enlace);
+  document.getElementById('estadoRecepcionDoctrina').textContent =
+    'Manifiesto exportado (solo metadatos y SHA-256). Los archivos originales siguen en el navegador.';
+}
+
 function cambiarSubseccionAdmin(seccion) {
-  const btns = ['tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
-  const secs = ['adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
+  const btns = ['tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavDoctrinaDocumental', 'tabNavEditorDoctrina', 'tabNavAccesos'];
+  const secs = ['adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionDoctrinaDocumental', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
 
   btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
@@ -2172,6 +2298,9 @@ function cambiarSubseccionAdmin(seccion) {
     document.getElementById('tabNavMuroGeneral')?.classList.add('active');
     document.getElementById('adminSeccionMuroGeneral')?.classList.remove('hidden');
     cargarMuroGeneralAdmin();
+  } else if (seccion === 'doctrina_documental') {
+    document.getElementById('tabNavDoctrinaDocumental')?.classList.add('active');
+    document.getElementById('adminSeccionDoctrinaDocumental')?.classList.remove('hidden');
   } else if (seccion === 'editor_doctrina') {
     document.getElementById('tabNavEditorDoctrina')?.classList.add('active');
     document.getElementById('adminSeccionEditorDoctrina')?.classList.remove('hidden');
