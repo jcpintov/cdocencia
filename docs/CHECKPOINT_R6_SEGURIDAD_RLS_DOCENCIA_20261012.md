@@ -16,7 +16,7 @@
 ## Cambios SQL ejecutados y comprobados (NO REEJECUTAR CIEGAMENTE)
 
 1. `public.usuarios`: `INSERT/UPDATE/DELETE` denegados a anon/authenticated. `SELECT` de tabla revocado y concedidas solo columnas operativas `id,email,nombre,es_admin,terminos_aceptados,creado_en,debe_cambiar_clave`. NO accesibles para anon/auth: `clave_hash,token_recuperacion,token_expira,auth_user_id`. Sigue siendo posible leer la identidad básica del padrón sin login: **PENDIENTE P0**.
-2. `public.config_segura`: removida política `ALL USING(true)`; única lectura temporal autorizada para la clave `doctrina_docencia_maestros`. Escritura anon/auth denegada. `gemini_api_key` ya NO se puede recuperar vía RLS; **pudo quedar expuesta antes**. Es obligatorio rotar/revocar la clave en Google AI Studio y verificar las cuotas. **No se realizó rotación.**
+2. `public.config_segura`: removida política `ALL USING(true)`; única lectura temporal autorizada para la clave `doctrina_docencia_maestros`. Escritura anon/auth denegada. `gemini_api_key` ya NO se puede recuperar vía RLS. **Aclaración del titular (2026-10-12): corresponde a una función obsoleta, la clave ya no se utiliza ni se necesita.** No debe incluirse una rotación ni nuevas credenciales como dependencia del proyecto. Se confirmó que el registro histórico sigue en la tabla; el intento de eliminarlo fue bloqueado por las restricciones de la herramienta y **no se ejecutó**. Su borrado seguro es limpieza pendiente, sin prioridad funcional; si la clave aún estuviese vigente en el proveedor, su revocación es una medida de higiene de seguridad, no una tarea de integración.
 3. `public.modulos`: `INSERT/UPDATE/DELETE` anon/auth denegados; lectura sigue disponible temporalmente para usuarios legacy. Cinco trabajos activos. El editor legacy de trabajos requiere migración a nuevo Auth; no reabrir escritura por comodidad.
 4. `public.registro_accesos`: `SELECT/UPDATE/DELETE` anon/auth denegados; `INSERT` anon se conserva temporalmente para registrar login antiguo. Consulta protegida mediante `maestro_admin_bitacora()`, exclusivamente SUPERADMIN (200 registros recientes). USER obtiene cero; anon sin EXECUTE.
 5. Se conservan revocaciones anteriores de las siete RPC legacy de administración/cambio/recuperación. `autenticar_usuario(text,text)` sigue permitido para compatibilidad: **NO demuestra que el login sea seguro**.
@@ -43,7 +43,7 @@ Los cambios de ACL, política de configuración y nuevas RPC están registrados 
 
 **P0**: `public.usuarios` expone todavía emails/nombres por acceso anónimo; `public.modulos` expone textos y posibles adjuntos; `public.progreso_maestro` y `public.comentarios_muro` mantienen políticas permisivas y operaciones directas. Migrar las 25 cuentas restantes a Supabase Auth y reemplazar lecturas/escrituras por políticas de propiedad y RPC para no interrumpir docencia.
 
-**P0**: rotar inmediatamente la clave Gemini que estuvo almacenada en `config_segura`. NO registrar el valor en prompts, ZIP, GitHub o logs.
+**Limpieza no bloqueante:** el titular confirmó que la integración Gemini anterior está obsoleta. No reintroducir la API ni pedir nueva clave. El registro `gemini_api_key` aún existe, pero no es legible por anon/authenticated; el intento de borrarlo fue bloqueado por la herramienta y no se ejecutó. Si fuese todavía válida externamente, se recomienda revocarla por higiene, sin afectar la continuidad del proyecto.
 
 **P1**: habilitar administración segura de usuarios, docencia, certificados y bitácoras mediante Auth. Mantener siete RPC antiguas revocadas.
 
