@@ -612,15 +612,19 @@
     const {id}=obtenerTrabajoMiDocencia();
     if(!id||!window.confirm('Este cambio marcará como leído un trabajo REAL de su perfil. ¿Confirmar?'))return;
     const actual=client;operacionDocencia=true;
+    let lecturaRegistrada=false;
     try{
       if(!await verificarIdentidadDocencia())throw new Error('not_authorized');
       const {data,error}=await actual.rpc('maestro_marcar_lectura',{p_modulo_id:id});
       if(actual!==client)return;
       if(error||data!==true)throw new Error('write_failed');
       el('estadoMiDocenciaAuth').textContent='Lectura registrada para su propio perfil.';
-      el('cargarMiDocenciaAuth').click();
+      lecturaRegistrada=true;
     }catch(_){el('estadoMiDocenciaAuth').textContent='La lectura no pudo registrarse. No se dará por confirmada.'}
-    finally{operacionDocencia=false}
+    finally{
+      operacionDocencia=false;
+      if(lecturaRegistrada&&actual===client)el('cargarMiDocenciaAuth').click();
+    }
   });
   el('guardarComentarioAuth').addEventListener('click',async()=>{
     if(busy||operacionDocencia||!client)return;
