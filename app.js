@@ -2239,7 +2239,10 @@ async async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     .order('creado_en', { ascending: false }).limit(100);
   if (filtroActual !== 'todos') query = query.eq('usuario_id', filtroActual);
   if (ocultarAdmin) {
-    query = query.not('email', 'in', '("jpintov@gmail.com","jpintov@hotmail.com")');
+    // Excluir por identidad de correo de forma insensible a mayúsculas.
+    // Los registros sin correo permanecen visibles para auditoría.
+    query = query.or('email.is.null,email.not.ilike.jpintov@gmail.com')
+      .or('email.is.null,email.not.ilike.jpintov@hotmail.com');
   }
   const { data: registros, error, count } = await query;
   if (error) {
