@@ -512,7 +512,8 @@
       <hr class="admin-divider">
 
       <nav class="admin-menu-list">
-        <button id="tabNavUsuarios" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('usuarios')">
+        <button id="tabNavResumen" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('resumen')">Resumen ejecutivo</button>
+        <button id="tabNavUsuarios" class="admin-side-btn" onclick="cambiarSubseccionAdmin('usuarios')">
           Usuarios y accesos
         </button>
         <button id="tabNavCargar" class="admin-side-btn" onclick="cambiarSubseccionAdmin('cargar')">
@@ -546,8 +547,46 @@
     </aside>
 
     <main class="admin-main-content">
+      <!-- PORTADA DE LA CONSOLA ÚNICA SUPERADMIN -->
+      <section id="adminSeccionResumen" class="admin-overview" aria-labelledby="adminResumenTitulo">
+        <header class="admin-overview-header">
+          <p class="admin-overline">Doctrina · Docencia · Gestión</p>
+          <h1 id="adminResumenTitulo">Resumen ejecutivo</h1>
+          <p>Supervisión centralizada de usuarios, publicaciones y actividad de la Cámara.</p>
+        </header>
+        <div class="admin-overview-kpis" role="group" aria-label="Indicadores generales">
+          <article class="admin-overview-kpi"><span>Usuarios del padrón</span><strong id="resumenKpiUsuarios">—</strong><small>Excluye cuentas de prueba y administración</small></article>
+          <article class="admin-overview-kpi"><span>Trabajos activos</span><strong id="resumenKpiTrabajos">—</strong><small>Contenidos docentes habilitados</small></article>
+          <article class="admin-overview-kpi"><span>Accesos de usuarios</span><strong id="resumenKpiAccesos">—</strong><small>Sin las dos cuentas jpintov</small></article>
+          <article class="admin-overview-kpi"><span>Historial conservado</span><strong id="resumenKpiHistorial">—</strong><small>Todos los registros, incluidas pruebas</small></article>
+        </div>
+        <p id="resumenSuperadminEstado" class="text-instruccion" aria-live="polite">Consultando indicadores de la plataforma...</p>
+        <div class="admin-overview-modulos">
+          <section class="admin-overview-modulo">
+            <h2>Gestión de usuarios</h2>
+            <p>Administrar el padrón, credenciales y perfiles de acceso.</p>
+            <button type="button" class="admin-link-btn" onclick="cambiarSubseccionAdmin('usuarios')">Abrir padrón</button>
+          </section>
+          <section class="admin-overview-modulo">
+            <h2>Control documental</h2>
+            <p>Revisar trabajos y publicaciones disponibles para la Cámara.</p>
+            <button type="button" class="admin-link-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">Gestionar trabajos</button>
+          </section>
+          <section class="admin-overview-modulo">
+            <h2>Auditoría de participación</h2>
+            <p>Examinar accesos por período y ocultar las cuentas de prueba sin eliminar su historial.</p>
+            <button type="button" class="admin-link-btn" onclick="cambiarSubseccionAdmin('accesos')">Abrir bitácora</button>
+          </section>
+          <section class="admin-overview-modulo">
+            <h2>Docencia institucional</h2>
+            <p>Mantener los textos institucionales de la Cámara de Maestros.</p>
+            <button type="button" class="admin-link-btn" onclick="cambiarSubseccionAdmin('editor_doctrina')">Abrir editor</button>
+          </section>
+        </div>
+      </section>
+
       <!-- SUBSECCIÓN: ADMINISTRAR USUARIOS -->
-      <section id="adminSeccionUsuarios" class="card card-trazado">
+      <section id="adminSeccionUsuarios" class="card card-trazado hidden">
         <div class="admin-card-header">
           <div>
             <h2>Padrón y Administración de Usuarios</h2>
