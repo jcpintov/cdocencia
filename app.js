@@ -2101,17 +2101,60 @@ async function cargarDatosAdmin() {
     }
   }
 
-  cambiarSubseccionAdmin('usuarios');
+  cambiarSubseccionAdmin('resumen');
+}
+
+let secuenciaResumenSuperadmin = 0;
+async function cargarResumenSuperadmin() {
+  const secuenciaActual = ++secuenciaResumenSuperadmin;
+  const estado = document.getElementById('resumenSuperadminEstado');
+  const escribir = (id, valor) => {
+    const nodo = document.getElementById(id);
+    if (nodo) nodo.textContent = String(valor);
+  };
+  const ids = ['resumenKpiUsuarios', 'resumenKpiTrabajos', 'resumenKpiAccesos', 'resumenKpiHistorial'];
+  ids.forEach(id => escribir(id, '…'));
+  if (estado) estado.textContent = 'Consultando indicadores...';
+  // La portada es exclusivamente informativa; ninguna consulta altera registros.
+  const excluirCuentas = 'email.is.null,and(email.not.ilike.jpintov@gmail.com,email.not.ilike.jpintov@hotmail.com)';
+  try {
+    const consultas = await Promise.all([
+      sbApp.from('usuarios').select('id', { count: 'exact', head: true })
+        .eq('es_admin', false).or(excluirCuentas),
+      sbApp.from('modulos').select('id', { count: 'exact', head: true }).eq('activo', true),
+      sbApp.from('registro_accesos').select('id', { count: 'exact', head: true }).or(excluirCuentas),
+      sbApp.from('registro_accesos').select('id', { count: 'exact', head: true })
+    ]);
+    if (secuenciaActual !== secuenciaResumenSuperadmin) return;
+    let fallos = 0;
+    consultas.forEach((resultado, i) => {
+      const valor = resultado.error ? '—' : Number(resultado.count || 0).toLocaleString('es-CL');
+      if (resultado.error) { fallos++; console.error('Indicador Superadmin no disponible:', resultado.error); }
+      escribir(ids[i], valor);
+    });
+    if (estado) estado.textContent = fallos
+      ? 'Algunos indicadores no están disponibles. Compruebe los permisos de lectura antes de publicar.'
+      : 'Datos de lectura: las cuentas de prueba se excluyen solo de los indicadores de usuarios. La auditoría íntegra se conserva.';
+  } catch (error) {
+    if (secuenciaActual !== secuenciaResumenSuperadmin) return;
+    ids.forEach(id => escribir(id, '—'));
+    if (estado) estado.textContent = 'No fue posible cargar los indicadores.';
+    console.error('Error en resumen de Superadmin:', error);
+  }
 }
 
 function cambiarSubseccionAdmin(seccion) {
-  const btns = ['tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
-  const secs = ['adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
+  const btns = ['tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
+  const secs = ['adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
 
   btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
 
-  if (seccion === 'usuarios') {
+  if (seccion === 'resumen') {
+    document.getElementById('tabNavResumen')?.classList.add('active');
+    document.getElementById('adminSeccionResumen')?.classList.remove('hidden');
+    cargarResumenSuperadmin();
+  } else if (seccion === 'usuarios') {
     document.getElementById('tabNavUsuarios')?.classList.add('active');
     document.getElementById('adminSeccionUsuarios')?.classList.remove('hidden');
     cargarListadoUsuariosAdmin();
