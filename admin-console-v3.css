@@ -164,3 +164,32 @@
   #seccionAdmin .admin-side-btn,#seccionAdmin .admin-nav-link-ext,
   #seccionAdmin .admin-header-actions .btn-primary{transition:none}
 }
+
+/* Encabezado ejecutivo; nunca se muestra fuera de la consola Admin. */
+#seccionAdmin .admin-workspace-header{
+  max-width:1480px;margin:0 auto 24px;padding:27px clamp(22px,3vw,37px);
+  background:linear-gradient(118deg,#162e41,#294658);border:1px solid #344e5f;
+  border-bottom:3px solid #b58a59;border-radius:17px;box-shadow:0 14px 36px #172d3d13
+}
+#seccionAdmin .admin-workspace-overline{
+  color:#d6b98c;font-size:10px;line-height:1.5;font-weight:750;
+  text-transform:uppercase;letter-spacing:.18em
+}
+#seccionAdmin .admin-workspace-header h1{
+  color:#f7f5ef;font:500 clamp(28px,3.2vw,40px)/1.16 Georgia,serif;
+  letter-spacing:-.03em;margin:12px 0 9px
+}
+#seccionAdmin .admin-workspace-header p{
+  max-width:680px;color:#c9d3dc;margin:0;font-size:13px;line-height:1.75
+}
+#seccionAdmin .admin-workspace-meta{
+  display:flex;flex-wrap:wrap;gap:9px;margin-top:22px
+}
+#seccionAdmin .admin-workspace-meta span{
+  padding:7px 11px;border:1px solid #ffffff2a;border-radius:50px;
+  color:#e4e9ed;background:#ffffff09;font-size:11px;font-weight:650
+}
+@media(max-width:760px){
+  #seccionAdmin .admin-workspace-header{padding:22px 20px;border-radius:13px}
+  #seccionAdmin .admin-workspace-meta{gap:7px}
+}
