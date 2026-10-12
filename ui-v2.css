@@ -142,3 +142,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 #adminSeccionDoctrinaDocumental .form-group textarea:focus-visible,#adminSeccionDoctrinaDocumental .form-group input:focus-visible,#adminSeccionDoctrinaDocumental .form-group select:focus-visible{outline:2px solid #a8794d;outline-offset:2px}
 #adminSeccionDoctrinaDocumental .form-group [required]{border-inline-start:3px solid #ba8959}
 #adminSeccionDoctrinaDocumental .form-group .text-instruccion{font-size:.87rem;line-height:1.65;padding:12px 14px;border-radius:8px;background:#f3f5f7;color:#4e6175}
+
+/* Padrón Superadmin: componentes DOM sin interpolación de HTML */
+#seccionAdmin .admin-email-cell{font-family:ui-monospace,Consolas,monospace;font-size:.82rem;overflow-wrap:anywhere}
+#seccionAdmin .admin-role-superadmin,#seccionAdmin .admin-role-user{display:inline-block;padding:4px 9px;border-radius:6px;font-size:.8rem;font-weight:700}
+#seccionAdmin .admin-role-superadmin{color:#7b5b36;background:#f4ede3}
+#seccionAdmin .admin-role-user{color:#354c61;background:#edf1f4}
+#seccionAdmin .admin-clave-pendiente{color:#9b6a15;font-size:.81rem;font-weight:650}
+#seccionAdmin .admin-clave-ok{color:#2b6650;font-size:.81rem;font-weight:650}
+#seccionAdmin .admin-acciones-seguras{display:flex;gap:7px;flex-wrap:wrap}
+#seccionAdmin .admin-acciones-seguras .admin-action-delete{color:#a34743;border-color:#c7a19e}
