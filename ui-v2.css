@@ -180,3 +180,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 #seccionAdmin .admin-mantenimiento-alerta a{color:#754a20;font-size:.85rem;font-weight:700;text-underline-offset:3px;width:fit-content}
 #seccionAdmin .admin-mantenimiento-alerta a:focus-visible{outline:2px solid #b47d45;outline-offset:3px}
 #seccionAdmin button:disabled{cursor:not-allowed;opacity:.58}
+
+/* Contenidos docentes seguros sin interpolación HTML */
+.badge-estado.badge-en-curso{background:#fef3c7;color:#92400e}
+.editor-pregunta-card{display:grid;gap:11px;margin-bottom:16px;border-left:3px solid var(--accent-gold,#a8794d)}
+.editor-pregunta-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.editor-pregunta-header strong{font-size:.92rem;color:var(--accent-gold-dark,#8c653e)}
+.editor-pregunta-correcta{display:flex;align-items:center;gap:8px}
+.editor-pregunta-correcta label{font-size:.84rem;font-weight:650}
+.editor-pregunta-correcta select{min-width:72px;padding:7px 9px}
+.editor-pregunta-campo{display:grid;gap:5px;min-width:0;margin:0}
+.editor-pregunta-campo label{font-size:.84rem;font-weight:600;color:var(--text-muted,#526375)}
+.editor-pregunta-campo input{width:100%;min-height:39px;padding:8px 10px;border:1px solid #cfdae3;border-radius:7px;font:inherit}
+.editor-pregunta-alternativas{display:grid;gap:8px;margin:8px 0}
+.editor-pregunta-etiqueta{font-size:.84rem;font-weight:700}
