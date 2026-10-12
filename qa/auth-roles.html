@@ -393,6 +393,47 @@
     if(ok)m.preguntas_json={...m.preguntas_json,preguntas};
   });
 
+
+  function pintarResumenBitacora(){
+    if(el('role').textContent!=='SUPERADMIN')return;
+    const omitir=[
+      el('ocultarGmailAuth').checked?'jpintov@gmail.com':null,
+      el('ocultarHotmailAuth').checked?'jpintov@hotmail.com':null
+    ].filter(Boolean);
+    const visibles=accesosBitacora.filter(r=>
+      !omitir.includes(String(r.email||'').toLowerCase().trim()));
+    const destino=el('bitacoraResumenAuth');
+    destino.replaceChildren();
+    const resumen=document.createElement('p');
+    resumen.textContent=visibles.length+' accesos visibles de '+
+      accesosBitacora.length+' registros consultados. Los filtros no eliminan datos históricos.';
+    destino.appendChild(resumen);
+    el('estadoBitacoraAuth').textContent=visibles.length
+      ? 'Resumen de accesos actualizado.' : 'Sin registros visibles con estos filtros.';
+  }
+  el('cargarBitacoraAuth').addEventListener('click',async()=>{
+    if(busy||guardandoTrabajo)return;
+    const boton=el('cargarBitacoraAuth');
+    boton.disabled=true;
+    el('estadoBitacoraAuth').textContent='Consultando registros autorizados...';
+    try{
+      if(!await superadminActual()){
+        el('estadoBitacoraAuth').textContent='Acceso denegado: se requiere Superadmin.';
+        return;
+      }
+      const {data,error}=await client.rpc('maestro_admin_bitacora');
+      if(error||!Array.isArray(data)){
+        el('estadoBitacoraAuth').textContent='No fue posible consultar la bitácora.';
+        return;
+      }
+      accesosBitacora=data;
+      pintarResumenBitacora();
+    }catch(_){el('estadoBitacoraAuth').textContent='Error de conexión al consultar accesos.'}
+    finally{boton.disabled=false}
+  });
+  el('ocultarGmailAuth').addEventListener('change',pintarResumenBitacora);
+  el('ocultarHotmailAuth').addEventListener('change',pintarResumenBitacora);
+
   el('logout').addEventListener('click',async()=>{await signOut();status('Sesión de prueba cerrada.');});
   window.addEventListener('pagehide',()=>{if(client)client.auth.signOut({scope:'local'}).catch(()=>{})});
 })();
