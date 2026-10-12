@@ -401,7 +401,7 @@ async function cargarListadoUsuariosAdmin() {
       : `<span style="background: rgba(0,0,0,0.05); color: var(--text-main); padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;">Hermano</span>`;
 
     const estadoClaveHtml = u.debe_cambiar_clave
-      ? `<span style="color: #B27B10; font-weight: 600; font-size: 0.82rem;">⚠️ Requiere cambio</span>`
+      ? `<span style="color: #B27B10; font-weight: 600; font-size: 0.82rem;">Requiere cambio</span>`
       : `<span style="color: var(--success); font-weight: 600; font-size: 0.82rem;">✓ Al día</span>`;
 
     const nombreEscapado = (u.nombre || '').replace(/'/g, "\\'");
@@ -415,9 +415,9 @@ async function cargarListadoUsuariosAdmin() {
         <td>${estadoClaveHtml}</td>
         <td>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button class="admin-link-btn" onclick="abrirModalEditarUsuario('${u.id}', '${nombreEscapado}', '${emailEscapado}', ${u.es_admin})">✏️ Editar</button>
-            <button class="admin-link-btn" style="color: var(--accent-gold-dark);" onclick="abrirModalAdminClaveHermano('${u.id}', '${nombreEscapado}')">🔑 Clave</button>
-            ${u.id !== usuarioActual.id ? `<button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="confirmarEliminarUsuario('${u.id}', '${nombreEscapado}')">🗑️ Eliminar</button>` : ''}
+            <button class="admin-link-btn" onclick="abrirModalEditarUsuario('${u.id}', '${nombreEscapado}', '${emailEscapado}', ${u.es_admin})">Editar</button>
+            <button class="admin-link-btn" style="color: var(--accent-gold-dark);" onclick="abrirModalAdminClaveHermano('${u.id}', '${nombreEscapado}')">Contraseña</button>
+            ${u.id !== usuarioActual.id ? `<button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="confirmarEliminarUsuario('${u.id}', '${nombreEscapado}')">Eliminar</button>` : ''}
           </div>
         </td>
       </tr>
@@ -426,7 +426,7 @@ async function cargarListadoUsuariosAdmin() {
 }
 
 function abrirModalCrearUsuario() {
-  document.getElementById('modalAdminUsuarioTitulo').innerText = '👤 Nuevo Hermano en Padrón';
+  document.getElementById('modalAdminUsuarioTitulo').innerText = 'Nuevo integrante del padrón';
   document.getElementById('adminUsuarioTargetId').value = '';
   document.getElementById('adminUsuarioNombre').value = '';
   document.getElementById('adminUsuarioEmail').value = '';
@@ -445,7 +445,7 @@ function autogenerarClaveNuevoUsuario() {
 }
 
 function abrirModalEditarUsuario(id, nombre, email, esAdmin) {
-  document.getElementById('modalAdminUsuarioTitulo').innerText = '✏️ Editar Datos de Usuario';
+  document.getElementById('modalAdminUsuarioTitulo').innerText = 'Editar datos de usuario';
   document.getElementById('adminUsuarioTargetId').value = id;
   document.getElementById('adminUsuarioNombre').value = nombre;
   document.getElementById('adminUsuarioEmail').value = email;
