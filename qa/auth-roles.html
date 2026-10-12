@@ -22,6 +22,11 @@
     .status{margin:22px 0 0;padding:13px;background:#f6f8fa;border-left:3px solid #b48c65;line-height:1.6;border-radius:0 7px 7px 0}
     dl{display:grid;grid-template-columns:170px 1fr;gap:10px;margin:20px 0 0}dt{color:#607489}dd{margin:0;font-weight:650;overflow-wrap:anywhere}
     .disclaimer{font-size:.83rem;color:#5e6e7a;line-height:1.7;margin:20px 0}
+    #padronSuperadminLab{background:#f8fafb;padding:21px;border-radius:9px;margin-top:24px}
+    #tablaPadron th,#tablaPadron td{padding:9px 12px;border-bottom:1px solid #dce5eb;text-align:left;overflow-wrap:anywhere}
+    #tablaPadron th{background:#e8eef2;font-size:.78rem;color:#506578}
+    #tablaPadron td{color:#2d4355}
+
     [hidden]{display:none!important}@media(max-width:600px){main{margin:16px auto}header,section{padding:24px 18px}dl{grid-template-columns:1fr;gap:4px}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.10/dist/umd/supabase.min.js" defer></script>
@@ -57,6 +62,18 @@
       <dt>Rol validado</dt><dd id="role">—</dd>
       <dt>Administración</dt><dd id="permissions">—</dd>
     </dl>
+    <section id="padronSuperadminLab" hidden aria-label="Padrón de comprobación Superadmin">
+      <h2 style="font:500 1.35rem Georgia,serif;margin:0 0 9px">Comprobación de lectura del padrón</h2>
+      <p style="line-height:1.55;margin:0 0 12px">Solo para Superadmin verificado. Sin modificaciones y sin credenciales, hashes ni tokens.</p>
+      <button type="button" id="consultarPadron">Verificar lectura autorizada</button>
+      <p class="status" id="estadoPadron" role="status" aria-live="polite">Padrón aún no consultado.</p>
+      <div style="overflow-x:auto">
+        <table id="tablaPadron" style="border-collapse:collapse;width:100%;font-size:.87rem" hidden>
+          <thead><tr><th scope="col">Nombre</th><th scope="col">Correo</th><th scope="col">Rol</th><th scope="col">Cuenta Auth</th></tr></thead>
+          <tbody id="padronBody"></tbody>
+        </table>
+      </div>
+    </section>
     <p class="disclaimer">Esta prueba no cambia la contraseña del portal heredado. No envía la contraseña a Vercel: la autenticación se realiza directamente con Supabase Auth. El token se mantiene en memoria y no se muestra en pantalla ni se guarda de manera persistente. El acceso a «Doctrina y Reglamentos» continúa cerrado a los usuarios ordinarios.</p>
   </section>
 </main>
@@ -70,6 +87,10 @@
   const status=texto=>{el('status').textContent=texto};
   const show=(role)=>{
     el('result').hidden=!role;
+    el('padronSuperadminLab').hidden=role!=='SUPERADMIN';
+    el('tablaPadron').hidden=true;
+    el('padronBody').replaceChildren();
+    el('estadoPadron').textContent='Padrón aún no consultado.';
     el('confirmed').textContent=role?'Sí':'—';
     el('role').textContent=role||'—';
     el('permissions').textContent=role==='SUPERADMIN'
@@ -118,6 +139,37 @@
         : 'ALERTA: el rol no coincide con el perfil esperado. No continúes con las pruebas.');
     }catch(_){status('Error de comunicación. No se ha modificado ningún usuario.')}
     finally{el('password').value='';setBusy(false);el('logout').disabled=!client}
+  });
+  el('consultarPadron').addEventListener('click',async()=>{
+    if(busy||!client||el('role').textContent!=='SUPERADMIN')return;
+    const boton=el('consultarPadron'),estado=el('estadoPadron');
+    boton.disabled=true;
+    estado.textContent='Verificando autorización de lectura con Supabase Auth...';
+    el('tablaPadron').hidden=true;
+    el('padronBody').replaceChildren();
+    try{
+      const {data,error}=await client.rpc('maestro_padron_superadmin');
+      if(error||!Array.isArray(data)){
+        estado.textContent='El servidor denegó la consulta o no pudo verificar la sesión.';
+        return;
+      }
+      const confirmacion=await client.rpc('maestro_identidad_actual');
+      if(confirmacion.error||confirmacion.data?.length!==1||confirmacion.data[0].rol!=='SUPERADMIN'){
+        estado.textContent='Consulta cancelada: ya no se reconoce el rol Superadmin.';
+        return;
+      }
+      const tbody=el('padronBody');
+      for(const p of data){
+        const tr=document.createElement('tr');
+        [p.nombre||'',p.email||'',p.es_admin?'SUPERADMIN':'USER',p.auth_vinculada?'Vinculada':'Pendiente'].forEach(value=>{
+          const td=document.createElement('td');td.textContent=String(value);tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+      el('tablaPadron').hidden=false;
+      estado.textContent=data.length+' registros visibles mediante función autenticada de solo lectura. Ninguna fila fue modificada.';
+    }catch(_){estado.textContent='Error de conexión al comprobar el padrón.'}
+    finally{boton.disabled=false}
   });
   el('logout').addEventListener('click',async()=>{await signOut();status('Sesión de prueba cerrada.');});
   window.addEventListener('pagehide',()=>{if(client)client.auth.signOut({scope:'local'}).catch(()=>{})});
