@@ -988,181 +988,154 @@ async function mostrarDocenciaParaMaestros() {
    MURO Y FORO DE REFLEXIONES
    ========================================================================== */
 async function mostrarMuroReflexionesUsuarios() {
-  document.getElementById('seccionDocencia').classList.add('hidden');
-  document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
-  document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
-  
+  const usuarioId = usuarioActual?.id;
+  if (!usuarioId) return;
+  document.getElementById('seccionDocencia')?.classList.add('hidden');
+  document.getElementById('seccionCatalogoTrabajos')?.classList.add('hidden');
+  document.getElementById('seccionDocenciaInstitucional')?.classList.add('hidden');
   const cont = document.getElementById('contenedorMuroUsuariosDirecto');
-  cont.innerHTML = "<p class='td-loading'>Recuperando aportes de la Cámara...</p>";
-  document.getElementById('seccionMuroUsuarios').classList.remove('hidden');
+  if (!cont) return;
+  const crear = (padre, tag, clase, contenido) => {
+    const nodo = document.createElement(tag);
+    if (clase) nodo.className = clase;
+    if (contenido !== undefined) nodo.textContent = String(contenido ?? '');
+    if (padre) padre.appendChild(nodo);
+    return nodo;
+  };
+  const boton = (padre, texto, clase, ejecutar) => {
+    const b = crear(padre, 'button', clase, texto);
+    b.type = 'button';
+    b.addEventListener('click', ejecutar);
+    return b;
+  };
+  cont.replaceChildren();
+  crear(cont, 'p', 'td-loading', 'Recuperando aportes de la Cámara...');
+  document.getElementById('seccionMuroUsuarios')?.classList.remove('hidden');
 
   await refrescarProgresosUsuario();
-
+  if (usuarioActual?.id !== usuarioId) return;
   const { data: aportes, error } = await sbApp
     .from('progreso_maestro')
     .select('id, reflexion, completado_en, modulo_id, usuario_id, usuarios(nombre), modulos(numero_orden, titulo)')
     .eq('completado', true)
     .not('reflexion', 'is', null)
     .order('completado_en', { ascending: false });
-
-  cont.innerHTML = "";
-
+  if (usuarioActual?.id !== usuarioId) return;
   if (error || !aportes) {
-    cont.innerHTML = "<p style='color: var(--error);'>Error al cargar las reflexiones de la Cámara.</p>";
+    cont.replaceChildren();
+    crear(cont, 'p', 'text-instruccion', 'Error al cargar las reflexiones de la Cámara.');
     return;
   }
-
-  let comentariosMap = {};
-  const { data: comentariosData } = await sbApp
+  const { data: comentariosData, error: errorComentarios } = await sbApp
     .from('comentarios_muro')
     .select('id, progreso_id, usuario_id, contenido, contenido_original, editado, editado_en, creado_en, usuarios(nombre)')
     .eq('activo', true)
     .order('creado_en', { ascending: true });
-
-  if (comentariosData) {
-    const idsProcesados = new Set();
-    comentariosData.forEach(c => {
-      if (idsProcesados.has(c.id)) return;
-      idsProcesados.add(c.id);
-
-      if (!comentariosMap[c.progreso_id]) comentariosMap[c.progreso_id] = [];
-      comentariosMap[c.progreso_id].push(c);
-    });
-  }
-
-  const reflexionesPorModulo = {};
-  const clavesReflexionVistas = new Set();
-
-  aportes.forEach(a => {
-    if (!a.modulo_id || !a.reflexion || a.reflexion.trim() === "") return;
-    const claveUnica = `${a.usuario_id}_${a.modulo_id}`;
-    if (clavesReflexionVistas.has(claveUnica)) return;
-    clavesReflexionVistas.add(claveUnica);
-
-    if (!reflexionesPorModulo[a.modulo_id]) reflexionesPorModulo[a.modulo_id] = [];
-    reflexionesPorModulo[a.modulo_id].push(a);
-  });
-
-  const modulosCompletadosUsuario = [];
-  const modulosPendientesUsuario = [];
-
-  listaModulos.forEach(m => {
-    const prog = misProgresos[m.id];
-    if (prog && prog.completado) {
-      modulosCompletadosUsuario.push({
-        ...m,
-        fechaCompletado: prog.completado_en ? new Date(prog.completado_en).getTime() : 0
-      });
-    } else {
-      modulosPendientesUsuario.push(m);
-    }
-  });
-
-  modulosCompletadosUsuario.sort((a, b) => b.fechaCompletado - a.fechaCompletado);
-
-  if (modulosCompletadosUsuario.length === 0) {
-    cont.innerHTML = `
-      <div style="background: rgba(153, 120, 57, 0.08); border-left: 4px solid var(--accent-gold); padding: 20px; border-radius: 6px;">
-        <h3 style="color: var(--accent-gold-dark); margin-bottom: 8px;">Aportes bajo Reserva Docente</h3>
-        <p style="margin: 0; font-family: var(--font-ui); font-size: 0.95rem; color: var(--text-main);">
-          Q.·.H.·., para acceder a las reflexiones y comentarios vertidos por los Hermanos de la Cámara, debe completar el estudio de los temas correspondientes y consagrar su reflexión personal en la Fase III.
-        </p>
-      </div>
-    `;
+  if (usuarioActual?.id !== usuarioId) return;
+  if (errorComentarios) {
+    cont.replaceChildren();
+    crear(cont, 'p', 'text-instruccion', 'No fue posible consultar los comentarios.');
     return;
   }
-
-  modulosCompletadosUsuario.forEach(m => {
-    const items = reflexionesPorModulo[m.id] || [];
-    let reflexionesHtml = "";
-
-    if (items.length === 0) {
-      reflexionesHtml = "<p style='font-style: italic; color: var(--text-muted); font-size: 0.9rem;'>No hay reflexiones adicionales en este tema.</p>";
-    } else {
-      reflexionesHtml = items.map(it => {
-        const fechaTxt = it.completado_en 
-          ? new Date(it.completado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
-          : "";
-        
-        const comentariosDeEstaReflexion = comentariosMap[it.id] || [];
-        let comentariosHtml = comentariosDeEstaReflexion.map(c => {
-          const cFecha = c.creado_en 
-            ? new Date(c.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-            : "";
-          const esAutorComentario = (c.usuario_id === usuarioActual.id);
-          const editadoTag = c.editado ? ` <span style="font-size: 0.72rem; color: var(--accent-gold); font-style: italic;">(editado)</span>` : "";
-
-          let botonesComentario = "";
-          if (esAutorComentario) {
-            botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido)}')">✏️ Editar</button>`;
-          }
-          if (usuarioActual.es_admin) {
-            const nombreEscapado = (c.usuarios?.nombre || '').replace(/'/g, "\\'");
-            botonesComentario += `<button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${nombreEscapado}', '${cFecha}')">🔍 Huella</button>`;
-            botonesComentario += `<button class="foro-comentario-btn" style="color: var(--error);" onclick="eliminarComentarioForo('${c.id}')">🗑️</button>`;
-          }
-
-          return `
-            <div class="foro-comentario-item" id="comentario_item_${c.id}">
-              <div class="foro-comentario-header">
-                <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
-                <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
-              </div>
-              <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
-            </div>
-          `;
-        }).join('');
-
-        return `
-          <div class="reflexion-item" style="margin-bottom: 20px; border-left: 3px solid var(--accent-gold); padding: 18px 20px; border-radius: 0 6px 6px 0;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span class="reflexion-autor">${it.usuarios?.nombre || "Hermano Maestro"}</span>
-              <span style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-ui);">${fechaTxt}</span>
-            </div>
-            <div style="font-size: 1rem; line-height: 1.6; font-style: italic; margin-bottom: 8px;">"${it.reflexion}"</div>
-            
-            <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${it.id}')">
-              💬 Comentarios (${comentariosDeEstaReflexion.length})
-            </button>
-
-            <div id="caja_comentario_${it.id}" class="foro-comentar-caja hidden">
-              <textarea id="input_comentario_${it.id}" name="input_comentario_${it.id}" rows="3" class="foro-comentar-input" placeholder="Escriba su comentario aquí..."></textarea>
-              <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleFormularioComentario('${it.id}')">Cancelar</button>
-                <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem; width: auto;" onclick="enviarComentarioForo('${it.id}', '${m.id}')">Publicar</button>
-              </div>
-            </div>
-
-            <div class="foro-comentarios-wrapper" id="lista_comentarios_${it.id}">
-              ${comentariosHtml}
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    cont.innerHTML += `
-      <div style="margin-bottom: 34px;">
-        <div style="border-bottom: 2px solid var(--accent-gold); padding-bottom: 6px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: flex-end;">
-          <div>
-            <span class="muro-trabajo-orden">Trabajo N° ${m.numero_orden}</span>
-            <h3 class="muro-trabajo-titulo" style="margin: 2px 0 0 0; font-family: var(--font-reading);">${m.titulo}</h3>
-          </div>
-          <span style="font-size: 0.8rem; color: var(--success); font-weight: 700; text-transform: uppercase;">✓ Desbloqueado</span>
-        </div>
-        ${reflexionesHtml}
-      </div>
-    `;
+  const comentariosMap = new Map();
+  const idsComentario = new Set();
+  (comentariosData || []).forEach(c => {
+    if (idsComentario.has(c.id)) return;
+    idsComentario.add(c.id);
+    if (!comentariosMap.has(c.progreso_id)) comentariosMap.set(c.progreso_id, []);
+    comentariosMap.get(c.progreso_id).push(c);
   });
-
-  if (modulosPendientesUsuario.length > 0) {
-    let pendientesListado = modulosPendientesUsuario.map(m => `Trabajo ${m.numero_orden}: ${m.titulo}`).join(' • ');
-    cont.innerHTML += `
-      <div style="margin-top: 30px; background: rgba(0,0,0,0.03); border: 1px dashed var(--border-color); padding: 18px; border-radius: 6px; font-family: var(--font-ui); font-size: 0.88rem; color: var(--text-muted);">
-        <strong>🔒 Trabajos con aportes en reserva docente hasta su completación:</strong><br>
-        <span style="font-style: italic;">${pendientesListado}</span>
-      </div>
-    `;
+  const reflexionesPorModulo = new Map();
+  const clavesVistas = new Set();
+  aportes.forEach(aporte => {
+    if (!aporte.modulo_id || !aporte.reflexion?.trim()) return;
+    const clave = String(aporte.usuario_id) + '/' + String(aporte.modulo_id);
+    if (clavesVistas.has(clave)) return;
+    clavesVistas.add(clave);
+    if (!reflexionesPorModulo.has(aporte.modulo_id)) reflexionesPorModulo.set(aporte.modulo_id, []);
+    reflexionesPorModulo.get(aporte.modulo_id).push(aporte);
+  });
+  const completados = [], pendientes = [];
+  listaModulos.forEach(m => {
+    const progreso = misProgresos[m.id];
+    if (progreso?.completado) completados.push({
+      ...m, fechaCompletado: progreso.completado_en ? new Date(progreso.completado_en).getTime() : 0
+    });
+    else pendientes.push(m);
+  });
+  completados.sort((x,y) => y.fechaCompletado - x.fechaCompletado);
+  cont.replaceChildren();
+  if (!completados.length) {
+    const aviso = crear(cont, 'div', 'muro-reserva-docente');
+    crear(aviso,'h3','', 'Aportes bajo Reserva Docente');
+    crear(aviso,'p','',
+      'Para acceder a las reflexiones de la Cámara, complete los trabajos correspondientes y consagre su reflexión en la Fase III.');
+    return;
+  }
+  completados.forEach(m => {
+    const grupo = crear(cont, 'section', 'muro-modulo-grupo');
+    const cabecera = crear(grupo, 'header', 'muro-modulo-cabecera');
+    const datos = crear(cabecera, 'div', '');
+    crear(datos,'span','muro-trabajo-orden','Trabajo N° ' + m.numero_orden);
+    crear(datos,'h3','muro-trabajo-titulo',m.titulo || 'Trabajo docente');
+    crear(cabecera,'span','muro-modulo-estado','Desbloqueado');
+    const aportesModulo = reflexionesPorModulo.get(m.id) || [];
+    if (!aportesModulo.length) crear(grupo,'p','text-instruccion','No hay reflexiones adicionales en este tema.');
+    aportesModulo.forEach(it => {
+      const articulo = crear(grupo,'article','reflexion-item muro-reflexion-usuario');
+      const header = crear(articulo,'div','muro-reflexion-header');
+      crear(header,'span','reflexion-autor',it.usuarios?.nombre || 'Hermano Maestro');
+      crear(header,'span','muro-reflexion-fecha',it.completado_en
+        ? new Date(it.completado_en).toLocaleDateString('es-CL') : '');
+      crear(articulo,'div','muro-reflexion-texto','"' + it.reflexion + '"');
+      const lista = comentariosMap.get(it.id) || [];
+      boton(articulo,'Comentarios (' + lista.length + ')','foro-btn-toggle-comentar',
+        ()=>toggleFormularioComentario(it.id));
+      const caja = crear(articulo,'div','foro-comentar-caja hidden');
+      caja.id = 'caja_comentario_' + it.id;
+      const textarea = crear(caja,'textarea','foro-comentar-input');
+      textarea.rows=3;textarea.id='input_comentario_' + it.id;
+      textarea.name=textarea.id;
+      textarea.placeholder='Escriba su comentario aquí...';
+      const formActions = crear(caja,'div','foro-comentar-acciones');
+      boton(formActions,'Cancelar','btn-secondary',()=>toggleFormularioComentario(it.id));
+      boton(formActions,'Publicar','btn-primary',()=>enviarComentarioForo(it.id,m.id));
+      const comentarios = crear(articulo,'div','foro-comentarios-wrapper');
+      comentarios.id='lista_comentarios_' + it.id;
+      lista.forEach(c => {
+        const fecha=c.creado_en?new Date(c.creado_en).toLocaleDateString('es-CL',
+          {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
+        const comentario=crear(comentarios,'article','foro-comentario-item');
+        comentario.id='comentario_item_' + c.id;
+        const encabezado=crear(comentario,'div','foro-comentario-header');
+        crear(encabezado,'span','foro-comentario-autor',
+          'Aporte del Q.·.H.·. ' + (c.usuarios?.nombre || 'Hermano'));
+        const fechaNodo=crear(encabezado,'span','foro-comentario-fecha',fecha);
+        if(c.editado)crear(fechaNodo,'span','foro-etiqueta-editado',' (editado)');
+        const cuerpo=crear(comentario,'div','foro-comentario-cuerpo',c.contenido || '');
+        cuerpo.id='comentario_cuerpo_' + c.id;
+        const esAutor = c.usuario_id === usuarioId;
+        if (esAutor || usuarioActual?.es_admin) {
+          const acciones = crear(comentario,'div','foro-comentario-acciones');
+          if(esAutor)boton(acciones,'Editar','foro-comentario-btn',
+            ()=>abrirModalEditarComentario(c.id,encodeURIComponent(c.contenido || '')));
+          if(usuarioActual?.es_admin) {
+            boton(acciones,'Huella','foro-comentario-btn',()=>abrirAuditoriaComentario(
+              c.id,encodeURIComponent(c.contenido_original || c.contenido || ''),
+              c.usuarios?.nombre || 'Hermano',fecha));
+            boton(acciones,'Eliminar','foro-comentario-btn foro-accion-eliminar',
+              ()=>eliminarComentarioForo(c.id));
+          }
+        }
+      });
+    });
+  });
+  if (pendientes.length) {
+    const reserva = crear(cont,'div','muro-modulo-pendientes');
+    crear(reserva,'strong','',
+      'Trabajos con aportes en reserva docente hasta su completación:');
+    crear(reserva,'span','',
+      pendientes.map(m=>'Trabajo ' + m.numero_orden + ': ' + m.titulo).join(' • '));
   }
 }
 
