@@ -20,7 +20,7 @@ function setup() {
     createElement(tag){const item=el(tag);Object.defineProperty(item,'id',{set(id){elements.set(id,item);},get(){return [...elements].find(([,v])=>v===item)?.[0];}});return item;}};
   const window = {};
   vm.runInNewContext(source,{document,window});
-  return {shell:window.DoctrinaSuperadminShell,tab:elements.get('doctrina-superadmin-tab'),panel:elements.get('doctrina-superadmin-panel'),adminMenu,document};
+  return {shell:window.DoctrinaSuperadminShell,tab:elements.get('doctrina-superadmin-tab'),panel:elements.get('doctrina-superadmin-panel'),backdrop:elements.get('doctrina-superadmin-backdrop'),adminMenu,document};
 }
 function client(id,authorized=true) {return {auth:{getUser:async()=>({data:{user:{id}}})},rpc:async()=>({data:authorized})};}
 test('default deny',()=>{const x=setup();assert.equal(x.tab.hidden,true);assert.equal(x.panel.hidden,true);});
@@ -83,4 +83,18 @@ test('verified user can reuse existing session without a second login',async()=>
   assert.equal(x.panel.hidden,false);
   x.shell.hide();
   assert.equal(x.shell.open(),false);
+});
+
+test('real dialog backdrop blocks underlying interactions and restores body scrolling',async()=>{
+  const x=setup();await x.shell.refreshFromSupabase(client('authorized-owner'));
+  assert.equal(x.backdrop.hidden,true);
+  assert.equal(x.document.body.style.overflow,undefined);
+  assert.equal(x.shell.open(),true);
+  assert.equal(x.backdrop.hidden,false);
+  assert.equal(x.document.body.style.overflow,'hidden');
+  x.backdrop.listeners.click();
+  assert.equal(x.backdrop.hidden,true);
+  assert.equal(x.panel.hidden,true);
+  assert.equal(x.document.body.style.overflow,'');
+  assert.equal(x.document.activeElement,x.tab);
 });
