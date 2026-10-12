@@ -2204,7 +2204,9 @@ async function guardarArchivoOriginalEnBD() {
 /* ==========================================================================
    BITÁCORA DE ACCESOS
    ========================================================================== */
-async async function cargarBitacoraAccesos(filtroUsuarioId = null) {
+async let secuenciaConsultaBitacora = 0;
+async function cargarBitacoraAccesos(filtroUsuarioId = null) {
+  const secuenciaActual = ++secuenciaConsultaBitacora;
   const tbody = document.getElementById('tablaAccesosBody');
   const selectFiltro = document.getElementById('filtroUsuarioAcceso');
   const cuentasOcultas = [
@@ -2227,6 +2229,7 @@ async async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     selectFiltro.replaceChildren(new Option('Todos los usuarios', 'todos'));
 
     const { data: usrs, error: errorUsuarios } = await sbApp.from('usuarios').select('id, nombre, email').order('nombre', { ascending: true });
+    if (secuenciaActual !== secuenciaConsultaBitacora) return;
     if (!errorUsuarios && usrs) {
       usrs.forEach(u => {
         if (cuentasOcultas.includes((u.email || '').trim().toLowerCase())) return;
@@ -2246,6 +2249,7 @@ async async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     query = query.or('email.is.null,email.not.ilike.' + correo);
   });
   const { data: registros, error, count } = await query;
+  if (secuenciaActual !== secuenciaConsultaBitacora) return;
   if (error) {
     estado('No fue posible consultar la bitácora.');
     if (resumen) resumen.textContent = 'Error al consultar los accesos. No se modificó ningún registro.';
