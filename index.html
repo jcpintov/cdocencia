@@ -531,8 +531,11 @@
         <button id="tabNavMetricas" class="admin-side-btn" onclick="cambiarSubseccionAdmin('metricas')">
           Indicadores y progreso
         </button>
+        <button id="tabNavDoctrinaReglamentos" class="admin-side-btn" type="button" onclick="cambiarSubseccionAdmin('doctrina_reglamentos')">
+          Doctrina y Reglamentos
+        </button>
         <button id="tabNavDoctrinaDocumental" class="admin-side-btn" type="button" onclick="cambiarSubseccionAdmin('doctrina_documental')">
-          Doctrina documental
+          Recepción documental
         </button>
         <button id="tabNavEditorDoctrina" class="admin-side-btn" onclick="cambiarSubseccionAdmin('editor_doctrina')">
           Docencia institucional
@@ -579,6 +582,11 @@
             <h2>Auditoría de participación</h2>
             <p>Examinar accesos por período y ocultar las cuentas de prueba sin eliminar su historial.</p>
             <button type="button" class="admin-link-btn" onclick="cambiarSubseccionAdmin('accesos')">Abrir bitácora</button>
+          </section>
+          <section class="admin-overview-modulo">
+            <h2>Doctrina y Reglamentos</h2>
+            <p>Investigación normativa y doctrinal exclusiva del Superadmin, inicialmente sobre PDF locales.</p>
+            <button type="button" class="admin-link-btn" onclick="cambiarSubseccionAdmin('doctrina_reglamentos')">Abrir análisis doctrinal</button>
           </section>
           <section class="admin-overview-modulo">
             <h2>Docencia institucional</h2>
@@ -788,6 +796,41 @@
       </section>
 
       <!-- RECEPCIÓN PREVIA DE DOCTRINA: METADATOS LOCALES, SIN TRANSFERENCIA DE ARCHIVOS -->
+      <!-- CONSULTA NORMATIVA Y DOCTRINAL: SOLO SUPERADMIN. LECTOR LOCAL, SIN UPLOAD -->
+      <section id="adminSeccionDoctrinaReglamentos" class="card card-trazado hidden" aria-labelledby="tituloDoctrinaReglamentos">
+        <div class="admin-card-header">
+          <div>
+            <p class="admin-overline">Herramienta exclusiva de Superadmin</p>
+            <h2 id="tituloDoctrinaReglamentos">Doctrina y Reglamentos</h2>
+            <p class="text-instruccion">Análisis documental y búsqueda con referencia de página. Esta primera versión consulta únicamente archivos PDF seleccionados en este dispositivo: <strong>no descarga ni publica documentos desde Supabase</strong>.</p>
+          </div>
+        </div>
+        <form id="formConsultaDoctrina" onsubmit="event.preventDefault(); consultarDoctrinaReglamentos()">
+          <div class="doctrina-form-grid">
+            <div class="form-group doctrina-form-wide">
+              <label for="inputConsultaDoctrina">Tema, artículo o consulta</label>
+              <input id="inputConsultaDoctrina" type="search" maxlength="260" autocomplete="off" placeholder="Ej.: docencia y perfeccionamiento moral; iniciación; aumento de salario" required>
+            </div>
+            <div class="form-group doctrina-form-wide">
+              <label for="inputArchivosConsultaDoctrina">Originales PDF para búsqueda local</label>
+              <input id="inputArchivosConsultaDoctrina" type="file" accept=".pdf,application/pdf" multiple>
+              <small>Elige uno o varios PDF; los archivos permanecen en este navegador. Los PDF escaneados sin texto extraíble requieren reconocimiento textual, todavía no disponible.</small>
+            </div>
+          </div>
+          <div class="doctrina-form-actions">
+            <button type="submit" class="btn-primary" id="btnConsultarDoctrina">Buscar en documentos</button>
+            <button type="button" class="btn-secondary" onclick="limpiarConsultaDoctrina()">Limpiar resultados</button>
+            <button type="button" class="btn-secondary" onclick="cambiarSubseccionAdmin('doctrina_documental')">Abrir recepción documental</button>
+          </div>
+        </form>
+        <div class="doctrina-consulta-contexto" aria-live="polite">
+          <strong>Contexto de la consulta</strong>
+          <p id="contextoConsultaDoctrina">Se identificará el grado relacionado con el tema cuando corresponda. No es una restricción de acceso.</p>
+        </div>
+        <p id="estadoConsultaDoctrina" class="text-instruccion" role="status" aria-live="polite">Indica una consulta y selecciona los PDF para buscar en su texto extraíble.</p>
+        <div id="resultadosConsultaDoctrina" class="doctrina-consulta-resultados" aria-label="Resultados documentales"></div>
+      </section>
+
       <section id="adminSeccionDoctrinaDocumental" class="card card-trazado hidden" aria-labelledby="tituloDoctrinaDocumental">
         <div class="admin-card-header">
           <div>
@@ -800,7 +843,7 @@
           <div class="form-group doctrina-form-wide">
             <label for="doctrinaArchivos">Originales por clasificar (PDF, Word, TXT, Markdown)</label>
             <input id="doctrinaArchivos" type="file" accept=".pdf,.doc,.docx,.txt,.md" multiple>
-            <small>Máximo 128 MB por archivo para verificación local. Archivos grandes pueden consumir memoria. Separa los grados y valida cada documento antes de publicarlo.</small>
+            <small>Máximo 128 MB por archivo para verificación local. Archivos grandes pueden consumir memoria. El contexto del grado es solo temático; valida cada documento antes de publicarlo.</small>
           </div>
           <div class="form-group">
             <label for="doctrinaClase">Clase documental</label>
@@ -810,10 +853,13 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="doctrinaGrado">Grado mínimo</label>
-            <select id="doctrinaGrado">
-              <option value="A">Aprendiz (A)</option><option value="C">Compañero (C)</option>
-              <option value="M" selected>Maestro (M)</option><option value="EDMJ">EDMJ — acceso especial</option>
+            <label for="doctrinaContextoGrado">Contexto temático (no regula accesos)</label>
+            <select id="doctrinaContextoGrado">
+              <option value="general" selected>General / transversal</option>
+              <option value="aprendiz">Iniciación y Aprendiz</option>
+              <option value="companero">Aumento y Compañero</option>
+              <option value="maestro">Exaltación y Maestro</option>
+              <option value="mixto">Varios grados</option>
             </select>
           </div>
           <div class="form-group">
