@@ -15,6 +15,8 @@
 
 ## 2. Seguridad ejecutada en Supabase (R7)
 
+Adicionalmente, se limitó `UPDATE` de `public.comentarios_muro` a `contenido`, `editado`, `editado_en` y `activo`. Los clientes no pueden alterar `usuario_id`, `modulo_id`, `progreso_id`, `contenido_original`, `ip_origen`, `creado_en` ni su clave primaria. Comprobada compatibilidad con edición y ocultamiento legacy. **Aún existe riesgo de editar contenido ajeno por políticas antiguas.**
+
 Se revocó `DELETE` directo a `PUBLIC`, `anon`, `authenticated` en:
 `public.progreso_maestro` y `public.comentarios_muro`. La revocación y las lecturas/escrituras legacy conservadas se comprobaron.
 
