@@ -1,7 +1,7 @@
 # CHECKPOINT DE SEGURIDAD — DOCTRINA–DOCENCIA
 
 **Fecha:** 2026-10-12 (Chile). **Checkpoint:** `OFL-DOC-SEC-20261012-R1`.  
-**Repositorio:** `jcpintov/cdocencia`. **Rama:** `fix/roles-enter-20261012`. **Commit de base verificado antes de este checkpoint:** `b42fb76e90b1026ebdf427ef6e27bcb201670003`.  
+**Repositorio:** `jcpintov/cdocencia`. **Rama:** `fix/roles-enter-20261012`. **Commit de base verificado:** `b42fb76e90b1026ebdf427ef6e27bcb201670003`. **Código y pruebas posteriores incluidos hasta:** `63fe1de2576e3180a2bfae01d4753d999245e383`.  
 **No usar `main` como fuente de esta versión ni desplegar a producción.**
 
 ## 1. Mandato y arquitectura
@@ -52,6 +52,8 @@
 - `ui-v2.css`: interfaz Superadmin, indicadores, formulario de fuentes y buscador local responsive.
 - `scripts/validar-manifiesto-doctrina.cjs`: validador sin red de cuarentena y condiciones de admisión.
 - `tests/doctrina-politica.test.cjs`, `tests/doctrina-manifiesto.test.cjs`, `tests/doctrina-ingesta.test.cjs`: regresión de política, manifiestos y carga local.
+- `tests/seguridad-padron.test.cjs` y `tests/seguridad-credenciales.test.cjs`: detección de inyección HTML, conservación de permisos SUPERADMIN, criptografía de contraseñas y privacidad del portapapeles.
+- `app.js`: generación de contraseñas de 16 caracteres con `crypto.getRandomValues`, sin `Math.random`; nunca mostrar la contraseña en una alerta. Protección del exportador doctrinal y limpieza de originales/manifest al cerrar sesión.
 - `docs/CONTRATO_FUNCIONAL_SUPERADMIN_v1.md`, `docs/CONTRATO_FUNCIONAL_USER_MAESTRO_v1.md` y `docs/DOCTRINA_PUERTAS_DE_LIBERACION_v1.md` son la referencia contractual.
 - `docs/DOCTRINA_INGESTA_SEGURA.md` y `docs/DOCTRINA_POLITICA_MAESTROS_20261012.md` documentan la historia y el alcance.
 
@@ -61,7 +63,7 @@
 2. Revisar estos contratos, gates G0–G7 y el presente checkpoint; **no ejecutar migraciones de nuevo sin verificar primero `information_schema` y la tabla `supabase_migrations.schema_migrations`**.
 3. Restaurar los originales desde el archivo del titular `DOCTRINA_ORIGINALES_VIGENTES_LOTE01_20261012.zip`, verificar 19 archivos y SHA-256 del manifiesto vigente. Si falta, solicitar el archivo; no reconstruir contenido desde hashes.
 4. Ejecutar SQL de **solo lectura** para contar los 19 registros y confirmar cuarentena, RLS, 2 sustituciones y Storage=0; no alterar bitácoras.
-5. Ejecutar `node tests/doctrina-politica.test.cjs`, `node tests/doctrina-manifiesto.test.cjs`, `node tests/doctrina-ingesta.test.cjs` en copia local de la rama; resolver fallos antes de desplegar.
+5. Ejecutar `node tests/doctrina-politica.test.cjs`, `node tests/doctrina-manifiesto.test.cjs`, `node tests/doctrina-ingesta.test.cjs`, `node tests/seguridad-padron.test.cjs` y `node tests/seguridad-credenciales.test.cjs` en copia local de la rama; resolver fallos antes de desplegar.
 6. Iniciar nuevo trabajo por autenticación servidor/seguridad RPC, no por publicar contenido o añadir botón USER.
 7. Confirmar Vercel/team/project/branch exactos antes de la vista previa; **no usar `--prod` ni promover despliegues**.
 8. **Nunca** incluir claves Supabase, contraseñas, tokens, archivos reservados en GitHub o despliegues públicos.
