@@ -626,45 +626,45 @@ async function renderizarCatalogoTrabajos() {
   document.getElementById('catalogoContadorModulos').innerText = `${listaModulos.length} temas disponibles`;
 
   const grid = document.getElementById('gridTrabajosBienvenida');
-  grid.innerHTML = "";
+  if (!grid) return;
+  grid.replaceChildren();
+  const crear = (tag, clase, texto, padre) => {
+    const nodo = document.createElement(tag);
+    if (clase) nodo.className = clase;
+    if (texto !== undefined) nodo.textContent = String(texto ?? '');
+    if (padre) padre.appendChild(nodo);
+    return nodo;
+  };
 
   listaModulos.forEach(m => {
     const prog = misProgresos[m.id];
-    let badgeHtml = `<span class="badge-estado badge-pen">Pendiente</span>`;
-    if (prog && prog.completado) {
-      badgeHtml = `<span class="badge-estado badge-ok">✓ Completado</span>`;
-    } else if (prog && prog.leido) {
-      badgeHtml = `<span class="badge-estado" style="background:#FEF3C7;color:#92400E;">En Curso</span>`;
-    }
-
-    const fechaCreacion = m.creado_en 
+    const fechaCreacion = m.creado_en
       ? new Date(m.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
-      : "Consagrado";
-
-    grid.innerHTML += `
-      <div class="card-trabajo-grid">
-        <div>
-          <div class="grid-card-meta">
-            <span class="grid-card-orden">Trabajo N° ${m.numero_orden}</span>
-            <span>📅 ${fechaCreacion}</span>
-          </div>
-          <div class="grid-card-cuerpo">
-            <img class="grid-card-icono" src="imgs/iconos/${obtenerIconoTrabajo(m.titulo)}.webp" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">
-            <div class="grid-card-textos">
-              <h4 class="grid-card-titulo">${m.titulo}</h4>
-              <p class="grid-card-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara de Docencia"}</p>
-            </div>
-          </div>
-          <p class="grid-card-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara de Docencia"}</p>
-        </div>
-        <div class="grid-card-footer">
-          ${badgeHtml}
-          <button class="btn-grid-ir" onclick="entrarADocenciaConModulo('${m.id}')">
-            Ir ➔
-          </button>
-        </div>
-      </div>
-    `;
+      : 'Consagrado';
+    const autor = m.autor ? formatearAutorMasonico(m.autor) : 'Cámara de Docencia';
+    const tarjeta = crear('article', 'card-trabajo-grid', undefined, grid);
+    const cuerpo = crear('div', '', undefined, tarjeta);
+    const metadatos = crear('div', 'grid-card-meta', undefined, cuerpo);
+    crear('span', 'grid-card-orden', 'Trabajo N° ' + (m.numero_orden ?? '—'), metadatos);
+    crear('span', '', fechaCreacion, metadatos);
+    const principal = crear('div', 'grid-card-cuerpo', undefined, cuerpo);
+    const icono = crear('img', 'grid-card-icono', undefined, principal);
+    icono.src = 'imgs/iconos/' + obtenerIconoTrabajo(m.titulo) + '.webp';
+    icono.alt = '';
+    icono.loading = 'lazy';
+    icono.decoding = 'async';
+    icono.addEventListener('error', () => { icono.style.display = 'none'; });
+    const textos = crear('div', 'grid-card-textos', undefined, principal);
+    crear('h4', 'grid-card-titulo', m.titulo || 'Trabajo docente', textos);
+    crear('p', 'grid-card-autor', autor, textos);
+    crear('p', 'grid-card-autor', autor, cuerpo);
+    const pie = crear('div', 'grid-card-footer', undefined, tarjeta);
+    const completado = Boolean(prog?.completado), leido = Boolean(prog?.leido);
+    const badge = crear('span', 'badge-estado ' + (completado ? 'badge-ok' : leido ? 'badge-en-curso' : 'badge-pen'),
+      completado ? 'Completado' : leido ? 'En curso' : 'Pendiente', pie);
+    const entrar = crear('button', 'btn-grid-ir', 'Abrir trabajo', pie);
+    entrar.type = 'button';
+    entrar.addEventListener('click', () => entrarADocenciaConModulo(m.id));
   });
 
   document.getElementById('seccionCatalogoTrabajos').classList.remove('hidden');
