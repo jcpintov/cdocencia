@@ -268,49 +268,12 @@ function aceptarSigilo() {
 }
 
 async function guardarNuevaClaveObligatoria() {
-  const c1 = document.getElementById('nuevaClaveInput').value;
-  const c2 = document.getElementById('repetirClaveInput').value;
-  const err = document.getElementById('errorCambioClave');
-
-  if (c1 !== c2) {
-    err.innerText = "Las contraseñas no coinciden.";
-    return;
-  }
-
-  const falloSeguridad = validarSeguridadClave(c1);
-  if (falloSeguridad) {
-    err.innerText = falloSeguridad;
-    return;
-  }
-
-  err.innerText = "Actualizando su contraseña...";
-
-  try {
-    const { error } = await sbApp.rpc('cambiar_clave_usuario', {
-      p_usuario_id: usuarioActual.id,
-      p_nueva_clave: c1
-    });
-
-    if (error) {
-      err.innerText = "Error: " + error.message;
-      return;
-    }
-
-    usuarioActual.debe_cambiar_clave = false;
-    sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
-
-    document.getElementById('modalCambioClaveObligatorio').classList.add('hidden');
-    const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-    document.getElementById('bienvenidaNombreQH').innerText = `Q.·.H.·. ${nombreLimpio}`;
-    if (usuarioActual.es_admin) {
-      document.getElementById('seccionAdmin').classList.remove('hidden');
-      cargarDatosAdmin();
-    } else {
-      document.getElementById('seccionBienvenida').classList.remove('hidden');
-    }
-  } catch (ex) {
-    err.innerText = "Error: " + ex.message;
-  }
+  const error = document.getElementById('errorCambioClave');
+  const clave = document.getElementById('nuevaClaveInput');
+  const repetir = document.getElementById('repetirClaveInput');
+  if (clave) clave.value = '';
+  if (repetir) repetir.value = '';
+  if (error) error.textContent = 'Cambio de contraseña suspendido temporalmente por seguridad. No se permite continuar con una contraseña provisional hasta activar el reemplazo autenticado.';
 }
 
 function cerrarSesion() {
@@ -366,39 +329,15 @@ function abrirModalCambioClaveUsuario() {
 }
 
 function autogenerarEnInputMiClave() {
-  const p = generarClaveAleatoriaSegura();
-  const input = document.getElementById('inputMiClaveNueva');
-  input.value = p;
-  navigator.clipboard.writeText(p);
-  alert("Contraseña generada y copiada al portapapeles: " + p);
+  const estado = document.getElementById('errorMiCambioClave');
+  if (estado) estado.textContent = 'Generación y cambio de contraseña temporalmente deshabilitados mientras se migra la autenticación.';
 }
 
 async function guardarMiNuevaClave() {
-  const clave = document.getElementById('inputMiClaveNueva').value.trim();
-  const err = document.getElementById('errorMiCambioClave');
-  const fallo = validarSeguridadClave(clave);
-  if (fallo) {
-    err.innerText = fallo;
-    return;
-  }
-
-  err.innerText = "Guardando...";
-
-  try {
-    const { error } = await sbApp.rpc('cambiar_clave_usuario', {
-      p_usuario_id: usuarioActual.id,
-      p_nueva_clave: clave
-    });
-
-    if (error) {
-      err.innerText = "Error: " + error.message;
-    } else {
-      alert("Contraseña actualizada con éxito.");
-      cerrarModalUniversalDirecto('modalCambiarMiClave');
-    }
-  } catch (ex) {
-    err.innerText = "Error: " + ex.message;
-  }
+  const clave = document.getElementById('inputMiClaveNueva');
+  const estado = document.getElementById('errorMiCambioClave');
+  if (clave) clave.value = '';
+  if (estado) estado.textContent = 'Cambio de contraseña suspendido por seguridad. Esta operación requiere Supabase Auth con identidad verificada.';
 }
 
 /* ==========================================================================
@@ -521,78 +460,8 @@ function abrirModalEditarUsuario(id, nombre, email, esAdmin) {
 }
 
 async function guardarAdminUsuario() {
-  const targetId = document.getElementById('adminUsuarioTargetId').value;
-  const nombre = document.getElementById('adminUsuarioNombre').value.trim();
-  const email = document.getElementById('adminUsuarioEmail').value.trim().toLowerCase();
-  const esAdmin = false; // El padrón no puede otorgar privilegios administrativos.
-  const err = document.getElementById('errorAdminUsuario');
-
-  if (!nombre || !email) {
-    err.innerText = "El nombre y el correo son obligatorios.";
-    return;
-  }
-
-  err.innerText = "Guardando...";
-
-  try {
-    if (!targetId) {
-      const clave = document.getElementById('adminUsuarioClave').value.trim();
-      const fallo = validarSeguridadClave(clave);
-      if (fallo) {
-        err.innerText = fallo;
-        return;
-      }
-
-      const { error } = await sbApp.rpc('admin_crear_usuario', {
-        p_admin_id: usuarioActual.id,
-        p_nombre: nombre,
-        p_email: email,
-        p_clave: clave,
-        p_es_admin: esAdmin
-      });
-
-      if (error) {
-        err.innerText = "Error: " + error.message;
-        return;
-      }
-      alert("Usuario incorporado exitosamente.");
-    } else {
-      // Segunda comprobación: impide desactivar accidentalmente a un Superadmin.
-      // Es protección del cliente; el servidor debe reforzar este mismo control.
-      if (targetId === usuarioActual?.id) {
-        err.innerText = 'La cuenta Superadmin no se edita desde este formulario.';
-        return;
-      }
-      const { data: destino, error: errorDestino } = await sbApp
-        .from('usuarios').select('es_admin').eq('id', targetId).single();
-      if (errorDestino || !destino) {
-        err.innerText = 'No se pudo verificar el rol del usuario. No se guardaron cambios.';
-        return;
-      }
-      if (destino.es_admin) {
-        err.innerText = 'Operación cancelada: este formulario no puede modificar cuentas Superadmin.';
-        return;
-      }
-      const { error } = await sbApp.rpc('admin_editar_usuario', {
-        p_admin_id: usuarioActual.id,
-        p_target_id: targetId,
-        p_nombre: nombre,
-        p_email: email,
-        p_es_admin: esAdmin
-      });
-
-      if (error) {
-        err.innerText = "Error: " + error.message;
-        return;
-      }
-      alert("Usuario actualizado exitosamente.");
-    }
-
-    cerrarModalUniversalDirecto('modalAdminUsuario');
-    cargarListadoUsuariosAdmin();
-  } catch (ex) {
-    err.innerText = "Error: " + ex.message;
-  }
+  const estado = document.getElementById('errorAdminUsuario');
+  if (estado) estado.textContent = 'Altas y modificaciones en mantenimiento de seguridad. Los permisos de las funciones antiguas están revocados; no se ha modificado ningún usuario.';
 }
 
 function confirmarEliminarUsuario(targetId, nombre) {
@@ -649,37 +518,10 @@ async function autogenerarAdminClaveHermano() {
 }
 
 async function guardarAdminClaveHermano() {
-  const targetId = document.getElementById('adminTargetHermanoId').value;
-  const clave = document.getElementById('inputAdminClaveHermano').value.trim();
-  const forzar = document.getElementById('chkForzarCambioAdmin').checked;
-  const err = document.getElementById('errorAdminClaveHermano');
-
-  const fallo = validarSeguridadClave(clave);
-  if (fallo) {
-    err.innerText = fallo;
-    return;
-  }
-
-  err.innerText = "Actualizando...";
-
-  try {
-    const { error } = await sbApp.rpc('admin_cambiar_clave', {
-      p_admin_id: usuarioActual.id,
-      p_target_id: targetId,
-      p_nueva_clave: clave,
-      p_forzar_cambio: forzar
-    });
-
-    if (error) {
-      err.innerText = "Error: " + error.message;
-    } else {
-      alert("Contraseña asignada con éxito al Hermano.");
-      cerrarModalUniversalDirecto('modalAdminClaveHermano');
-      cargarListadoUsuariosAdmin();
-    }
-  } catch (ex) {
-    err.innerText = "Error: " + ex.message;
-  }
+  const entrada = document.getElementById('inputAdminClaveHermano');
+  const estado = document.getElementById('errorAdminClaveHermano');
+  if (entrada) entrada.value = '';
+  if (estado) estado.textContent = 'Asignación de contraseñas suspendida. Requiere validación de identidad en Supabase Auth.';
 }
 
 /* ==========================================================================
@@ -692,88 +534,33 @@ function abrirModalRecuperarClave() {
 }
 
 async function enviarSolicitudRecuperacion() {
-  const email = document.getElementById('recuperarEmailInput').value.trim().toLowerCase();
-  const statusMsg = document.getElementById('recuperarStatusMsg');
-
-  if (!email) {
-    statusMsg.innerHTML = `<span style="color: var(--error);">Ingrese su correo electrónico.</span>`;
-    return;
-  }
-
-  statusMsg.innerHTML = "<em>Generando enlace de recuperación...</em>";
-
-  try {
-    const { data: token, error } = await sbApp.rpc('solicitar_recuperacion_clave', {
-      p_email: email
-    });
-
-    if (error || !token) {
-      statusMsg.innerHTML = `<span style="color: var(--error);">El correo no figura registrado en el padrón.</span>`;
-      return;
-    }
-
-    const enlaceReset = `${window.location.origin}${window.location.pathname}?token=${token}`;
-    statusMsg.innerHTML = `
-      <div style="background: rgba(153,120,57,0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--accent-gold); margin-top: 8px;">
-        <p style="margin: 0 0 6px 0; color: var(--success); font-weight: 700;">✓ Enlace de recuperación generado:</p>
-        <a href="${enlaceReset}" style="font-size: 0.8rem; word-break: break-all; color: var(--accent-gold-dark); text-decoration: underline;">
-          ${enlaceReset}
-        </a>
-        <p style="margin: 6px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
-          Haga clic en el enlace para restablecer su contraseña de inmediato (válido por 30 minutos).
-        </p>
-      </div>
-    `;
-  } catch (ex) {
-    statusMsg.innerHTML = `<span style="color: var(--error);">Error al procesar: ${ex.message}</span>`;
-  }
+  const estado = document.getElementById('recuperarStatusMsg');
+  const entrada = document.getElementById('recuperarEmailInput');
+  if (entrada) entrada.value = '';
+  if (estado) estado.textContent = 'La recuperación heredada está deshabilitada por seguridad. No se genera ningún enlace de restablecimiento. La recuperación se reactivará mediante un correo verificado en Supabase Auth.';
 }
 
 function verificarTokenUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get('token');
-  if (token) {
-    tokenRecuperacionActivo = token;
-    document.getElementById('modalResetearConToken').classList.remove('hidden');
-  }
+  // Los tokens antiguos ya no son válidos. No mostrarlos ni copiarlos al DOM.
+  const parametros = new URLSearchParams(window.location.search);
+  if (!parametros.has('token')) return;
+  tokenRecuperacionActivo = null;
+  parametros.delete('token');
+  const query = parametros.toString();
+  const destino = window.location.pathname + (query ? '?' + query : '') + window.location.hash;
+  window.history.replaceState({}, document.title, destino);
+  const error = document.getElementById('errorLogin');
+  if (error) error.textContent = 'Este enlace de recuperación ya no es válido. El restablecimiento seguro está en mantenimiento.';
 }
 
 async function guardarResetConToken() {
-  const c1 = document.getElementById('tokenNuevaClave').value;
-  const c2 = document.getElementById('tokenRepetirClave').value;
-  const err = document.getElementById('errorResetToken');
-
-  if (c1 !== c2) {
-    err.innerText = "Las contraseñas no coinciden.";
-    return;
-  }
-
-  const falloSeguridad = validarSeguridadClave(c1);
-  if (falloSeguridad) {
-    err.innerText = falloSeguridad;
-    return;
-  }
-
-  err.innerText = "Restableciendo contraseña...";
-
-  try {
-    const { error } = await sbApp.rpc('resetear_clave_con_token', {
-      p_token: tokenRecuperacionActivo,
-      p_nueva_clave: c1
-    });
-
-    if (error) {
-      err.innerText = "Error: " + error.message;
-      return;
-    }
-
-    alert("Contraseña restablecida con éxito. Ingrese con sus nuevas credenciales.");
-    window.history.replaceState({}, document.title, window.location.pathname);
-    document.getElementById('modalResetearConToken').classList.add('hidden');
-    tokenRecuperacionActivo = null;
-  } catch (ex) {
-    err.innerText = "Error: " + ex.message;
-  }
+  tokenRecuperacionActivo = null;
+  const entrada = document.getElementById('tokenNuevaClave');
+  const confirmar = document.getElementById('tokenRepetirClave');
+  if (entrada) entrada.value = '';
+  if (confirmar) confirmar.value = '';
+  const error = document.getElementById('errorResetToken');
+  if (error) error.textContent = 'Restablecimiento por token antiguo deshabilitado por seguridad.';
 }
 
 /* ==========================================================================
