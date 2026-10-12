@@ -2191,7 +2191,8 @@ async function prepararLoteDoctrinal() {
   const maximo = 128 * 1024 * 1024; // Soporta el original normativo del lote (~95 MiB) solo para catalogación local.
   const metadatos = {
     clase: document.getElementById('doctrinaClase')?.value || 'doctrina',
-    grado_minimo: document.getElementById('doctrinaGrado')?.value || 'M',
+    grado_minimo: 'M', // Compatibilidad de esquema. TODOS los usuarios son Maestros; NO usar para controlar acceso.
+    contexto_grado: document.getElementById('doctrinaContextoGrado')?.value || 'general',
     clasificacion_acceso: document.getElementById('doctrinaClasificacion')?.value || 'reservado',
     autorizacion_procesamiento_externo: false, // Exige aprobación verificable por documento; nunca heredar autorización del lote.
     autorizacion_externa_solicitada_lote: Boolean(document.getElementById('doctrinaAutorizaExterno')?.checked),
@@ -2274,9 +2275,163 @@ function exportarManifiestoDoctrina() {
     'Manifiesto exportado (solo metadatos y SHA-256). Los archivos originales siguen en el navegador.';
 }
 
+
+/* ==========================================================================
+   DOCTRINA Y REGLAMENTOS — CONSULTA LOCAL SOLO SUPERADMIN
+   El contexto de grado NO controla accesos. No hay conexión a Storage ni LLM.
+   ========================================================================== */
+let secuenciaConsultaDoctrina = 0;
+
+function normalizarConsultaDoctrinal(texto) {
+  return String(texto || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function identificarContextoDoctrinal(consulta) {
+  const texto = normalizarConsultaDoctrinal(consulta);
+  const contextos = [];
+  if (/(^|[^a-z])(iniciacion|iniciado|aprendiz|primer grado|piedra bruta)(?=$|[^a-z])/.test(texto)) {
+    contextos.push('Iniciación / Aprendiz (primer grado)');
+  }
+  if (/(^|[^a-z])(aumento|companero|segundo grado)(?=$|[^a-z])/.test(texto)) {
+    contextos.push('Aumento / Compañero (segundo grado)');
+  }
+  if (/(^|[^a-z])(exaltacion|maestro|maestria|tercer grado|camara del medio)(?=$|[^a-z])/.test(texto)) {
+    contextos.push('Exaltación / Maestro (tercer grado)');
+  }
+  return contextos;
+}
+
+function limpiarConsultaDoctrina() {
+  ++secuenciaConsultaDoctrina;
+  const entrada = document.getElementById('inputConsultaDoctrina');
+  const archivos = document.getElementById('inputArchivosConsultaDoctrina');
+  if (entrada) entrada.value = '';
+  if (archivos) archivos.value = '';
+  const resultados = document.getElementById('resultadosConsultaDoctrina');
+  if (resultados) resultados.replaceChildren();
+  const contexto = document.getElementById('contextoConsultaDoctrina');
+  if (contexto) contexto.textContent = 'Sin una consulta activa. El grado es contexto temático, no un permiso.';
+  const estado = document.getElementById('estadoConsultaDoctrina');
+  if (estado) estado.textContent = 'Selecciona archivos PDF para iniciar una consulta local.';
+  const boton = document.getElementById('btnConsultarDoctrina');
+  if (boton) boton.disabled = false;
+}
+
+async function consultarDoctrinaReglamentos() {
+  if (!usuarioActual?.es_admin) return; // Protección de interfaz: NO reemplaza autorización de servidor.
+  const consulta = document.getElementById('inputConsultaDoctrina')?.value.trim() || '';
+  const archivos = Array.from(document.getElementById('inputArchivosConsultaDoctrina')?.files || []);
+  const contexto = document.getElementById('contextoConsultaDoctrina');
+  const estado = document.getElementById('estadoConsultaDoctrina');
+  const resultados = document.getElementById('resultadosConsultaDoctrina');
+  const boton = document.getElementById('btnConsultarDoctrina');
+  if (!estado || !resultados) return;
+  const secuenciaActual = ++secuenciaConsultaDoctrina;
+  resultados.replaceChildren();
+  const etiquetas = identificarContextoDoctrinal(consulta);
+  if (contexto) contexto.textContent = etiquetas.length
+    ? 'Tema relacionado: ' + etiquetas.join(' · ') + '. Sin restricciones por grado.'
+    : 'Tema transversal / sin grado específico detectado. Todos los usuarios ordinarios son Maestros.';
+  if (consulta.length < 3 || !archivos.length) {
+    estado.textContent = 'Escribe una consulta de al menos tres caracteres y selecciona uno o más PDF.';
+    return;
+  }
+  if (!window.pdfjsLib) {
+    estado.textContent = 'El lector PDF no está disponible. Comprueba la carga de PDF.js.';
+    return;
+  }
+  const palabrasVacias = new Set(['para', 'sobre', 'como', 'donde', 'desde', 'entre', 'hasta', 'esta', 'este', 'esto', 'estos', 'estas', 'aquellos', 'aquellas', 'cuando', 'cual', 'cuales', 'cuanto', 'mas', 'sus', 'con', 'por', 'que', 'del', 'las', 'los', 'una', 'unos', 'unas', 'el', 'la', 'un', 'y', 'o', 'en', 'de', 'al', 'es', 'se', 'su', 'mi']);
+  const palabras = [...new Set(normalizarConsultaDoctrinal(consulta)
+    .split(/[^a-z0-9]+/).filter(p => p.length >= 3 && !palabrasVacias.has(p)))].slice(0, 10);
+  if (!palabras.length) {
+    estado.textContent = 'La consulta debe incluir al menos un término significativo.';
+    return;
+  }
+  if (boton) boton.disabled = true;
+  let totalCoincidencias = 0, paginasExaminadas = 0, documentosSinTexto = 0, documentosAnalizados = 0;
+  const advertencias = [];
+  try {
+    const maxDocs = Math.min(archivos.length, 10);
+    for (const archivo of archivos.slice(0, maxDocs)) {
+      if (secuenciaActual !== secuenciaConsultaDoctrina || !usuarioActual?.es_admin) return;
+      if (!/\.pdf$/i.test(archivo.name) || archivo.size < 1 || archivo.size > 128 * 1024 * 1024) {
+        advertencias.push(archivo.name + ': formato o tamaño no admitido.');
+        continue;
+      }
+      estado.textContent = 'Buscando en ' + archivo.name + ' (sin transferir el archivo)...';
+      let pdf;
+      try {
+        pdf = await window.pdfjsLib.getDocument({data: new Uint8Array(await archivo.arrayBuffer())}).promise;
+        if (secuenciaActual !== secuenciaConsultaDoctrina) return;
+        documentosAnalizados++;
+        let paginasConTexto = 0, coincidenciasArchivo = 0;
+        for (let pagina = 1; pagina <= pdf.numPages; pagina++) {
+          if (secuenciaActual !== secuenciaConsultaDoctrina || !usuarioActual?.es_admin) return;
+          const paginaPdf = await pdf.getPage(pagina);
+          const contenido = await paginaPdf.getTextContent();
+          const textoOriginal = contenido.items.map(i => i.str || '').join(' ').replace(/\s+/g, ' ').trim();
+          paginasExaminadas++;
+          if (!textoOriginal) continue;
+          paginasConTexto++;
+          const textoNormal = normalizarConsultaDoctrinal(textoOriginal);
+          const encontradas = palabras.filter(p => textoNormal.includes(p));
+          if (!encontradas.length) continue;
+          totalCoincidencias++;
+          coincidenciasArchivo++;
+          if (totalCoincidencias <= 35) {
+            const primera = textoNormal.indexOf(encontradas[0]);
+            const inicio = Math.max(0, primera - 130);
+            const resumen = textoOriginal.slice(inicio, inicio + 330);
+            const item = document.createElement('article');
+            item.className = 'doctrina-consulta-hallazgo';
+            const titulo = document.createElement('h3');
+            titulo.textContent = archivo.name + ' · página PDF ' + pagina;
+            const meta = document.createElement('small');
+            meta.textContent = 'Términos detectados: ' + encontradas.join(', ');
+            const pasaje = document.createElement('p');
+            pasaje.textContent = (inicio ? '…' : '') + resumen + (inicio + 330 < textoOriginal.length ? '…' : '');
+            item.append(titulo, meta, pasaje);
+            resultados.appendChild(item);
+          }
+          if (coincidenciasArchivo >= 15) break; // límite de resultados por archivo
+        }
+        if (!paginasConTexto) {
+          documentosSinTexto++;
+          advertencias.push(archivo.name + ': PDF sin texto extraíble; requerirá OCR supervisado.');
+        }
+      } catch (error) {
+        advertencias.push(archivo.name + ': error al interpretar el PDF.');
+        console.error('Lectura PDF doctrinal local:', error);
+      } finally {
+        try { await pdf?.destroy(); } catch (_) {}
+      }
+    }
+    if (secuenciaActual !== secuenciaConsultaDoctrina) return;
+    estado.textContent = documentosAnalizados + ' documento(s) analizado(s), ' +
+      paginasExaminadas + ' páginas examinadas, ' + totalCoincidencias + ' coincidencia(s) por página. ' +
+      (totalCoincidencias > 35 ? 'Se muestran las primeras 35 coincidencias. ' : '') +
+      (documentosSinTexto ? documentosSinTexto + ' PDF sin texto extraíble. ' : '') +
+      (archivos.length > 10 ? 'Se procesaron solo los primeros 10 archivos. ' : '') +
+      (advertencias.length ? 'Observaciones: ' + advertencias.join(' ') : 'Resultados locales, sin publicación ni envío externo.');
+    if (!totalCoincidencias) {
+      const mensaje = document.createElement('p');
+      mensaje.textContent = 'Sin coincidencias textuales. La ausencia de resultados no demuestra que la materia no esté en los documentos.';
+      resultados.appendChild(mensaje);
+    }
+  } finally {
+    if (secuenciaActual === secuenciaConsultaDoctrina && boton) boton.disabled = false;
+  }
+}
+
 function cambiarSubseccionAdmin(seccion) {
-  const btns = ['tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavDoctrinaDocumental', 'tabNavEditorDoctrina', 'tabNavAccesos'];
-  const secs = ['adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionDoctrinaDocumental', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
+  // Control de interfaz únicamente. La autorización de operaciones remotas se valida en servidor.
+  if (!usuarioActual?.es_admin) {
+    document.getElementById('seccionAdmin')?.classList.add('hidden');
+    return;
+  }
+  const btns = ['tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavDoctrinaReglamentos', 'tabNavDoctrinaDocumental', 'tabNavEditorDoctrina', 'tabNavAccesos'];
+  const secs = ['adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionDoctrinaReglamentos', 'adminSeccionDoctrinaDocumental', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
 
   btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
@@ -2303,6 +2458,9 @@ function cambiarSubseccionAdmin(seccion) {
     document.getElementById('tabNavMuroGeneral')?.classList.add('active');
     document.getElementById('adminSeccionMuroGeneral')?.classList.remove('hidden');
     cargarMuroGeneralAdmin();
+  } else if (seccion === 'doctrina_reglamentos') {
+    document.getElementById('tabNavDoctrinaReglamentos')?.classList.add('active');
+    document.getElementById('adminSeccionDoctrinaReglamentos')?.classList.remove('hidden');
   } else if (seccion === 'doctrina_documental') {
     document.getElementById('tabNavDoctrinaDocumental')?.classList.add('active');
     document.getElementById('adminSeccionDoctrinaDocumental')?.classList.remove('hidden');
