@@ -107,6 +107,17 @@
       </div>
       <p class="status" id="estadoEditorAuth" role="status" aria-live="polite">Los originales solo se modificarán después de una confirmación explícita.</p>
     </section>
+    <section id="bitacoraAdminAuth" hidden aria-labelledby="bitacoraAdminTitulo">
+      <h2 id="bitacoraAdminTitulo">Bitácora institucional</h2>
+      <p>Consulta restringida al Superadmin. Los filtros afectan solo la visualización.</p>
+      <div class="actions"><button type="button" id="cargarBitacoraAuth">Consultar accesos</button></div>
+      <div class="qa-filtros-bitacora">
+        <label><input id="ocultarGmailAuth" type="checkbox" checked> Excluir Gmail de la vista</label>
+        <label><input id="ocultarHotmailAuth" type="checkbox" checked> Excluir Hotmail de la vista</label>
+      </div>
+      <p class="status" id="estadoBitacoraAuth" role="status" aria-live="polite">Bitácora no consultada.</p>
+      <div id="bitacoraResumenAuth" aria-label="Resumen de bitácora"></div>
+    </section>
     <p class="disclaimer">Esta prueba no cambia la contraseña del portal heredado. No envía la contraseña a Vercel: la autenticación se realiza directamente con Supabase Auth. El token se mantiene en memoria y no se muestra en pantalla ni se guarda de manera persistente. El acceso a «Doctrina y Reglamentos» continúa cerrado a los usuarios ordinarios.</p>
   </section>
 </main>
