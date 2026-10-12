@@ -2219,7 +2219,10 @@ async async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     td.textContent = mensaje;
   };
   estado('Consultando registros...');
-  if (selectFiltro && selectFiltro.options.length <= 1) {
+  if (selectFiltro) {
+    const seleccionAnterior = selectFiltro.value;
+    selectFiltro.replaceChildren(new Option('Todos los usuarios', 'todos'));
+
     const { data: usrs, error: errorUsuarios } = await sbApp.from('usuarios').select('id, nombre, email').order('nombre', { ascending: true });
     if (!errorUsuarios && usrs) {
       usrs.forEach(u => {
@@ -2227,10 +2230,11 @@ async async function cargarBitacoraAccesos(filtroUsuarioId = null) {
         selectFiltro.add(new Option(u.nombre, u.id));
       });
     }
+    if ([...selectFiltro.options].some(o => o.value === seleccionAnterior)) selectFiltro.value = seleccionAnterior;
   }
   // El filtro se ejecuta antes de limitar la consulta: no se pierden accesos
   // de usuarios por la abundancia de pruebas administrativas.
-  const filtroActual = filtroUsuarioId || selectFiltro?.value || 'todos';
+  const filtroActual = filtroUsuarioId && [...(selectFiltro?.options || [])].some(o => o.value === filtroUsuarioId) ? filtroUsuarioId : (selectFiltro?.value || 'todos');
   let query = sbApp.from('registro_accesos').select('*', { count: 'exact' })
     .order('creado_en', { ascending: false }).limit(100);
   if (filtroActual !== 'todos') query = query.eq('usuario_id', filtroActual);
