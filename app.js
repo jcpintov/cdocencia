@@ -291,7 +291,12 @@ async function guardarNuevaClaveObligatoria() {
     document.getElementById('modalCambioClaveObligatorio').classList.add('hidden');
     const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
     document.getElementById('bienvenidaNombreQH').innerText = `Q.·.H.·. ${nombreLimpio}`;
-    document.getElementById('seccionBienvenida').classList.remove('hidden');
+    if (usuarioActual.es_admin) {
+      document.getElementById('seccionAdmin').classList.remove('hidden');
+      cargarDatosAdmin();
+    } else {
+      document.getElementById('seccionBienvenida').classList.remove('hidden');
+    }
   } catch (ex) {
     err.innerText = "Error: " + ex.message;
   }
