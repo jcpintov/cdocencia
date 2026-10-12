@@ -172,3 +172,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .muro-reserva-docente p{line-height:1.65;margin:0}
 .muro-modulo-pendientes{margin-top:30px;background:#f4f6f8;border:1px dashed #d3dce5;padding:18px;border-radius:7px;display:grid;gap:8px;font-size:.88rem;color:#5b697a}
 @media(max-width:610px){.muro-reflexion-usuario{padding:15px 13px}.muro-modulo-cabecera{align-items:start}.foro-comentar-acciones button{flex:1}}
+
+/* Mantenimiento de credenciales — solo laboratorio hasta migración Auth */
+#seccionAdmin .admin-mantenimiento-alerta{display:grid;gap:8px;background:#fffaf2;border:1px solid #ddc8a5;border-left:4px solid #b47d45;border-radius:8px;padding:15px 19px;margin-bottom:22px;color:#534634;line-height:1.55}
+#seccionAdmin .admin-mantenimiento-alerta strong{font-size:.92rem;color:#6b4825}
+#seccionAdmin .admin-mantenimiento-alerta p{font-size:.85rem;margin:0;max-width:850px}
+#seccionAdmin .admin-mantenimiento-alerta a{color:#754a20;font-size:.85rem;font-weight:700;text-underline-offset:3px;width:fit-content}
+#seccionAdmin .admin-mantenimiento-alerta a:focus-visible{outline:2px solid #b47d45;outline-offset:3px}
+#seccionAdmin button:disabled{cursor:not-allowed;opacity:.58}
