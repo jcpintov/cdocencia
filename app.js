@@ -303,6 +303,9 @@ async function guardarNuevaClaveObligatoria() {
 }
 
 function cerrarSesion() {
+  // Limpiar información doctrinal local y cancelar extracciones pendientes antes de ceder la sesión.
+  limpiarRecepcionDoctrina(true);
+  limpiarConsultaDoctrina();
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
   if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
   usuarioActual = null;
@@ -2184,11 +2187,23 @@ async function cargarResumenSuperadmin() {
 let manifiestoDoctrinaPendiente = [];
 let secuenciaRecepcionDoctrina = 0;
 
-function limpiarRecepcionDoctrina() {
+function limpiarRecepcionDoctrina(limpiarMetadatos = false) {
   ++secuenciaRecepcionDoctrina;
   manifiestoDoctrinaPendiente = [];
   const input = document.getElementById('doctrinaArchivos');
   if (input) input.value = '';
+  if (limpiarMetadatos) {
+    const ids = ['doctrinaEmisorAutor','doctrinaInstitucion','doctrinaReferenciaFuente',
+      'doctrinaEdicion','doctrinaFechaFuente','doctrinaFundamento','doctrinaDerechos','doctrinaReferencia'];
+    ids.forEach(id => {
+      const nodo = document.getElementById(id);
+      if (nodo) nodo.value = '';
+    });
+    const tipo = document.getElementById('doctrinaFuenteTipo');
+    if (tipo) tipo.value = '';
+    const externo = document.getElementById('doctrinaAutorizaExterno');
+    if (externo) externo.checked = false;
+  }
   const tabla = document.getElementById('tablaRecepcionDoctrina');
   if (tabla) {
     tabla.replaceChildren();
@@ -2330,6 +2345,7 @@ async function prepararLoteDoctrinal() {
 }
 
 function exportarManifiestoDoctrina() {
+  if (!usuarioActual?.es_admin) return;
   if (!manifiestoDoctrinaPendiente.length) {
     document.getElementById('estadoRecepcionDoctrina').textContent = 'Prepara archivos válidos antes de exportar.';
     return;
