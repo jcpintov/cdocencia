@@ -2730,33 +2730,68 @@ function modificarPuntosMesa(mesaId, delta) {
    GESTIÓN DIRECTA DE TRABAJOS
    ========================================================================== */
 async function cargarGestionTrabajosAdmin() {
+  if (!usuarioActual?.es_admin) return;
   const cont = document.getElementById('listaGestionTrabajosAdmin');
-  cont.innerHTML = "<p class='td-loading'>Cargando trabajos...</p>";
+  if (!cont) return;
+  cont.replaceChildren();
+  const cargando = document.createElement('p');
+  cargando.className = 'td-loading';
+  cargando.textContent = 'Cargando trabajos...';
+  cont.appendChild(cargando);
 
-  const { data: mods } = await sbApp
+  const { data: mods, error } = await sbApp
     .from('modulos')
-    .select('*')
+    .select('id, numero_orden, titulo, autor, activo, contenido_trazado')
     .eq('activo', true)
     .order('numero_orden', { ascending: true });
 
+  if (!usuarioActual?.es_admin) return;
+  cont.replaceChildren();
+  if (error) {
+    const fallo = document.createElement('p');
+    fallo.className = 'text-instruccion';
+    fallo.textContent = 'No fue posible obtener los trabajos.';
+    cont.appendChild(fallo);
+    return;
+  }
   listaModulos = mods || [];
-  cont.innerHTML = "";
-
   listaModulos.forEach(m => {
-    cont.innerHTML += `
-      <div class="card card-gestion-trabajo">
-        <div class="gestion-trabajo-info">
-          <span class="gestion-trabajo-orden">TRABAJO N° ${m.numero_orden}</span>
-          <h4 class="gestion-trabajo-titulo">${m.titulo}</h4>
-          <p class="gestion-trabajo-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara de Docencia"}</p>
-        </div>
-        <div class="gestion-trabajo-botones">
-          <button class="admin-link-btn" onclick="abrirAuditoriaModulo('${m.id}')">🔍 Auditar / Editar 8 Preguntas</button>
-          <button class="admin-link-btn btn-eliminar-trabajo" onclick="eliminarModuloYReordenar('${m.id}')">🗑️ Eliminar</button>
-        </div>
-      </div>
-    `;
+    const card = document.createElement('article');
+    card.className = 'card card-gestion-trabajo';
+    const info = document.createElement('div');
+    info.className = 'gestion-trabajo-info';
+    const orden = document.createElement('span');
+    orden.className = 'gestion-trabajo-orden';
+    orden.textContent = 'TRABAJO N° ' + (m.numero_orden ?? '—');
+    const titulo = document.createElement('h4');
+    titulo.className = 'gestion-trabajo-titulo';
+    titulo.textContent = m.titulo || 'Trabajo docente';
+    const autor = document.createElement('p');
+    autor.className = 'gestion-trabajo-autor';
+    autor.textContent = m.autor ? formatearAutorMasonico(m.autor) : 'Cámara de Docencia';
+    info.append(orden, titulo, autor);
+
+    const acciones = document.createElement('div');
+    acciones.className = 'gestion-trabajo-botones';
+    const crearBoton = (texto, clase, callback) => {
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'admin-link-btn' + (clase ? ' ' + clase : '');
+      boton.textContent = texto;
+      boton.addEventListener('click', callback);
+      acciones.appendChild(boton);
+    };
+    crearBoton('Auditar y editar preguntas', '', () => abrirAuditoriaModulo(m.id));
+    crearBoton('Eliminar trabajo', 'btn-eliminar-trabajo', () => eliminarModuloYReordenar(m.id));
+    card.append(info, acciones);
+    cont.appendChild(card);
   });
+  if (!listaModulos.length) {
+    const aviso = document.createElement('p');
+    aviso.className = 'text-instruccion';
+    aviso.textContent = 'No hay trabajos activos en el catálogo.';
+    cont.appendChild(aviso);
+  }
 }
 
 function abrirAuditoriaModulo(moduloId) {
