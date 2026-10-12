@@ -19,3 +19,6 @@ test('probe refuses absent environment',async()=>assert.rejects(runSmtpProbe({en
 
 test('probe refuses missing SMTP password',async()=>assert.rejects(runSmtpProbe({env:{...env,SMTP_PASSWORD:''},createTransport:()=>({sendMail:async()=>{}})})));
 test('probe refuses insecure SMTP transport',async()=>assert.rejects(runSmtpProbe({env:{...env,SMTP_SECURE:'false'},createTransport:()=>({sendMail:async()=>{}})})));
+
+test('probe refuses altered SMTP host',async()=>assert.rejects(runSmtpProbe({env:{...env,SMTP_HOST:'example.invalid'},createTransport:()=>({sendMail:async()=>{}})})));
+test('probe refuses altered sender identity',async()=>assert.rejects(runSmtpProbe({env:{...env,SMTP_FROM:'other@example.com'},createTransport:()=>({sendMail:async()=>{}})})));
