@@ -46,5 +46,10 @@ jobs:
           node --check doctrina/superadmin/auth-login.js
       - name: Pruebas de seguridad de Superadmin
         run: node --test doctrina/superadmin/tests/*.test.cjs
+      - name: Validar sintaxis de componentes SMTP privados
+        run: |
+          node --check doctrina/security/smtp-ofl-adapter.cjs
+          node --check doctrina/security/smtp-probe-preview.cjs
+          node --check doctrina/security/smtp-probe-runner.cjs
       - name: Pruebas de contrato de recuperación de Docencia
         run: node --test doctrina/security/tests/*.test.cjs
