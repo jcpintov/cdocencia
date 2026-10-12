@@ -36,7 +36,24 @@
     close.addEventListener('click',hide);
     modal.addEventListener('click',e=>{if(e.target===modal)hide();});
     modal.addEventListener('keydown',e=>{if(e.key==='Escape')hide();if(e.key==='Tab'){const focusable=[close,email,send];const i=focusable.indexOf(document.activeElement);if(e.shiftKey&&i===0){e.preventDefault();send.focus();}else if(!e.shiftKey&&i===2){e.preventDefault();close.focus();}}});
-    triggers.forEach(button=>button.addEventListener('click',async()=>{const client=typeof sbApp!=='undefined'?sbApp:null;try{const {data,error}=await client.auth.getUser();if(!error&&data?.user?.email?.toLowerCase()==='jpintov@gmail.com'){status.textContent='Sesión institucional activa. Abra el panel Doctrina para continuar.';modal.hidden=false;email.focus();return;}}catch(_){}modal.hidden=false;email.focus();}));
+    triggers.forEach(button=>button.addEventListener('click',async()=>{
+      const client=typeof sbApp!=='undefined'?sbApp:null;
+      if(client?.auth?.getUser){
+        try{
+          const {data,error}=await client.auth.getUser();
+          if(!error&&data?.user?.email?.toLowerCase()==='jpintov@gmail.com'){
+            const shell=window.DoctrinaSuperadminShell;
+            if(button.id==='doctrina-auth-login'&&shell?.refreshFromSupabase&&shell?.open){
+              // Reusar la sesión vigente únicamente después de autorizar de nuevo en servidor.
+              if(await shell.refreshFromSupabase(client)&&shell.open()){modal.hidden=true;return;}
+            }
+            status.textContent='La sesión institucional ya está activa. El acceso al gobierno Doctrina requiere autorización del servidor y no solicita otra cuenta.';
+            modal.hidden=false;email.focus();return;
+          }
+        }catch(_){/* Fallo cerrado; no se asume autorización. */}
+      }
+      status.textContent='';modal.hidden=false;email.focus();
+    }));
     form.append(label,send,status);dialog.append(close,mark,eyebrow,title,desc,form,foot);modal.append(dialog);document.body.append(modal);
     form.addEventListener('submit',async function(event){
       event.preventDefault();
