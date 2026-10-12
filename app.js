@@ -465,27 +465,12 @@ async function guardarAdminUsuario() {
 }
 
 function confirmarEliminarUsuario(targetId, nombre) {
-  abrirModalConfirmacion(
-    "Eliminar Usuario del Padrón",
-    `¿Está seguro de eliminar al usuario "${nombre}"? Esta acción borrará permanentemente sus accesos y progresos registrados.`,
-    async () => {
-      try {
-        const { error } = await sbApp.rpc('admin_eliminar_usuario', {
-          p_admin_id: usuarioActual.id,
-          p_target_id: targetId
-        });
-
-        if (error) {
-          alert("Error al eliminar: " + error.message);
-        } else {
-          alert("Usuario eliminado correctamente.");
-          cargarListadoUsuariosAdmin();
-        }
-      } catch (ex) {
-        alert("Error de conexión: " + ex.message);
-      }
-    }
-  );
+  const aviso = 'La eliminación de usuarios está suspendida mientras se completa la migración a Supabase Auth. No se ha eliminado ningún registro.';
+  // La ruta legacy carece de autorización verificada; no solicitar confirmación
+  // de una operación que el servidor no permitirá ejecutar.
+  const estado = document.getElementById('resumenSuperadminEstado');
+  if (estado) estado.textContent = aviso;
+  alert(aviso);
 }
 
 function abrirModalAdminClaveHermano(targetId, nombreHermano) {
