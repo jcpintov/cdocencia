@@ -166,9 +166,9 @@
         </div>
       </div>
 
-      <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 10px;">
+      <div class="form-group hidden" aria-hidden="true" style="display: none !important;">
         <input type="checkbox" id="adminUsuarioEsAdmin" style="width: 18px; height: 18px; cursor: pointer;">
-        <label for="adminUsuarioEsAdmin" style="margin: 0; cursor: pointer; font-weight: 600;">Asignar Privilegios de Superadmin</label>
+        <label for="adminUsuarioEsAdmin" style="margin: 0; cursor: pointer; font-weight: 600;">Permiso administrativo heredado (no editable)</label>
       </div>
 
       <p id="errorAdminUsuario" class="error-msg" style="text-align: left; margin-bottom: 12px;"></p>
@@ -1032,5 +1032,20 @@
 
   <script src="app.js"></script>
   <script src="ui-v2.js" defer></script>
+<script>
+/* Enter confirma el botón principal de un diálogo visible; el login usa submit nativo. */
+document.addEventListener('keydown', function(event) {
+  if (event.key !== 'Enter' || event.repeat || event.isComposing || event.defaultPrevented) return;
+  const target = event.target;
+  if (target && (target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
+  const modal = Array.from(document.querySelectorAll('.modal-overlay')).find(
+    node => !node.classList.contains('hidden') && getComputedStyle(node).display !== 'none'
+  );
+  if (!modal) return;
+  if (target && (target.tagName === 'BUTTON' || target.tagName === 'A')) return;
+  const action = modal.querySelector('button.btn-primary:not([disabled])');
+  if (action) { event.preventDefault(); action.click(); }
+});
+</script>
 </body>
 </html>
