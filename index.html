@@ -768,6 +768,12 @@
             <p class="text-instruccion" style="margin: 0;">Registro cronológico de ingresos con marca de tiempo e IP.</p>
           </div>
           <div class="admin-header-actions">
+            <label for="periodoBitacora">Período:</label>
+            <select id="periodoBitacora" name="periodoBitacora" onchange="cargarBitacoraAccesos()">
+              <option value="todo">Histórico completo</option>
+              <option value="7">Últimos 7 días</option>
+              <option value="30">Últimos 30 días</option>
+            </select>
             <label for="filtroUsuarioAcceso">Filtrar Hermano:</label>
             <select id="filtroUsuarioAcceso" name="filtroUsuarioAcceso" onchange="cargarBitacoraAccesos(this.value)">
               <option value="todos">Todos los usuarios</option>
@@ -777,6 +783,28 @@
           </div>
         </div>
 
+        <div class="bitacora-kpis" role="group" aria-label="Indicadores de accesos">
+          <article class="bitacora-kpi">
+            <span>Accesos en período</span>
+            <strong id="kpiBitacoraAccesos" aria-live="polite">—</strong>
+            <small>Recuento exacto de accesos visibles</small>
+          </article>
+          <article class="bitacora-kpi">
+            <span>Usuarios distintos</span>
+            <strong id="kpiBitacoraUsuarios" aria-live="polite">—</strong>
+            <small id="kpiBitacoraUsuariosNota">Calculado sobre los 100 accesos mostrados</small>
+          </article>
+          <article class="bitacora-kpi">
+            <span>Último acceso</span>
+            <strong id="kpiBitacoraUltimo" aria-live="polite">—</strong>
+            <small>Fecha del ingreso visible más reciente</small>
+          </article>
+          <article class="bitacora-kpi">
+            <span>Cuentas ocultas</span>
+            <strong id="kpiBitacoraOcultas" aria-live="polite">2</strong>
+            <small>Excluidas del informe, conservadas en origen</small>
+          </article>
+        </div>
         <p id="resumenBitacoraAccesos" class="text-instruccion" aria-live="polite">Los registros administrativos se conservan y pueden ocultarse del informe.</p>
         <div class="table-responsive">
           <table class="metricas-table">
