@@ -193,3 +193,13 @@
   #seccionAdmin .admin-workspace-header{padding:22px 20px;border-radius:13px}
   #seccionAdmin .admin-workspace-meta{gap:7px}
 }
+
+/* Fondo real de diálogo, aislado de Docencia; botón disparador en #seccionAdmin. */
+#doctrina-superadmin-backdrop[hidden]{display:none!important}
+#doctrina-superadmin-backdrop{
+  position:fixed;inset:0;z-index:9009;background:rgba(8,20,32,.77);
+  backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)
+}
+@media(prefers-reduced-transparency:reduce){
+  #doctrina-superadmin-backdrop{backdrop-filter:none;-webkit-backdrop-filter:none}
+}
