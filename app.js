@@ -2207,9 +2207,12 @@ async function guardarArchivoOriginalEnBD() {
 async async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   const tbody = document.getElementById('tablaAccesosBody');
   const selectFiltro = document.getElementById('filtroUsuarioAcceso');
-  const ocultarAdmin = document.getElementById('ocultarAdminBitacora')?.checked ?? true;
+  const cuentasOcultas = [
+    document.getElementById('ocultarGmailBitacora')?.checked ? 'jpintov@gmail.com' : null,
+    document.getElementById('ocultarHotmailBitacora')?.checked ? 'jpintov@hotmail.com' : null
+  ].filter(Boolean);
   const resumen = document.getElementById('resumenBitacoraAccesos');
-  const correosAdmin = ['jpintov@gmail.com', 'jpintov@hotmail.com'];
+
   tbody.replaceChildren();
   const estado = (mensaje) => {
     tbody.replaceChildren();
@@ -2226,7 +2229,7 @@ async async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     const { data: usrs, error: errorUsuarios } = await sbApp.from('usuarios').select('id, nombre, email').order('nombre', { ascending: true });
     if (!errorUsuarios && usrs) {
       usrs.forEach(u => {
-        if (ocultarAdmin && correosAdmin.includes((u.email || '').trim().toLowerCase())) return;
+        if (cuentasOcultas.includes((u.email || '').trim().toLowerCase())) return;
         selectFiltro.add(new Option(u.nombre, u.id));
       });
     }
@@ -2238,12 +2241,10 @@ async async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   let query = sbApp.from('registro_accesos').select('*', { count: 'exact' })
     .order('creado_en', { ascending: false }).limit(100);
   if (filtroActual !== 'todos') query = query.eq('usuario_id', filtroActual);
-  if (ocultarAdmin) {
-    // Excluir por identidad de correo de forma insensible a mayúsculas.
-    // Los registros sin correo permanecen visibles para auditoría.
-    query = query.or('email.is.null,email.not.ilike.jpintov@gmail.com')
-      .or('email.is.null,email.not.ilike.jpintov@hotmail.com');
-  }
+  // Cada exclusión se aplica independientemente, antes del límite de 100.
+  cuentasOcultas.forEach(correo => {
+    query = query.or('email.is.null,email.not.ilike.' + correo);
+  });
   const { data: registros, error, count } = await query;
   if (error) {
     estado('No fue posible consultar la bitácora.');
@@ -2251,7 +2252,7 @@ async async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     console.error('Error de bitácora:', error);
     return;
   }
-  if (resumen) resumen.textContent = (ocultarAdmin ? 'Estadística de usuarios · administradores excluidos de la vista. ' : 'Vista completa · incluye accesos administrativos. ') +
+  if (resumen) resumen.textContent = (cuentasOcultas.length ? 'Cuentas ocultas: ' + cuentasOcultas.join(', ') + '. ' : 'Vista completa · sin cuentas ocultas. ') +
     (count ?? 0) + ' accesos coincidentes; mostrando hasta 100 registros recientes. Los datos históricos permanecen intactos.';
   if (!registros?.length) { estado('No hay ingresos registrados para el criterio seleccionado.'); return; }
   tbody.replaceChildren();
