@@ -136,3 +136,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 #adminSeccionDoctrinaReglamentos .doctrina-consulta-hallazgo small{font-size:.76rem;color:#97693f;line-height:1.5}
 #adminSeccionDoctrinaReglamentos .doctrina-consulta-hallazgo p{margin:11px 0 0;font-size:.88rem;line-height:1.72;color:#52667a;white-space:normal;overflow-wrap:anywhere}
 @media(max-width:620px){#adminSeccionDoctrinaReglamentos .doctrina-form-actions button{width:100%}}
+
+/* Procedencia editorial verificada únicamente por revisión humana */
+#adminSeccionDoctrinaDocumental .form-group textarea{width:100%;min-height:92px;resize:vertical;display:block;line-height:1.55;border:1px solid #d7e0e8;border-radius:9px;padding:11px 12px;background:#fff;color:#26394b;font:inherit}
+#adminSeccionDoctrinaDocumental .form-group textarea:focus-visible,#adminSeccionDoctrinaDocumental .form-group input:focus-visible,#adminSeccionDoctrinaDocumental .form-group select:focus-visible{outline:2px solid #a8794d;outline-offset:2px}
+#adminSeccionDoctrinaDocumental .form-group [required]{border-inline-start:3px solid #ba8959}
+#adminSeccionDoctrinaDocumental .form-group .text-instruccion{font-size:.87rem;line-height:1.65;padding:12px 14px;border-radius:8px;background:#f3f5f7;color:#4e6175}
