@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Laboratorio de seguridad · Doctrina–Docencia</title>
+  <style>
+    :root{color-scheme:light;font-family:Inter,ui-sans-serif,system-ui,sans-serif}
+    *{box-sizing:border-box}body{margin:0;background:#f2f5f7;color:#263e53}
+    main{max-width:730px;margin:55px auto;padding:0 20px}
+    header{background:#1d3347;color:#fff;border-radius:14px 14px 0 0;padding:29px 34px}
+    header p{color:#d5b38f;margin-bottom:8px;font-size:.82rem;letter-spacing:.07em;text-transform:uppercase}
+    h1{font:500 2rem Georgia,serif;margin:0 0 10px}header small{line-height:1.65;color:#d8e0e6}
+    section{background:#fff;border:1px solid #dce3e9;padding:28px 34px}
+    .panel{border-radius:0 0 14px 14px}.campos{display:grid;gap:16px}
+    label{display:block;font-weight:640;font-size:.9rem;margin-bottom:7px}
+    input,select{width:100%;border:1px solid #bfcbd5;padding:11px;border-radius:8px;font:inherit}
+    input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid #aa794d;outline-offset:2px}
+    button{border:0;background:#1e3b54;color:#fff;font:inherit;font-weight:650;border-radius:8px;padding:11px 18px;cursor:pointer}
+    button.secondary{background:#eef2f5;border:1px solid #cbd4db;color:#284357}
+    button:disabled{opacity:.5;cursor:wait}.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:20px}
+    .status{margin:22px 0 0;padding:13px;background:#f6f8fa;border-left:3px solid #b48c65;line-height:1.6;border-radius:0 7px 7px 0}
+    dl{display:grid;grid-template-columns:170px 1fr;gap:10px;margin:20px 0 0}dt{color:#607489}dd{margin:0;font-weight:650;overflow-wrap:anywhere}
+    .disclaimer{font-size:.83rem;color:#5e6e7a;line-height:1.7;margin:20px 0}
+    [hidden]{display:none!important}@media(max-width:600px){main{margin:16px auto}header,section{padding:24px 18px}dl{grid-template-columns:1fr;gap:4px}}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.10/dist/umd/supabase.min.js" defer></script>
+</head>
+<body>
+<main>
+  <header>
+    <p>OFL 146 · Doctrina–Docencia</p>
+    <h1>Control de identidad y privilegios</h1>
+    <small>Laboratorio aislado de interfaz. Los permisos son determinados en Supabase Auth y PostgreSQL. No modifica perfiles ni documentos.</small>
+  </header>
+  <section class="panel">
+    <form id="form" autocomplete="on">
+      <div class="campos">
+        <div><label for="account">Cuenta de prueba</label>
+          <select id="account" required>
+            <option value="jpintov@gmail.com">Gmail · perfil SUPERADMIN</option>
+            <option value="jpintov@hotmail.com">Hotmail · perfil USER / Maestro</option>
+          </select>
+        </div>
+        <div><label for="password">Contraseña de Supabase Auth</label>
+          <input id="password" type="password" autocomplete="current-password" minlength="6" required>
+        </div>
+      </div>
+      <div class="actions">
+        <button type="submit" id="verify">Verificar identidad</button>
+        <button class="secondary" type="button" id="logout" disabled>Cerrar sesión de prueba</button>
+      </div>
+    </form>
+    <p class="status" id="status" role="status" aria-live="polite">Sin sesión de prueba. Utiliza la contraseña creada en Supabase Auth para la cuenta seleccionada.</p>
+    <dl id="result" hidden>
+      <dt>Identidad confirmada</dt><dd id="confirmed">—</dd>
+      <dt>Rol validado</dt><dd id="role">—</dd>
+      <dt>Administración</dt><dd id="permissions">—</dd>
+    </dl>
+    <p class="disclaimer">Esta prueba no cambia la contraseña del portal heredado. No envía la contraseña a Vercel: la autenticación se realiza directamente con Supabase Auth. El token se mantiene en memoria y no se muestra en pantalla ni se guarda de manera persistente. El acceso a «Doctrina y Reglamentos» continúa cerrado a los usuarios ordinarios.</p>
+  </section>
+</main>
+<script>
+(() => {
+  'use strict';
+  const SUPABASE_URL='https://pwnnpjygnviyzyyvfxnq.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY='sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF';
+  let client=null, busy=false;
+  const el=id=>document.getElementById(id);
+  const status=texto=>{el('status').textContent=texto};
+  const show=(role)=>{
+    el('result').hidden=!role;
+    el('confirmed').textContent=role?'Sí':'—';
+    el('role').textContent=role||'—';
+    el('permissions').textContent=role==='SUPERADMIN'
+      ? 'Administración autorizada por identidad (operaciones en mantenimiento)'
+      : role==='USER'?'Solo funciones de Maestro; sin administración':'—';
+  };
+  const setBusy=valor=>{
+    busy=valor;el('verify').disabled=valor;
+    el('logout').disabled=valor||!client;el('account').disabled=valor;
+  };
+  async function signOut(){
+    try{if(client)await client.auth.signOut({scope:'local'})}
+    finally{client=null;el('password').value='';show(null);el('logout').disabled=true}
+  }
+  el('form').addEventListener('submit',async event=>{
+    event.preventDefault();
+    if(busy)return;
+    if(!window.supabase?.createClient){status('El módulo seguro de autenticación no está disponible.');return}
+    const email=el('account').value;
+    if(!['jpintov@gmail.com','jpintov@hotmail.com'].includes(email)){status('Cuenta de prueba no autorizada.');return}
+    const password=el('password').value;
+    setBusy(true);show(null);
+    try{
+      if(client)await client.auth.signOut({scope:'local'});
+      client=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY,{
+        auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false}
+      });
+      status('Verificando credenciales con Supabase Auth...');
+      const {data,error}=await client.auth.signInWithPassword({email,password});
+      el('password').value='';
+      if(error||!data?.session?.access_token){status('No se pudo iniciar sesión con Supabase Auth. Comprueba las credenciales.');return}
+      const response=await fetch('/api/security/session',{
+        method:'GET',cache:'no-store',
+        headers:{Authorization:'Bearer '+data.session.access_token}
+      });
+      const profile=await response.json().catch(()=>({}));
+      if(!response.ok||!['SUPERADMIN','USER'].includes(profile.role)){
+        status(response.status===503?'Servidor de verificación pendiente de configuración.':
+          'La sesión fue autenticada, pero no se autorizó el perfil institucional.');
+        return;
+      }
+      show(profile.role);
+      const expected=email.endsWith('@gmail.com')?'SUPERADMIN':'USER';
+      status(profile.role===expected
+        ? 'Comprobación correcta: la identidad y el rol coinciden con la política.'
+        : 'ALERTA: el rol no coincide con el perfil esperado. No continúes con las pruebas.');
+    }catch(_){status('Error de comunicación. No se ha modificado ningún usuario.')}
+    finally{el('password').value='';setBusy(false);el('logout').disabled=!client}
+  });
+  el('logout').addEventListener('click',async()=>{await signOut();status('Sesión de prueba cerrada.');});
+  window.addEventListener('pagehide',()=>{if(client)client.auth.signOut({scope:'local'}).catch(()=>{})});
+})();
+</script>
+</body>
+</html>
