@@ -176,10 +176,20 @@
   const SUPABASE_URL='https://pwnnpjygnviyzyyvfxnq.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY='sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF';
   let client=null, busy=false, trabajos=[], guardandoTrabajo=false, accesosBitacora=[];
+  let misProgresosAuth=[], catalogoMiDocencia=[], comentarioEditandoId=null, operacionDocencia=false;
   const el=id=>document.getElementById(id);
   const status=texto=>{el('status').textContent=texto};
   const show=(role)=>{
     el('result').hidden=!role;
+    el('panelDocenciaAuth').hidden=!role;
+    el('interaccionMiDocenciaAuth').hidden=true;
+    el('selectTrabajoMiDocenciaAuth').replaceChildren();
+    el('resumenMiDocenciaAuth').replaceChildren();
+    el('listaComentariosMiDocenciaAuth').replaceChildren();
+    el('contenidoComentarioAuth').value='';
+    el('estadoMiDocenciaAuth').textContent='Sin consulta activa.';
+    misProgresosAuth=[];catalogoMiDocencia=[];
+    comentarioEditandoId=null;operacionDocencia=false;
     el('padronSuperadminLab').hidden=role!=='SUPERADMIN';
     el('editorDocenteAuth').hidden=role!=='SUPERADMIN';
     el('bitacoraAdminAuth').hidden=role!=='SUPERADMIN';
@@ -474,6 +484,171 @@
   });
   el('ocultarGmailAuth').addEventListener('change',pintarResumenBitacora);
   el('ocultarHotmailAuth').addEventListener('change',pintarResumenBitacora);
+
+
+  function obtenerTrabajoMiDocencia(){
+    const id=el('selectTrabajoMiDocenciaAuth').value;
+    const progreso=misProgresosAuth.find(p=>p.modulo_id===id);
+    const modulo=catalogoMiDocencia.find(m=>m.modulo_id===id);
+    return {id,progreso,modulo};
+  }
+  function cancelarEdicionMiDocencia(){
+    comentarioEditandoId=null;
+    el('contenidoComentarioAuth').value='';
+    el('cancelarEdicionComentarioAuth').hidden=true;
+    el('guardarComentarioAuth').textContent='Publicar comentario — con confirmación';
+    el('modoComentarioAuth').textContent=
+      'Solo podrá comentar los trabajos que haya completado. La publicación exige confirmación.';
+  }
+  function panelKpiDocencia(titulo,valor){
+    const bloque=document.createElement('div');
+    bloque.className='mi-docencia-kpi';
+    const numero=document.createElement('strong');
+    numero.textContent=String(valor);
+    const etiqueta=document.createElement('span');
+    etiqueta.textContent=titulo;
+    bloque.append(numero,etiqueta);
+    el('resumenMiDocenciaAuth').appendChild(bloque);
+  }
+  async function verificarIdentidadDocencia(){
+    if(!client||!['USER','SUPERADMIN'].includes(el('role').textContent))return false;
+    const {data,error}=await client.rpc('maestro_identidad_actual');
+    return !error&&data?.length===1&&data[0].rol===el('role').textContent;
+  }
+  el('cargarMiDocenciaAuth').addEventListener('click',async()=>{
+    if(busy||operacionDocencia||!client)return;
+    const actual=client, boton=el('cargarMiDocenciaAuth'), estado=el('estadoMiDocenciaAuth');
+    boton.disabled=true;estado.textContent='Consultando exclusivamente avances de esta identidad...';
+    try{
+      if(!await verificarIdentidadDocencia())throw new Error('not_authorized');
+      const [rp,rm]=await Promise.all([
+        actual.rpc('maestro_mis_progresos'),
+        actual.rpc('maestro_modulos_activos')
+      ]);
+      if(actual!==client)return;
+      if(rp.error||rm.error||!Array.isArray(rp.data)||!Array.isArray(rm.data))
+        throw new Error('read_error');
+      misProgresosAuth=rp.data;
+      catalogoMiDocencia=rm.data;
+      const select=el('selectTrabajoMiDocenciaAuth');
+      select.replaceChildren();
+      for(const m of catalogoMiDocencia){
+        const op=document.createElement('option');
+        op.value=m.modulo_id;
+        op.textContent='Trabajo '+m.numero_orden+': '+(m.titulo||'');
+        select.appendChild(op);
+      }
+      el('resumenMiDocenciaAuth').replaceChildren();
+      panelKpiDocencia('Trabajos activos',catalogoMiDocencia.length);
+      panelKpiDocencia('Trabajos leídos',misProgresosAuth.filter(p=>p.leido).length);
+      panelKpiDocencia('Trabajos concluidos',misProgresosAuth.filter(p=>p.completado).length);
+      el('interaccionMiDocenciaAuth').hidden=!catalogoMiDocencia.length;
+      el('listaComentariosMiDocenciaAuth').replaceChildren();
+      cancelarEdicionMiDocencia();
+      estado.textContent='Consulta completada. Solo se muestran avances vinculados a su identidad autenticada.';
+    }catch(_){estado.textContent='No fue posible verificar y consultar sus avances; no se ha modificado nada.'}
+    finally{boton.disabled=false}
+  });
+  async function cargarComentariosMiDocencia(){
+    const {id,progreso}=obtenerTrabajoMiDocencia(),destino=el('listaComentariosMiDocenciaAuth');
+    destino.replaceChildren();
+    cancelarEdicionMiDocencia();
+    if(!progreso?.completado&&el('role').textContent!=='SUPERADMIN'){
+      const aviso=document.createElement('p');
+      aviso.textContent='Los comentarios permanecen bajo reserva docente hasta completar el trabajo.';
+      destino.appendChild(aviso);
+      return;
+    }
+    const actual=client;
+    try{
+      const {data,error}=await actual.rpc('maestro_comentarios_modulo',{p_modulo_id:id});
+      if(actual!==client||id!==el('selectTrabajoMiDocenciaAuth').value)return;
+      if(error||!Array.isArray(data))throw new Error('read_failed');
+      const encabezado=document.createElement('p');
+      encabezado.textContent=data.length+' comentarios autorizados en este trabajo.';
+      destino.appendChild(encabezado);
+      for(const c of data){
+        const card=document.createElement('article');
+        card.className='mi-docencia-comentario';
+        const autor=document.createElement('strong');
+        autor.textContent=c.autor_nombre||'Hermano Maestro';
+        const fecha=document.createElement('span');
+        const date=c.creado_en?new Date(c.creado_en):null;
+        fecha.textContent=date&&!Number.isNaN(date.getTime())
+          ? ' · '+date.toLocaleDateString('es-CL'):'';
+        const cuerpo=document.createElement('p');
+        cuerpo.textContent=c.contenido||'';
+        card.append(autor,fecha,cuerpo);
+        if(c.es_autor){
+          const editar=document.createElement('button');
+          editar.type='button';editar.className='secondary';
+          editar.textContent='Editar mi comentario';
+          editar.addEventListener('click',()=>{
+            comentarioEditandoId=c.comentario_id;
+            el('contenidoComentarioAuth').value=c.contenido||'';
+            el('guardarComentarioAuth').textContent='Guardar mi edición — con confirmación';
+            el('cancelarEdicionComentarioAuth').hidden=false;
+            el('modoComentarioAuth').textContent='El original permanece conservado. Solo puede editar comentarios propios.';
+            el('contenidoComentarioAuth').focus();
+          });
+          card.appendChild(editar);
+        }
+        destino.appendChild(card);
+      }
+    }catch(_){
+      const aviso=document.createElement('p');
+      aviso.textContent='No fue posible consultar los comentarios. Verifique la sesión.';
+      destino.appendChild(aviso);
+    }
+  }
+  el('verComentariosMiDocenciaAuth').addEventListener('click',cargarComentariosMiDocencia);
+  el('selectTrabajoMiDocenciaAuth').addEventListener('change',()=>{
+    el('listaComentariosMiDocenciaAuth').replaceChildren();
+    cancelarEdicionMiDocencia();
+  });
+  el('cancelarEdicionComentarioAuth').addEventListener('click',cancelarEdicionMiDocencia);
+  el('marcarLecturaAuth').addEventListener('click',async()=>{
+    if(busy||operacionDocencia||!client)return;
+    const {id}=obtenerTrabajoMiDocencia();
+    if(!id||!window.confirm('Este cambio marcará como leído un trabajo REAL de su perfil. ¿Confirmar?'))return;
+    const actual=client;operacionDocencia=true;
+    try{
+      if(!await verificarIdentidadDocencia())throw new Error('not_authorized');
+      const {data,error}=await actual.rpc('maestro_marcar_lectura',{p_modulo_id:id});
+      if(actual!==client)return;
+      if(error||data!==true)throw new Error('write_failed');
+      el('estadoMiDocenciaAuth').textContent='Lectura registrada para su propio perfil.';
+      el('cargarMiDocenciaAuth').click();
+    }catch(_){el('estadoMiDocenciaAuth').textContent='La lectura no pudo registrarse. No se dará por confirmada.'}
+    finally{operacionDocencia=false}
+  });
+  el('guardarComentarioAuth').addEventListener('click',async()=>{
+    if(busy||operacionDocencia||!client)return;
+    const {id,progreso}=obtenerTrabajoMiDocencia();
+    const texto=el('contenidoComentarioAuth').value.trim();
+    const statusNode=el('estadoMiDocenciaAuth');
+    if(!progreso?.completado||texto.length<5||texto.length>1500){
+      statusNode.textContent='Debe haber completado el trabajo y escribir un comentario de 5 a 1500 caracteres.';
+      return;
+    }
+    const editando=comentarioEditandoId;
+    if(!window.confirm(editando
+      ? 'CONFIRMAR EDICIÓN REAL de su comentario; el original se conservará. ¿Continuar?'
+      : 'CONFIRMAR PUBLICACIÓN REAL en la Cámara de Maestros. ¿Continuar?'))return;
+    operacionDocencia=true;const actual=client;
+    try{
+      if(!await verificarIdentidadDocencia())throw new Error('not_authorized');
+      const {data,error}=editando
+        ?await actual.rpc('maestro_editar_comentario_propio',{p_comentario_id:editando,p_contenido:texto})
+        :await actual.rpc('maestro_publicar_comentario',{p_progreso_id:progreso.progreso_id,p_contenido:texto});
+      if(actual!==client)return;
+      if(error||(!editando&&!data)||(editando&&data!==true))throw new Error('write_failed');
+      statusNode.textContent=editando?'Comentario propio actualizado.':'Comentario publicado con identidad verificada.';
+      cancelarEdicionMiDocencia();
+      await cargarComentariosMiDocencia();
+    }catch(_){statusNode.textContent='El servidor rechazó la operación o falló la conexión; revise antes de reintentar.'}
+    finally{operacionDocencia=false}
+  });
 
   el('logout').addEventListener('click',async()=>{await signOut();status('Sesión de prueba cerrada.');});
   window.addEventListener('pagehide',()=>{if(client)client.auth.signOut({scope:'local'}).catch(()=>{})});
