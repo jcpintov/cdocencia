@@ -770,12 +770,14 @@
           <div class="admin-header-actions">
             <label for="filtroUsuarioAcceso">Filtrar Hermano:</label>
             <select id="filtroUsuarioAcceso" name="filtroUsuarioAcceso" onchange="cargarBitacoraAccesos(this.value)">
-              <option value="todos">👥 Todos los Hermanos</option>
+              <option value="todos">Todos los usuarios</option>
             </select>
-            <button class="admin-link-btn" onclick="cargarBitacoraAccesos()">🔄 Actualizar</button>
+            <label class="bitacora-toggle" for="ocultarAdminBitacora"><input id="ocultarAdminBitacora" type="checkbox" checked onchange="cargarBitacoraAccesos()"> Ocultar Admin</label>
+            <button class="admin-link-btn" type="button" onclick="cargarBitacoraAccesos()">Actualizar</button>
           </div>
         </div>
 
+        <p id="resumenBitacoraAccesos" class="text-instruccion" aria-live="polite">Los registros administrativos se conservan y pueden ocultarse del informe.</p>
         <div class="table-responsive">
           <table class="metricas-table">
             <thead>
