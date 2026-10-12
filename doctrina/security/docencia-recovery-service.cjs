@@ -28,7 +28,7 @@ function createDocenciaRecoveryService({accounts,tokens,mailer,limiter,hashPassw
       const token=crypto.randomBytes(32).toString('base64url');
       const tokenHash=hashToken(token);
       await tokens.issue({userId:account.id,tokenHash,expiresAt:now()+TOKEN_TTL_MS});
-      const link=new URL('/recuperar',origin);
+      const link=new URL('/docencia-restablecer.html',origin);
       link.searchParams.set('token',token);
       try {
         await mailer.send({to:account.email,subject:'Recuperación de acceso a Docencia',
