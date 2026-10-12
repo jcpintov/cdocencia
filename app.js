@@ -2188,12 +2188,13 @@ async function prepararLoteDoctrinal() {
     return;
   }
   const etiquetasPermitidas = /\.(pdf|doc|docx|txt|md)$/i;
-  const maximo = 50 * 1024 * 1024;
+  const maximo = 128 * 1024 * 1024; // Soporta el original normativo del lote (~95 MiB) solo para catalogación local.
   const metadatos = {
     clase: document.getElementById('doctrinaClase')?.value || 'doctrina',
     grado_minimo: document.getElementById('doctrinaGrado')?.value || 'M',
     clasificacion_acceso: document.getElementById('doctrinaClasificacion')?.value || 'reservado',
-    autorizacion_procesamiento_externo: Boolean(document.getElementById('doctrinaAutorizaExterno')?.checked),
+    autorizacion_procesamiento_externo: false, // Exige aprobación verificable por documento; nunca heredar autorización del lote.
+    autorizacion_externa_solicitada_lote: Boolean(document.getElementById('doctrinaAutorizaExterno')?.checked),
     referencia_origen: (document.getElementById('doctrinaReferencia')?.value || '').trim()
   };
   estado.textContent = 'Preparando ' + archivos.length + ' archivo(s), sin transferencia de datos...';
@@ -2228,6 +2229,10 @@ async function prepararLoteDoctrinal() {
         sha256,
         ...metadatos,
         estado: 'borrador',
+        grado_validado: false,
+        derechos_verificados: false,
+        publicacion_permitida: false,
+        pendiente_revision_institucional: true,
         objeto_storage: null
       });
     } catch (error) {
