@@ -2169,6 +2169,7 @@ function limpiarRecepcionDoctrina() {
 }
 
 async function prepararLoteDoctrinal() {
+  if (!usuarioActual?.es_admin) return; // Identidad real se valida en servidor antes de transferir.
   const input = document.getElementById('doctrinaArchivos');
   const tabla = document.getElementById('tablaRecepcionDoctrina');
   const estado = document.getElementById('estadoRecepcionDoctrina');
@@ -2187,9 +2188,33 @@ async function prepararLoteDoctrinal() {
     estado.textContent = 'La verificación SHA-256 requiere un contexto HTTPS compatible.';
     return;
   }
-  const etiquetasPermitidas = /\.(pdf|doc|docx|txt|md)$/i;
+  const etiquetasPermitidas = /\.pdf$/i;
   const maximo = 128 * 1024 * 1024; // Soporta el original normativo del lote (~95 MiB) solo para catalogación local.
+  const texto = id => (document.getElementById(id)?.value || '').trim();
+  const fuenteTipo = texto('doctrinaFuenteTipo');
+  const fuentesAdmitidas = ['oficial_gran_logia_chile', 'literatura_reaa_confiable'];
+  const emisor = texto('doctrinaEmisorAutor');
+  const institucion = texto('doctrinaInstitucion');
+  const referencia = texto('doctrinaReferenciaFuente');
+  const fundamento = texto('doctrinaFundamento');
+  if (!fuentesAdmitidas.includes(fuenteTipo) || emisor.length < 3 ||
+      institucion.length < 3 || referencia.length < 8 || fundamento.length < 30) {
+    estado.textContent = 'Complete procedencia oficial o literaria REAA, emisor, institución, referencia verificable y fundamento de confiabilidad (30 caracteres mínimo). No se ha preparado ningún archivo.';
+    return;
+  }
   const metadatos = {
+    fuente_tipo: fuenteTipo, // PROCEDENCIA DECLARADA: nunca equivale a fuente verificada.
+    emisor_autor: emisor,
+    institucion_editorial: institucion,
+    referencia_fuente: referencia,
+    identificador_edicion: texto('doctrinaEdicion'),
+    fecha_fuente: texto('doctrinaFechaFuente'),
+    fundamento_confiabilidad: fundamento,
+    licencia_derechos: texto('doctrinaDerechos') || 'Pendiente de verificar por el Superadmin',
+    revision_procedencia: 'pendiente',
+    revision_correlacion: 'pendiente',
+    revision_respuestas: 'pendiente',
+    revision_seguridad: 'pendiente',
     clase: document.getElementById('doctrinaClase')?.value || 'doctrina',
     grado_minimo: 'M', // Compatibilidad de esquema. TODOS los usuarios son Maestros; NO usar para controlar acceso.
     contexto_grado: document.getElementById('doctrinaContextoGrado')?.value || 'general',
@@ -2200,6 +2225,7 @@ async function prepararLoteDoctrinal() {
   };
   estado.textContent = 'Preparando ' + archivos.length + ' archivo(s), sin transferencia de datos...';
   let rechazados = 0;
+  const hashesPreparados = new Set();
   for (const archivo of archivos) {
     if (secuenciaActual !== secuenciaRecepcionDoctrina) return;
     const fila = tabla.insertRow();
@@ -2209,37 +2235,55 @@ async function prepararLoteDoctrinal() {
     const celdaEstado = fila.insertCell();
     if (!etiquetasPermitidas.test(archivo.name) || archivo.size < 1 || archivo.size > maximo) {
       celdaHash.textContent = '—';
-      celdaEstado.textContent = 'No admitido: formato vacío, extensión o tamaño fuera de límite';
+      celdaEstado.textContent = 'No admitido: extensión distinta de PDF o tamaño fuera del límite (1 a 128 MB)';
       rechazados++;
       continue;
     }
     try {
       const contenido = await archivo.arrayBuffer();
       if (secuenciaActual !== secuenciaRecepcionDoctrina) return;
+      const cabecera = new Uint8Array(contenido, 0, Math.min(5, contenido.byteLength));
+      if (String.fromCharCode(...cabecera) !== '%PDF-') {
+        celdaHash.textContent = '—';
+        celdaEstado.textContent = 'Rechazado: cabecera PDF inválida';
+        rechazados++;
+        continue;
+      }
       const huella = await crypto.subtle.digest('SHA-256', contenido);
       if (secuenciaActual !== secuenciaRecepcionDoctrina) return;
       const sha256 = Array.from(new Uint8Array(huella), b => b.toString(16).padStart(2, '0')).join('');
+      if (hashesPreparados.has(sha256)) {
+        celdaHash.textContent = sha256;
+        celdaEstado.textContent = 'Duplicado exacto en este lote; omitido';
+        rechazados++;
+        continue;
+      }
+      hashesPreparados.add(sha256);
       celdaHash.textContent = sha256;
       celdaHash.title = sha256;
-      celdaEstado.textContent = 'Listo para catalogación';
+      celdaEstado.textContent = 'Preingesta local · fuente NO verificada';
       manifiestoDoctrinaPendiente.push({
         titulo: archivo.name.replace(/\.[^.]+$/, ''),
         archivo_original: archivo.name,
         bytes: archivo.size,
-        mime: archivo.type || 'application/octet-stream',
+        mime: 'application/pdf',
         sha256,
         ...metadatos,
-        estado: 'borrador',
+        estado: 'solo_catalogo',
+        formato_pdf_cabecera: true,
+        fuente_confirmada: false,
+        integridad_objeto_storage_verificada: false,
         grado_validado: false,
         derechos_verificados: false,
         publicacion_permitida: false,
+        respuestas_habilitadas: false,
         pendiente_revision_institucional: true,
         objeto_storage: null
       });
     } catch (error) {
       if (secuenciaActual !== secuenciaRecepcionDoctrina) return;
       celdaHash.textContent = '—';
-      celdaEstado.textContent = 'Error al calcular huella';
+      celdaEstado.textContent = 'No fue posible verificar el original';
       rechazados++;
       console.error('Error al verificar original:', error);
     }
