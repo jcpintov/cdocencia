@@ -1315,17 +1315,22 @@ function renderizarTrazadoEnriquecido(textoBruto) {
    ENTORNO DOCENTE Y LECTURA CON TEMPORIZADOR
    ========================================================================== */
 async function refrescarProgresosUsuario() {
-  const { data: dataProgreso } = await sbApp
+  const usuarioId = usuarioActual?.id;
+  if (!usuarioId) return;
+  const { data: dataProgreso, error } = await sbApp
     .from('progreso_maestro')
     .select('*')
-    .eq('usuario_id', usuarioActual.id);
-
-  misProgresos = {};
-  if (dataProgreso) {
-    dataProgreso.forEach(p => { 
-      misProgresos[p.modulo_id] = p; 
-    });
+    .eq('usuario_id', usuarioId);
+  // Una respuesta demorada de una sesión anterior nunca debe sobrescribir
+  // el progreso de quien inicia sesión después.
+  if (usuarioActual?.id !== usuarioId) return;
+  if (error) {
+    console.error('No fue posible actualizar progresos de la sesión:', error);
+    return;
   }
+  const siguientes = {};
+  (dataProgreso || []).forEach(p => { siguientes[p.modulo_id] = p; });
+  misProgresos = siguientes;
 }
 
 function renderizarSidebar() {
