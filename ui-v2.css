@@ -56,3 +56,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 #seccionAdmin button:focus-visible{outline:2px solid #c49b72;outline-offset:3px}
 @media(max-width:960px){#seccionAdmin .sidebar-admin{border-right:0;border-bottom:1px solid #344b5c}#seccionAdmin .admin-menu-list{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}}
 @media(max-width:600px){#seccionAdmin .admin-menu-list{grid-template-columns:1fr 1fr}#seccionAdmin .admin-main-content{padding:16px}#seccionAdmin .admin-side-btn{font-size:.83rem;padding:10px}}
+
+/* Filtros individuales de bitácora */
+#adminSeccionAccesos .bitacora-filtros-cuentas{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;border:1px solid #dce3e9;border-radius:9px;padding:8px 12px;margin:0;min-width:0}
+#adminSeccionAccesos .bitacora-filtros-cuentas legend{font-size:.8rem;font-weight:600;color:#53677a;padding:0 5px}
+#adminSeccionAccesos .bitacora-filtros-cuentas label{display:inline-flex;align-items:center;gap:7px;font-size:.85rem;white-space:normal;cursor:pointer}
+#adminSeccionAccesos .bitacora-filtros-cuentas input{accent-color:#a8794d;width:16px;height:16px}
