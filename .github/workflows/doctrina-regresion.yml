@@ -1,0 +1,39 @@
+name: Validaciones Doctrina–Docencia (no certifican seguridad)
+
+on:
+  push:
+    branches:
+      - fix/roles-enter-20261012
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas-locales:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Obtener rama sin credenciales persistentes
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Sintaxis de archivos del sitio
+        run: |
+          node --check app.js
+          node --check api/security/session.js
+          node --check scripts/validar-manifiesto-doctrina.cjs
+      - name: Pruebas de regresión sin red ni secretos
+        run: |
+          set -eu
+          for file in tests/*.test.cjs; do
+            echo "Comprobando $file"
+            node "$file"
+          done
+      - name: Advertencia de seguridad P0 sin falsos aprobados
+        run: |
+          echo "::warning title=Corte de autenticación pendiente::Las RPC legacy siguen abiertas hasta migración Auth y corte aprobado. El resultado verde solo acredita pruebas unitarias, NO seguridad de producción."
