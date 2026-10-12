@@ -772,7 +772,7 @@
             <select id="filtroUsuarioAcceso" name="filtroUsuarioAcceso" onchange="cargarBitacoraAccesos(this.value)">
               <option value="todos">Todos los usuarios</option>
             </select>
-            <label class="bitacora-toggle" for="ocultarAdminBitacora"><input id="ocultarAdminBitacora" type="checkbox" checked onchange="cargarBitacoraAccesos()"> Ocultar Admin</label>
+            <fieldset class="bitacora-filtros-cuentas"><legend>Ocultar accesos de:</legend><label for="ocultarGmailBitacora"><input id="ocultarGmailBitacora" type="checkbox" checked onchange="cargarBitacoraAccesos()"> jpintov@gmail.com</label><label for="ocultarHotmailBitacora"><input id="ocultarHotmailBitacora" type="checkbox" checked onchange="cargarBitacoraAccesos()"> jpintov@hotmail.com</label></fieldset>
             <button class="admin-link-btn" type="button" onclick="cargarBitacoraAccesos()">Actualizar</button>
           </div>
         </div>
