@@ -3414,89 +3414,96 @@ function imprimirMuroGeneralPDF() {
 /* ==========================================================================
    EDITOR DE DOCTRINA ADMIN
    ========================================================================== */
+let secuenciaEditorDoctrina = 0;
+
+function crearTarjetaEditorDoctrina(bloque, numero) {
+  const id = ++secuenciaEditorDoctrina;
+  const card = document.createElement('div');
+  card.className = 'bloque-doctrina-card';
+  card.id = 'bloque_doc_' + id;
+  const header = document.createElement('div');
+  header.className = 'bloque-doctrina-header';
+  const encabezado = document.createElement('strong');
+  encabezado.textContent = numero ? 'Bloque N° ' + numero : 'Nuevo Bloque';
+  header.appendChild(encabezado);
+  const eliminar = document.createElement('button');
+  eliminar.type = 'button';
+  eliminar.className = 'admin-link-btn admin-action-delete';
+  eliminar.textContent = 'Eliminar';
+  eliminar.addEventListener('click', () => card.remove());
+  header.appendChild(eliminar);
+  card.appendChild(header);
+  const campo = (titulo, clase, contenido, multilinea) => {
+    const grupo = document.createElement('div');
+    grupo.className = 'form-group';
+    const etiqueta = document.createElement('label');
+    etiqueta.textContent = titulo + ':';
+    etiqueta.htmlFor = 'doc_' + clase + '_' + id;
+    const input = document.createElement(multilinea ? 'textarea' : 'input');
+    input.id = etiqueta.htmlFor;
+    input.className = 'doctrina-edit-' + clase;
+    if (multilinea) input.rows = 4;
+    else input.type = 'text';
+    input.value = String(contenido ?? '');
+    grupo.append(etiqueta, input);
+    card.appendChild(grupo);
+  };
+  campo('Título', 'titulo', bloque.titulo || '', false);
+  campo('Subtítulo', 'subtitulo', bloque.subtitulo || '', false);
+  campo('Texto', 'texto', bloque.texto || '', true);
+  return card;
+}
+
 async function cargarEditorDoctrinaAdmin() {
+  if (!usuarioActual?.es_admin) return;
   const cont = document.getElementById('contenedorEditorDoctrinaAdmin');
-  cont.innerHTML = "<p class='td-loading'>Cargando doctrina institucional...</p>";
-
+  if (!cont) return;
+  cont.replaceChildren();
+  const espera = document.createElement('p');
+  espera.className = 'td-loading';
+  espera.textContent = 'Cargando docencia institucional...';
+  cont.appendChild(espera);
   const bloques = await obtenerDoctrinaBD();
-  cont.innerHTML = "";
-
-  bloques.forEach((b, idx) => {
-    cont.innerHTML += `
-      <div class="bloque-doctrina-card" id="bloque_doc_${idx}">
-        <div class="bloque-doctrina-header">
-          <strong>Bloque N° ${idx + 1}</strong>
-          <button class="admin-link-btn" style="color: var(--error);" onclick="eliminarBloqueDoctrinaAdmin(${idx})">🗑️ Eliminar</button>
-        </div>
-        <div class="form-group">
-          <label>Título:</label>
-          <input type="text" id="doc_tit_${idx}" value="${b.titulo.replace(/"/g, '&quot;')}">
-        </div>
-        <div class="form-group">
-          <label>Subtítulo:</label>
-          <input type="text" id="doc_sub_${idx}" value="${b.subtitulo.replace(/"/g, '&quot;')}">
-        </div>
-        <div class="form-group">
-          <label>Texto:</label>
-          <textarea id="doc_txt_${idx}" rows="4">${b.texto}</textarea>
-        </div>
-      </div>
-    `;
-  });
+  if (!usuarioActual?.es_admin) return;
+  cont.replaceChildren();
+  (bloques || []).forEach((b, idx) => cont.appendChild(crearTarjetaEditorDoctrina(b, idx + 1)));
 }
 
 function agregarBloqueDoctrinaAdmin() {
+  if (!usuarioActual?.es_admin) return;
   const cont = document.getElementById('contenedorEditorDoctrinaAdmin');
-  const idx = cont.querySelectorAll('.bloque-doctrina-card').length;
-
-  cont.innerHTML += `
-    <div class="bloque-doctrina-card" id="bloque_doc_${idx}">
-      <div class="bloque-doctrina-header">
-        <strong>Nuevo Bloque</strong>
-        <button class="admin-link-btn" style="color: var(--error);" onclick="eliminarBloqueDoctrinaAdmin(${idx})">🗑️ Eliminar</button>
-      </div>
-      <div class="form-group">
-        <label>Título:</label>
-        <input type="text" id="doc_tit_${idx}" value="Nuevo Título">
-      </div>
-      <div class="form-group">
-        <label>Subtítulo:</label>
-        <input type="text" id="doc_sub_${idx}" value="Nuevo Subtítulo">
-      </div>
-      <div class="form-group">
-        <label>Texto:</label>
-        <textarea id="doc_txt_${idx}" rows="4">Escriba aquí los fundamentos doctrinales...</textarea>
-      </div>
-    </div>
-  `;
+  if (!cont) return;
+  cont.appendChild(crearTarjetaEditorDoctrina({
+    titulo: 'Nuevo Título', subtitulo: 'Nuevo Subtítulo',
+    texto: 'Escriba aquí los fundamentos doctrinales...'
+  }, null));
 }
 
 function eliminarBloqueDoctrinaAdmin(idx) {
-  document.getElementById(`bloque_doc_${idx}`)?.remove();
+  // Compatibilidad con llamadas anteriores; las nuevas tarjetas usan listener seguro.
+  document.getElementById('bloque_doc_' + idx)?.remove();
 }
 
 async function guardarDoctrinaAdmin() {
+  if (!usuarioActual?.es_admin) return;
   const cont = document.getElementById('contenedorEditorDoctrinaAdmin');
+  if (!cont) return;
   const cards = cont.querySelectorAll('.bloque-doctrina-card');
   const bloques = [];
-
-  cards.forEach((_, idx) => {
-    const tit = document.getElementById(`doc_tit_${idx}`)?.value.trim();
-    const sub = document.getElementById(`doc_sub_${idx}`)?.value.trim();
-    const txt = document.getElementById(`doc_txt_${idx}`)?.value.trim();
-    if (tit && txt) {
-      bloques.push({ titulo: tit, subtitulo: sub || '', texto: txt });
-    }
+  cards.forEach(card => {
+    const tit = card.querySelector('.doctrina-edit-titulo')?.value.trim();
+    const sub = card.querySelector('.doctrina-edit-subtitulo')?.value.trim();
+    const txt = card.querySelector('.doctrina-edit-texto')?.value.trim();
+    if (tit && txt) bloques.push({ titulo: tit, subtitulo: sub || '', texto: txt });
   });
-
   const { error } = await sbApp
     .from('config_segura')
-    .upsert({ clave: 'doctrina_docencia_maestros', valor: JSON.stringify(bloques) }, { onConflict: 'clave' });
-
+    .upsert({ clave: 'doctrina_docencia_maestros', valor: JSON.stringify(bloques) },
+      { onConflict: 'clave' });
   if (error) {
-    alert("Error al guardar doctrina: " + error.message);
+    alert('No fue posible guardar la docencia institucional: ' + error.message);
   } else {
-    alert("Doctrina institucional actualizada exitosamente.");
+    alert('Docencia institucional actualizada.');
   }
 }
 
