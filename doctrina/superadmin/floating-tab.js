@@ -57,13 +57,49 @@
 #doctrina-superadmin-panel .ds-table td,#doctrina-superadmin-panel .ds-activity{border-bottom-color:#e7e2db}
 #doctrina-superadmin-panel :focus-visible{outline:2px solid #e8c18b;outline-offset:3px}
 @media(max-width:680px){#doctrina-superadmin-panel .ds-header{padding:22px}#doctrina-superadmin-panel .ds-content{padding:20px}#doctrina-superadmin-panel .ds-kpis{grid-template-columns:1fr 1fr}#doctrina-superadmin-panel .ds-grid{grid-template-columns:1fr}#doctrina-superadmin-panel .ds-kpi strong{font-size:27px}}
+/* Executive console v3: the launcher belongs to the Admin sidebar, never floats. */
+#doctrina-superadmin-tab{position:relative;top:auto;right:auto;z-index:auto;display:block;writing-mode:horizontal-tb;letter-spacing:.015em;text-transform:none;width:100%;padding:14px 16px;margin:8px 0 0;border:1px solid #bc9565a3;border-radius:10px;background:linear-gradient(105deg,#8c684634,#ffffff06);font-size:13px;font-weight:650;color:#f1d4ab;text-align:left;box-shadow:none;min-height:46px}
+#doctrina-superadmin-tab:hover{background:#d1a06a25;color:#fff;border-color:#c59b6d}
+#doctrina-superadmin-tab:focus-visible{outline:2px solid #d1a977;outline-offset:3px}
+#doctrina-superadmin-panel{position:fixed;top:50%;left:50%;right:auto;transform:translate(-50%,-50%);height:min(91dvh,910px);width:min(1120px,calc(100vw - 36px));z-index:9011;border:1px solid #d8d0c6;border-radius:20px;background:#f5f3ee;box-shadow:0 0 0 100vmax #071320ba,0 30px 100px #0007;overflow-y:auto;overscroll-behavior:contain}
+#doctrina-superadmin-panel .ds-header{padding:31px clamp(22px,3vw,45px);background:linear-gradient(125deg,#142c40 0%,#294456 100%);border-bottom:3px solid #bd9564}
+#doctrina-superadmin-panel .ds-eyebrow{font-size:10px;color:#d8b98e;letter-spacing:.21em}
+#doctrina-superadmin-panel h2{color:#fff;font:500 clamp(27px,3vw,40px)/1.13 Georgia,serif;letter-spacing:-.032em}
+#doctrina-superadmin-panel .ds-sub{color:#c3cdd5;font-size:13px}
+#doctrina-superadmin-panel .ds-close{min-height:43px;background:#ffffff16;border:1px solid #ffffff44;color:#f8f4eb;font-weight:600}
+#doctrina-superadmin-panel .ds-close:hover{background:#ffffff2a}
+#doctrina-superadmin-panel .ds-content{padding:30px clamp(20px,3vw,44px) 42px;background:#f5f3ee}
+#doctrina-superadmin-panel .ds-nav{gap:6px;border-bottom:1px solid #ddd8d1;margin-bottom:26px}
+#doctrina-superadmin-panel .ds-nav button{padding:15px 17px;color:#4c6070;font-size:13px;font-weight:700}
+#doctrina-superadmin-panel .ds-nav button[aria-selected=true]{color:#825e35;border-bottom-color:#b58a59}
+#doctrina-superadmin-panel .ds-kpis{gap:15px;margin-bottom:24px}
+#doctrina-superadmin-panel .ds-kpi,#doctrina-superadmin-panel .ds-card{border:1px solid #e4dfd7;border-radius:14px;padding:24px;background:#fff;box-shadow:0 8px 27px #182d3b0a}
+#doctrina-superadmin-panel .ds-kpi strong{color:#183448;font:500 38px Georgia,serif}
+#doctrina-superadmin-panel .ds-grid{gap:17px}
+#doctrina-superadmin-panel h3{font:600 19px Georgia,serif;color:#183448}
+#doctrina-superadmin-panel .ds-table th{background:#f8f6f2;color:#526274;border-bottom:1px solid #e4dfd7;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+#doctrina-superadmin-panel .ds-table td{border-bottom:1px solid #ece8e2;color:#30485a}
+#doctrina-superadmin-panel .ds-primary{background:#183449;color:#fff}
+#doctrina-superadmin-panel .ds-primary:hover{background:#294d64}
+#doctrina-superadmin-panel .ds-secondary{background:#fff;color:#234255;border:1px solid #cfcac3}
+#doctrina-superadmin-panel .ds-chip{background:#e8f4eb;color:#246044;font-weight:700}
+#doctrina-superadmin-panel .ds-chip.off{background:#f7ebdf;color:#79523b}
+#doctrina-superadmin-panel .ds-note{color:#526274;line-height:1.65}
+#doctrina-superadmin-panel [role=status]{min-height:18px}
+@media(max-width:700px){#doctrina-superadmin-panel{height:min(94dvh,950px);width:calc(100vw - 18px);border-radius:14px}}
+@media(max-width:700px){#doctrina-superadmin-panel .ds-header{padding:23px 19px;align-items:flex-start}}
+@media(max-width:700px){#doctrina-superadmin-panel .ds-content{padding:21px 17px 32px}}
+@media(max-width:700px){#doctrina-superadmin-panel .ds-kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:700px){#doctrina-superadmin-panel .ds-grid{grid-template-columns:1fr}}
+@media(max-width:700px){#doctrina-superadmin-panel .ds-kpi strong{font-size:29px}}
+@media(prefers-reduced-motion:reduce){#doctrina-superadmin-panel,#doctrina-superadmin-tab{transition:none}}
 `;
-  const tab = document.createElement('button'); tab.id='doctrina-superadmin-tab'; tab.type='button'; tab.textContent='Superadmin'; tab.hidden=true; tab.setAttribute('aria-controls','doctrina-superadmin-panel'); tab.setAttribute('aria-expanded','false');
-  const panel = document.createElement('aside'); panel.id='doctrina-superadmin-panel'; panel.hidden=true; panel.setAttribute('aria-label','Superadmin Doctrina');
+  const tab = document.createElement('button'); tab.id='doctrina-superadmin-tab'; tab.type='button'; tab.textContent='Gobierno Doctrina';tab.className='admin-side-btn ds-doctrina-launcher';tab.setAttribute('aria-haspopup','dialog'); tab.hidden=true; tab.setAttribute('aria-controls','doctrina-superadmin-panel'); tab.setAttribute('aria-expanded','false');
+  const panel = document.createElement('aside'); panel.id='doctrina-superadmin-panel'; panel.hidden=true; panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','Gobierno institucional de Doctrina');
   const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
   const header=el('header','ds-header');
-  const brand=el('div');brand.append(el('p','ds-eyebrow','OFL 146 · Plataforma Doctrina'),el('h2','','Centro de administración'),el('p','ds-sub','Gobierno, accesos y trazabilidad institucional'));
-  const close=el('button','ds-close','Cerrar ✕');close.type='button';close.setAttribute('aria-label','Cerrar panel');
+  const brand=el('div');brand.append(el('p','ds-eyebrow','OFL 146 · Plataforma Doctrina'),el('h2','','Gobierno institucional'),el('p','ds-sub','Gobierno, accesos y trazabilidad institucional'));
+  const close=el('button','ds-close','Cerrar');close.type='button';close.setAttribute('aria-label','Cerrar panel');
   header.append(brand,close);
   const content=el('div','ds-content');const nav=el('nav','ds-nav');nav.setAttribute('aria-label','Secciones de administración');
   const views={};const buttons={};
@@ -89,12 +125,26 @@
   form.append(emailLabel,choiceLabel,motiveLabel,apply,feedback);formCard.append(form);
   const usersGrid=el('div','ds-grid');usersGrid.append(userCard,formCard);views.users.append(usersGrid);
   const auditCard=el('article','ds-card');auditCard.append(el('h3','','Bitácora de autorizaciones'));const audit=el('div');auditCard.append(audit);views.audit.append(auditCard);
-  const reload=el('button','ds-secondary','↻ Actualizar datos');reload.type='button';reload.style.marginBottom='16px';
-  content.append(nav,reload,views.dashboard,views.users,views.audit);panel.append(header,content);document.head.append(style);document.body.append(tab,panel);
+  const reload=el('button','ds-secondary','Actualizar datos');reload.type='button';reload.style.marginBottom='16px';
+  content.append(nav,reload,views.dashboard,views.users,views.audit);panel.append(header,content);document.head.append(style);
+  // El botón se inserta en la navegación del Admin; el diálogo reside a nivel de documento.
+  const adminSection=document.getElementById('seccionAdmin');
+  const adminMenu=adminSection&&typeof adminSection.querySelector==='function'?adminSection.querySelector('.admin-menu-list'):null;
+  (adminMenu||document.body).append(tab);document.body.append(panel);
   let authorizedClient=null;let generation=0;
   close.addEventListener('click',()=>{panel.hidden=true;tab.setAttribute('aria-expanded','false');tab.focus();});
   tab.addEventListener('click',()=>{if(tab.hidden)return;panel.hidden=false;tab.setAttribute('aria-expanded','true');close.focus();});
-  document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&!panel.hidden){panel.hidden=true;tab.setAttribute('aria-expanded','false');if(!tab.hidden)tab.focus();}});
+  document.addEventListener('keydown',(event)=>{
+    if(event.key==='Escape'&&!panel.hidden){panel.hidden=true;tab.setAttribute('aria-expanded','false');if(!tab.hidden)tab.focus();return;}
+    // Trampa de foco limitada al diálogo: nunca captura el teclado de Docencia cuando está cerrado.
+    if(event.key==='Tab'&&!panel.hidden&&typeof panel.querySelectorAll==='function'){
+      const focusable=Array.from(panel.querySelectorAll('button:not([disabled]):not([hidden]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href]')).filter(n=>!n.hidden&&n.getAttribute('aria-hidden')!=='true');
+      if(!focusable.length){event.preventDefault();close.focus();return;}
+      const first=focusable[0],last=focusable[focusable.length-1],active=document.activeElement;
+      if(event.shiftKey&&(active===first||!panel.contains(active))){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&(active===last||!panel.contains(active))){event.preventDefault();first.focus();}
+    }
+  });
   function resetAdmin(){generation++;authorizedClient=null;list.replaceChildren();audit.replaceChildren();recentList.replaceChildren();totalKpi.textContent=activeKpi.textContent=auditKpi.textContent='—';feedback.textContent='';}
   async function loadAdmin(){
     const client=authorizedClient;const current=generation;if(!client)return;
