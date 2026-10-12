@@ -114,15 +114,12 @@
   const grid=el('div','ds-grid');const overview=el('article','ds-card');overview.append(el('h3','','Estado de la plataforma'),el('p','ds-note','Los indicadores muestran únicamente información real de las funciones administrativas autorizadas. No representan el total de miembros de Docencia.'));
   const recent=el('article','ds-card');recent.append(el('h3','','Actividad reciente'));const recentList=el('div');recent.append(recentList);grid.append(overview,recent);views.dashboard.append(kpis,grid);
   const userCard=el('article','ds-card');userCard.append(el('h3','','Administradores autorizados'));const list=el('div');userCard.append(list);
-  const formCard=el('article','ds-card');formCard.append(el('h3','','Gestionar autorización'),el('p','ds-note','Solo cuentas verificadas en Supabase Auth. Los cambios requieren fundamento y confirmación.'));
-  const form=el('form');const email=el('input');email.type='email';email.id='doctrina-admin-email';email.name='admin_email';email.required=true;email.autocomplete='off';
-  const emailLabel=el('label','','Correo electrónico');emailLabel.append(email);
-  const choice=el('select');choice.id='doctrina-admin-operation';choice.name='admin_operation';[['true','Activar acceso'],['false','Revocar acceso']].forEach(([v,t])=>{const o=el('option','',t);o.value=v;choice.append(o);});
-  const choiceLabel=el('label','','Operación');choiceLabel.append(choice);
-  const motive=el('textarea');motive.id='doctrina-admin-reason';motive.name='admin_reason';motive.required=true;motive.minLength=10;motive.maxLength=1000;
-  const motiveLabel=el('label','','Fundamento documentado (mínimo 10 caracteres)');motiveLabel.append(motive);
-  const apply=el('button','ds-primary','Confirmar operación');apply.type='submit';const feedback=el('p','ds-note');feedback.setAttribute('role','status');
-  form.append(emailLabel,choiceLabel,motiveLabel,apply,feedback);formCard.append(form);
+  // Política vigente: un único titular. La interfaz no delega privilegios ni modifica la allowlist.
+  const formCard=el('article','ds-card');
+  formCard.append(el('h3','','Administración individual'),
+    el('p','ds-note','La plataforma reconoce una sola identidad titular autorizada. No se habilitan altas adicionales ni delegación de privilegios desde esta interfaz.'),
+    el('p','ds-note','La administración de identidades exige una modificación de política verificada en servidor, trazabilidad y autorización expresa del titular.'));
+  const feedback=el('p','ds-note');feedback.setAttribute('role','status');formCard.append(feedback);
   const usersGrid=el('div','ds-grid');usersGrid.append(userCard,formCard);views.users.append(usersGrid);
   const auditCard=el('article','ds-card');auditCard.append(el('h3','','Bitácora de autorizaciones'));const audit=el('div');auditCard.append(audit);views.audit.append(auditCard);
   const reload=el('button','ds-secondary','Actualizar datos');reload.type='button';reload.style.marginBottom='16px';
@@ -133,7 +130,8 @@
   (adminMenu||document.body).append(tab);document.body.append(panel);
   let authorizedClient=null;let generation=0;
   close.addEventListener('click',()=>{panel.hidden=true;tab.setAttribute('aria-expanded','false');tab.focus();});
-  tab.addEventListener('click',()=>{if(tab.hidden)return;panel.hidden=false;tab.setAttribute('aria-expanded','true');close.focus();});
+  function open(){if(tab.hidden||!authorizedClient)return false;panel.hidden=false;tab.setAttribute('aria-expanded','true');close.focus();return true;}
+  tab.addEventListener('click',()=>{void open();});
   document.addEventListener('keydown',(event)=>{
     if(event.key==='Escape'&&!panel.hidden){panel.hidden=true;tab.setAttribute('aria-expanded','false');if(!tab.hidden)tab.focus();return;}
     // Trampa de foco limitada al diálogo: nunca captura el teclado de Docencia cuando está cerrado.
@@ -167,19 +165,6 @@
     finally{if(current===generation)reload.disabled=false;}
   }
   reload.addEventListener('click',()=>{void loadAdmin();});
-  form.addEventListener('submit',async(event)=>{
-    event.preventDefault();const client=authorizedClient;if(!client)return;
-    const operation=choice.value==='true';
-    if(!window.confirm((operation?'Activar':'Revocar')+' acceso Superadmin a '+email.value.trim()+'?'))return;
-    apply.disabled=true;feedback.textContent='Procesando solicitud…';
-    try{
-      const {data,error}=await client.rpc('doctrina_admin_cambiar',{p_email:email.value.trim(),p_activo:operation,p_motivo:motive.value.trim()});
-      if(client!==authorizedClient)return;
-      if(error||data!==true){feedback.textContent='Operación denegada o no disponible.';return;}
-      feedback.textContent='Operación registrada.';motive.value='';await loadAdmin();
-    }catch(_){feedback.textContent='No fue posible completar la operación.';}
-    finally{apply.disabled=false;}
-  });
   // Consultar RPC del servidor con sesión Auth válida. Fallo = denegación.
   // La función SQL pública doctrina_es_superadmin() valida auth.uid() en servidor.
   let revision = 0;
@@ -203,6 +188,7 @@
   }
   window.DoctrinaSuperadminShell=Object.freeze({
     refreshFromSupabase: refreshFromSupabase,
-    hide: hide
+    hide: hide,
+    open: open
   });
 })();
