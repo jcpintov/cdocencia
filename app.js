@@ -390,49 +390,84 @@ async function guardarMiNuevaClave() {
 /* ==========================================================================
    SUPERADMIN: MÓDULO ADMINISTRAR USUARIOS
    ========================================================================== */
+let secuenciaCargaPadronAdmin = 0;
 async function cargarListadoUsuariosAdmin() {
+  // Nunca interpolar datos del padrón en HTML ni en onclick: origen no confiable.
+  if (!usuarioActual?.es_admin) return;
   const tbody = document.getElementById('tablaUsuariosAdminBody');
-  tbody.innerHTML = `<tr><td colspan="5" class="td-loading">Consultando padrón de usuarios...</td></tr>`;
-
+  if (!tbody) return;
+  const secuenciaActual = ++secuenciaCargaPadronAdmin;
+  const mensaje = (texto) => {
+    tbody.replaceChildren();
+    const fila = tbody.insertRow();
+    const celda = fila.insertCell();
+    celda.colSpan = 5;
+    celda.className = 'td-loading';
+    celda.textContent = texto;
+  };
+  mensaje('Consultando padrón de usuarios...');
   const { data: usuarios, error } = await sbApp
     .from('usuarios')
     .select('id, nombre, email, es_admin, debe_cambiar_clave')
     .order('nombre', { ascending: true });
-
-  tbody.innerHTML = '';
-
-  if (error || !usuarios || usuarios.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); font-style: italic;">No se encontraron usuarios registrados.</td></tr>`;
+  if (secuenciaActual !== secuenciaCargaPadronAdmin || !usuarioActual?.es_admin) return;
+  if (error) {
+    mensaje('No fue posible consultar el padrón. Verifica la sesión y los permisos.');
+    console.error('Error al obtener usuarios:', error);
     return;
   }
-
+  if (!usuarios?.length) {
+    mensaje('No se encontraron usuarios registrados.');
+    return;
+  }
+  tbody.replaceChildren();
   usuarios.forEach(u => {
-    const rolHtml = u.es_admin
-      ? `<span style="background: rgba(153,120,57,0.15); color: var(--accent-gold-dark); font-weight: 700; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;">Superadmin</span>`
-      : `<span style="background: rgba(0,0,0,0.05); color: var(--text-main); padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;">Hermano</span>`;
+    const fila = tbody.insertRow();
+    const nombre = String(u.nombre || 'Hermano');
+    const correo = String(u.email || '');
+    const nombreCelda = fila.insertCell();
+    const fuerte = document.createElement('strong');
+    fuerte.textContent = nombre;
+    nombreCelda.appendChild(fuerte);
 
-    const estadoClaveHtml = u.debe_cambiar_clave
-      ? `<span style="color: #B27B10; font-weight: 600; font-size: 0.82rem;">⚠️ Requiere cambio</span>`
-      : `<span style="color: var(--success); font-weight: 600; font-size: 0.82rem;">✓ Al día</span>`;
+    const emailCelda = fila.insertCell();
+    emailCelda.className = 'admin-email-cell';
+    emailCelda.textContent = correo;
 
-    const nombreEscapado = (u.nombre || '').replace(/'/g, "\\'");
-    const emailEscapado = (u.email || '').replace(/'/g, "\\'");
+    const rolCelda = fila.insertCell();
+    const rol = document.createElement('span');
+    rol.className = u.es_admin ? 'admin-role-superadmin' : 'admin-role-user';
+    rol.textContent = u.es_admin ? 'Superadmin' : 'Maestro';
+    rolCelda.appendChild(rol);
 
-    tbody.innerHTML += `
-      <tr>
-        <td><strong>${u.nombre || "Hermano"}</strong></td>
-        <td style="font-family: monospace; font-size: 0.88rem;">${u.email}</td>
-        <td>${rolHtml}</td>
-        <td>${estadoClaveHtml}</td>
-        <td>
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            ${u.es_admin ? '<span class="admin-profile-protected" title="Cuenta Superadmin protegida">Perfil protegido</span>' : `<button class="admin-link-btn" onclick="abrirModalEditarUsuario('${u.id}', '${nombreEscapado}', '${emailEscapado}', false)">Editar</button>`}
-            ${!u.es_admin ? `<button class="admin-link-btn" style="color: var(--accent-gold-dark);" onclick="abrirModalAdminClaveHermano('${u.id}', '${nombreEscapado}')">Cambiar clave</button>` : ''}
-            ${!u.es_admin && u.id !== usuarioActual.id ? `<button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="confirmarEliminarUsuario('${u.id}', '${nombreEscapado}')">Eliminar</button>` : ''}
-          </div>
-        </td>
-      </tr>
-    `;
+    const claveCelda = fila.insertCell();
+    const clave = document.createElement('span');
+    clave.className = u.debe_cambiar_clave ? 'admin-clave-pendiente' : 'admin-clave-ok';
+    clave.textContent = u.debe_cambiar_clave ? 'Requiere cambio' : 'Al día';
+    claveCelda.appendChild(clave);
+
+    const accionesCelda = fila.insertCell();
+    const acciones = document.createElement('div');
+    acciones.className = 'admin-acciones-seguras';
+    accionesCelda.appendChild(acciones);
+    if (u.es_admin || u.id === usuarioActual?.id) {
+      const protegido = document.createElement('span');
+      protegido.className = 'admin-profile-protected';
+      protegido.textContent = 'Perfil protegido';
+      acciones.appendChild(protegido);
+      return;
+    }
+    const anadirBoton = (texto, callback, clase) => {
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'admin-link-btn' + (clase ? ' ' + clase : '');
+      boton.textContent = texto;
+      boton.addEventListener('click', callback);
+      acciones.appendChild(boton);
+    };
+    anadirBoton('Editar', () => abrirModalEditarUsuario(u.id, nombre, correo, false));
+    anadirBoton('Cambiar clave', () => abrirModalAdminClaveHermano(u.id, nombre));
+    anadirBoton('Eliminar', () => confirmarEliminarUsuario(u.id, nombre), 'admin-action-delete');
   });
 }
 
