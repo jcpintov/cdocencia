@@ -2225,7 +2225,7 @@ async function guardarArchivoOriginalEnBD() {
 /* ==========================================================================
    BITÁCORA DE ACCESOS
    ========================================================================== */
-async let secuenciaConsultaBitacora = 0;
+let secuenciaConsultaBitacora = 0;
 async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   const secuenciaActual = ++secuenciaConsultaBitacora;
   const tbody = document.getElementById('tablaAccesosBody');
