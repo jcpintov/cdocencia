@@ -3310,36 +3310,55 @@ async function exportarRespaldoCompletoJSON() {
    MURO GENERAL ADMIN
    ========================================================================== */
 async function cargarMuroGeneralAdmin() {
+  if (!usuarioActual?.es_admin) return;
   const cont = document.getElementById('contenedorMuroGeneralAdmin');
-  cont.innerHTML = "<p class='td-loading'>Cargando muro general...</p>";
-  document.getElementById('muroAdminFechaEmision').innerText = `EMISIÓN: ${new Date().toLocaleDateString('es-CL')}`;
-
+  if (!cont) return;
+  cont.replaceChildren();
+  const inicio = document.createElement('p');
+  inicio.className = 'td-loading';
+  inicio.textContent = 'Cargando muro general...';
+  cont.appendChild(inicio);
+  const fecha = document.getElementById('muroAdminFechaEmision');
+  if (fecha) fecha.textContent = 'EMISIÓN: ' + new Date().toLocaleDateString('es-CL');
   const { data: reflexiones, error } = await sbApp
     .from('progreso_maestro')
     .select('*, usuarios(nombre), modulos(numero_orden, titulo)')
     .eq('completado', true)
     .not('reflexion', 'is', null)
     .order('completado_en', { ascending: false });
-
-  cont.innerHTML = "";
-
-  if (error || !reflexiones || reflexiones.length === 0) {
-    cont.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay reflexiones consagradas.</p>";
+  if (!usuarioActual?.es_admin) return;
+  cont.replaceChildren();
+  if (error || !reflexiones?.length) {
+    const vacio = document.createElement('p');
+    vacio.className = 'text-instruccion';
+    vacio.textContent = error ? 'No fue posible obtener las reflexiones.' : 'No hay reflexiones consagradas.';
+    cont.appendChild(vacio);
     return;
   }
-
   reflexiones.forEach(r => {
-    const fecha = r.completado_en ? new Date(r.completado_en).toLocaleDateString('es-CL') : '';
-    cont.innerHTML += `
-      <div class="reflexion-item" style="margin-bottom: 16px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-          <strong>Trabajo ${r.modulos?.numero_orden || '—'}: ${r.modulos?.titulo || 'Trazado'}</strong>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">${fecha}</span>
-        </div>
-        <p style="margin: 0 0 6px 0; font-style: italic;">"${r.reflexion}"</p>
-        <span class="reflexion-autor">Q.·.H.·. ${r.usuarios?.nombre || 'Hermano'}</span>
-      </div>
-    `;
+    const articulo = document.createElement('article');
+    articulo.className = 'reflexion-item';
+    articulo.style.marginBottom = '16px';
+    const cabecera = document.createElement('div');
+    cabecera.className = 'muro-admin-fila';
+    const titulo = document.createElement('strong');
+    titulo.textContent = 'Trabajo ' + (r.modulos?.numero_orden ?? '—') +
+      ': ' + (r.modulos?.titulo || 'Trazado');
+    const emitido = document.createElement('span');
+    emitido.className = 'muro-admin-fecha';
+    emitido.textContent = r.completado_en
+      ? new Date(r.completado_en).toLocaleDateString('es-CL') : '';
+    cabecera.append(titulo, emitido);
+    articulo.appendChild(cabecera);
+    const texto = document.createElement('p');
+    texto.className = 'muro-admin-reflexion';
+    texto.textContent = '"' + (r.reflexion || '') + '"';
+    articulo.appendChild(texto);
+    const autor = document.createElement('span');
+    autor.className = 'reflexion-autor';
+    autor.textContent = 'Q.·.H.·. ' + (r.usuarios?.nombre || 'Hermano');
+    articulo.appendChild(autor);
+    cont.appendChild(articulo);
   });
 }
 
