@@ -2204,53 +2204,58 @@ async function guardarArchivoOriginalEnBD() {
 /* ==========================================================================
    BITÁCORA DE ACCESOS
    ========================================================================== */
-async function cargarBitacoraAccesos(filtroUsuarioId = null) {
+async async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   const tbody = document.getElementById('tablaAccesosBody');
-  tbody.innerHTML = `<tr><td colspan="4" class="td-loading">Consultando registros...</td></tr>`;
-
   const selectFiltro = document.getElementById('filtroUsuarioAcceso');
+  const ocultarAdmin = document.getElementById('ocultarAdminBitacora')?.checked ?? true;
+  const resumen = document.getElementById('resumenBitacoraAccesos');
+  const correosAdmin = ['jpintov@gmail.com', 'jpintov@hotmail.com'];
+  tbody.replaceChildren();
+  const estado = (mensaje) => {
+    tbody.replaceChildren();
+    const tr = tbody.insertRow();
+    const td = tr.insertCell();
+    td.colSpan = 4;
+    td.textContent = mensaje;
+  };
+  estado('Consultando registros...');
   if (selectFiltro && selectFiltro.options.length <= 1) {
-    const { data: usrs } = await sbApp.from('usuarios').select('id, nombre').order('nombre', { ascending: true });
-    if (usrs) {
+    const { data: usrs, error: errorUsuarios } = await sbApp.from('usuarios').select('id, nombre, email').order('nombre', { ascending: true });
+    if (!errorUsuarios && usrs) {
       usrs.forEach(u => {
-        selectFiltro.innerHTML += `<option value="${u.id}">${u.nombre}</option>`;
+        if (ocultarAdmin && correosAdmin.includes((u.email || '').trim().toLowerCase())) return;
+        selectFiltro.add(new Option(u.nombre, u.id));
       });
     }
   }
-
-  let query = sbApp
-    .from('registro_accesos')
-    .select('*')
-    .order('creado_en', { ascending: false })
-    .limit(100);
-
-  const filtroActual = filtroUsuarioId || (selectFiltro ? selectFiltro.value : 'todos');
-  if (filtroActual && filtroActual !== 'todos') {
-    query = query.eq('usuario_id', filtroActual);
+  // El filtro se ejecuta antes de limitar la consulta: no se pierden accesos
+  // de usuarios por la abundancia de pruebas administrativas.
+  const filtroActual = filtroUsuarioId || selectFiltro?.value || 'todos';
+  let query = sbApp.from('registro_accesos').select('*', { count: 'exact' })
+    .order('creado_en', { ascending: false }).limit(100);
+  if (filtroActual !== 'todos') query = query.eq('usuario_id', filtroActual);
+  if (ocultarAdmin) {
+    query = query.not('email', 'in', '("jpintov@gmail.com","jpintov@hotmail.com")');
   }
-
-  const { data: registros, error } = await query;
-
-  tbody.innerHTML = "";
-
-  if (error || !registros || registros.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); font-style: italic;">No hay ingresos registrados para el criterio seleccionado.</td></tr>`;
+  const { data: registros, error, count } = await query;
+  if (error) {
+    estado('No fue posible consultar la bitácora.');
+    if (resumen) resumen.textContent = 'Error al consultar los accesos. No se modificó ningún registro.';
+    console.error('Error de bitácora:', error);
     return;
   }
-
+  if (resumen) resumen.textContent = (ocultarAdmin ? 'Estadística de usuarios · administradores excluidos de la vista. ' : 'Vista completa · incluye accesos administrativos. ') +
+    (count ?? 0) + ' accesos coincidentes; mostrando hasta 100 registros recientes. Los datos históricos permanecen intactos.';
+  if (!registros?.length) { estado('No hay ingresos registrados para el criterio seleccionado.'); return; }
+  tbody.replaceChildren();
   registros.forEach(r => {
+    const tr = tbody.insertRow();
     const d = new Date(r.creado_en);
-    const fechaTxt = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const horaTxt = d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-    tbody.innerHTML += `
-      <tr>
-        <td style="white-space: nowrap;"><strong>${fechaTxt}</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">${horaTxt}</span></td>
-        <td><span style="font-weight: 600;">${r.nombre || "Hermano"}</span></td>
-        <td style="font-family: monospace; font-size: 0.88rem;">${r.email}</td>
-        <td><span style="background: rgba(153,120,57,0.1); color: var(--accent-gold-dark); padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85rem;">${r.ip_origen || "—"}</span></td>
-      </tr>
-    `;
+    const fecha = tr.insertCell();
+    fecha.textContent = Number.isNaN(d.getTime()) ? 'Fecha no disponible' : d.toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'medium' });
+    tr.insertCell().textContent = r.nombre || 'Hermano';
+    tr.insertCell().textContent = r.email || '—';
+    tr.insertCell().textContent = r.ip_origen || '—';
   });
 }
 
