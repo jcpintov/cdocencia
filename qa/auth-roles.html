@@ -115,12 +115,18 @@
   'use strict';
   const SUPABASE_URL='https://pwnnpjygnviyzyyvfxnq.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY='sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF';
-  let client=null, busy=false;
+  let client=null, busy=false, trabajos=[], guardandoTrabajo=false;
   const el=id=>document.getElementById(id);
   const status=texto=>{el('status').textContent=texto};
   const show=(role)=>{
     el('result').hidden=!role;
     el('padronSuperadminLab').hidden=role!=='SUPERADMIN';
+    el('editorDocenteAuth').hidden=role!=='SUPERADMIN';
+    el('editorFormularioAuth').hidden=true;
+    el('editorModuloSelector').replaceChildren();
+    el('preguntasContenidoAuth').replaceChildren();
+    trabajos=[];
+    el('estadoEditorAuth').textContent='Consulta no realizada. Ningún documento ha cambiado.';
     el('tablaPadron').hidden=true;
     el('padronBody').replaceChildren();
     el('estadoPadron').textContent='Padrón aún no consultado.';
@@ -204,6 +210,166 @@
     }catch(_){estado.textContent='Error de conexión al comprobar el padrón.'}
     finally{boton.disabled=false}
   });
+
+  // Una sesión verificable no equivale a autorización para modificar por
+  // simple visibilidad del botón: las RPC verifican auth.uid() otra vez.
+  async function superadminActual() {
+    if(!client||el('role').textContent!=='SUPERADMIN')return false;
+    const resultado=await client.rpc('maestro_identidad_actual');
+    return !resultado.error&&resultado.data?.length===1&&
+      resultado.data[0].rol==='SUPERADMIN';
+  }
+  const nodo=(padre,tag,clase,texto)=>{
+    const n=document.createElement(tag);
+    if(clase)n.className=clase;
+    if(texto!==undefined)n.textContent=String(texto??'');
+    if(padre)padre.appendChild(n);
+    return n;
+  };
+  function dibujarPreguntas(trabajo) {
+    const cont=el('preguntasContenidoAuth');
+    cont.replaceChildren();
+    const preguntas=trabajo?.preguntas_json?.preguntas;
+    if(!Array.isArray(preguntas)||preguntas.length!==8){
+      nodo(cont,'p','','Este trabajo no contiene una batería válida de ocho preguntas.');
+      el('guardarPreguntasAuth').disabled=true;
+      return;
+    }
+    el('guardarPreguntasAuth').disabled=false;
+    preguntas.forEach((p,i)=>{
+      const card=nodo(cont,'article','qa-question');
+      nodo(card,'h3','', 'Pregunta '+(i+1));
+      const grupo=(titulo,id,valor,select=false)=>{
+        const bloque=nodo(card,'div','');
+        const label=nodo(bloque,'label','',titulo);
+        label.htmlFor=id;
+        const input=nodo(bloque,select?'select':'input','');
+        input.id=id;
+        if(select){
+          for(const c of ['A','B','C','D']){
+            const option=nodo(input,'option','',c);
+            option.value=c;
+          }
+        }else{
+          input.type='text';input.maxLength=3000;
+        }
+        input.value=String(valor??'');
+        return input;
+      };
+      grupo('Enunciado', 'qa_p_'+i+'_enunciado',p.enunciado);
+      const opciones=nodo(card,'div','qa-option-grid');
+      for(const letra of ['A','B','C','D']){
+        const op=p.opciones?.find(o=>o.letra===letra);
+        const label=nodo(opciones,'label','', 'Alternativa '+letra);
+        const input=nodo(opciones,'input','');
+        input.id='qa_p_'+i+'_op_'+letra;
+        input.type='text';input.maxLength=3000;
+        input.value=String(op?.texto||'');
+        label.htmlFor=input.id;
+      }
+      grupo('Respuesta correcta','qa_p_'+i+'_correcta',p.respuesta_correcta||'A',true);
+      grupo('Retroalimentación','qa_p_'+i+'_retro',p.retroalimentacion);
+    });
+  }
+  function seleccionarTrabajoAuth(){
+    const m=trabajos.find(x=>x.id===el('editorModuloSelector').value);
+    if(!m){el('editorFormularioAuth').hidden=true;return}
+    el('editorFormularioAuth').hidden=false;
+    el('editorTitulo').value=m.titulo||'';
+    el('editorAutor').value=m.autor||'';
+    el('editorTexto').value=m.contenido_trazado||'';
+    dibujarPreguntas(m);
+  }
+  el('cargarTrabajosAuth').addEventListener('click',async()=>{
+    if(busy||guardandoTrabajo)return;
+    const boton=el('cargarTrabajosAuth'),estado=el('estadoEditorAuth');
+    boton.disabled=true;
+    estado.textContent='Validando identidad y consultando trabajos...';
+    try{
+      if(!await superadminActual()){estado.textContent='Consulta denegada: se requiere Superadmin vigente.';return}
+      const {data,error}=await client.from('modulos')
+        .select('id,numero_orden,titulo,autor,contenido_trazado,preguntas_json')
+        .eq('activo',true).order('numero_orden',{ascending:true});
+      if(error||!Array.isArray(data)){estado.textContent='No fue posible recuperar los trabajos.';return}
+      trabajos=data;
+      const selector=el('editorModuloSelector'),anterior=selector.value;
+      selector.replaceChildren();
+      data.forEach(m=>{
+        const op=nodo(selector,'option','','Trabajo '+m.numero_orden+': '+(m.titulo||''));
+        op.value=m.id;
+      });
+      if(data.some(m=>m.id===anterior))selector.value=anterior;
+      seleccionarTrabajoAuth();
+      estado.textContent=data.length+' trabajos listados. No se ha modificado contenido.';
+    }catch(_){estado.textContent='Error de conexión al consultar trabajos.'}
+    finally{boton.disabled=false}
+  });
+  el('editorModuloSelector').addEventListener('change',seleccionarTrabajoAuth);
+  async function ejecutarGuardado(nombre,payload,mensaje){
+    const estado=el('estadoEditorAuth');
+    if(guardandoTrabajo||busy)return false;
+    if(!await superadminActual()){estado.textContent='Guardado denegado: sesión Superadmin no vigente.';return false}
+    if(!window.confirm('CONFIRMAR CAMBIO REAL: se actualizará un trabajo docente compartido en Supabase y se registrará en auditoría. ¿Continuar?')){
+      estado.textContent='Operación cancelada: no hubo cambios.';
+      return false;
+    }
+    guardandoTrabajo=true;
+    el('guardarTextoAuth').disabled=true;el('guardarPreguntasAuth').disabled=true;
+    try{
+      const {data,error}=await client.rpc(nombre,payload);
+      if(error||data!==true){
+        estado.textContent='El servidor rechazó la modificación. Verifica los campos y los permisos.';
+        return false;
+      }
+      estado.textContent=mensaje+' Auditoría registrada por identidad Auth.';
+      return true;
+    }catch(_){estado.textContent='Error de comunicación: verificar el estado antes de reintentar.';return false}
+    finally{
+      guardandoTrabajo=false;el('guardarTextoAuth').disabled=false;
+      el('guardarPreguntasAuth').disabled=false;
+    }
+  }
+  el('guardarTextoAuth').addEventListener('click',async()=>{
+    const id=el('editorModuloSelector').value;
+    const m=trabajos.find(x=>x.id===id);
+    if(!m)return;
+    const titulo=el('editorTitulo').value.trim(),autor=el('editorAutor').value.trim();
+    const texto=el('editorTexto').value;
+    if(titulo.length<3||titulo.length>180||texto.trim().length<20||texto.length>300000){
+      el('estadoEditorAuth').textContent='Comprueba extensión del título y del texto.';
+      return;
+    }
+    const ok=await ejecutarGuardado('maestro_admin_editar_trabajo',{
+      p_modulo_id:id,p_titulo:titulo,p_autor:autor,p_contenido_trazado:texto
+    },'Título y texto docente actualizados.');
+    if(ok){Object.assign(m,{titulo,autor,contenido_trazado:texto});
+      el('editorModuloSelector').selectedOptions[0].textContent=
+        'Trabajo '+m.numero_orden+': '+titulo;
+    }
+  });
+  el('guardarPreguntasAuth').addEventListener('click',async()=>{
+    const id=el('editorModuloSelector').value;
+    const m=trabajos.find(x=>x.id===id);
+    if(!m||m.preguntas_json?.preguntas?.length!==8)return;
+    const preguntas=m.preguntas_json.preguntas.map((base,i)=>({
+      ...base,
+      enunciado:el('qa_p_'+i+'_enunciado').value.trim(),
+      respuesta_correcta:el('qa_p_'+i+'_correcta').value,
+      retroalimentacion:el('qa_p_'+i+'_retro').value.trim(),
+      opciones:['A','B','C','D'].map(letra=>({
+        letra,texto:el('qa_p_'+i+'_op_'+letra).value.trim()
+      }))
+    }));
+    const valido=preguntas.every(p=>p.enunciado.length>=5&&
+      ['A','B','C','D'].includes(p.respuesta_correcta)&&
+      p.opciones.every(o=>o.texto.length>=2));
+    if(!valido){el('estadoEditorAuth').textContent='Existen enunciados o alternativas incompletas.';return}
+    const ok=await ejecutarGuardado('maestro_admin_actualizar_preguntas',{
+      p_modulo_id:id,p_bateria:{preguntas}
+    },'Las ocho preguntas fueron actualizadas.');
+    if(ok)m.preguntas_json={...m.preguntas_json,preguntas};
+  });
+
   el('logout').addEventListener('click',async()=>{await signOut();status('Sesión de prueba cerrada.');});
   window.addEventListener('pagehide',()=>{if(client)client.auth.signOut({scope:'local'}).catch(()=>{})});
 })();
