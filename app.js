@@ -187,7 +187,8 @@ async function iniciarSesion() {
     }
 
     usuarioActual = data[0];
-    sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
+    // Nunca persistir el privilegio es_admin: solo existe durante la sesión.
+    sessionStorage.removeItem('camara_usuario_sesion');
 
     err.innerText = "";
     registrarIngresoAuditoria(usuarioActual);
@@ -218,22 +219,18 @@ async function registrarIngresoAuditoria(usuario) {
 }
 
 function recuperarSesionGuardada() {
-  const guardada = sessionStorage.getItem('camara_usuario_sesion');
-  if (guardada) {
-    try {
-      usuarioActual = JSON.parse(guardada);
-      configurarEntornoUsuario();
-    } catch (e) {
-      sessionStorage.removeItem('camara_usuario_sesion');
-    }
-  }
+  // La identidad no se recupera de sessionStorage sin un token validado.
+  sessionStorage.removeItem('camara_usuario_sesion');
+  usuarioActual = null;
 }
+
 
 function configurarEntornoUsuario() {
   reiniciarTemporizadorInactividad();
   document.getElementById('seccionLogin').classList.add('hidden');
   document.getElementById('btnSalir').classList.remove('hidden');
-  document.getElementById('btnCambiarMiClave').classList.remove('hidden');
+  // Cambio de clave legacy suspendido hasta reemplazo con Supabase Auth.
+  document.getElementById('btnCambiarMiClave').classList.add('hidden');
 
   if (usuarioActual.es_admin) {
     document.getElementById('seccionAdmin').classList.remove('hidden');
