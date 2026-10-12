@@ -124,14 +124,25 @@ function validarSeguridadClave(clave) {
 }
 
 function generarClaveAleatoriaSegura() {
-  const letras = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const simbolos = "!@#$%*?";
-  let p = "";
-  for (let i = 0; i < 6; i++) {
-    p += letras.charAt(Math.floor(Math.random() * letras.length));
+  // Usar criptografía del navegador; jamás Math.random() para credenciales.
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error('Se necesita HTTPS y un navegador con generador criptográfico.');
   }
-  p += simbolos.charAt(Math.floor(Math.random() * simbolos.length));
-  return p;
+  const letras = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const simbolos = '!@#$%*?';
+  const elegir = (longitud) => {
+    const numeros = new Uint32Array(1);
+    const limite = Math.floor(0x100000000 / longitud) * longitud;
+    do { crypto.getRandomValues(numeros); } while (numeros[0] >= limite);
+    return numeros[0] % longitud;
+  };
+  const caracteres = Array.from({ length: 14 }, () => letras[elegir(letras.length)]);
+  caracteres.push(simbolos[elegir(simbolos.length)], simbolos[elegir(simbolos.length)]);
+  for (let i = caracteres.length - 1; i > 0; i--) {
+    const j = elegir(i + 1);
+    [caracteres[i], caracteres[j]] = [caracteres[j], caracteres[i]];
+  }
+  return caracteres.join('');
 }
 
 function alternarVisibilidadClaveLogin() {
@@ -617,12 +628,24 @@ function abrirModalAdminClaveHermano(targetId, nombreHermano) {
   document.getElementById('modalAdminClaveHermano').classList.remove('hidden');
 }
 
-function autogenerarAdminClaveHermano() {
-  const p = generarClaveAleatoriaSegura();
+async function autogenerarAdminClaveHermano() {
   const input = document.getElementById('inputAdminClaveHermano');
-  input.value = p;
-  navigator.clipboard.writeText(p);
-  alert("Contraseña copiada al portapapeles: " + p);
+  const estado = document.getElementById('errorAdminClaveHermano');
+  if (!usuarioActual?.es_admin || !input) return;
+  try {
+    const clave = generarClaveAleatoriaSegura();
+    input.value = clave;
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(clave);
+      if (estado) estado.textContent = 'Clave segura generada y copiada. Guárdala por un canal confidencial.';
+    } else {
+      if (estado) estado.textContent = 'Clave segura generada; cópiala manualmente desde el campo protegido.';
+    }
+  } catch (error) {
+    if (input.value) {
+      if (estado) estado.textContent = 'Clave generada, pero el portapapeles no está disponible. Copia la clave manualmente desde el campo protegido.';
+    } else if (estado) estado.textContent = 'No fue posible generar una clave criptográficamente segura.';
+  }
 }
 
 async function guardarAdminClaveHermano() {
