@@ -270,3 +270,8 @@ GRANT EXECUTE ON FUNCTION public.maestro_registrar_evaluacion(uuid,jsonb) TO aut
 -- ACL de borrado directo revocada en R7 (mantener hasta migración Auth total):
 REVOKE DELETE ON public.progreso_maestro FROM PUBLIC,anon,authenticated;
 REVOKE DELETE ON public.comentarios_muro FROM PUBLIC,anon,authenticated;
+
+-- R7: integridad de comentarios, ACL YA APLICADA en Supabase.
+REVOKE UPDATE ON TABLE public.comentarios_muro FROM PUBLIC,anon,authenticated;
+GRANT UPDATE (contenido,editado,editado_en,activo) ON TABLE public.comentarios_muro TO anon,authenticated;
+-- NO equivale a propiedad del comentario: RLS por usuario sigue pendiente.
