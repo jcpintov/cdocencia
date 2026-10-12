@@ -531,6 +531,9 @@
         <button id="tabNavMetricas" class="admin-side-btn" onclick="cambiarSubseccionAdmin('metricas')">
           Indicadores y progreso
         </button>
+        <button id="tabNavDoctrinaDocumental" class="admin-side-btn" type="button" onclick="cambiarSubseccionAdmin('doctrina_documental')">
+          Doctrina documental
+        </button>
         <button id="tabNavEditorDoctrina" class="admin-side-btn" onclick="cambiarSubseccionAdmin('editor_doctrina')">
           Docencia institucional
         </button>
@@ -780,6 +783,66 @@
               </tr>
             </thead>
             <tbody id="tablaMetricasBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- RECEPCIÓN PREVIA DE DOCTRINA: METADATOS LOCALES, SIN TRANSFERENCIA DE ARCHIVOS -->
+      <section id="adminSeccionDoctrinaDocumental" class="card card-trazado hidden" aria-labelledby="tituloDoctrinaDocumental">
+        <div class="admin-card-header">
+          <div>
+            <p class="admin-overline">Módulo documental · Preparación segura</p>
+            <h2 id="tituloDoctrinaDocumental">Recepción de documentos doctrinales</h2>
+            <p class="text-instruccion">Clasificación y verificación de integridad en el navegador. Esta fase <strong>no sube documentos a Supabase</strong> ni los publica.</p>
+          </div>
+        </div>
+        <div class="doctrina-form-grid">
+          <div class="form-group doctrina-form-wide">
+            <label for="doctrinaArchivos">Originales por clasificar (PDF, Word, TXT, Markdown)</label>
+            <input id="doctrinaArchivos" type="file" accept=".pdf,.doc,.docx,.txt,.md" multiple>
+            <small>Máximo 50 MB por archivo. Si contienen grados distintos, prepara lotes separados.</small>
+          </div>
+          <div class="form-group">
+            <label for="doctrinaClase">Clase documental</label>
+            <select id="doctrinaClase">
+              <option value="doctrina">Doctrina</option><option value="normativa">Normativa</option><option value="ritual">Ritual</option>
+              <option value="tradicion">Tradición</option><option value="bibliografia">Bibliografía</option><option value="docencia">Docencia</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="doctrinaGrado">Grado mínimo</label>
+            <select id="doctrinaGrado">
+              <option value="A">Aprendiz (A)</option><option value="C">Compañero (C)</option>
+              <option value="M" selected>Maestro (M)</option><option value="EDMJ">EDMJ — acceso especial</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="doctrinaClasificacion">Clasificación de acceso</label>
+            <select id="doctrinaClasificacion">
+              <option value="reservado" selected>Reservado</option>
+              <option value="confidencial">Confidencial</option>
+              <option value="publicable">Publicable — pendiente de aprobación</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="doctrinaReferencia">Referencia / procedencia</label>
+            <input id="doctrinaReferencia" type="text" maxlength="200" placeholder="Ej.: Biblioteca institucional — lote 01">
+          </div>
+          <div class="form-group doctrina-form-wide doctrina-consentimiento">
+            <label><input id="doctrinaAutorizaExterno" type="checkbox"> Autorizo procesamiento mediante servicios externos <strong>para este lote</strong>.</label>
+            <small>Desmarcado por defecto. Esta casilla es únicamente documental: no inicia procesamiento externo ni reemplaza una autorización expresa por documento.</small>
+          </div>
+        </div>
+        <div class="doctrina-form-actions">
+          <button type="button" class="btn-primary" onclick="prepararLoteDoctrinal()">Preparar y verificar archivos</button>
+          <button type="button" class="btn-secondary" id="btnExportarManifiestoDoctrina" onclick="exportarManifiestoDoctrina()" disabled>Exportar manifiesto JSON</button>
+          <button type="button" class="btn-secondary" onclick="limpiarRecepcionDoctrina()">Limpiar</button>
+        </div>
+        <p id="estadoRecepcionDoctrina" class="text-instruccion" role="status" aria-live="polite">No hay archivos preparados. Los originales permanecen en este navegador.</p>
+        <div class="table-responsive">
+          <table class="metricas-table">
+            <thead><tr><th>Archivo</th><th>Tamaño</th><th>SHA-256</th><th>Estado</th></tr></thead>
+            <tbody id="tablaRecepcionDoctrina"><tr><td colspan="4">Selecciona archivos para iniciar la recepción local.</td></tr></tbody>
           </table>
         </div>
       </section>
