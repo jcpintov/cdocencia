@@ -2290,13 +2290,13 @@ function normalizarConsultaDoctrinal(texto) {
 function identificarContextoDoctrinal(consulta) {
   const texto = normalizarConsultaDoctrinal(consulta);
   const contextos = [];
-  if (/(^|[^a-z])(iniciacion|iniciado|aprendiz|primer grado|piedra bruta)(?=$|[^a-z])/.test(texto)) {
+  if (/(^|[^a-z])(iniciacion(?:es)?|iniciado(?:s)?|aprendiz|aprendices|primer grado|piedra bruta)(?=$|[^a-z])/.test(texto)) {
     contextos.push('Iniciación / Aprendiz (primer grado)');
   }
-  if (/(^|[^a-z])(aumento|companero|segundo grado)(?=$|[^a-z])/.test(texto)) {
+  if (/(^|[^a-z])(aumento(?:s)?|companero(?:s)?|segundo grado)(?=$|[^a-z])/.test(texto)) {
     contextos.push('Aumento / Compañero (segundo grado)');
   }
-  if (/(^|[^a-z])(exaltacion|maestro|maestria|tercer grado|camara del medio)(?=$|[^a-z])/.test(texto)) {
+  if (/(^|[^a-z])(exaltacion(?:es)?|maestro(?:s)?|maestria|tercer grado|camara del medio)(?=$|[^a-z])/.test(texto)) {
     contextos.push('Exaltación / Maestro (tercer grado)');
   }
   return contextos;
