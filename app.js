@@ -1905,31 +1905,23 @@ async function cargarDatosAdmin() {
 
   listaModulos = mods || [];
   
-  const selectMetricas = document.getElementById('selectMetricasModulo');
-  if (selectMetricas) {
-    selectMetricas.innerHTML = "";
-    listaModulos.forEach(m => {
-      selectMetricas.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
-    });
-  }
-  
-  const selectPresencialMod = document.getElementById('selectOrigenTrabajoPresencial');
-  if (selectPresencialMod) {
-    selectPresencialMod.innerHTML = `<option value="aleatorio">🎲 Todos los Trabajos (Aleatorio)</option>`;
-    listaModulos.forEach(m => {
-      selectPresencialMod.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
-    });
-  }
-
-  const selectAdjunto = document.getElementById('selectModuloParaArchivo');
-  if (selectAdjunto) {
-    selectAdjunto.innerHTML = "";
-    listaModulos.forEach(m => {
-      selectAdjunto.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
-    });
-    if (listaModulos.length > 0) {
-      verificarEstadoArchivoModulo(selectAdjunto.value || listaModulos[0].id);
-    }
+  const nombreModulo = m => 'Trabajo ' + (m.numero_orden ?? '—') + ': ' + (m.titulo || 'Sin título');
+  const reemplazarOpciones = (id, opciones) => {
+    const select = document.getElementById(id);
+    if (!select) return null;
+    const seleccionAnterior = select.value;
+    select.replaceChildren();
+    opciones.forEach(([titulo, valor]) => select.add(new Option(titulo, String(valor))));
+    if ([...select.options].some(op => op.value === seleccionAnterior)) select.value = seleccionAnterior;
+    return select;
+  };
+  const opcionesTrabajos = listaModulos.map(m => [nombreModulo(m), m.id]);
+  reemplazarOpciones('selectMetricasModulo', opcionesTrabajos);
+  reemplazarOpciones('selectOrigenTrabajoPresencial',
+    [['Todos los trabajos (aleatorio)', 'aleatorio'], ...opcionesTrabajos]);
+  const selectAdjunto = reemplazarOpciones('selectModuloParaArchivo', opcionesTrabajos);
+  if (selectAdjunto && listaModulos.length) {
+    verificarEstadoArchivoModulo(selectAdjunto.value || listaModulos[0].id);
   }
 
   cambiarSubseccionAdmin('resumen');
