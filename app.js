@@ -1315,6 +1315,11 @@ function eliminarComentarioForo(comentarioId) {
 /* ==========================================================================
    RENDERIZADO DE TRAZADO
    ========================================================================== */
+function escaparHtmlTexto(texto) {
+  return String(texto ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 function renderizarTrazadoEnriquecido(textoBruto) {
   if (!textoBruto) return "";
   const parrafos = textoBruto.split(/\n\s*\n/);
@@ -1327,9 +1332,9 @@ function renderizarTrazadoEnriquecido(textoBruto) {
                      (limpio.length < 80 && limpio === limpio.toUpperCase() && !limpio.includes('. '));
 
     if (esTitulo) {
-      return `<h3 class="trazado-subtitulo">${limpio}</h3>`;
+      return `<h3 class="trazado-subtitulo">${escaparHtmlTexto(limpio)}</h3>`;
     }
-    return `<p class="trazado-parrafo">${limpio.replace(/\n/g, ' ')}</p>`;
+    return `<p class="trazado-parrafo">${escaparHtmlTexto(limpio.replace(/\n/g, ' '))}</p>`;
   }).join('');
 }
 
