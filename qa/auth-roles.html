@@ -22,6 +22,19 @@
     .status{margin:22px 0 0;padding:13px;background:#f6f8fa;border-left:3px solid #b48c65;line-height:1.6;border-radius:0 7px 7px 0}
     dl{display:grid;grid-template-columns:170px 1fr;gap:10px;margin:20px 0 0}dt{color:#607489}dd{margin:0;font-weight:650;overflow-wrap:anywhere}
     .disclaimer{font-size:.83rem;color:#5e6e7a;line-height:1.7;margin:20px 0}
+    #editorDocenteAuth{background:#fff;padding:20px;margin-top:22px;border:1px solid #dae2e9;border-left:3px solid #a8794d;border-radius:8px}
+    #editorDocenteAuth h2{font:500 1.4rem Georgia,serif;margin:0 0 10px}
+    #editorDocenteAuth p{font-size:.88rem;line-height:1.6}
+    #editorDocenteAuth textarea{display:block;width:100%;font:inherit;padding:12px;border:1px solid #becbd5;border-radius:8px;resize:vertical;line-height:1.55}
+    #editorDocenteAuth details{margin:20px 0 0;border-top:1px solid #d5e0e8;padding-top:14px}
+    #editorDocenteAuth summary{cursor:pointer;font-weight:650;line-height:1.6}
+    #editorDocenteAuth .qa-question{padding:17px 15px;border:1px solid #dae4eb;border-radius:8px;margin:14px 0;display:grid;gap:10px}
+    #editorDocenteAuth .qa-question h3{font-size:.95rem;margin:0}
+    #editorDocenteAuth .qa-option-grid{display:grid;gap:8px}
+    #editorDocenteAuth .qa-question label{margin:0}
+    #editorDocenteAuth .qa-question input{min-width:0}
+    #editorDocenteAuth button:disabled{opacity:.55;cursor:wait}
+
     #padronSuperadminLab{background:#f8fafb;padding:21px;border-radius:9px;margin-top:24px}
     #tablaPadron th,#tablaPadron td{padding:9px 12px;border-bottom:1px solid #dce5eb;text-align:left;overflow-wrap:anywhere}
     #tablaPadron th{background:#e8eef2;font-size:.78rem;color:#506578}
@@ -73,6 +86,26 @@
           <tbody id="padronBody"></tbody>
         </table>
       </div>
+    </section>
+    <section id="editorDocenteAuth" hidden aria-labelledby="editorDocenteTitulo">
+      <h2 id="editorDocenteTitulo">Trabajos docentes — edición autenticada</h2>
+      <p>Exclusivo SUPERADMIN. Los cambios afectan los trabajos compartidos de Supabase. Cada operación requiere confirmación expresa y queda auditada.</p>
+      <div class="actions"><button type="button" id="cargarTrabajosAuth">Consultar trabajos</button></div>
+      <div id="editorFormularioAuth" hidden>
+        <div class="campos">
+          <div><label for="editorModuloSelector">Trabajo</label><select id="editorModuloSelector"></select></div>
+          <div><label for="editorTitulo">Título</label><input id="editorTitulo" maxlength="180" required></div>
+          <div><label for="editorAutor">Autor o emisor</label><input id="editorAutor" maxlength="180"></div>
+          <div><label for="editorTexto">Texto docente íntegro</label><textarea id="editorTexto" rows="10" maxlength="300000"></textarea></div>
+        </div>
+        <div class="actions"><button type="button" id="guardarTextoAuth">Guardar título y texto — con auditoría</button></div>
+        <details id="preguntasDetalleAuth">
+          <summary>Revisar las ocho preguntas y alternativas</summary>
+          <div id="preguntasContenidoAuth"></div>
+          <div class="actions"><button type="button" id="guardarPreguntasAuth">Guardar batería de ocho preguntas — con auditoría</button></div>
+        </details>
+      </div>
+      <p class="status" id="estadoEditorAuth" role="status" aria-live="polite">Los originales solo se modificarán después de una confirmación explícita.</p>
     </section>
     <p class="disclaimer">Esta prueba no cambia la contraseña del portal heredado. No envía la contraseña a Vercel: la autenticación se realiza directamente con Supabase Auth. El token se mantiene en memoria y no se muestra en pantalla ni se guarda de manera persistente. El acceso a «Doctrina y Reglamentos» continúa cerrado a los usuarios ordinarios.</p>
   </section>
