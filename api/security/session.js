@@ -5,7 +5,7 @@
  *
  * Configuración requerida exclusivamente en servidor:
  *   SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY,
- *   SUPABASE_SERVICE_ROLE_KEY, SUPERADMIN_AUTH_USER_ID.
+ *   Supabase Auth y RPC de identidad sin clave de servicio.
  *
  * En ausencia de configuración: 503 (fail closed). No modifica la sesión
  * de autenticación heredada ni habilita acciones administrativas.
@@ -27,14 +27,12 @@ function reply(res, code, payload) {
 function config() {
   const url = process.env.SUPABASE_URL;
   const publishableKey = process.env.SUPABASE_PUBLISHABLE_KEY;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const superadminUid = process.env.SUPERADMIN_AUTH_USER_ID;
-  if (!url || !publishableKey || !serviceKey || !UUID.test(superadminUid || '')) return null;
+  if (!url || !publishableKey) return null;
   try {
     const origin = new URL(url);
     if (origin.protocol !== 'https:' || !origin.hostname.endsWith(ALLOWED_ORIGIN_SUFFIX) ||
         origin.username || origin.password || origin.port || origin.pathname !== '/') return null;
-    return { url: origin.origin, publishableKey, serviceKey, superadminUid };
+    return { url: origin.origin, publishableKey };
   } catch (_) { return null; }
 }
 
@@ -60,36 +58,24 @@ async function handler(req, res) {
         typeof authResponse.data?.email !== 'string' || !authResponse.data?.email_confirmed_at) {
       return reply(res, 401, {error: 'invalid_session'});
     }
-    // La correspondencia al padrón se obtiene desde la base confiable,
-    // nunca desde un email enviado directamente por el navegador.
-    const user = authResponse.data;
-    const endpoint = new URL(conf.url + '/rest/v1/usuarios');
-    endpoint.searchParams.set('select', 'id,email,es_admin');
-    endpoint.searchParams.set('email', 'eq.' + user.email.trim().toLowerCase());
-    endpoint.searchParams.set('limit', '2');
-    const padronResponse = await getJson(endpoint.toString(), {
-      headers: {
-        apikey: conf.serviceKey,
-        Authorization: 'Bearer ' + conf.serviceKey
-      }
+    const identity = await fetch(conf.url + '/rest/v1/rpc/maestro_identidad_actual', {
+      method: 'POST',
+      headers: { apikey: conf.publishableKey, Authorization: 'Bearer ' + match[1],
+        'Content-Type': 'application/json' },
+      body: '{}', redirect: 'error', signal: AbortSignal.timeout(8000)
     });
-    if (!padronResponse.ok) return reply(res, 502, {error: 'directory_unavailable'});
-    const matches = padronResponse.data;
-    if (!Array.isArray(matches) || matches.length !== 1 ||
-        !UUID.test(matches[0]?.id || '') || typeof matches[0]?.es_admin !== 'boolean' ||
-        String(matches[0]?.email || '').trim().toLowerCase() !== user.email.trim().toLowerCase()) {
+    if (!identity.ok) return reply(res, 502, {error: 'identity_service_unavailable'});
+    const profiles = await identity.json();
+    if (!Array.isArray(profiles) || profiles.length !== 1)
       return reply(res, 403, {error: 'member_not_authorized'});
-    }
-    const isDesignatedAdmin = user.id.toLowerCase() === conf.superadminUid.toLowerCase();
-    // Fallar cerrado si la cuenta heredada aparece como Admin pero el Auth UID
-    // NO coincide con el único UID administrativo aprobado.
-    if (Boolean(matches[0].es_admin) !== isDesignatedAdmin)
+    const profile = profiles[0];
+    if (!UUID.test(profile?.auth_user_id || '') || !UUID.test(profile?.legacy_user_id || '') ||
+        profile.auth_user_id.toLowerCase() !== authResponse.data.id.toLowerCase() ||
+        !['USER', 'SUPERADMIN'].includes(profile.rol))
       return reply(res, 403, {error: 'role_mapping_not_authorized'});
     return reply(res, 200, {
-      authenticated: true,
-      role: isDesignatedAdmin ? 'SUPERADMIN' : 'USER',
-      auth_user_id: user.id,
-      legacy_user_id: matches[0].id
+      authenticated: true, role: profile.rol, auth_user_id: profile.auth_user_id,
+      legacy_user_id: profile.legacy_user_id
     });
   } catch (_) {
     return reply(res, 502, {error: 'authentication_service_unavailable'});
