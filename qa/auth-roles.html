@@ -34,6 +34,14 @@
     #editorDocenteAuth .qa-question label{margin:0}
     #editorDocenteAuth .qa-question input{min-width:0}
     #editorDocenteAuth button:disabled{opacity:.55;cursor:wait}
+    #bitacoraAdminAuth{background:#fff;padding:20px;border:1px solid #dae2e9;border-left:3px solid #a8794d;border-radius:8px;margin-top:22px}
+    #bitacoraAdminAuth h2{font:500 1.35rem Georgia,serif;margin:0 0 10px}
+    #bitacoraAdminAuth p{font-size:.88rem;line-height:1.6}
+    #bitacoraAdminAuth .qa-filtros-bitacora{display:flex;flex-wrap:wrap;gap:12px;margin-top:14px}
+    #bitacoraAdminAuth .qa-filtros-bitacora label{display:flex;align-items:center;gap:6px;font-size:.86rem}
+    #bitacoraAdminAuth .qa-filtros-bitacora input{width:auto}
+    #bitacoraResumenAuth{line-height:1.65;font-size:.89rem}
+
 
     #padronSuperadminLab{background:#f8fafb;padding:21px;border-radius:9px;margin-top:24px}
     #tablaPadron th,#tablaPadron td{padding:9px 12px;border-bottom:1px solid #dce5eb;text-align:left;overflow-wrap:anywhere}
@@ -126,13 +134,17 @@
   'use strict';
   const SUPABASE_URL='https://pwnnpjygnviyzyyvfxnq.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY='sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF';
-  let client=null, busy=false, trabajos=[], guardandoTrabajo=false;
+  let client=null, busy=false, trabajos=[], guardandoTrabajo=false, accesosBitacora=[];
   const el=id=>document.getElementById(id);
   const status=texto=>{el('status').textContent=texto};
   const show=(role)=>{
     el('result').hidden=!role;
     el('padronSuperadminLab').hidden=role!=='SUPERADMIN';
     el('editorDocenteAuth').hidden=role!=='SUPERADMIN';
+    el('bitacoraAdminAuth').hidden=role!=='SUPERADMIN';
+    accesosBitacora=[];
+    el('bitacoraResumenAuth').replaceChildren();
+    el('estadoBitacoraAuth').textContent='Bitácora no consultada.';
     el('editorFormularioAuth').hidden=true;
     el('editorModuloSelector').replaceChildren();
     el('preguntasContenidoAuth').replaceChildren();
