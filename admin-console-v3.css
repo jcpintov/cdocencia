@@ -1,0 +1,166 @@
+/* Doctrina–Docencia | Consola administrativa v3
+   Presentación exclusivamente dentro de #seccionAdmin.
+   Sin cambios de permisos, sesiones, consultas o datos. */
+#seccionAdmin.admin-layout {
+  --ad-navy:#142a3b; --ad-ink:#1d3141; --ad-copper:#b58a59;
+  --ad-surface:#ffffff; --ad-ground:#f3f2ee; --ad-border:#e4e0d9;
+  --ad-muted:#526274; --ad-shadow:0 14px 38px rgba(25,42,56,.065);
+  display:grid;grid-template-columns:minmax(252px,284px) minmax(0,1fr);
+  align-items:stretch;gap:0;min-height:calc(100dvh - 75px);
+  background:var(--ad-ground);color:var(--ad-ink);font-family:var(--font-ui,Inter,system-ui,sans-serif)
+}
+#seccionAdmin .sidebar-admin {
+  position:sticky;top:0;align-self:start;min-height:calc(100dvh - 75px);
+  padding:29px 19px 22px;border-right:1px solid #ffffff18;
+  background:radial-gradient(ellipse at 0% 0%,#315166 0%,transparent 45%),
+    linear-gradient(165deg,#182f43 0%,#102334 73%,#0d1d2b 100%);
+  color:#e9edf0;box-shadow:6px 0 36px #0b213011
+}
+#seccionAdmin .admin-brand{
+  align-items:center;gap:14px;margin:0 4px 23px;padding:0 0 23px;border-bottom:1px solid #ffffff1e
+}
+#seccionAdmin .admin-monogram{
+  display:grid;place-items:center;flex:none;width:45px;height:45px;
+  border:1px solid #c99e6a8c;border-radius:13px;background:#ffffff08;
+  color:#e5c294;font:500 24px Georgia,serif;box-shadow:inset 0 0 0 4px #ffffff05
+}
+#seccionAdmin .admin-brand h3{
+  margin:0;color:#f9f8f4;font:500 20px/1.2 Georgia,serif;letter-spacing:-.02em
+}
+#seccionAdmin .admin-links-top{gap:7px;margin:0 0 12px}
+#seccionAdmin .admin-nav-link-ext{
+  border:1px solid #ffffff1e;background:#ffffff07;color:#d6dce0;
+  border-radius:9px;padding:11px 13px;font-size:12px;font-weight:600;
+  transition:background .16s ease,border-color .16s ease
+}
+#seccionAdmin .admin-nav-link-ext:hover,#seccionAdmin .admin-nav-link-ext:focus-visible{
+  background:#ffffff12;border-color:#e3be8582;color:#fff
+}
+#seccionAdmin .admin-divider{margin:15px 4px 21px;background:#ffffff17}
+#seccionAdmin .admin-menu-list{gap:5px}
+#seccionAdmin .admin-side-btn{
+  width:100%;min-height:46px;padding:12px 14px;border:1px solid transparent;
+  border-radius:10px;background:transparent;color:#b9c6d1;
+  font-size:13px;font-weight:600;line-height:1.35;letter-spacing:.002em;
+  transition:background .16s,color .16s,border-color .16s;box-shadow:none;text-align:left
+}
+#seccionAdmin .admin-side-btn:hover,#seccionAdmin .admin-side-btn:focus-visible{
+  color:#fff;background:#ffffff0e;border-color:#ffffff20
+}
+#seccionAdmin .admin-side-btn.active{
+  color:#f7eee0;background:linear-gradient(90deg,#ae82552b,#ffffff09);
+  border-color:#c59a6855;box-shadow:inset 3px 0 0 #d2a770
+}
+#seccionAdmin .admin-doctrina-entry{
+  margin:0 0 8px;border:1px solid #b58a596e;background:#b58a5915;color:#edd1ad
+}
+#seccionAdmin .admin-side-footer{
+  padding:24px 4px 0;margin-top:24px;border-top:1px solid #ffffff20
+}
+#seccionAdmin .admin-side-footer .btn-secondary{
+  min-height:43px;border-radius:9px;border-color:#ffffff35!important;
+  background:#ffffff0d!important;color:#f0f3f4!important;font-size:12px
+}
+#seccionAdmin .admin-main-content{
+  min-width:0;padding:clamp(22px,3vw,46px);overflow:visible;
+  background:var(--ad-ground)
+}
+#seccionAdmin .admin-main-content > section.card{
+  max-width:1480px;margin:0 auto 24px;padding:clamp(20px,2.6vw,36px);
+  border:1px solid var(--ad-border);border-radius:17px;background:var(--ad-surface);
+  box-shadow:var(--ad-shadow);color:var(--ad-ink)
+}
+#seccionAdmin .admin-card-header{
+  align-items:flex-start;gap:18px;border-bottom:1px solid var(--ad-border);
+  padding:0 0 24px;margin:0 0 26px
+}
+#seccionAdmin .admin-card-header h2{
+  margin:0 0 10px;font:500 clamp(23px,2.5vw,33px)/1.15 Georgia,serif;
+  letter-spacing:-.025em;color:var(--ad-navy)
+}
+#seccionAdmin .text-instruccion,#seccionAdmin .admin-card-header p{
+  color:var(--ad-muted);font-size:13px;line-height:1.7
+}
+#seccionAdmin .admin-header-actions{
+  gap:9px;align-items:center;justify-content:flex-end
+}
+#seccionAdmin .admin-header-actions .btn-primary,#seccionAdmin .admin-main-content .btn-primary{
+  background:var(--ad-navy);color:#fff;border:1px solid var(--ad-navy);
+  border-radius:9px;font-size:13px;font-weight:650;box-shadow:none;
+  transition:background .16s,transform .16s
+}
+#seccionAdmin .admin-header-actions .btn-primary:hover,#seccionAdmin .admin-main-content .btn-primary:hover{
+  background:#234257;transform:translateY(-1px)
+}
+#seccionAdmin .admin-link-btn,#seccionAdmin .admin-main-content .btn-secondary{
+  display:inline-flex;align-items:center;justify-content:center;
+  color:var(--ad-navy);background:#fff;border:1px solid #cfc9c1;
+  border-radius:9px;font-size:12px;font-weight:650;padding:10px 14px;text-decoration:none
+}
+#seccionAdmin .admin-link-btn:hover,#seccionAdmin .admin-main-content .btn-secondary:hover{
+  background:#f6f3ed;border-color:#b58a59
+}
+#seccionAdmin .table-responsive{
+  overflow-x:auto;border:1px solid #ebe7e1;border-radius:12px;margin-top:15px
+}
+#seccionAdmin .metricas-table{
+  width:100%;border-collapse:collapse;font-size:12px;background:#fff
+}
+#seccionAdmin .metricas-table th,#seccionAdmin .metricas-table thead th{
+  background:#f6f5f1!important;color:#3c4a55!important;
+  border-bottom:1px solid var(--ad-border);padding:14px 17px;
+  font-size:11px;font-weight:750;letter-spacing:.055em;text-transform:uppercase
+}
+#seccionAdmin .metricas-table td{
+  padding:15px 17px;color:#2f4050;border-bottom:1px solid #eeeae5;
+  line-height:1.5;vertical-align:middle
+}
+#seccionAdmin .metricas-table tbody tr:last-child td{border-bottom:0}
+#seccionAdmin .metricas-table tbody tr:hover{background:#faf9f6}
+#seccionAdmin .admin-main-content label{color:#33465a;font-size:13px}
+#seccionAdmin .admin-main-content input,
+#seccionAdmin .admin-main-content select,
+#seccionAdmin .admin-main-content textarea{
+  border:1px solid #c7d0d6;border-radius:9px;background:#fff;color:#172e41
+}
+#seccionAdmin .admin-main-content input:focus-visible,
+#seccionAdmin .admin-main-content select:focus-visible,
+#seccionAdmin .admin-main-content textarea:focus-visible{
+  outline:2px solid #bd915b;outline-offset:2px
+}
+#seccionAdmin button:focus-visible,#seccionAdmin a:focus-visible{
+  outline:2px solid #d6a972;outline-offset:3px
+}
+#seccionAdmin .admin-main-content .card-trazado{
+  border-top:3px solid #b58a59
+}
+@media(max-width:980px){
+  #seccionAdmin.admin-layout{grid-template-columns:240px minmax(0,1fr)}
+  #seccionAdmin .admin-main-content{padding:22px}
+}
+@media(max-width:760px){
+  #seccionAdmin.admin-layout{display:block;min-height:auto}
+  #seccionAdmin .sidebar-admin{
+    position:relative;top:auto;min-height:auto;padding:18px 16px 16px;
+    border-right:0;border-bottom:3px solid #b58a59
+  }
+  #seccionAdmin .admin-brand{margin-bottom:14px;padding-bottom:14px}
+  #seccionAdmin .admin-links-top{flex-direction:row;flex-wrap:wrap}
+  #seccionAdmin .admin-nav-link-ext{flex:1 1 132px}
+  #seccionAdmin .admin-menu-list{
+    display:flex;flex-direction:row;gap:8px;overflow-x:auto;
+    padding:5px 2px 11px;scroll-snap-type:x proximity
+  }
+  #seccionAdmin .admin-menu-list .admin-side-btn{
+    width:auto;min-width:max-content;white-space:nowrap;scroll-snap-align:start
+  }
+  #seccionAdmin .admin-side-footer{margin-top:8px;padding-top:12px}
+  #seccionAdmin .admin-main-content{padding:17px}
+  #seccionAdmin .admin-main-content > section.card{padding:20px;border-radius:13px}
+  #seccionAdmin .admin-card-header{gap:14px}
+  #seccionAdmin .admin-header-actions{justify-content:flex-start}
+}
+@media(prefers-reduced-motion:reduce){
+  #seccionAdmin .admin-side-btn,#seccionAdmin .admin-nav-link-ext,
+  #seccionAdmin .admin-header-actions .btn-primary{transition:none}
+}
