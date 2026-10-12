@@ -426,9 +426,9 @@ async function cargarListadoUsuariosAdmin() {
         <td>${estadoClaveHtml}</td>
         <td>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button class="admin-link-btn" onclick="abrirModalEditarUsuario('${u.id}', '${nombreEscapado}', '${emailEscapado}', ${u.es_admin})">✏️ Editar</button>
+            ${u.es_admin ? '<span class="admin-profile-protected" title="Cuenta Superadmin protegida">Perfil protegido</span>' : `<button class="admin-link-btn" onclick="abrirModalEditarUsuario('${u.id}', '${nombreEscapado}', '${emailEscapado}', false)">Editar</button>`}
             <button class="admin-link-btn" style="color: var(--accent-gold-dark);" onclick="abrirModalAdminClaveHermano('${u.id}', '${nombreEscapado}')">🔑 Clave</button>
-            ${u.id !== usuarioActual.id ? `<button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="confirmarEliminarUsuario('${u.id}', '${nombreEscapado}')">🗑️ Eliminar</button>` : ''}
+            ${!u.es_admin && u.id !== usuarioActual.id ? `<button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="confirmarEliminarUsuario('${u.id}', '${nombreEscapado}')">Eliminar</button>` : ''}
           </div>
         </td>
       </tr>
@@ -456,6 +456,11 @@ function autogenerarClaveNuevoUsuario() {
 }
 
 function abrirModalEditarUsuario(id, nombre, email, esAdmin) {
+  // La edición de Superadmin requiere un flujo propio que no modifique es_admin.
+  if (esAdmin === true || esAdmin === 'true' || id === usuarioActual?.id) {
+    alert('La cuenta Superadmin no se modifica desde el padrón. Esta medida protege sus permisos.');
+    return;
+  }
   document.getElementById('modalAdminUsuarioTitulo').innerText = '✏️ Editar Datos de Usuario';
   document.getElementById('adminUsuarioTargetId').value = id;
   document.getElementById('adminUsuarioNombre').value = nombre;
@@ -503,6 +508,22 @@ async function guardarAdminUsuario() {
       }
       alert("Usuario incorporado exitosamente.");
     } else {
+      // Segunda comprobación: impide desactivar accidentalmente a un Superadmin.
+      // Es protección del cliente; el servidor debe reforzar este mismo control.
+      if (targetId === usuarioActual?.id) {
+        err.innerText = 'La cuenta Superadmin no se edita desde este formulario.';
+        return;
+      }
+      const { data: destino, error: errorDestino } = await sbApp
+        .from('usuarios').select('es_admin').eq('id', targetId).single();
+      if (errorDestino || !destino) {
+        err.innerText = 'No se pudo verificar el rol del usuario. No se guardaron cambios.';
+        return;
+      }
+      if (destino.es_admin) {
+        err.innerText = 'Operación cancelada: este formulario no puede modificar cuentas Superadmin.';
+        return;
+      }
       const { error } = await sbApp.rpc('admin_editar_usuario', {
         p_admin_id: usuarioActual.id,
         p_target_id: targetId,
@@ -2244,10 +2265,14 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   let query = sbApp.from('registro_accesos').select('*', { count: 'exact' })
     .order('creado_en', { ascending: false }).limit(100);
   if (filtroActual !== 'todos') query = query.eq('usuario_id', filtroActual);
-  // Cada exclusión se aplica independientemente, antes del límite de 100.
-  cuentasOcultas.forEach(correo => {
-    query = query.or('email.is.null,email.not.ilike.' + correo);
-  });
+  // Una sola expresión PostgREST: conserva correos NULL y aplica TODAS
+  // las exclusiones antes de limitar a los últimos 100 ingresos.
+  if (cuentasOcultas.length) {
+    const condiciones = cuentasOcultas.map(correo => 'email.not.ilike.' + correo);
+    query = query.or('email.is.null,' + (
+      condiciones.length === 1 ? condiciones[0] : 'and(' + condiciones.join(',') + ')'
+    ));
+  }
   const { data: registros, error, count } = await query;
   if (secuenciaActual !== secuenciaConsultaBitacora) return;
   if (error) {
