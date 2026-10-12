@@ -2808,51 +2808,59 @@ function abrirAuditoriaModulo(moduloId) {
 }
 
 function renderizarEditorPreguntasAuditoria() {
-  const contPreguntas = document.getElementById('cuerpoPreguntasAuditoria');
-  contPreguntas.innerHTML = "";
-
+  if (!usuarioActual?.es_admin || !moduloAuditando) return;
+  const cont = document.getElementById('cuerpoPreguntasAuditoria');
+  if (!cont) return;
+  cont.replaceChildren();
   const preguntas = moduloAuditando.preguntas_json?.preguntas || [];
-  preguntas.forEach((p, idx) => {
-    const esEtica = (idx === preguntas.length - 1);
-    
-    let opcionesInputs = ['A', 'B', 'C', 'D'].map(letra => {
-      const opObj = p.opciones?.find(o => o.letra === letra) || { letra: letra, texto: "" };
-      return `
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-          <strong style="width: 20px;">${letra})</strong>
-          <input type="text" id="edit_p_${idx}_op_${letra}" name="edit_p_${idx}_op_${letra}" value="${opObj.texto.replace(/"/g, '&quot;')}" style="flex: 1; padding: 6px 10px; font-size: 0.9rem;">
-        </div>
-      `;
-    }).join('');
-
-    contPreguntas.innerHTML += `
-      <div class="bloque-doctrina-card" style="margin-bottom: 16px; border-left-color: ${esEtica ? 'var(--accent-gold)' : 'var(--primary)'};">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-          <strong style="color: var(--accent-gold-dark);">${esEtica ? 'Pregunta 8 (Dilema Ético)' : `Pregunta ${idx + 1}`}</strong>
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <label for="edit_p_${idx}_correcta" style="font-size: 0.85rem; font-weight: 700;">Respuesta Correcta:</label>
-            <select id="edit_p_${idx}_correcta" name="edit_p_${idx}_correcta" style="width: 70px; padding: 4px 8px;">
-              <option value="A" ${p.respuesta_correcta === 'A' ? 'selected' : ''}>A</option>
-              <option value="B" ${p.respuesta_correcta === 'B' ? 'selected' : ''}>B</option>
-              <option value="C" ${p.respuesta_correcta === 'C' ? 'selected' : ''}>C</option>
-              <option value="D" ${p.respuesta_correcta === 'D' ? 'selected' : ''}>D</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom: 10px;">
-          <label for="edit_p_${idx}_enunciado">Enunciado:</label>
-          <input type="text" id="edit_p_${idx}_enunciado" name="edit_p_${idx}_enunciado" value="${(p.enunciado || '').replace(/"/g, '&quot;')}" style="font-size: 0.95rem;">
-        </div>
-        <div style="margin-bottom: 10px;">
-          <span style="font-size: 0.85rem; font-weight: 600; display: block; margin-bottom: 4px;">Alternativas:</span>
-          ${opcionesInputs}
-        </div>
-        <div class="form-group" style="margin-bottom: 0;">
-          <label for="edit_p_${idx}_retro">Retroalimentación:</label>
-          <input type="text" id="edit_p_${idx}_retro" name="edit_p_${idx}_retro" value="${(p.retroalimentacion || '').replace(/"/g, '&quot;')}" style="font-size: 0.9rem;">
-        </div>
-      </div>
-    `;
+  const crear = (tag, clase, texto, padre) => {
+    const nodo = document.createElement(tag);
+    if (clase) nodo.className = clase;
+    if (texto !== undefined) nodo.textContent = String(texto ?? '');
+    if (padre) padre.appendChild(nodo);
+    return nodo;
+  };
+  const inputTexto = (padre, id, titulo, valor) => {
+    const grupo = crear('div', 'form-group editor-pregunta-campo', undefined, padre);
+    const label = crear('label', '', titulo, grupo);
+    label.htmlFor = id;
+    const input = crear('input', '', undefined, grupo);
+    input.type = 'text';
+    input.id = id;
+    input.name = id;
+    input.value = String(valor ?? '');
+    return input;
+  };
+  preguntas.forEach((pregunta, idx) => {
+    const card = crear('article', 'bloque-doctrina-card editor-pregunta-card', undefined, cont);
+    const cabecera = crear('div', 'editor-pregunta-header', undefined, card);
+    const esEtica = idx === preguntas.length - 1;
+    crear('strong', '', 'Pregunta ' + (idx + 1) + (esEtica ? ' (Dilema ético)' : ''), cabecera);
+    const respuesta = crear('div', 'editor-pregunta-correcta', undefined, cabecera);
+    const idCorrecta = 'edit_p_' + idx + '_correcta';
+    const etiqueta = crear('label', '', 'Respuesta correcta:', respuesta);
+    etiqueta.htmlFor = idCorrecta;
+    const select = crear('select', '', undefined, respuesta);
+    select.id = idCorrecta;
+    select.name = idCorrecta;
+    for (const letra of ['A', 'B', 'C', 'D']) {
+      const opt = document.createElement('option');
+      opt.value = letra;
+      opt.textContent = letra;
+      select.appendChild(opt);
+    }
+    select.value = ['A', 'B', 'C', 'D'].includes(pregunta.respuesta_correcta)
+      ? pregunta.respuesta_correcta : 'A';
+    inputTexto(card, 'edit_p_' + idx + '_enunciado', 'Enunciado:', pregunta.enunciado);
+    const alternativas = crear('div', 'editor-pregunta-alternativas', undefined, card);
+    crear('span', 'editor-pregunta-etiqueta', 'Alternativas:', alternativas);
+    for (const letra of ['A', 'B', 'C', 'D']) {
+      const opcion = pregunta.opciones?.find(o => o.letra === letra);
+      inputTexto(alternativas, 'edit_p_' + idx + '_op_' + letra, letra + ')',
+        opcion?.texto || '');
+    }
+    inputTexto(card, 'edit_p_' + idx + '_retro', 'Retroalimentación:',
+      pregunta.retroalimentacion);
   });
 }
 
