@@ -2741,7 +2741,7 @@ async function cargarGestionTrabajosAdmin() {
 
   const { data: mods, error } = await sbApp
     .from('modulos')
-    .select('id, numero_orden, titulo, autor, activo, contenido_trazado')
+    .select('*') // El editor requiere preguntas_json y campos auxiliares.
     .eq('activo', true)
     .order('numero_orden', { ascending: true });
 
