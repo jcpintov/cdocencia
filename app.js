@@ -2258,7 +2258,10 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   }
   if (resumen) resumen.textContent = (cuentasOcultas.length ? 'Cuentas ocultas: ' + cuentasOcultas.join(', ') + '. ' : 'Vista completa · sin cuentas ocultas. ') +
     (count ?? 0) + ' accesos coincidentes; mostrando hasta 100 registros recientes. Los datos históricos permanecen intactos.';
-  if (!registros?.length) { estado('No hay ingresos registrados para el criterio seleccionado.'); return; }
+  if (!registros?.length) {
+    estado(cuentasOcultas.length ? 'No hay accesos de usuarios para los filtros seleccionados. Los accesos ocultos se conservan en el historial.' : 'No hay ingresos registrados para el criterio seleccionado.');
+    return;
+  }
   tbody.replaceChildren();
   registros.forEach(r => {
     const tr = tbody.insertRow();
