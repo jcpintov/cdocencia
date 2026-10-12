@@ -7,7 +7,7 @@ const source = fs.readFileSync(path.join(__dirname,'..','floating-tab.js'),'utf8
 function setup() {
   const elements = new Map();
   function el(tag) {return {tag,hidden:false,children:[],listeners:{},style:{},setAttribute(){},addEventListener(name,fn){this.listeners[name]=fn;},append(...items){this.children.push(...items);},replaceChildren(...items){this.children=items;},cloneNode(){return el(tag);},focus(){}};}
-  const document = {head:el('head'),body:el('body'),getElementById(id){return elements.get(id)||null;},createTextNode(value){return {textContent:value};},createElement(tag){const item=el(tag);Object.defineProperty(item,'id',{set(id){elements.set(id,item);},get(){return [...elements].find(([,v])=>v===item)?.[0];}});return item;}};
+  const document = {head:el('head'),body:el('body'),listeners:{},addEventListener(name,fn){this.listeners[name]=fn;},getElementById(id){return elements.get(id)||null;},createTextNode(value){return {textContent:value};},createElement(tag){const item=el(tag);Object.defineProperty(item,'id',{set(id){elements.set(id,item);},get(){return [...elements].find(([,v])=>v===item)?.[0];}});return item;}};
   const window = {};
   vm.runInNewContext(source,{document,window});
   return {shell:window.DoctrinaSuperadminShell,tab:elements.get('doctrina-superadmin-tab'),panel:elements.get('doctrina-superadmin-panel')};
