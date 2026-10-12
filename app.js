@@ -1804,98 +1804,116 @@ function habilitarEdicionReflexion() {
 
 async function cargarMuroReflexiones() {
   const contenedor = document.getElementById('contenedorMuro');
-  contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Cargando aportes de la Cámara...</p>";
-
+  const moduloId = moduloActual?.id;
+  if (!contenedor || !moduloId || !usuarioActual) return;
+  const estado = document.createElement('p');
+  estado.className = 'td-loading';
+  estado.textContent = 'Cargando aportes de la Cámara...';
+  contenedor.replaceChildren(estado);
   const { data, error } = await sbApp
     .from('progreso_maestro')
     .select('id, reflexion, completado_en, modulo_id, usuario_id, usuarios(nombre)')
-    .eq('modulo_id', moduloActual.id)
+    .eq('modulo_id', moduloId)
     .eq('completado', true)
     .not('reflexion', 'is', null);
-
-  contenedor.innerHTML = "";
-  if (!error && data && data.length > 0) {
-    let comentariosMap = {};
-    const { data: comentariosData } = await sbApp
-      .from('comentarios_muro')
-      .select('id, progreso_id, usuario_id, contenido, contenido_original, editado, editado_en, creado_en, usuarios(nombre)')
-      .eq('modulo_id', moduloActual.id)
-      .eq('activo', true)
-      .order('creado_en', { ascending: true });
-
-    if (comentariosData) {
-      const idsProcesados = new Set();
-      comentariosData.forEach(c => {
-        if (idsProcesados.has(c.id)) return;
-        idsProcesados.add(c.id);
-
-        if (!comentariosMap[c.progreso_id]) comentariosMap[c.progreso_id] = [];
-        comentariosMap[c.progreso_id].push(c);
-      });
-    }
-
-    const usuariosVistos = new Set();
-
-    data.forEach(item => {
-      if (!item.reflexion || item.reflexion.trim() === "" || item.modulo_id !== moduloActual.id) return;
-      if (usuariosVistos.has(item.usuario_id)) return;
-      usuariosVistos.add(item.usuario_id);
-
-      const coms = comentariosMap[item.id] || [];
-      let comsHtml = coms.map(c => {
-        const cFecha = c.creado_en 
-          ? new Date(c.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-          : "";
-        const esAutor = (c.usuario_id === usuarioActual.id);
-        const editadoTag = c.editado ? ` <span style="font-size: 0.72rem; color: var(--accent-gold); font-style: italic;">(editado)</span>` : "";
-
-        let botonesComentario = "";
-        if (esAutor) {
-          botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido)}')">✏️ Editar</button>`;
-        }
-        if (usuarioActual.es_admin) {
-          const nombreEscapado = (c.usuarios?.nombre || '').replace(/'/g, "\\'");
-          botonesComentario += `<button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${nombreEscapado}', '${cFecha}')">🔍 Huella</button>`;
-          botonesComentario += `<button class="foro-comentario-btn" style="color: var(--error);" onclick="eliminarComentarioForo('${c.id}')">🗑️</button>`;
-        }
-
-        return `
-          <div class="foro-comentario-item" id="comentario_item_${c.id}">
-            <div class="foro-comentario-header">
-              <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
-              <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
-            </div>
-            <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
-          </div>
-        `;
-      }).join('');
-
-      contenedor.innerHTML += `
-        <div class="reflexion-item" style="margin-bottom: 20px;">
-          <div class="reflexion-autor">${item.usuarios?.nombre || "Hermano Maestro"}</div>
-          <div style="font-style: italic; margin-bottom: 8px;">"${item.reflexion}"</div>
-          
-          <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${item.id}')">
-            💬 Comentarios (${coms.length})
-          </button>
-
-          <div id="caja_comentario_${item.id}" class="foro-comentar-caja hidden">
-            <textarea id="input_comentario_${item.id}" name="input_comentario_${item.id}" rows="3" class="foro-comentar-input" placeholder="Escriba su comentario aquí..."></textarea>
-            <div style="display: flex; justify-content: flex-end; gap: 8px;">
-              <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleFormularioComentario('${item.id}')">Cancelar</button>
-              <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem; width: auto;" onclick="enviarComentarioForo('${item.id}', '${moduloActual.id}')">Publicar</button>
-            </div>
-          </div>
-
-          <div class="foro-comentarios-wrapper" id="lista_comentarios_${item.id}">
-            ${comsHtml}
-          </div>
-        </div>
-      `;
-    });
-  } else {
-    contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Aún no hay reflexiones consagradas en este trabajo.</p>";
+  if (moduloActual?.id !== moduloId || !usuarioActual) return;
+  if (error) {
+    estado.textContent = 'No fue posible obtener las reflexiones de este trabajo.';
+    return;
   }
+  const { data: comentariosData, error: errorComentarios } = await sbApp
+    .from('comentarios_muro')
+    .select('id, progreso_id, usuario_id, contenido, contenido_original, editado, editado_en, creado_en, usuarios(nombre)')
+    .eq('modulo_id', moduloId)
+    .eq('activo', true)
+    .order('creado_en', { ascending: true });
+  if (moduloActual?.id !== moduloId || !usuarioActual) return;
+  if (errorComentarios) {
+    estado.textContent = 'No fue posible verificar los comentarios de este trabajo.';
+    return;
+  }
+  contenedor.replaceChildren();
+  const comentarios = new Map();
+  const idsComentarios = new Set();
+  (comentariosData || []).forEach(c => {
+    if (idsComentarios.has(c.id)) return;
+    idsComentarios.add(c.id);
+    if (!comentarios.has(c.progreso_id)) comentarios.set(c.progreso_id, []);
+    comentarios.get(c.progreso_id).push(c);
+  });
+  const crear = (tag, clase, texto, padre) => {
+    const nodo = document.createElement(tag);
+    if (clase) nodo.className = clase;
+    if (texto !== undefined) nodo.textContent = String(texto ?? '');
+    if (padre) padre.appendChild(nodo);
+    return nodo;
+  };
+  const crearBoton = (texto, clase, padre, evento) => {
+    const boton = crear('button', clase, texto, padre);
+    boton.type = 'button';
+    boton.addEventListener('click', evento);
+    return boton;
+  };
+  const usuariosVistos = new Set();
+  (data || []).forEach(item => {
+    if (!item.reflexion?.trim() || item.modulo_id !== moduloId ||
+        usuariosVistos.has(item.usuario_id)) return;
+    usuariosVistos.add(item.usuario_id);
+    const lista = comentarios.get(item.id) || [];
+    const articulo = crear('article', 'reflexion-item', undefined, contenedor);
+    articulo.style.marginBottom = '20px';
+    crear('div', 'reflexion-autor', item.usuarios?.nombre || 'Hermano Maestro', articulo);
+    const reflexion = crear('div', 'reflexion-texto-seguro', '"' + item.reflexion + '"', articulo);
+    reflexion.style.fontStyle = 'italic';
+    reflexion.style.marginBottom = '8px';
+    crearBoton('Comentarios (' + lista.length + ')', 'foro-btn-toggle-comentar', articulo,
+      () => toggleFormularioComentario(item.id));
+    const caja = crear('div', 'foro-comentar-caja hidden', undefined, articulo);
+    caja.id = 'caja_comentario_' + item.id;
+    const area = crear('textarea', 'foro-comentar-input', undefined, caja);
+    area.id = 'input_comentario_' + item.id;
+    area.name = area.id;
+    area.rows = 3;
+    area.placeholder = 'Escriba su comentario aquí...';
+    const accionesFormulario = crear('div', 'foro-comentar-acciones', undefined, caja);
+    crearBoton('Cancelar', 'btn-secondary', accionesFormulario,
+      () => toggleFormularioComentario(item.id));
+    crearBoton('Publicar', 'btn-primary', accionesFormulario,
+      () => enviarComentarioForo(item.id, moduloId));
+    const listaNodo = crear('div', 'foro-comentarios-wrapper', undefined, articulo);
+    listaNodo.id = 'lista_comentarios_' + item.id;
+    lista.forEach(c => {
+      const fecha = c.creado_en
+        ? new Date(c.creado_en).toLocaleDateString('es-CL',
+          { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : '';
+      const comentario = crear('article', 'foro-comentario-item', undefined, listaNodo);
+      comentario.id = 'comentario_item_' + c.id;
+      const cabecera = crear('div', 'foro-comentario-header', undefined, comentario);
+      crear('span', 'foro-comentario-autor',
+        'Aporte del Q.·.H.·. ' + (c.usuarios?.nombre || 'Hermano'), cabecera);
+      const fechaNodo = crear('span', 'foro-comentario-fecha', fecha, cabecera);
+      if (c.editado) crear('span', 'foro-etiqueta-editado', ' (editado)', fechaNodo);
+      const cuerpo = crear('div', 'foro-comentario-cuerpo', c.contenido || '', comentario);
+      cuerpo.id = 'comentario_cuerpo_' + c.id;
+      const esAutor = c.usuario_id === usuarioActual.id;
+      if (esAutor || usuarioActual.es_admin) {
+        const accionesComentario = crear('div', 'foro-comentario-acciones', undefined, comentario);
+        if (esAutor) crearBoton('Editar', 'foro-comentario-btn', accionesComentario,
+          () => abrirModalEditarComentario(c.id, encodeURIComponent(c.contenido || '')));
+        if (usuarioActual.es_admin) {
+          crearBoton('Huella', 'foro-comentario-btn', accionesComentario,
+            () => abrirAuditoriaComentario(c.id,
+              encodeURIComponent(c.contenido_original || c.contenido || ''),
+              c.usuarios?.nombre || 'Hermano', fecha));
+          crearBoton('Eliminar', 'foro-comentario-btn foro-accion-eliminar',
+            accionesComentario, () => eliminarComentarioForo(c.id));
+        }
+      }
+    });
+  });
+  if (!usuariosVistos.size) crear('p', 'text-instruccion',
+    'Aún no hay reflexiones consagradas en este trabajo.', contenedor);
 }
 
 /* ==========================================================================
