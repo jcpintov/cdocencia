@@ -43,6 +43,17 @@ const blocked=['admin_crear_usuario','admin_editar_usuario','admin_eliminar_usua
  'solicitar_recuperacion_clave','resetear_clave_con_token'];
 for(const name of blocked)
  assert(!app.includes("sbApp.rpc('"+name+"'"),'No reabrir RPC legacy: '+name);
+for(const id of ['bitacoraAdminAuth','cargarBitacoraAuth','ocultarGmailAuth','ocultarHotmailAuth','estadoBitacoraAuth']) {
+  assert.equal(html.split('id="'+id+'"').length,2,'ID bitácora único: '+id);
+}
+assert(html.includes("el('bitacoraAdminAuth').hidden=role!=='SUPERADMIN'"));
+assert(html.includes("await client.rpc('maestro_admin_bitacora')"));
+assert(html.includes("el('ocultarGmailAuth').checked"));
+assert(html.includes("el('ocultarHotmailAuth').checked"));
+assert(html.includes('Los filtros no eliminan datos históricos.'));
+assert(!html.includes("client.from('registro_accesos')"),
+  'Bitácora debe consultarse mediante RPC autenticada');
+
 assert(!html.includes('tabNavDoctrinaReglamentos'),
  'El laboratorio de Auth no debe exponer el módulo doctrinal');
 
