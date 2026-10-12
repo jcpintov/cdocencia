@@ -217,7 +217,7 @@
         🔑 Recuperación de Contraseña
       </h3>
       <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
-        Ingrese su correo registrado en el padrón para generar su enlace de restablecimiento seguro.
+        La recuperación heredada se encuentra suspendida por seguridad. No se generarán enlaces ni se revelarán tokens. El nuevo procedimiento utilizará un correo verificado.
       </p>
 
       <div class="form-group">
@@ -229,7 +229,7 @@
 
       <div style="display: flex; justify-content: flex-end; gap: 10px;">
         <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalRecuperarClave')">Cancelar</button>
-        <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="enviarSolicitudRecuperacion()">Generar Enlace</button>
+        <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="enviarSolicitudRecuperacion()">Consultar estado</button>
       </div>
     </div>
   </div>
@@ -553,12 +553,17 @@
     </aside>
 
     <main class="admin-main-content">
+      <div class="admin-mantenimiento-alerta" role="status">
+        <strong>Operaciones administrativas temporalmente restringidas</strong>
+        <p>La consulta del padrón continúa disponible. Altas, edición, bajas y cambios de contraseña están suspendidos mientras se migra la autenticación. No se han eliminado usuarios ni respaldos.</p>
+        <a href="qa/auth-roles.html" target="_blank" rel="noopener noreferrer">Abrir laboratorio de identidad USER / SUPERADMIN</a>
+      </div>
       <!-- PORTADA DE LA CONSOLA ÚNICA SUPERADMIN -->
       <section id="adminSeccionResumen" class="admin-overview" aria-labelledby="adminResumenTitulo">
         <header class="admin-overview-header">
           <p class="admin-overline">Doctrina · Docencia · Gestión</p>
           <h1 id="adminResumenTitulo">Resumen ejecutivo</h1>
-          <p>Supervisión centralizada de usuarios, publicaciones y actividad de la Cámara.</p>
+          <p>Supervisión centralizada de usuarios, publicaciones y actividad de la Cámara. Las modificaciones administrativas permanecen en mantenimiento de seguridad.</p>
         </header>
         <div class="admin-overview-kpis" role="group" aria-label="Indicadores generales">
           <article class="admin-overview-kpi"><span>Usuarios del padrón</span><strong id="resumenKpiUsuarios">—</strong><small>Excluye cuentas de prueba y administración</small></article>
@@ -601,10 +606,10 @@
         <div class="admin-card-header">
           <div>
             <h2>Padrón y Administración de Usuarios</h2>
-            <p class="text-instruccion" style="margin: 0;">Gestione altas, bajas, roles y contraseñas de los integrantes de la Cámara.</p>
+            <p class="text-instruccion" style="margin: 0;">Consulte el padrón. Las altas, bajas, roles y contraseñas permanecen bloqueados hasta completar la migración segura de autenticación.</p>
           </div>
           <div class="admin-header-actions">
-            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" onclick="abrirModalCrearUsuario()">➕ Nuevo Hermano</button>
+            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" disabled title="Operación suspendida hasta migrar autenticación">Nueva incorporación (mantenimiento)</button>
             <button class="admin-link-btn" onclick="cargarListadoUsuariosAdmin()">🔄 Refrescar Padrón</button>
           </div>
         </div>
