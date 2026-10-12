@@ -61,7 +61,7 @@
 #doctrina-superadmin-tab{position:relative;top:auto;right:auto;z-index:auto;display:block;writing-mode:horizontal-tb;letter-spacing:.015em;text-transform:none;width:100%;padding:14px 16px;margin:8px 0 0;border:1px solid #bc9565a3;border-radius:10px;background:linear-gradient(105deg,#8c684634,#ffffff06);font-size:13px;font-weight:650;color:#f1d4ab;text-align:left;box-shadow:none;min-height:46px}
 #doctrina-superadmin-tab:hover{background:#d1a06a25;color:#fff;border-color:#c59b6d}
 #doctrina-superadmin-tab:focus-visible{outline:2px solid #d1a977;outline-offset:3px}
-#doctrina-superadmin-panel{position:fixed;top:50%;left:50%;right:auto;transform:translate(-50%,-50%);height:min(91dvh,910px);width:min(1120px,calc(100vw - 36px));z-index:9011;border:1px solid #d8d0c6;border-radius:20px;background:#f5f3ee;box-shadow:0 0 0 100vmax #071320ba,0 30px 100px #0007;overflow-y:auto;overscroll-behavior:contain}
+#doctrina-superadmin-panel{position:fixed;top:50%;left:50%;right:auto;transform:translate(-50%,-50%);height:min(91dvh,910px);width:min(1120px,calc(100vw - 36px));z-index:9011;border:1px solid #d8d0c6;border-radius:20px;background:#f5f3ee;box-shadow:0 30px 100px #0007;overflow-y:auto;overscroll-behavior:contain}
 #doctrina-superadmin-panel .ds-header{padding:31px clamp(22px,3vw,45px);background:linear-gradient(125deg,#142c40 0%,#294456 100%);border-bottom:3px solid #bd9564}
 #doctrina-superadmin-panel .ds-eyebrow{font-size:10px;color:#d8b98e;letter-spacing:.21em}
 #doctrina-superadmin-panel h2{color:#fff;font:500 clamp(27px,3vw,40px)/1.13 Georgia,serif;letter-spacing:-.032em}
@@ -95,6 +95,7 @@
 @media(prefers-reduced-motion:reduce){#doctrina-superadmin-panel,#doctrina-superadmin-tab{transition:none}}
 `;
   const tab = document.createElement('button'); tab.id='doctrina-superadmin-tab'; tab.type='button'; tab.textContent='Gobierno Doctrina';tab.className='admin-side-btn ds-doctrina-launcher';tab.setAttribute('aria-haspopup','dialog'); tab.hidden=true; tab.setAttribute('aria-controls','doctrina-superadmin-panel'); tab.setAttribute('aria-expanded','false');
+  const backdrop = document.createElement('div');backdrop.id='doctrina-superadmin-backdrop';backdrop.hidden=true;
   const panel = document.createElement('aside'); panel.id='doctrina-superadmin-panel'; panel.hidden=true; panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','Gobierno institucional de Doctrina');
   const el=(tag,cls,txt)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n;};
   const header=el('header','ds-header');
@@ -127,16 +128,26 @@
   // El botón se inserta en la navegación del Admin; el diálogo reside a nivel de documento.
   const adminSection=document.getElementById('seccionAdmin');
   const adminMenu=adminSection&&typeof adminSection.querySelector==='function'?adminSection.querySelector('.admin-menu-list'):null;
-  (adminMenu||document.body).append(tab);document.body.append(panel);
-  let authorizedClient=null;let generation=0;
-  close.addEventListener('click',()=>{panel.hidden=true;tab.setAttribute('aria-expanded','false');tab.focus();});
-  function open(){if(tab.hidden||!authorizedClient)return false;panel.hidden=false;tab.setAttribute('aria-expanded','true');close.focus();return true;}
+  (adminMenu||document.body).append(tab);document.body.append(backdrop,panel);
+  let authorizedClient=null;let generation=0;let previousBodyOverflow='';
+  function closePanel(){
+    if(!panel.hidden)document.body.style.overflow=previousBodyOverflow;
+    backdrop.hidden=true;panel.hidden=true;tab.setAttribute('aria-expanded','false');if(!tab.hidden)tab.focus();
+  }
+  close.addEventListener('click',closePanel);
+  backdrop.addEventListener('click',closePanel);
+  function open(){
+    if(tab.hidden||!authorizedClient)return false;
+    if(panel.hidden)previousBodyOverflow=document.body.style.overflow||'';
+    document.body.style.overflow='hidden';backdrop.hidden=false;
+    panel.hidden=false;tab.setAttribute('aria-expanded','true');close.focus();return true;
+  }
   tab.addEventListener('click',()=>{void open();});
   document.addEventListener('keydown',(event)=>{
-    if(event.key==='Escape'&&!panel.hidden){panel.hidden=true;tab.setAttribute('aria-expanded','false');if(!tab.hidden)tab.focus();return;}
+    if(event.key==='Escape'&&!panel.hidden){closePanel();return;}
     // Trampa de foco limitada al diálogo: nunca captura el teclado de Docencia cuando está cerrado.
     if(event.key==='Tab'&&!panel.hidden&&typeof panel.querySelectorAll==='function'){
-      const focusable=Array.from(panel.querySelectorAll('button:not([disabled]):not([hidden]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href]')).filter(n=>!n.hidden&&n.getAttribute('aria-hidden')!=='true');
+      const focusable=Array.from(panel.querySelectorAll('button:not([disabled]):not([hidden]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href]')).filter(n=>!n.hidden&&!n.closest?.('[hidden]')&&n.getAttribute('aria-hidden')!=='true');
       if(!focusable.length){event.preventDefault();close.focus();return;}
       const first=focusable[0],last=focusable[focusable.length-1],active=document.activeElement;
       if(event.shiftKey&&(active===first||!panel.contains(active))){event.preventDefault();last.focus();}
@@ -168,7 +179,7 @@
   // Consultar RPC del servidor con sesión Auth válida. Fallo = denegación.
   // La función SQL pública doctrina_es_superadmin() valida auth.uid() en servidor.
   let revision = 0;
-  function hide() { revision += 1; tab.hidden = true; panel.hidden = true; tab.setAttribute('aria-expanded','false'); resetAdmin(); }
+  function hide() { revision += 1; closePanel(); tab.hidden = true; panel.hidden = true; tab.setAttribute('aria-expanded','false'); resetAdmin(); }
   async function refreshFromSupabase(client) {
     hide();
     const current = revision;
