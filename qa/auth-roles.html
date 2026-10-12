@@ -41,6 +41,20 @@
     #bitacoraAdminAuth .qa-filtros-bitacora label{display:flex;align-items:center;gap:6px;font-size:.86rem}
     #bitacoraAdminAuth .qa-filtros-bitacora input{width:auto}
     #bitacoraResumenAuth{line-height:1.65;font-size:.89rem}
+    #panelDocenciaAuth{background:#fff;padding:20px;margin-top:22px;border:1px solid #dbe5ea;border-left:3px solid #a8794d;border-radius:8px}
+    #panelDocenciaAuth h2{font:500 1.4rem Georgia,serif;margin:0 0 10px}
+    #panelDocenciaAuth p{font-size:.88rem;line-height:1.65}
+    #panelDocenciaAuth .mi-docencia-resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:16px 0}
+    #panelDocenciaAuth .mi-docencia-kpi{padding:16px;background:#f4f7f9;border-radius:8px}
+    #panelDocenciaAuth .mi-docencia-kpi strong{display:block;font-size:1.4rem;color:#17354f}
+    #panelDocenciaAuth .mi-docencia-kpi span{font-size:.79rem;color:#647687}
+    #panelDocenciaAuth .mi-docencia-comentar{border-top:1px solid #dbe4e9;margin-top:20px;padding-top:17px}
+    #panelDocenciaAuth textarea{width:100%;font:inherit;border:1px solid #bccbd6;border-radius:8px;padding:11px;resize:vertical;line-height:1.6}
+    #panelDocenciaAuth .mi-docencia-comentario{border:1px solid #dae3eb;border-radius:8px;margin:11px 0;padding:14px 15px}
+    #panelDocenciaAuth .mi-docencia-comentario p{white-space:pre-wrap;overflow-wrap:anywhere}
+    #panelDocenciaAuth .mi-docencia-explicacion{color:#647687}
+    #panelDocenciaAuth button:disabled{opacity:.55;cursor:wait}
+
 
 
     #padronSuperadminLab{background:#f8fafb;padding:21px;border-radius:9px;margin-top:24px}
@@ -125,6 +139,33 @@
       </div>
       <p class="status" id="estadoBitacoraAuth" role="status" aria-live="polite">Bitácora no consultada.</p>
       <div id="bitacoraResumenAuth" aria-label="Resumen de bitácora"></div>
+    </section>
+    <section id="panelDocenciaAuth" hidden aria-labelledby="tituloMiDocenciaAuth">
+      <h2 id="tituloMiDocenciaAuth">Mi Docencia — verificación de permisos</h2>
+      <p>Consulta autenticada del progreso propio y de los comentarios de trabajos completados. Esta vista no concede acceso a Doctrina y Reglamentos.</p>
+      <div class="actions">
+        <button id="cargarMiDocenciaAuth" type="button">Consultar mis avances</button>
+      </div>
+      <p id="estadoMiDocenciaAuth" class="status" role="status" aria-live="polite">Sin consulta activa.</p>
+      <div id="resumenMiDocenciaAuth" class="mi-docencia-resumen" aria-label="Resumen de avances propios"></div>
+      <div id="interaccionMiDocenciaAuth" hidden>
+        <label for="selectTrabajoMiDocenciaAuth">Trabajo para consulta</label>
+        <select id="selectTrabajoMiDocenciaAuth"></select>
+        <div class="actions">
+          <button type="button" id="verComentariosMiDocenciaAuth" class="secondary">Consultar comentarios autorizados</button>
+          <button type="button" id="marcarLecturaAuth" class="secondary">Marcar lectura propia</button>
+        </div>
+        <div id="listaComentariosMiDocenciaAuth" aria-label="Comentarios de la Cámara"></div>
+        <div class="mi-docencia-comentar">
+          <label for="contenidoComentarioAuth">Comentario al trabajo seleccionado</label>
+          <textarea id="contenidoComentarioAuth" rows="4" maxlength="1500" placeholder="Escriba un comentario fundamentado. Esta operación modificará datos reales."></textarea>
+          <p class="mi-docencia-explicacion" id="modoComentarioAuth">Solo podrá comentar los trabajos que haya completado. La publicación exige confirmación.</p>
+          <div class="actions">
+            <button type="button" id="guardarComentarioAuth">Publicar comentario — con confirmación</button>
+            <button type="button" id="cancelarEdicionComentarioAuth" class="secondary" hidden>Cancelar edición</button>
+          </div>
+        </div>
+      </div>
     </section>
     <p class="disclaimer">Esta prueba no cambia la contraseña del portal heredado. No envía la contraseña a Vercel: la autenticación se realiza directamente con Supabase Auth. El token se mantiene en memoria y no se muestra en pantalla ni se guarda de manera persistente. El acceso a «Doctrina y Reglamentos» continúa cerrado a los usuarios ordinarios.</p>
   </section>
