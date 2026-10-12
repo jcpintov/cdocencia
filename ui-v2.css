@@ -75,3 +75,23 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 #seccionAdmin .admin-profile-protected{display:inline-flex;align-items:center;padding:6px 9px;border:1px solid #d7dee6;border-radius:7px;font-size:.82rem;color:#62748a}
 @media(max-width:1150px){#adminSeccionAccesos .bitacora-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){#adminSeccionAccesos .bitacora-kpis{grid-template-columns:1fr}#adminSeccionAccesos .admin-header-actions{align-items:stretch}#adminSeccionAccesos .bitacora-filtros-cuentas{width:100%;display:grid;gap:10px}#adminSeccionAccesos .bitacora-kpi{padding:16px}}
+
+/* Portada ejecutiva consolidada de la consola Superadmin */
+#seccionAdmin .admin-overview{display:flex;flex-direction:column;gap:22px;min-width:0}
+#seccionAdmin .admin-overview-header{padding:30px 32px;border:1px solid #dbe4eb;border-radius:14px;background:linear-gradient(112deg,#fff 0%,#f8fafb 75%,#f1f4f6 100%)}
+#seccionAdmin .admin-overline{font-size:.76rem;text-transform:uppercase;letter-spacing:.13em;color:#a8794d;font-weight:750;margin:0 0 12px}
+#seccionAdmin .admin-overview-header h1{font-family:Georgia,serif;font-size:clamp(1.75rem,3vw,2.4rem);line-height:1.2;color:#1c344a;margin:0 0 12px}
+#seccionAdmin .admin-overview-header>p:last-child{margin:0;color:#607184;line-height:1.65}
+#seccionAdmin .admin-overview-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+#seccionAdmin .admin-overview-kpi{display:flex;flex-direction:column;gap:9px;background:#fff;border:1px solid #dfe6eb;border-radius:12px;padding:22px 18px;min-width:0}
+#seccionAdmin .admin-overview-kpi span{font-size:.82rem;color:#68798b;font-weight:650}
+#seccionAdmin .admin-overview-kpi strong{font-family:Georgia,serif;font-weight:600;font-size:2.05rem;line-height:1.2;color:#1c344a;font-variant-numeric:tabular-nums}
+#seccionAdmin .admin-overview-kpi small{font-size:.77rem;color:#768496;line-height:1.45}
+#seccionAdmin #resumenSuperadminEstado{margin:0;padding:0 2px}
+#seccionAdmin .admin-overview-modulos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+#seccionAdmin .admin-overview-modulo{display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:0;padding:24px;background:#fff;border:1px solid #dfe6eb;border-radius:12px}
+#seccionAdmin .admin-overview-modulo h2{font-family:Georgia,serif;font-size:1.18rem;color:#233c51;margin:0}
+#seccionAdmin .admin-overview-modulo p{color:#64758a;font-size:.9rem;line-height:1.6;margin:0 0 4px}
+#seccionAdmin .admin-overview-modulo button{margin-top:auto}
+@media(max-width:1180px){#seccionAdmin .admin-overview-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){#seccionAdmin .admin-overview-header{padding:24px 18px}#seccionAdmin .admin-overview-kpis,#seccionAdmin .admin-overview-modulos{grid-template-columns:1fr}#seccionAdmin .admin-overview-modulo{padding:19px}}
