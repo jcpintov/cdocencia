@@ -800,7 +800,7 @@
           <div class="form-group doctrina-form-wide">
             <label for="doctrinaArchivos">Originales por clasificar (PDF, Word, TXT, Markdown)</label>
             <input id="doctrinaArchivos" type="file" accept=".pdf,.doc,.docx,.txt,.md" multiple>
-            <small>Máximo 50 MB por archivo. Si contienen grados distintos, prepara lotes separados.</small>
+            <small>Máximo 128 MB por archivo para verificación local. Archivos grandes pueden consumir memoria. Separa los grados y valida cada documento antes de publicarlo.</small>
           </div>
           <div class="form-group">
             <label for="doctrinaClase">Clase documental</label>
@@ -829,8 +829,8 @@
             <input id="doctrinaReferencia" type="text" maxlength="200" placeholder="Ej.: Biblioteca institucional — lote 01">
           </div>
           <div class="form-group doctrina-form-wide doctrina-consentimiento">
-            <label><input id="doctrinaAutorizaExterno" type="checkbox"> Autorizo procesamiento mediante servicios externos <strong>para este lote</strong>.</label>
-            <small>Desmarcado por defecto. Esta casilla es únicamente documental: no inicia procesamiento externo ni reemplaza una autorización expresa por documento.</small>
+            <label><input id="doctrinaAutorizaExterno" type="checkbox"> Solicito evaluación de procesamiento externo <strong>para este lote</strong> (no autoriza su ejecución).</label>
+            <small>Desmarcado por defecto. El procesamiento externo permanece denegado en el manifiesto hasta su autorización expresa, individual y auditable.</small>
           </div>
         </div>
         <div class="doctrina-form-actions">
