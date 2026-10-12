@@ -13,3 +13,6 @@ test('preview probe sends only to authorized recipient using mock',async()=>{
 test('probe refuses production',async()=>assert.rejects(runSmtpProbe({env:{...env,VERCEL_ENV:'production'},createTransport:()=>({sendMail:async()=>{}})})));
 test('probe refuses unapproved recipient',async()=>assert.rejects(runSmtpProbe({env:{...env,SMTP_TEST_TO:'other@example.com'},createTransport:()=>({sendMail:async()=>{}})})));
 test('probe refuses missing preview mode',async()=>assert.rejects(runSmtpProbe({env:{...env,RECOVERY_MODE:'local'},createTransport:()=>({sendMail:async()=>{}})})));
+
+test('probe refuses missing explicit test recipient',async()=>assert.rejects(runSmtpProbe({env:{...env,SMTP_TEST_TO:''},createTransport:()=>({sendMail:async()=>{}})})));
+test('probe refuses absent environment',async()=>assert.rejects(runSmtpProbe({env:null,createTransport:()=>({sendMail:async()=>{}})})));
