@@ -231,6 +231,12 @@ function configurarEntornoUsuario() {
     document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
     document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
     document.getElementById('seccionMuroUsuarios').classList.add('hidden');
+    // La consola administrativa es el único entorno SUPERADMIN.
+    // No se exige otro cambio si la contraseña personal ya fue establecida.
+    if (usuarioActual.debe_cambiar_clave) {
+      document.getElementById('modalCambioClaveObligatorio').classList.remove('hidden');
+      return;
+    }
     cargarDatosAdmin();
   } else {
     document.getElementById('modalSigilo').classList.remove('hidden');
