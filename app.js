@@ -2235,6 +2235,14 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     document.getElementById('ocultarHotmailBitacora')?.checked ? 'jpintov@hotmail.com' : null
   ].filter(Boolean);
   const resumen = document.getElementById('resumenBitacoraAccesos');
+  const periodo = document.getElementById('periodoBitacora')?.value || 'todo';
+  const dias = periodo === '7' ? 7 : (periodo === '30' ? 30 : null);
+  const actualizarIndicador = (id, valor) => {
+    const nodo = document.getElementById(id);
+    if (nodo) nodo.textContent = String(valor);
+  };
+  ['kpiBitacoraAccesos', 'kpiBitacoraUsuarios', 'kpiBitacoraUltimo'].forEach(id => actualizarIndicador(id, '…'));
+  actualizarIndicador('kpiBitacoraOcultas', cuentasOcultas.length);
 
   tbody.replaceChildren();
   const estado = (mensaje) => {
@@ -2262,9 +2270,11 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   // El filtro se ejecuta antes de limitar la consulta: no se pierden accesos
   // de usuarios por la abundancia de pruebas administrativas.
   const filtroActual = filtroUsuarioId && [...(selectFiltro?.options || [])].some(o => o.value === filtroUsuarioId) ? filtroUsuarioId : (selectFiltro?.value || 'todos');
-  let query = sbApp.from('registro_accesos').select('*', { count: 'exact' })
+  let query = sbApp.from('registro_accesos')
+    .select('usuario_id,nombre,email,ip_origen,creado_en', { count: 'exact' })
     .order('creado_en', { ascending: false }).limit(100);
   if (filtroActual !== 'todos') query = query.eq('usuario_id', filtroActual);
+  if (dias) query = query.gte('creado_en', new Date(Date.now() - dias * 86400000).toISOString());
   // Una sola expresión PostgREST: conserva correos NULL y aplica TODAS
   // las exclusiones antes de limitar a los últimos 100 ingresos.
   if (cuentasOcultas.length) {
@@ -2277,12 +2287,26 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   if (secuenciaActual !== secuenciaConsultaBitacora) return;
   if (error) {
     estado('No fue posible consultar la bitácora.');
+    ['kpiBitacoraAccesos', 'kpiBitacoraUsuarios', 'kpiBitacoraUltimo'].forEach(id => actualizarIndicador(id, '—'));
     if (resumen) resumen.textContent = 'Error al consultar los accesos. No se modificó ningún registro.';
     console.error('Error de bitácora:', error);
     return;
   }
+  const total = Number.isFinite(count) ? count : registros?.length || 0;
+  const identidades = new Set(
+    (registros || []).map(r => r.usuario_id || (r.email || '').trim().toLowerCase()).filter(Boolean)
+  );
+  actualizarIndicador('kpiBitacoraAccesos', total.toLocaleString('es-CL'));
+  actualizarIndicador('kpiBitacoraUsuarios', identidades.size.toLocaleString('es-CL'));
+  const notaUsuarios = document.getElementById('kpiBitacoraUsuariosNota');
+  if (notaUsuarios) notaUsuarios.textContent = total > (registros?.length || 0)
+    ? 'Usuarios distintos en los 100 accesos más recientes (muestra)'
+    : 'Usuarios distintos en todos los accesos filtrados';
+  const ultimaFecha = registros?.[0]?.creado_en ? new Date(registros[0].creado_en) : null;
+  actualizarIndicador('kpiBitacoraUltimo', ultimaFecha && !Number.isNaN(ultimaFecha.getTime())
+    ? ultimaFecha.toLocaleString('es-CL', { dateStyle: 'short', timeStyle: 'short' }) : 'Sin ingresos');
   if (resumen) resumen.textContent = (cuentasOcultas.length ? 'Cuentas ocultas: ' + cuentasOcultas.join(', ') + '. ' : 'Vista completa · sin cuentas ocultas. ') +
-    (count ?? 0) + ' accesos coincidentes; mostrando hasta 100 registros recientes. Los datos históricos permanecen intactos.';
+    total.toLocaleString('es-CL') + ' accesos en el período; mostrando hasta 100 registros recientes. Los datos históricos permanecen intactos.';
   if (!registros?.length) {
     estado(cuentasOcultas.length ? 'No hay accesos de usuarios para los filtros seleccionados. Los accesos ocultos se conservan en el historial.' : 'No hay ingresos registrados para el criterio seleccionado.');
     return;
