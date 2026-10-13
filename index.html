@@ -44,31 +44,24 @@
 
   <!-- PANTALLA 1: ACCESO -->
   <main id="seccionLogin" class="login-wrapper">
-    <form id="formAccesoCamara" class="card card-trazado" onsubmit="event.preventDefault(); iniciarSesion();">
-      <h2 style="text-align: center; margin-bottom: 6px;">Cámara de Docencia</h2>
-      <p class="login-sub">Espacio docente reservado para Maestros Masones.</p>
-      <div class="form-group">
-        <label for="inputEmail">Correo Electrónico Registrado:</label>
-        <input type="email" id="inputEmail" name="login_email" placeholder="su.correo@ejemplo.com" autocomplete="username">
+    <section class="card card-trazado acceso-institucional" aria-labelledby="tituloAccesoInstitucional">
+      <span class="acceso-institucional-kicker">Cámara de Docencia · OFL 146</span>
+      <h2 id="tituloAccesoInstitucional">Acceso institucional protegido</h2>
+      <p>Para ingresar a Docencia o a la Consola Superadmin se requiere una identidad confirmada en Supabase Auth, vinculada al padrón institucional.</p>
+      <a class="btn-primary acceso-institucional-accion" href="./acceso-seguro.html">
+        Ingresar con Supabase Auth
+      </a>
+      <p class="acceso-institucional-nota">
+        El inicio de sesión anterior fue retirado por seguridad. La nueva interfaz se encuentra en validación; los perfiles aún no activados deberán esperar su invitación.
+      </p>
+      <!-- IDs heredados de compatibilidad DOM: deshabilitados, sin credenciales ni eventos. -->
+      <div hidden aria-hidden="true">
+        <input id="inputEmail" name="login_email" type="email" disabled autocomplete="off">
+        <input id="inputClave" name="login_clave" type="password" disabled autocomplete="off">
+        <button id="btnToggleVerClave" type="button" disabled></button>
+        <p id="errorLogin"></p>
       </div>
-
-      <div class="form-group">
-        <label for="inputClave">Contraseña:</label>
-        <div style="position: relative; display: flex; align-items: center;">
-          <input type="password" id="inputClave" name="login_clave" placeholder="••••••••" autocomplete="current-password" style="padding-right: 42px;">
-          <button type="button" id="btnToggleVerClave" onclick="alternarVisibilidadClaveLogin()" style="position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 1.15rem; color: var(--text-muted); padding: 0;" title="Mostrar / Ocultar contraseña">👁️</button>
-        </div>
-      </div>
-
-      <div style="display: flex; justify-content: flex-end; margin-top: -10px; margin-bottom: 16px;">
-        <a href="#" class="login-recuperar-enlace" onclick="event.preventDefault(); abrirModalRecuperarClave()" style="font-family: var(--font-ui); font-size: 0.9rem; text-decoration: underline;">
-          ¿Olvidó su contraseña?
-        </a>
-      </div>
-
-      <button class="btn-primary" type="submit">Acceder a la Cámara</button>
-      <p id="errorLogin" class="error-msg"></p>
-    </form>
+    </section>
   </main>
 
   <!-- MODAL SIGILO Y ADVERTENCIA -->
