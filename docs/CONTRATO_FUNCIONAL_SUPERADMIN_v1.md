@@ -78,3 +78,10 @@ Uso exclusivo SUPERADMIN: investigación y comparación doctrinal/normativa con 
 El contrato se cumple solo si los controles **de servidor**, flujo de revisión, integridad, auditoría, pruebas de respuestas y pruebas negativas de acceso funcionan de extremo a extremo en un entorno aislado; todos los hallazgos críticos están resueltos y el titular valida el despliegue. Hasta entonces, la función de subir documentos permanece como **preparación local**.
 
 **Versionado:** todo cambio a facultades o políticas requiere nueva versión del contrato, test y checkpoint.
+
+
+## Anexo operativo de seguridad R9 (2026-10-13)
+
+**Vigencia superior a toda descripción de integración legacy:** Supabase compartido ya ha retirado permisos y políticas directas en `usuarios`, `modulos`, `progreso_maestro`, `comentarios_muro`, `registro_accesos` y `config_segura` para `anon/authenticated`. Ninguna pantalla administrativa debe intentar restaurar privilegios `SELECT/INSERT/UPDATE` directamente; utilizar exclusivamente RPC con `auth.uid()` verificado y evidencia de auditoría. La bitácora se registra mediante `maestro_registrar_ingreso_auth`, no mediante inserciones anónimas.
+
+`doctrina_admin_cambiar` se encuentra **revocada** para cliente y existe un índice único que impide más de un Superadmin activo. El único titular actual conserva supervisión y edición docente, sin poder cursar trabajos como alumno. El inicio de sesión heredado continúa como riesgo P0 separado; su desactivación requiere confirmar el corte de los 25 usuarios no vinculados. El código de `main` y el portal antiguo **no son compatibles plenamente con el cierre R9**. No afirmar continuidad de esos flujos hasta migrarlos y probarlos.
