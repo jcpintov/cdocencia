@@ -280,7 +280,7 @@
     if(busy)return;
     if(!window.supabase?.createClient){status('El módulo seguro de autenticación no está disponible.');return}
     const email=String(el('account').value||'').trim().toLowerCase();
-    if(email.length>254 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){
+    if(email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
       status('Escriba un correo electrónico válido.');return;
     }
     const password=el('password').value;
