@@ -456,9 +456,9 @@
     estado.textContent='Validando identidad y consultando trabajos...';
     try{
       if(!await superadminActual()){estado.textContent='Consulta denegada: se requiere Superadmin vigente.';return}
-      const {data,error}=await client.from('modulos')
-        .select('id,numero_orden,titulo,autor,contenido_trazado,preguntas_json')
-        .eq('activo',true).order('numero_orden',{ascending:true});
+      // El servidor valida el rol SUPERADMIN y devuelve solo los campos editoriales.
+      // No consultar directamente la tabla modulos desde el cliente.
+      const {data,error}=await client.rpc('maestro_admin_trabajos_editor');
       if(error||!Array.isArray(data)){estado.textContent='No fue posible recuperar los trabajos.';return}
       trabajos=data;
       const selector=el('editorModuloSelector'),anterior=selector.value;
