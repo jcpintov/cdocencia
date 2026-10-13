@@ -124,7 +124,7 @@ function environment(opts={}){
  const invalid=environment();
  await invalid.submit('no-es-correo');
  assert(!invalid.events.some(e=>e.startsWith('auth:')));
- assert.equal(invalid.el('password').value,'SOLO_PARA_PRUEBA' ,
-   'No iniciar autenticación con correo inválido'); // corregir: contraseña también debe limpiarse
+ assert.equal(invalid.el('password').value,'',
+   'No retener contraseñas si el correo es inválido');
  console.log('PASS R11: SUPERADMIN, USER, dominio libre, acceso denegado, auditoría fail-closed, CSP y navegación');
 })().catch(error=>{console.error(error);process.exitCode=1});
