@@ -22,6 +22,18 @@
     .status{margin:22px 0 0;padding:13px;background:#f6f8fa;border-left:3px solid #b48c65;line-height:1.6;border-radius:0 7px 7px 0}
     dl{display:grid;grid-template-columns:170px 1fr;gap:10px;margin:20px 0 0}dt{color:#607489}dd{margin:0;font-weight:650;overflow-wrap:anywhere}
     .disclaimer{font-size:.83rem;color:#5e6e7a;line-height:1.7;margin:20px 0}
+    #supervisionDocenciaAdmin{background:#fff;padding:20px;margin-top:22px;border:1px solid #dae2e9;border-left:3px solid #a8794d;border-radius:8px}
+    #supervisionDocenciaAdmin h2{font:500 1.4rem Georgia,serif;margin:0 0 10px}
+    #supervisionDocenciaAdmin p{font-size:.88rem;line-height:1.55}
+    #supervisionDocenciaAdmin .indicadores-supervision{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:15px 0}
+    #supervisionDocenciaAdmin .indicadores-supervision article{background:#f5f7f9;border:1px solid #e3e8ed;padding:16px;border-radius:8px}
+    #supervisionDocenciaAdmin .indicadores-supervision strong{display:block;font-size:1.55rem;color:#233b50}
+    #supervisionDocenciaAdmin .indicadores-supervision span{font-size:.79rem;color:#627488}
+    #supervisionDocenciaAdmin .tabla-supervision-scroll{overflow-x:auto;margin-top:14px}
+    #supervisionDocenciaAdmin table{border-collapse:collapse;min-width:550px;width:100%;font-size:.84rem}
+    #supervisionDocenciaAdmin th,#supervisionDocenciaAdmin td{padding:10px 12px;border-bottom:1px solid #dce4eb;text-align:left;overflow-wrap:anywhere}
+    #supervisionDocenciaAdmin th{font-size:.77rem;color:#607387;background:#edf2f5}
+    #supervisionDocenciaAdmin td span{display:block;color:#687c8e;font-size:.75rem;margin-top:4px}
     #editorDocenteAuth{background:#fff;padding:20px;margin-top:22px;border:1px solid #dae2e9;border-left:3px solid #a8794d;border-radius:8px}
     #editorDocenteAuth h2{font:500 1.4rem Georgia,serif;margin:0 0 10px}
     #editorDocenteAuth p{font-size:.88rem;line-height:1.6}
@@ -109,6 +121,27 @@
         </table>
       </div>
     </section>
+    <section id="supervisionDocenciaAdmin" hidden aria-labelledby="tituloSupervisionDocencia">
+      <h2 id="tituloSupervisionDocencia">Supervisión académica · Cámara de Maestros</h2>
+      <p>Vista exclusiva del Superadmin. Permite revisar la evolución de los usuarios sin participar como alumno, intervenir en evaluaciones o crear progresos personales.</p>
+      <div class="actions">
+        <button type="button" id="consultarSupervisionDocencia">Consultar avance de Maestros</button>
+      </div>
+      <p id="estadoSupervisionDocencia" class="status" role="status" aria-live="polite">Sin consulta realizada.</p>
+      <div id="indicadoresSupervisionDocencia" class="indicadores-supervision"></div>
+      <div id="tablaSupervisionContenedor" hidden>
+        <label for="filtrarSupervisionDocencia">Filtrar nombre o correo</label>
+        <input type="search" id="filtrarSupervisionDocencia" placeholder="Buscar en el resumen autorizado">
+        <div class="tabla-supervision-scroll">
+          <table id="tablaSupervisionDocencia">
+            <thead>
+              <tr><th scope="col">Maestro</th><th scope="col">Leídos</th><th scope="col">Concluidos</th><th scope="col">Última conclusión</th></tr>
+            </thead>
+            <tbody id="cuerpoSupervisionDocencia"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
     <section id="editorDocenteAuth" hidden aria-labelledby="editorDocenteTitulo">
       <h2 id="editorDocenteTitulo">Trabajos docentes — edición autenticada</h2>
       <p>Exclusivo SUPERADMIN. Los cambios afectan los trabajos compartidos de Supabase. Cada operación requiere confirmación expresa y queda auditada.</p>
@@ -176,6 +209,7 @@
   const SUPABASE_URL='https://pwnnpjygnviyzyyvfxnq.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY='sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF';
   let client=null, busy=false, trabajos=[], guardandoTrabajo=false, accesosBitacora=[];
+  let supervisionDocenciaDatos=[];
   let misProgresosAuth=[], catalogoMiDocencia=[], comentarioEditandoId=null, operacionDocencia=false;
   const el=id=>document.getElementById(id);
   const status=texto=>{el('status').textContent=texto};
@@ -191,6 +225,13 @@
     misProgresosAuth=[];catalogoMiDocencia=[];
     comentarioEditandoId=null;operacionDocencia=false;
     el('padronSuperadminLab').hidden=role!=='SUPERADMIN';
+    el('supervisionDocenciaAdmin').hidden=role!=='SUPERADMIN';
+    el('tablaSupervisionContenedor').hidden=true;
+    el('cuerpoSupervisionDocencia').replaceChildren();
+    el('indicadoresSupervisionDocencia').replaceChildren();
+    el('filtrarSupervisionDocencia').value='';
+    el('estadoSupervisionDocencia').textContent='Sin consulta realizada.';
+    supervisionDocenciaDatos=[];
     el('editorDocenteAuth').hidden=role!=='SUPERADMIN';
     el('bitacoraAdminAuth').hidden=role!=='SUPERADMIN';
     accesosBitacora=[];
@@ -653,6 +694,77 @@
     }catch(_){statusNode.textContent='El servidor rechazó la operación o falló la conexión; revise antes de reintentar.'}
     finally{operacionDocencia=false}
   });
+
+
+  function dibujarSupervisionDocencia(){
+    if(el('role').textContent!=='SUPERADMIN')return;
+    const filtro=el('filtrarSupervisionDocencia').value.trim().toLocaleLowerCase('es-CL');
+    const filas=supervisionDocenciaDatos.filter(u=>
+      (String(u.nombre||'')+' '+String(u.email||'')).toLocaleLowerCase('es-CL').includes(filtro));
+    const tbody=el('cuerpoSupervisionDocencia');
+    tbody.replaceChildren();
+    for(const u of filas){
+      const tr=document.createElement('tr');
+      const nombre=document.createElement('td');
+      const titulo=document.createElement('strong');
+      titulo.textContent=u.nombre||'Maestro';
+      const email=document.createElement('span');
+      email.textContent=u.email||'';
+      nombre.append(titulo,email);
+      tr.appendChild(nombre);
+      const disponibles=Math.max(0,Number(u.trabajos_disponibles)||0);
+      for(const valor of [u.trabajos_leidos,u.trabajos_completados]){
+        const td=document.createElement('td');
+        td.textContent=String(Math.max(0,Number(valor)||0))+' / '+String(disponibles);
+        tr.appendChild(td);
+      }
+      const fecha=document.createElement('td');
+      const d=u.ultima_conclusion?new Date(u.ultima_conclusion):null;
+      fecha.textContent=d&&!Number.isNaN(d.getTime())?d.toLocaleDateString('es-CL'):'—';
+      tr.appendChild(fecha);
+      tbody.appendChild(tr);
+    }
+    el('tablaSupervisionContenedor').hidden=false;
+    el('estadoSupervisionDocencia').textContent=
+      'Consulta de solo lectura: '+filas.length+' de '+supervisionDocenciaDatos.length+
+      ' Maestros. Ningún avance administrativo se ha creado.';
+  }
+  el('consultarSupervisionDocencia').addEventListener('click',async()=>{
+    if(busy||guardandoTrabajo||operacionDocencia)return;
+    const btn=el('consultarSupervisionDocencia');
+    btn.disabled=true;
+    el('estadoSupervisionDocencia').textContent='Autenticando supervisor y preparando resumen...';
+    const current=client;
+    try{
+      if(!await superadminActual())throw new Error('sin_rol_superadmin');
+      const {data,error}=await current.rpc('maestro_admin_resumen_docencia');
+      if(current!==client)return;
+      if(error||!Array.isArray(data))throw new Error('no_disponible');
+      supervisionDocenciaDatos=data;
+      const box=el('indicadoresSupervisionDocencia');
+      box.replaceChildren();
+      const resumen=[
+        ['Maestros',data.length],
+        ['Trabajos activos',data.length?Number(data[0].trabajos_disponibles)||0:0],
+        ['Lecturas registradas',data.reduce((t,u)=>t+(Number(u.trabajos_leidos)||0),0)],
+        ['Trabajos concluidos',data.reduce((t,u)=>t+(Number(u.trabajos_completados)||0),0)]
+      ];
+      for(const [etiqueta,valor] of resumen){
+        const card=document.createElement('article');
+        const cantidad=document.createElement('strong');
+        cantidad.textContent=String(valor);
+        const label=document.createElement('span');
+        label.textContent=etiqueta;
+        card.append(cantidad,label);
+        box.appendChild(card);
+      }
+      dibujarSupervisionDocencia();
+    }catch(_){
+      el('estadoSupervisionDocencia').textContent=
+        'No fue posible autorizar el resumen. Verifique el rol y la conexión.';
+    }finally{btn.disabled=false}
+  });
+  el('filtrarSupervisionDocencia').addEventListener('input',dibujarSupervisionDocencia);
 
   el('logout').addEventListener('click',async()=>{await signOut();status('Sesión de prueba cerrada.');});
   window.addEventListener('pagehide',()=>{if(client)client.auth.signOut({scope:'local'}).catch(()=>{})});
