@@ -142,7 +142,7 @@
     </section>
     <section id="panelDocenciaAuth" hidden aria-labelledby="tituloMiDocenciaAuth">
       <h2 id="tituloMiDocenciaAuth">Mi Docencia — verificación de permisos</h2>
-      <p>Consulta autenticada del progreso propio y de los comentarios de trabajos completados. Esta vista no concede acceso a Doctrina y Reglamentos.</p>
+      <p>Disponible exclusivamente para USER / Maestro. El SUPERADMIN administra y supervisa Docencia, pero no cursa trabajos, evaluaciones, reflexiones ni comentarios como participante.</p>
       <div class="actions">
         <button id="cargarMiDocenciaAuth" type="button">Consultar mis avances</button>
       </div>
@@ -181,7 +181,7 @@
   const status=texto=>{el('status').textContent=texto};
   const show=(role)=>{
     el('result').hidden=!role;
-    el('panelDocenciaAuth').hidden=!role;
+    el('panelDocenciaAuth').hidden=role!=='USER';
     el('interaccionMiDocenciaAuth').hidden=true;
     el('selectTrabajoMiDocenciaAuth').replaceChildren();
     el('resumenMiDocenciaAuth').replaceChildren();
@@ -207,7 +207,7 @@
     el('confirmed').textContent=role?'Sí':'—';
     el('role').textContent=role||'—';
     el('permissions').textContent=role==='SUPERADMIN'
-      ? 'Administración autorizada por identidad (operaciones en mantenimiento)'
+      ? 'SUPERADMIN: gestión y supervisión; sin participación en Docencia (operaciones heredadas en mantenimiento)'
       : role==='USER'?'Solo funciones de Maestro; sin administración':'—';
   };
   const setBusy=valor=>{
@@ -511,7 +511,7 @@
     el('resumenMiDocenciaAuth').appendChild(bloque);
   }
   async function verificarIdentidadDocencia(){
-    if(!client||!['USER','SUPERADMIN'].includes(el('role').textContent))return false;
+    if(!client||el('role').textContent!=='USER')return false;
     const {data,error}=await client.rpc('maestro_identidad_actual');
     return !error&&data?.length===1&&data[0].rol===el('role').textContent;
   }
