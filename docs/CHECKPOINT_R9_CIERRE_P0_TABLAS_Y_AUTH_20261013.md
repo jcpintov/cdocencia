@@ -81,3 +81,8 @@ Las siguientes migraciones se APLICARON en el mismo proyecto Supabase que consum
 - Las nuevas invitaciones **NO deben conceder Docencia automáticamente por coincidencia de email**. La asociación `auth_user_id` es un acto de activación institucional a registrar luego de identidad confirmada, y se hará desde un servicio Superadmin seguro; no actualizar desde navegador ni restaurar escritura pública.
 
 Esta adenda prevalece sobre cualquier indicación anterior de que el correo por sí solo habilita un USER/Auth nuevo.
+
+
+## ADENDA R10 — EL LOGIN HEREDADO YA ESTÁ BLOQUEADO (2026-10-13)
+
+Por autorización expresa, la migración `r10_retiro_definitivo_rpc_legacy_autenticar_usuario_corte_autorizado_20261013` revocó la ejecución de `public.autenticar_usuario(text,text)` para `PUBLIC`, `anon` y `authenticated`. **Los apartados anteriores que describen esa función como disponible son históricos y ya no representan el estado actual.** Se conservó EXECUTE para `service_role` exclusivamente. Los 25 perfiles no migrados no pueden iniciar sesión en el portal anterior. Leer `docs/CHECKPOINT_R10_CORTE_LOGIN_LEGACY_20261013.md` antes de tomar decisiones y no reabrir permisos anónimos.
