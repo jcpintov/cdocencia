@@ -59,9 +59,10 @@
   el('form').addEventListener('submit',async event=>{
     event.preventDefault();
     if(busy)return;
-    if(!window.supabase?.createClient){status('El módulo seguro de autenticación no está disponible.');return}
+    if(!window.supabase?.createClient){el('password').value='';status('El módulo seguro de autenticación no está disponible.');return}
     const email=String(el('account').value||'').trim().toLowerCase();
     if(email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      el('password').value='';
       status('Escriba un correo electrónico válido.');return;
     }
     const password=el('password').value;
