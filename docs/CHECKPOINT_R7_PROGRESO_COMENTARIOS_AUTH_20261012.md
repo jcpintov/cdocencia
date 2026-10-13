@@ -4,6 +4,36 @@
 **Proyecto Supabase:** `pwnnpjygnviyzyyvfxnq`. **Estado:** migración parcial en laboratorio; NO publicar en producción.
 **Antecedente:** `docs/CHECKPOINT_R6_SEGURIDAD_RLS_DOCENCIA_20261012.md` y contratos de roles.
 
+## ADENDA R7.2 — Exclusión de participación por servidor y supervisión propia
+
+**Política definitiva:** el `SUPERADMIN` administra, supervisa, revisa y audita la Docencia realizada por USER/Maestros. No cursa trabajos ni obtiene progreso académico, evaluaciones, reflexiones, certificados o comentarios como alumno. No basta con ocultar un botón.
+
+**Protecciones YA APLICADAS en Supabase:**
+- Migración `r7_2_bloqueo_triggers_participacion_superadmin_docencia`: función `doctrina.bloquear_participacion_superadmin()`, más dos triggers `BEFORE INSERT OR UPDATE` en `public.progreso_maestro` y `public.comentarios_muro`. Rechazan filas atribuidas a una identidad `public.usuarios.es_admin = TRUE`, incluso si una ruta legacy anónima intenta escribir directamente.
+- Migración `r7_2_resumen_superadmin_docencia_solo_lectura`: RPC `public.maestro_admin_resumen_docencia()` de lectura, `EXECUTE` solamente para `authenticated`, devuelve estadísticas de USER no administrativos después de verificar `auth.uid()` y `rol='SUPERADMIN'`. Nunca devuelve respuestas, reflexiones ni texto personal de trabajos.
+- La migración de R7.1 continúa imponiendo `rol='USER'` a las ocho RPC formativas. No reabrirlas al Superadmin.
+
+**Pruebas SQL concluyentes, todas reversibles:**
+- Inserciones anónimas de avances y comentarios atribuidos al Superadmin: rechazadas.
+- Modificación de filas existentes intentando cambiar autoría a Superadmin: rechazada en ambas tablas.
+- Actualización legítima de progreso de USER: permitida dentro de transacción revertida.
+- SUPERADMIN: padrón de 27 cuentas y supervisión de **26 USER**, cada uno con 5 trabajos; consulta académica propia = 0 filas.
+- USER/Hotmail: 5 progresos propios y 5 trabajos docentes; resumen administrativo de terceros = 0 filas.
+- Identidad sin perfil: resumen administrativo = 0 filas.
+- Edición de trabajos mediante RPC administrativa: posible en transacción de prueba revertida. Bitácora de cambios reales = 0.
+- Integridad conservada: **6 progresos y 3 comentarios**, ninguno del Superadmin.
+
+**UI y recuperación:** en `qa/auth-roles.html`, la sección «Mi Docencia» solo aparece a USER; nueva «Supervisión académica» visible únicamente al Superadmin. Muestra estadísticas y una tabla filtrable de los Maestros, con `textContent` seguro; no modifica progresos. Sintaxis y prueba aislada de HTML malicioso superadas. No se asegura validación de navegador hasta que exista un despliegue comprobado para el commit actual.
+
+**Persistencia de seguridad:**
+- `docs/sql/R7_2_BLOQUEO_PARTICIPACION_SUPERADMIN_APLICADO.sql` (copia reproducible de barreras ya instaladas).
+- `tests/seguridad-superadmin-no-docencia.test.cjs` y `tests/seguridad-supervision-docencia.test.cjs`.
+- Los contratos `SUPERADMIN` y `USER` ya reflejan esta separación.
+
+**Riesgo P0 pendiente y no resuelto por estos triggers:** los clientes legacy `anon` siguen teniendo lectura y actualización directa de progresos/comentarios pertenecientes a otros usuarios USER por RLS permisiva. La protección de autoría de SUPERADMIN no equivale a autorización de propiedad entre USER. Se mantiene pendiente la migración de identidades y el cierre de políticas.
+
+Esta adenda tiene precedencia sobre R7/R7.1 en cualquier declaración de que Superadmin cursa Docencia.
+
 ## ADENDA R7.1 — Corrección de roles, 2026-10-12
 
 **Orden expresa del titular:** «superadmin no participa de docencia». Se aplicó migración `r7_superadmin_no_participa_docencia_user_only_20261012`: las **ocho RPC formativas R7 son ahora exclusivas de `USER`**, aun si `SUPERADMIN` dispone de identidad verificada. `SUPERADMIN` conserva padrón, editor, revisión y auditoría mediante APIs administrativas distintas.
