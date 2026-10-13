@@ -75,6 +75,13 @@
     #tablaPadron td{color:#2d4355}
 
     [hidden]{display:none!important}@media(max-width:600px){main{margin:16px auto}header,section{padding:24px 18px}dl{grid-template-columns:1fr;gap:4px}}
+
+    .mi-docencia-lectura{margin:18px 0;line-height:1.65}
+    .mi-docencia-titulo-estudio{margin:9px 0;font:500 1.3rem Georgia,serif;color:#263e53}
+    .mi-docencia-texto-estudio{white-space:pre-wrap;overflow-wrap:anywhere;background:#f7f9fa;border-left:3px solid #a8794d;padding:17px 20px;margin:14px 0 24px}
+    .mi-docencia-pregunta-estudio{border:1px solid #dbe4eb;border-radius:9px;padding:14px;margin:9px 0;background:#fff}
+    .mi-docencia-pregunta-estudio p{font-weight:600;margin:0 0 10px}
+    .mi-docencia-pregunta-estudio ul{margin:0;padding-left:24px}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.10/dist/umd/supabase.min.js" defer></script>
 </head>
@@ -185,6 +192,10 @@
         <label for="selectTrabajoMiDocenciaAuth">Trabajo para consulta</label>
         <select id="selectTrabajoMiDocenciaAuth"></select>
         <div class="actions">
+          <button type="button" id="leerTrabajoMiDocenciaAuth" class="secondary">Leer trabajo y preguntas, sin soluciones</button>
+        </div>
+        <div id="lecturaTrabajoMiDocenciaAuth" class="mi-docencia-lectura" aria-live="polite"></div>
+        <div class="actions">
           <button type="button" id="verComentariosMiDocenciaAuth" class="secondary">Consultar comentarios autorizados</button>
           <button type="button" id="marcarLecturaAuth" class="secondary">Marcar lectura propia</button>
         </div>
@@ -220,6 +231,7 @@
     el('selectTrabajoMiDocenciaAuth').replaceChildren();
     el('resumenMiDocenciaAuth').replaceChildren();
     el('listaComentariosMiDocenciaAuth').replaceChildren();
+    el('lecturaTrabajoMiDocenciaAuth').replaceChildren();
     el('contenidoComentarioAuth').value='';
     el('estadoMiDocenciaAuth').textContent='Sin consulta activa.';
     misProgresosAuth=[];catalogoMiDocencia=[];
@@ -585,6 +597,7 @@
       panelKpiDocencia('Trabajos concluidos',misProgresosAuth.filter(p=>p.completado).length);
       el('interaccionMiDocenciaAuth').hidden=!catalogoMiDocencia.length;
       el('listaComentariosMiDocenciaAuth').replaceChildren();
+      el('lecturaTrabajoMiDocenciaAuth').replaceChildren();
       cancelarEdicionMiDocencia();
       estado.textContent='Consulta completada. Solo se muestran avances vinculados a su identidad autenticada.';
     }catch(_){estado.textContent='No fue posible verificar y consultar sus avances; no se ha modificado nada.'}
@@ -642,8 +655,56 @@
       destino.appendChild(aviso);
     }
   }
+  el('leerTrabajoMiDocenciaAuth').addEventListener('click',async()=>{
+    if(busy||operacionDocencia||!client||el('role').textContent!=='USER')return;
+    const {id}=obtenerTrabajoMiDocencia();
+    const destino=el('lecturaTrabajoMiDocenciaAuth');
+    destino.replaceChildren();
+    if(!id)return;
+    const actual=client;
+    const boton=el('leerTrabajoMiDocenciaAuth');
+    boton.disabled=true;
+    const crear=(tag,texto,padre)=>{
+      const nodo=document.createElement(tag);
+      if(texto!==undefined)nodo.textContent=String(texto??'');
+      if(padre)padre.appendChild(nodo);
+      return nodo;
+    };
+    crear('p','Cargando únicamente el texto y las preguntas autorizadas...',destino);
+    try {
+      if(!await verificarIdentidadDocencia())throw new Error('identity');
+      const {data,error}=await actual.rpc('maestro_trabajo_estudio',{p_modulo_id:id});
+      if(actual!==client||el('role').textContent!=='USER'||el('selectTrabajoMiDocenciaAuth').value!==id)return;
+      if(error||!Array.isArray(data)||data.length!==1)throw new Error('not_authorized');
+      const t=data[0];
+      destino.replaceChildren();
+      const titulo=crear('h3','Trabajo '+t.numero_orden+': '+(t.titulo||''),destino);
+      titulo.className='mi-docencia-titulo-estudio';
+      crear('p',t.autor?'Autor: '+t.autor:'',destino);
+      const texto=crear('div',t.contenido_trazado||'',destino);
+      texto.className='mi-docencia-texto-estudio';
+      const preguntas=Array.isArray(t.preguntas)?t.preguntas:[];
+      crear('h4','Interrogantes para el estudio ('+preguntas.length+')',destino);
+      preguntas.forEach((p,indice)=>{
+        const tarjeta=crear('article',undefined,destino);
+        tarjeta.className='mi-docencia-pregunta-estudio';
+        crear('p','Pregunta '+(indice+1)+': '+(p.enunciado||''),tarjeta);
+        const lista=crear('ul',undefined,tarjeta);
+        (Array.isArray(p.opciones)?p.opciones:[]).forEach(op=>{
+          crear('li',(op.letra||'')+'. '+(op.texto||''),lista);
+        });
+      });
+      crear('p','Las soluciones y la retroalimentación interna no se incluyen en esta consulta.',destino);
+    }catch(_){
+      if(actual===client&&el('selectTrabajoMiDocenciaAuth').value===id){
+        destino.replaceChildren();
+        crear('p','No fue posible recuperar el trabajo con el permiso actual.',destino);
+      }
+    }finally{boton.disabled=false}
+  });
   el('verComentariosMiDocenciaAuth').addEventListener('click',cargarComentariosMiDocencia);
   el('selectTrabajoMiDocenciaAuth').addEventListener('change',()=>{
+    el('lecturaTrabajoMiDocenciaAuth').replaceChildren();
     el('listaComentariosMiDocenciaAuth').replaceChildren();
     cancelarEdicionMiDocencia();
   });
