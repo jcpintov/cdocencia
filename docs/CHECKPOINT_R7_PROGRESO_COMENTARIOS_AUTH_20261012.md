@@ -4,6 +4,16 @@
 **Proyecto Supabase:** `pwnnpjygnviyzyyvfxnq`. **Estado:** migración parcial en laboratorio; NO publicar en producción.
 **Antecedente:** `docs/CHECKPOINT_R6_SEGURIDAD_RLS_DOCENCIA_20261012.md` y contratos de roles.
 
+## ADENDA R7.1 — Corrección de roles, 2026-10-12
+
+**Orden expresa del titular:** «superadmin no participa de docencia». Se aplicó migración `r7_superadmin_no_participa_docencia_user_only_20261012`: las **ocho RPC formativas R7 son ahora exclusivas de `USER`**, aun si `SUPERADMIN` dispone de identidad verificada. `SUPERADMIN` conserva padrón, editor, revisión y auditoría mediante APIs administrativas distintas.
+
+Pruebas PostgreSQL con roles simulados: Gmail/SUPERADMIN obtuvo 0 registros en tres consultas formativas y fue rechazado en cinco operaciones de escritura; Hotmail/USER conservó sus cinco progresos, catálogo de cinco trabajos y acceso al muro; la consulta de padrón Superadmin conservó 27 registros. Todos los cambios de prueba se revirtieron. Persisten 6 progresos y 3 comentarios.
+
+La pantalla `qa/auth-roles.html` muestra «Mi Docencia» **solo para USER**; 19 funciones docentes del portal heredado reciben además una guarda de interfaz para Superadmin. El control decisivo está en las funciones SQL: la interfaz por sí sola nunca constituye autorización suficiente.
+
+**Este apartado prevalece sobre toda descripción anterior de R7 que sugiera participación del SUPERADMIN.**
+
 ## 1. Política vigente
 
 - **SUPERADMIN único:** `jpintov@gmail.com`; **USER/Maestro piloto:** `jpintov@hotmail.com`, ambos reconocidos por Supabase Auth.
