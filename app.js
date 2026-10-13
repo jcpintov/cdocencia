@@ -163,38 +163,17 @@ function alternarVisibilidadClaveLogin() {
 /* ==========================================================================
    AUTENTICACIÓN Y ENTORNO
    ========================================================================== */
+// R10: el login heredado fue retirado de la Data API por autorización expresa.
+// Nunca volver a enviar contraseñas a autenticar_usuario ni a leer privilegios
+// desde la respuesta de un RPC antiguo. La transición se realiza por Auth.
 async function iniciarSesion() {
-  const email = document.getElementById('inputEmail').value.trim().toLowerCase();
-  const clave = document.getElementById('inputClave').value.trim();
   const err = document.getElementById('errorLogin');
-
-  if (!email || !clave) {
-    err.innerText = "Por favor ingrese su correo y contraseña.";
-    return;
-  }
-
-  err.innerText = "Verificando credenciales...";
-
-  try {
-    const { data, error } = await sbApp.rpc('autenticar_usuario', {
-      p_email: email,
-      p_clave: clave
-    });
-
-    if (error || !data || data.length === 0) {
-      err.innerText = "Correo o contraseña no válidos.";
-      return;
-    }
-
-    usuarioActual = data[0];
-    // Nunca persistir el privilegio es_admin: solo existe durante la sesión.
-    sessionStorage.removeItem('camara_usuario_sesion');
-
-    err.innerText = "";
-    registrarIngresoAuditoria(usuarioActual);
-    configurarEntornoUsuario();
-  } catch (ex) {
-    err.innerText = "Error de conexión: " + ex.message;
+  const clave = document.getElementById('inputClave');
+  if (clave) clave.value = '';
+  sessionStorage.removeItem('camara_usuario_sesion');
+  usuarioActual = null;
+  if (err) {
+    err.innerText = 'El acceso anterior está suspendido por seguridad. Utilice el acceso con Supabase Auth cuando la nueva interfaz esté disponible.';
   }
 }
 
