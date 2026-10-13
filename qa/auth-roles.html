@@ -301,15 +301,27 @@
       });
       const profile=await response.json().catch(()=>({}));
       if(!response.ok||!['SUPERADMIN','USER'].includes(profile.role)){
+        await signOut();
         status(response.status===503?'Servidor de verificación pendiente de configuración.':
           'La sesión fue autenticada, pero no se autorizó el perfil institucional.');
         return;
       }
-      show(profile.role);
       const expected=email.endsWith('@gmail.com')?'SUPERADMIN':'USER';
-      status(profile.role===expected
-        ? 'Comprobación correcta: la identidad y el rol coinciden con la política.'
-        : 'ALERTA: el rol no coincide con el perfil esperado. No continúes con las pruebas.');
+      if(profile.role!==expected){
+        await signOut();
+        status('Perfil no coincide con la identidad institucional esperada. Sesión cerrada.');
+        return;
+      }
+      // Auditar solo una identidad Auth confirmada, derivada en servidor;
+      // nunca insertar eventos con un usuario_id aportado por el navegador.
+      const registro=await client.rpc('maestro_registrar_ingreso_auth');
+      if(registro.error||registro.data!==true){
+        await signOut();
+        status('Auditoría de acceso no disponible. Sesión cerrada de forma segura.');
+        return;
+      }
+      show(profile.role);
+      status('Identidad, rol y auditoría de ingreso verificados con Supabase Auth.');
     }catch(_){status('Error de comunicación. No se ha modificado ningún usuario.')}
     finally{el('password').value='';setBusy(false);el('logout').disabled=!client}
   });
