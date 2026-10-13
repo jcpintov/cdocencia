@@ -9,6 +9,10 @@ Solo existen los roles `SUPERADMIN` y `USER`. Todos los usuarios ordinarios `USE
 
 `USER` inicia sesión con credenciales propias, cambia su clave cuando sea obligatorio y acepta los compromisos institucionales de uso. Las sesiones caducadas o inválidas no deben permitir acceder a material protegido.
 
+## Titularidad exclusiva de la participación formativa
+
+**Solo `USER` participa en Docencia:** estudia trabajos, registra lecturas, contesta evaluaciones, consagra reflexiones y comparte comentarios conforme a las reglas del muro. Cada actividad se atribuye a su propia identidad autenticada y queda asociada a su progreso. El rol `SUPERADMIN` está excluido de estas actividades; puede revisar, administrar y auditar mediante herramientas administrativas distintas, sin convertirse en participante.
+
 ## 2. Funcionalidad autorizada
 
 | Capacidad | Estado del USER |
