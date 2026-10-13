@@ -194,3 +194,60 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 .editor-pregunta-campo input{width:100%;min-height:39px;padding:8px 10px;border:1px solid #cfdae3;border-radius:7px;font:inherit}
 .editor-pregunta-alternativas{display:grid;gap:8px;margin:8px 0}
 .editor-pregunta-etiqueta{font-size:.84rem;font-weight:700}
+
+
+/* R11 · Puerta de acceso Auth, sin formulario legado */
+.acceso-institucional {
+  max-width: 560px;
+  width: 100%;
+  padding: clamp(26px, 5vw, 48px);
+  margin-inline: auto;
+  text-align: left;
+}
+.acceso-institucional-kicker {
+  display: block;
+  margin-bottom: 12px;
+  color: #9c7048;
+  text-transform: uppercase;
+  font: 700 .73rem/1.5 var(--font-ui, system-ui);
+  letter-spacing: .13em;
+}
+.acceso-institucional h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(1.55rem, 3.2vw, 2.25rem);
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 0 0 18px;
+}
+.acceso-institucional > p {
+  line-height: 1.7;
+  max-width: 57ch;
+  margin: 0 0 20px;
+}
+.acceso-institucional-accion {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 48px;
+  border-radius: 8px;
+  margin: 6px 0 20px;
+  padding: 12px 20px;
+  text-decoration: none;
+  text-align: center;
+  font-weight: 700;
+}
+.acceso-institucional-accion:focus-visible {
+  outline: 3px solid #a8794d;
+  outline-offset: 4px;
+}
+.acceso-institucional .acceso-institucional-nota {
+  border-left: 3px solid #b88b60;
+  padding: 10px 14px;
+  background: rgba(168,121,77,.08);
+  color: var(--text-muted, #596575);
+  font-size: .88rem;
+}
+@media (max-width: 540px) {
+  .acceso-institucional { padding: 24px 18px; }
+  .acceso-institucional-accion { display: flex; width: 100%; }
+}
