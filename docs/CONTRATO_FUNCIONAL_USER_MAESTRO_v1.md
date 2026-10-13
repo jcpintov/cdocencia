@@ -67,3 +67,10 @@ Operaciones prohibidas deben fallar en servidor con `401/403`, incluso si se mod
 ## 7. Garantías de experiencia
 
 Interfaz profesional, sobria y accesible; estados comprensibles ante error; sin promesas de respuesta cuando no hay fuentes validadas. Se comunica el motivo de las restricciones sin revelar existencia o ubicación de documentación no autorizada.
+
+
+## Anexo de continuidad de seguridad R9 (2026-10-13)
+
+Los trabajos, progresos, reflexiones y comentarios dejaron de admitir `SELECT/INSERT/UPDATE` directo desde navegador con roles `anon/authenticated`. USER accede por Supabase Auth y funciones docentes restringidas a **su propia identidad** y a trabajos efectivamente autorizados. Las soluciones internas y los PDF no se incluyen en `maestro_trabajo_estudio`. La pertenencia a un grado simbólico no determina permisos; USER/Maestro es el único rol de participante docente.
+
+El entorno legacy queda en mantenimiento hasta migrar y verificar las cuentas pendientes, sin reabrir políticas inseguras. La función `autenticar_usuario` aún es invocable, pero esa circunstancia **no garantiza** que la Docencia antigua funcione; no exponer una alternativa engañosa. `SUPERADMIN` puede supervisar, nunca cursar. El corpus de Doctrina y Reglamentos sigue sin entrada USER hasta la validación G0–G7 y aprobación formal.
