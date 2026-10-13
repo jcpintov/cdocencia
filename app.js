@@ -557,6 +557,8 @@ function volverAInicioPortal() {
 }
 
 async function irACatalogoDocencia() {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   document.getElementById('seccionBienvenida').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   document.getElementById('seccionMuroUsuarios').classList.add('hidden');
@@ -671,6 +673,8 @@ async function renderizarCatalogoTrabajos() {
 }
 
 function entrarADocenciaConModulo(idModulo) {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   document.getElementById('seccionMuroUsuarios').classList.add('hidden');
@@ -732,6 +736,8 @@ async function obtenerDoctrinaBD() {
 }
 
 async function mostrarDocenciaParaMaestros() {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionMuroUsuarios').classList.add('hidden');
@@ -757,6 +763,8 @@ async function mostrarDocenciaParaMaestros() {
    MURO Y FORO DE REFLEXIONES
    ========================================================================== */
 async function mostrarMuroReflexionesUsuarios() {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const usuarioId = usuarioActual?.id;
   if (!usuarioId) return;
   document.getElementById('seccionDocencia')?.classList.add('hidden');
@@ -912,6 +920,8 @@ async function mostrarMuroReflexionesUsuarios() {
    GESTIÓN DE COMENTARIOS DEL FORO
    ========================================================================== */
 function toggleFormularioComentario(progresoId) {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const caja = document.getElementById(`caja_comentario_${progresoId}`);
   if (caja) {
     caja.classList.toggle('hidden');
@@ -923,6 +933,8 @@ function toggleFormularioComentario(progresoId) {
 }
 
 async function enviarComentarioForo(progresoId, moduloId) {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const input = document.getElementById(`input_comentario_${progresoId}`);
   if (!input) return;
 
@@ -969,6 +981,8 @@ async function enviarComentarioForo(progresoId, moduloId) {
 }
 
 function abrirModalEditarComentario(comentarioId, textoCodificado) {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const texto = decodeURIComponent(textoCodificado);
   document.getElementById('editComentarioId').value = comentarioId;
   document.getElementById('textareaEditarComentario').value = texto;
@@ -976,6 +990,8 @@ function abrirModalEditarComentario(comentarioId, textoCodificado) {
 }
 
 async function guardarEdicionComentarioModal() {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const id = document.getElementById('editComentarioId').value;
   const texto = document.getElementById('textareaEditarComentario').value.trim();
 
@@ -1010,6 +1026,8 @@ async function guardarEdicionComentarioModal() {
 }
 
 function abrirAuditoriaComentario(comentarioId, textoOriginalCodificado, autor, fecha) {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const textoOriginal = decodeURIComponent(textoOriginalCodificado);
   document.getElementById('auditoriaComentarioMeta').innerText = `Autor: ${autor} | Emisión: ${fecha}`;
   document.getElementById('auditoriaTextoOriginal').innerText = textoOriginal;
@@ -1017,6 +1035,8 @@ function abrirAuditoriaComentario(comentarioId, textoOriginalCodificado, autor, 
 }
 
 function eliminarComentarioForo(comentarioId) {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   abrirModalConfirmacion(
     "Eliminar Comentario",
     "¿Está seguro de eliminar este comentario? Dejará de ser visible para los Hermanos, pero su huella original permanecerá auditada.",
@@ -1127,6 +1147,8 @@ function renderizarSidebar() {
 }
 
 async function seleccionarModulo(idModulo) {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
 
   moduloActual = listaModulos.find(m => m.id === idModulo);
@@ -1206,6 +1228,8 @@ async function seleccionarModulo(idModulo) {
 }
 
 function cambiarVistaDocencia(tipo) {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const tabTexto = document.getElementById('tabTexto');
   const tabPdf = document.getElementById('tabPdf');
   const vistaTexto = document.getElementById('vistaTexto');
@@ -1225,6 +1249,8 @@ function cambiarVistaDocencia(tipo) {
 }
 
 async function evaluarEstadoFasesModulo() {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const prog = misProgresos[moduloActual.id];
   const contConfLectura = document.getElementById('contenedorConfirmarLectura');
   const btnConfLectura = document.getElementById('btnConfirmarLectura');
@@ -1279,6 +1305,8 @@ async function evaluarEstadoFasesModulo() {
 }
 
 async function confirmarLecturaFaseUno() {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const btn = document.getElementById('btnConfirmarLectura');
   btn.disabled = true;
   btn.innerText = "Registrando lectura...";
@@ -1376,6 +1404,8 @@ function renderizarPreguntaActual() {
 }
 
 async function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   if (respuestasMarcadas[indicePreguntaActiva]) return;
 
   sbApp.from('progreso_maestro')
@@ -1418,6 +1448,8 @@ function avanzarSiguientePregunta() {
 }
 
 async function finalizarCuestionarioFaseDos() {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const btnFinalizar = document.getElementById('btnFinalizarCuestionario');
   btnFinalizar.disabled = true;
   btnFinalizar.innerText = "Registrando respuestas...";
@@ -1486,6 +1518,8 @@ function contarPalabras() {
 }
 
 async function guardarReflexionYCompletar() {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const texto = document.getElementById('textoReflexion').value.trim();
   const cant = texto === "" ? 0 : texto.split(/\s+/).length;
 
@@ -1538,6 +1572,8 @@ async function guardarReflexionYCompletar() {
 }
 
 function habilitarEdicionReflexion() {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const txtRef = document.getElementById('textoReflexion');
   const btnConsagrar = document.getElementById('btnConsagrarReflexion');
   const btnEditar = document.getElementById('btnEditarReflexion');
@@ -1550,6 +1586,8 @@ function habilitarEdicionReflexion() {
 }
 
 async function cargarMuroReflexiones() {
+  // SUPERADMIN administra y supervisa, nunca realiza actividades formativas.
+  if (!usuarioActual || usuarioActual.es_admin) return;
   const contenedor = document.getElementById('contenedorMuro');
   const moduloId = moduloActual?.id;
   if (!contenedor || !moduloId || !usuarioActual) return;
