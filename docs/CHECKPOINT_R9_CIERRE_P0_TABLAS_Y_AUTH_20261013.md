@@ -68,3 +68,16 @@ Las siguientes migraciones se APLICARON en el mismo proyecto Supabase que consum
 8. Cualquier necesidad de recuperar el portal antiguo requiere una decisión de continuidad vs confidencialidad; priorizar/Auth con autorización real y no reabrir RLS anónima.
 
 **Estado:** P0 de tablas expuestas cerrado; P0 de login legacy y migración de identidades pendientes.
+
+
+## ADENDA R9.1 — identidad Auth vinculada por UUID, 2026-10-13
+
+**Aplicado en la base compartida, con pruebas positivas/negativas:**
+
+- Migración `r9_enlace_auth_uuid_perfiles_confirmados_fail_closed`: se escribió `public.usuarios.auth_user_id` exclusivamente en los dos perfiles piloto ya confirmados por correo y rol; se creó el índice único parcial `usuarios_auth_uuid_unico_idx`. Los demás 25 perfiles permanecen sin vínculo. **Nadie recibió una nueva cuenta ni invitación**.
+- `public.maestro_identidad_actual()` ahora exige asociación exacta `public.usuarios.auth_user_id = auth.uid()`, correo coincidente y confirmado, relación coherente con el único Superadmin y exclusión de identidades suspendidas/eliminadas. Ya no admite una mera coincidencia de correo como prueba de pertenencia institucional.
+- Migración `r9_migracion_auth_indicadores_uuid_verificado_no_email`: el padrón Superadmin y el resumen de migración consideran `auth_vinculada` únicamente si el UUID asociado está realmente confirmado. **Resultado comprobado:** SUPERADMIN 27 perfiles y 2 vinculados/25 pendientes; USER cero filas.
+- Regresión en transacciones revertidas: Gmail conserva SUPERADMIN y 5 trabajos de editor/0 avances propios; Hotmail conserva USER y 5 avances propios/0 funciones de editor.
+- Las nuevas invitaciones **NO deben conceder Docencia automáticamente por coincidencia de email**. La asociación `auth_user_id` es un acto de activación institucional a registrar luego de identidad confirmada, y se hará desde un servicio Superadmin seguro; no actualizar desde navegador ni restaurar escritura pública.
+
+Esta adenda prevalece sobre cualquier indicación anterior de que el correo por sí solo habilita un USER/Auth nuevo.
