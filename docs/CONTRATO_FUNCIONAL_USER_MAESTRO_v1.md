@@ -74,3 +74,8 @@ Interfaz profesional, sobria y accesible; estados comprensibles ante error; sin 
 Los trabajos, progresos, reflexiones y comentarios dejaron de admitir `SELECT/INSERT/UPDATE` directo desde navegador con roles `anon/authenticated`. USER accede por Supabase Auth y funciones docentes restringidas a **su propia identidad** y a trabajos efectivamente autorizados. Las soluciones internas y los PDF no se incluyen en `maestro_trabajo_estudio`. La pertenencia a un grado simbólico no determina permisos; USER/Maestro es el único rol de participante docente.
 
 El entorno legacy queda en mantenimiento hasta migrar y verificar las cuentas pendientes, sin reabrir políticas inseguras. La función `autenticar_usuario` aún es invocable, pero esa circunstancia **no garantiza** que la Docencia antigua funcione; no exponer una alternativa engañosa. `SUPERADMIN` puede supervisar, nunca cursar. El corpus de Doctrina y Reglamentos sigue sin entrada USER hasta la validación G0–G7 y aprobación formal.
+
+
+## Anexo R10 — sustitución efectiva de autenticación (2026-10-13)
+
+**Estado vigente que prevalece sobre anexos anteriores:** el login antiguo `autenticar_usuario` YA FUE DESHABILITADO para `anon` y `authenticated` tras autorización del titular. Las cuentas sin `auth_user_id` confirmado (25) no pueden utilizarlo. Los perfiles autorizados se identifican únicamente con token Supabase Auth válido y vínculo UUID estable; jamás confiar en `es_admin` del navegador. El ingreso antiguo no se restablecerá para facilitar el acceso a los usuarios restantes: deben seguir el plan de activación segura. Los cierres de tablas R9 permanecen obligatorios. La nueva interfaz Auth requiere despliegue y pruebas reales, que todavía no constan aprobadas.
