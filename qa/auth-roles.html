@@ -121,6 +121,11 @@
       <p style="line-height:1.55;margin:0 0 12px">Solo para Superadmin verificado. Sin modificaciones y sin credenciales, hashes ni tokens.</p>
       <button type="button" id="consultarPadron">Verificar lectura autorizada</button>
       <p class="status" id="estadoPadron" role="status" aria-live="polite">Padrón aún no consultado.</p>
+      <div class="actions">
+        <button type="button" id="consultarMigracionAuth" class="secondary">Estado de migración a Supabase Auth</button>
+      </div>
+      <p class="status" id="estadoMigracionAuth" role="status" aria-live="polite">Sin diagnóstico de migración.</p>
+      <div id="indicadoresMigracionAuth" class="mi-docencia-resumen" aria-label="Totales de migración, solo Superadmin"></div>
       <div style="overflow-x:auto">
         <table id="tablaPadron" style="border-collapse:collapse;width:100%;font-size:.87rem" hidden>
           <thead><tr><th scope="col">Nombre</th><th scope="col">Correo</th><th scope="col">Rol</th><th scope="col">Cuenta Auth</th></tr></thead>
@@ -237,6 +242,8 @@
     misProgresosAuth=[];catalogoMiDocencia=[];
     comentarioEditandoId=null;operacionDocencia=false;
     el('padronSuperadminLab').hidden=role!=='SUPERADMIN';
+    el('indicadoresMigracionAuth').replaceChildren();
+    el('estadoMigracionAuth').textContent='Sin diagnóstico de migración.';
     el('supervisionDocenciaAdmin').hidden=role!=='SUPERADMIN';
     el('tablaSupervisionContenedor').hidden=true;
     el('cuerpoSupervisionDocencia').replaceChildren();
@@ -336,6 +343,41 @@
       estado.textContent=data.length+' registros visibles mediante función autenticada de solo lectura. Ninguna fila fue modificada.';
     }catch(_){estado.textContent='Error de conexión al comprobar el padrón.'}
     finally{boton.disabled=false}
+  });
+
+  el('consultarMigracionAuth').addEventListener('click',async()=>{
+    if(busy||!client||el('role').textContent!=='SUPERADMIN')return;
+    const actual=client,btn=el('consultarMigracionAuth'),estado=el('estadoMigracionAuth');
+    btn.disabled=true;
+    estado.textContent='Comprobando correspondencia entre padrón y Supabase Auth...';
+    el('indicadoresMigracionAuth').replaceChildren();
+    try {
+      if(!await superadminActual())throw new Error('role');
+      const {data,error}=await actual.rpc('maestro_admin_estado_migracion');
+      if(actual!==client||el('role').textContent!=='SUPERADMIN')return;
+      if(error||!Array.isArray(data)||data.length!==1)throw new Error('denied');
+      const x=data[0];
+      for(const [texto,valor] of [
+        ['Usuarios de padrón',x.usuarios_padron],
+        ['Identidades Auth',x.identidades_auth],
+        ['Vinculados y confirmados',x.padron_vinculado_confirmado],
+        ['Pendientes de migración',x.usuarios_pendientes],
+        ['Superadmins confirmados',x.superadmins_confirmados],
+        ['Correos duplicados',x.correos_duplicados]
+      ]) {
+        const item=document.createElement('div');
+        item.className='mi-docencia-indicador';
+        const numero=document.createElement('strong');
+        numero.textContent=String(valor??'—');
+        const etiqueta=document.createElement('span');
+        etiqueta.textContent=texto;
+        item.append(numero,etiqueta);
+        el('indicadoresMigracionAuth').appendChild(item);
+      }
+      estado.textContent='Resumen agregado, sin correos, contraseñas ni modificación de perfiles.';
+    }catch(_){
+      if(actual===client)estado.textContent='No se pudo consultar la migración con los permisos actuales.';
+    }finally{btn.disabled=false}
   });
 
   // Una sesión verificable no equivale a autorización para modificar por
