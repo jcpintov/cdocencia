@@ -8,6 +8,12 @@
 
 El rol SUPERADMIN se determina **en un servicio de confianza** después de autenticar la identidad: no se infiere del correo escrito por el cliente, `es_admin` en `sessionStorage`, un identificador `p_admin_id`, un parámetro HTTP o un botón. Toda acción administrativa deberá comprobar identidad y autorización **en servidor**, con denegación predeterminada, sin función `SECURITY DEFINER` invocable por anónimos para operar como administrador. Solo una identidad verificable, con sesión no caducada, puede ejecutar la operación. Cada operación importante produce un evento de auditoría.
 
+## Regla vinculante de segregación: SUPERADMIN no participa en Docencia
+
+**SUPERADMIN administra, configura, revisa, audita y supervisa Docencia, pero no participa como alumno ni Maestro cursante.** No realiza lecturas formativas registradas, evaluaciones, reflexiones, publicaciones o ediciones de comentarios como participante, ni recibe progreso académico o certificaciones personales de Docencia. Las acciones administrativas de revisión y corrección deben utilizar servicios separados, autenticados y auditados; nunca apropiarse de la identidad de un USER ni utilizar las funciones de participante.
+
+Esta separación debe aplicarse tanto en la navegación como en las funciones PostgreSQL: `maestro_mis_progresos`, `maestro_modulos_activos`, `maestro_marcar_lectura`, `maestro_comentarios_modulo`, `maestro_publicar_comentario`, `maestro_editar_comentario_propio`, `maestro_registrar_evaluacion` y `maestro_consagrar_reflexion` son **exclusivas de USER**. La supervisión de datos de Maestros corresponde a herramientas `maestro_admin_*` con controles independientes.
+
 ## 2. Capacidades
 
 | Capacidad | SUPERADMIN | Condición |
