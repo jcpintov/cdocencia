@@ -23,7 +23,8 @@ const elements=[
 for(const id of elements){
  assert.equal(html.split('id="'+id+'"').length,2,'ID único: '+id);
 }
-assert(qaScript.includes("el('panelDocenciaAuth').hidden=!role"),'Ningún acceso sin sesión');
+assert(qaScript.includes("el('panelDocenciaAuth').hidden=role!=='USER'"),'Mi Docencia solo USER');
+assert(qaScript.includes("el('role').textContent!=='USER'"),'Admin no valida identidad formativa');
 for(const rpc of [
  'maestro_identidad_actual','maestro_mis_progresos','maestro_modulos_activos',
  'maestro_comentarios_modulo','maestro_marcar_lectura','maestro_publicar_comentario',
@@ -49,4 +50,20 @@ assert(!ui.includes(".from('comentarios_muro')"),'QA no consulta la tabla de com
 assert(!html.includes("localStorage.setItem("));
 assert(!html.includes("sessionStorage.setItem("));
 assert(!html.includes('Doctrina y Reglamentos</button>'),'No crear botón doctrinal USER');
-console.log('PASS: pantalla Auth de avances propios, reserva docente, comentario propio y confirmación');
+
+for(const nombre of [
+  'entrarADocenciaConModulo','seleccionarModulo','confirmarLecturaFaseUno',
+  'evaluarRespuestaPasoAPaso','finalizarCuestionarioFaseDos',
+  'guardarReflexionYCompletar','enviarComentarioForo','guardarEdicionComentarioModal'
+]){
+  const re=new RegExp('(?:async\\s+)?function\\s+'+nombre+'\\s*\\([^)]*\\)\\s*\\{');
+  const match=re.exec(app);
+  assert(match,'Función de Docencia existente: '+nombre);
+  const segmento=app.slice(match.index,match.index+370);
+  assert(segmento.includes('if (!usuarioActual || usuarioActual.es_admin) return;'),
+    'Superadmin excluido de '+nombre);
+}
+assert(qaScript.includes("el('editorDocenteAuth').hidden=role!=='SUPERADMIN'"),
+  'Superadmin conserva editor administrativo');
+
+console.log('PASS: SUPERADMIN no participa; USER conserva Docencia, mural y evaluaciones');
