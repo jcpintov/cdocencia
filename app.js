@@ -618,14 +618,23 @@ function abrirModalRecuperarClave() {
 async function enviarSolicitudRecuperacion() {
   const statusMsg = document.getElementById('recuperarStatusMsg');
   const email = document.getElementById('recuperarEmailInput').value.trim().toLowerCase();
-  if (!email || !/^[^\s@]+@[^\\s@]+\.[^\\s@]+$/.test(email)) {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     statusMsg.textContent = 'Ingrese un correo electrónico válido.';
     return;
   }
-  // No solicitar ni revelar tokens mediante RPC: el mecanismo anterior
-  // devolvía el secreto al navegador sin acreditar posesión del correo.
-  // Activar únicamente cuando exista entrega y validación en servidor.
-  statusMsg.textContent = 'La recuperación por correo está temporalmente en preparación. Contacte al administrador para restablecer su acceso.';
+  statusMsg.textContent = 'Enviando solicitud...';
+  try {
+    const { error } = await sbApp.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/recuperar.html'
+    });
+    if (error) {
+      statusMsg.textContent = 'No fue posible enviar la solicitud. Inténtelo más tarde.';
+      return;
+    }
+    statusMsg.textContent = 'Solicitud recibida. Si su cuenta está habilitada, recibirá un enlace de recuperación. Revise también el correo no deseado.';
+  } catch {
+    statusMsg.textContent = 'Servicio temporalmente no disponible.';
+  }
 }
 
 function verificarTokenUrl() {
