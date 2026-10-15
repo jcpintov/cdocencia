@@ -75,3 +75,17 @@
     .mi-docencia-pregunta-estudio{border:1px solid #dbe4eb;border-radius:9px;padding:14px;margin:9px 0;background:#fff}
     .mi-docencia-pregunta-estudio p{font-weight:600;margin:0 0 10px}
     .mi-docencia-pregunta-estudio ul{margin:0;padding-left:24px}
+
+/* R12 — segundo factor y activación institucional de usuarios */
+#seguridadMFAAdmin{background:#f8fafc;border:1px solid #d3dfe8;border-left:4px solid #846037;border-radius:9px;padding:20px;margin-top:22px}
+#seguridadMFAAdmin h2{font:500 1.4rem Georgia,serif;margin:0 0 11px}
+#seguridadMFAAdmin p{font-size:.89rem;line-height:1.6}
+#panelCodigoMFA{margin-top:14px;padding:16px;border-radius:9px;background:#fff;border:1px solid #d3dfe8}
+#codigoMFAAdmin{max-width:230px;font-family:ui-monospace,Consolas,monospace;letter-spacing:.17em;font-size:1.15rem}
+#qrMFAAdmin{display:block;margin:14px 0;padding:7px;background:#fff;border:1px solid #d8e0e7;border-radius:8px;max-width:100%;height:auto}
+#panelVinculacionAuth{margin-top:20px;background:#fff;border:1px solid #c8d8e2;border-left:4px solid #99714b;padding:18px;border-radius:9px}
+#panelVinculacionAuth h3{font-size:1.09rem;margin:0 0 11px}
+#panelVinculacionAuth p{font-size:.86rem;line-height:1.65}
+#motivoVinculacionAuth{font:inherit;width:100%;border:1px solid #bbcbd5;border-radius:8px;padding:11px;resize:vertical}
+#tablaPadron button{padding:7px 9px;font-size:.78rem;white-space:nowrap}
+@media(max-width:610px){#seguridadMFAAdmin,#panelVinculacionAuth{padding:15px}}
