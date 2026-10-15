@@ -601,7 +601,7 @@ function abrirModalRecuperarClave() {
 async function enviarSolicitudRecuperacion() {
   const statusMsg = document.getElementById('recuperarStatusMsg');
   const email = document.getElementById('recuperarEmailInput').value.trim().toLowerCase();
-  if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+  if (!email || !/^[^\s@]+@[^\\s@]+\.[^\\s@]+$/.test(email)) {
     statusMsg.textContent = 'Ingrese un correo electrónico válido.';
     return;
   }
