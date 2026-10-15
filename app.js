@@ -321,9 +321,13 @@ async function guardarNuevaClaveObligatoria() {
     sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
 
     document.getElementById('modalCambioClaveObligatorio').classList.add('hidden');
-    const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-    document.getElementById('bienvenidaNombreQH').innerText = `Q.·.H.·. ${nombreLimpio}`;
-    document.getElementById('seccionBienvenida').classList.remove('hidden');
+    if (usuarioActual.es_admin) {
+      configurarEntornoUsuario();
+    } else {
+      const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
+      document.getElementById('bienvenidaNombreQH').innerText = `Q.·.H.·. ${nombreLimpio}`;
+      document.getElementById('seccionBienvenida').classList.remove('hidden');
+    }
   } catch (ex) {
     err.innerText = "Error: " + ex.message;
   }
