@@ -165,6 +165,30 @@ function alternarVisibilidadClaveLogin() {
 /* ==========================================================================
    AUTENTICACIÓN Y ENTORNO
    ========================================================================== */
+function mensajeErrorServicio(error, contexto = 'operación') {
+  const estado = Number(error?.status || error?.statusCode || 0);
+  const codigo = String(error?.code || '');
+  if (typeof navigator !== 'undefined' && navigator.onLine === false)
+    return 'Sin conexión a Internet. Compruebe su red y vuelva a intentar.';
+  if (estado === 400 || estado === 401 || /invalid_credentials|invalid_grant/i.test(codigo))
+    return 'Credenciales o solicitud no válidas. Revise los datos ingresados.';
+  if (estado === 402)
+    return 'Servicio temporalmente no disponible por una restricción de cuenta. Contacte al administrador.';
+  if (estado === 403)
+    return 'Acceso no autorizado para esta cuenta. Contacte al administrador.';
+  if (estado === 404)
+    return 'No se encontró el servicio solicitado. Contacte al administrador.';
+  if (estado === 408 || estado === 504)
+    return 'La conexión tardó demasiado. Vuelva a intentar.';
+  if (estado === 409)
+    return 'La información cambió durante la operación. Actualice y vuelva a intentar.';
+  if (estado === 429)
+    return 'Demasiados intentos. Espere unos minutos antes de volver a intentar.';
+  if (estado >= 500 || /fetch|network|timeout/i.test(String(error?.message || '')))
+    return 'Servicio temporalmente no disponible. Intente nuevamente más tarde.';
+  return 'No fue posible completar la ' + contexto + '. Intente nuevamente.';
+}
+
 async function iniciarSesion() {
   const email = document.getElementById('inputEmail').value.trim().toLowerCase();
   const clave = document.getElementById('inputClave').value;
@@ -181,10 +205,7 @@ async function iniciarSesion() {
     const { data, error } = await sbApp.auth.signInWithPassword({ email, password: clave });
 
     if (error) {
-      const invalida = /invalid login credentials|invalid credentials/i.test(error.message || '');
-      err.innerText = invalida
-        ? 'Correo o contraseña no válidos. Utilice Recuperar contraseña si necesita ayuda.'
-        : 'No fue posible verificar el acceso. Inténtelo más tarde.';
+      err.innerText = mensajeErrorServicio(error, 'autenticación');
       console.error('Error de autenticación:', error.code || 'sin código');
       return;
     }
@@ -208,7 +229,7 @@ async function iniciarSesion() {
     registrarIngresoAuditoria(usuarioActual);
     configurarEntornoUsuario();
   } catch (ex) {
-    err.innerText = "Error de conexión: " + ex.message;
+    err.innerText = mensajeErrorServicio(ex, 'autenticación');
   }
 }
 
