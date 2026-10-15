@@ -2045,13 +2045,17 @@ async function cargarDatosAdmin() {
 }
 
 function cambiarSubseccionAdmin(seccion) {
-  const btns = ['tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
-  const secs = ['adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
+  const btns = ['tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
+  const secs = ['adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
 
   btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
 
-  if (seccion === 'usuarios') {
+  if (seccion === 'resumen') {
+    document.getElementById('tabNavResumen')?.classList.add('active');
+    document.getElementById('adminSeccionResumen')?.classList.remove('hidden');
+    cargarResumenAdmin();
+  } else if (seccion === 'usuarios') {
     document.getElementById('tabNavUsuarios')?.classList.add('active');
     document.getElementById('adminSeccionUsuarios')?.classList.remove('hidden');
     cargarListadoUsuariosAdmin();
@@ -2905,3 +2909,28 @@ window.addEventListener('DOMContentLoaded', () => {
   verificarTokenUrl();
   recuperarSesionGuardada();
 });
+
+async function cargarResumenAdmin() {
+  const status = document.getElementById('resumenAdminEstado');
+  if (!status) return;
+  status.textContent = 'Actualizando indicadores...';
+  const campos = ['kpiUsuarios','kpiModulos','kpiCompletados','kpiComentarios'];
+  campos.forEach(id => { document.getElementById(id).textContent = '—'; });
+  try {
+    const [users, modules, progress, comments] = await Promise.all([
+      sbApp.from('usuarios').select('id,es_admin'),
+      sbApp.from('modulos').select('id', { count: 'exact', head: true }),
+      sbApp.from('progreso_maestro').select('usuario_id,completado').eq('completado',true),
+      sbApp.from('comentarios_muro').select('id', { count: 'exact', head: true })
+    ]);
+    if ([users,modules,progress,comments].some(result => result.error)) throw new Error('Sin permisos de lectura para indicadores');
+    const estudiantes = new Set(users.data.filter(u => !u.es_admin).map(u => u.id));
+    document.getElementById('kpiUsuarios').textContent = estudiantes.size.toLocaleString('es-CL');
+    document.getElementById('kpiModulos').textContent = (modules.count ?? 0).toLocaleString('es-CL');
+    document.getElementById('kpiCompletados').textContent = progress.data.filter(p => estudiantes.has(p.usuario_id)).length.toLocaleString('es-CL');
+    document.getElementById('kpiComentarios').textContent = (comments.count ?? 0).toLocaleString('es-CL');
+    status.textContent = 'Indicadores actualizados.';
+  } catch {
+    status.textContent = 'No fue posible consultar los indicadores con los permisos actuales.';
+  }
+}
