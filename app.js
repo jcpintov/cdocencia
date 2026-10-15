@@ -392,7 +392,7 @@ function autogenerarEnInputMiClave() {
 }
 
 async function guardarMiNuevaClave() {
-  const clave = document.getElementById('inputMiClaveNueva').value.trim();
+  const clave = document.getElementById('inputMiClaveNueva').value;
   const err = document.getElementById('errorMiCambioClave');
   const fallo = validarSeguridadClave(clave);
   if (fallo) {
@@ -419,7 +419,7 @@ async function guardarMiNuevaClave() {
 /* ==========================================================================
    SUPERADMIN: MÓDULO ADMINISTRAR USUARIOS
    ========================================================================== */
-async async function cargarListadoUsuariosAdmin() {
+async function cargarListadoUsuariosAdmin() {
   const tbody = document.getElementById('tablaUsuariosAdminBody');
   tbody.innerHTML = `<tr><td colspan="5" class="td-loading">Consultando padrón de usuarios...</td></tr>`;
 
@@ -2057,7 +2057,7 @@ function descargarCertificadoPDF() {
 /* ==========================================================================
    CONSOLA SUPERADMIN
    ========================================================================== */
-async async function cargarDatosAdmin() {
+async function cargarDatosAdmin() {
   const { data: mods } = await sbApp
     .from('modulos')
     .select('*')
@@ -2093,7 +2093,7 @@ async async function cargarDatosAdmin() {
     }
   }
 
-  cambiarSubseccionAdmin('usuarios');
+  cambiarSubseccionAdmin('resumen');
 }
 
 function cambiarSubseccionAdmin(seccion) {
