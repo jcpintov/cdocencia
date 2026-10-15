@@ -396,7 +396,7 @@ async function guardarMiNuevaClave() {
 /* ==========================================================================
    SUPERADMIN: MÓDULO ADMINISTRAR USUARIOS
    ========================================================================== */
-async function cargarListadoUsuariosAdmin() {
+async async function cargarListadoUsuariosAdmin() {
   const tbody = document.getElementById('tablaUsuariosAdminBody');
   tbody.innerHTML = `<tr><td colspan="5" class="td-loading">Consultando padrón de usuarios...</td></tr>`;
 
@@ -2025,7 +2025,7 @@ function descargarCertificadoPDF() {
 /* ==========================================================================
    CONSOLA SUPERADMIN
    ========================================================================== */
-async function cargarDatosAdmin() {
+async async function cargarDatosAdmin() {
   const { data: mods } = await sbApp
     .from('modulos')
     .select('*')
