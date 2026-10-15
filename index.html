@@ -558,12 +558,11 @@
             <p class="text-instruccion" style="margin: 0;">Gestione altas, bajas, roles y contraseñas de los integrantes de la Cámara.</p>
           </div>
           <div class="admin-header-actions">
-            <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem;" disabled title="Alta de cuentas pendiente de integración segura con Supabase Auth">Nuevo usuario (pendiente)</button>
+            <button class="btn-primary" type="button" onclick="abrirModalCrearUsuario()">Agregar usuario</button>
             <button class="admin-link-btn" onclick="cargarListadoUsuariosAdmin()">🔄 Refrescar Padrón</button>
           </div>
         </div>
 
-        <div style="display:flex;justify-content:flex-end;margin:12px 0"><button type="button" class="btn-primary" onclick="abrirModalCrearUsuario()">Agregar usuario</button></div>
         <div class="table-responsive">
           <table class="metricas-table">
             <thead>
