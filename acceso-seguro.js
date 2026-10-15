@@ -23,7 +23,7 @@
     el('seguridadMFAAdmin').hidden=role!=='SUPERADMIN';
     el('panelCodigoMFA').hidden=true;
     el('qrMFAAdmin').hidden=true;
-    el('qrMFAAdmin').removeAttribute('src');
+    el('qrMFAAdmin').src='';
     el('codigoMFAAdmin').value='';
     el('estadoMFAAdmin').textContent='Segundo factor no verificado en esta sesión.';
     factorMFA=null;
@@ -189,7 +189,7 @@
       factorMFA=null;
       el('panelCodigoMFA').hidden=true;
       el('qrMFAAdmin').hidden=true;
-      el('qrMFAAdmin').removeAttribute('src');
+      el('qrMFAAdmin').src='';
       estado.textContent='MFA verificado. La sesión alcanzó AAL2 para operaciones administrativas protegidas.';
     }catch(_){
       if(actual===client)estado.textContent=
@@ -201,7 +201,7 @@
     el('panelCodigoMFA').hidden=true;
     el('codigoMFAAdmin').value='';
     el('qrMFAAdmin').hidden=true;
-    el('qrMFAAdmin').removeAttribute('src');
+    el('qrMFAAdmin').src='';
     el('estadoMFAAdmin').textContent='Configuración cancelada. Ningún código ha sido conservado.';
   });
 
