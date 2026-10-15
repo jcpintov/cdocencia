@@ -15,8 +15,7 @@ BEGIN
     RETURN QUERY SELECT false, NULL::text;
     RETURN;
   END IF;
-  v_codigo := lpad((floor(random()*1000000))::integer::text, 6, '0');
-  -- random() NO es criptográficamente seguro: usar bytes CSPRNG.
+  -- Código generado con fuente criptográfica del servidor.
   v_codigo := lpad(((('x' || encode(gen_random_bytes(4),'hex'))::bit(32)::bigint % 1000000)::integer)::text,6,'0');
   UPDATE public.usuarios
   SET token_recuperacion = encode(digest(v_codigo,'sha256'),'hex'),
