@@ -2203,7 +2203,22 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     return;
   }
 
-  registros.forEach(r => {
+  const ocultarAdmin = document.getElementById('ocultarAdminAccesos')?.checked === true;
+  let registrosVisibles = registros;
+  if (ocultarAdmin) {
+    const { data: admins, error: adminError } = await sbApp.from('usuarios').select('id').eq('es_admin', true);
+    if (adminError) {
+      tbody.innerHTML = '<tr><td colspan="4">No fue posible aplicar el filtro de administrador.</td></tr>';
+      return;
+    }
+    const idsAdmin = new Set((admins || []).map(u => u.id));
+    registrosVisibles = registros.filter(r => !idsAdmin.has(r.usuario_id));
+  }
+  if (!registrosVisibles.length) {
+    tbody.innerHTML = '<tr><td colspan="4">Sin registros para el filtro seleccionado.</td></tr>';
+    return;
+  }
+  registrosVisibles.forEach(r => {
     const d = new Date(r.creado_en);
     const fechaTxt = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const horaTxt = d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
