@@ -153,7 +153,7 @@ function alternarVisibilidadClaveLogin() {
   if (!input || !btn) return;
   const visible = input.type === 'password';
   input.type = visible ? 'text' : 'password';
-  btn.textContent = visible ? 'Ocultar' : 'Mostrar';
+  btn.textContent = visible ? '🙈' : '👁️';
   btn.title = visible ? 'Ocultar contraseña' : 'Mostrar contraseña';
   btn.setAttribute('aria-label', btn.title);
   btn.setAttribute('aria-pressed', String(visible));
