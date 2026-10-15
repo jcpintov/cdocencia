@@ -2689,3 +2689,25 @@ body.theme-nocturno #seccionDocencia .nav-item-title{color:#f0f4f8!important}
 #seccionAdmin button:focus-visible,#seccionAdmin a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #ad813e;outline-offset:3px}
 @media(max-width:600px){#seccionAdmin .admin-card-header{align-items:stretch}#seccionAdmin .admin-card-header button{max-width:100%}#seccionAdmin .admin-kpi-grid{gap:12px}#seccionAdmin .admin-kpi{padding:16px 12px}#seccionAdmin .admin-kpi strong{font-size:clamp(1.35rem,6vw,1.8rem)}}
 @media(prefers-reduced-motion:reduce){#seccionAdmin .admin-kpi{transition:none}}
+
+/* Navegación legible para maestros: evita cortes y desbordes en panel lateral. */
+#seccionBienvenida .portal-nav-link,
+#seccionCatalogoTrabajos .portal-nav-link {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 0.94rem;
+  line-height: 1.35;
+  font-weight: 600;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+#seccionBienvenida .portal-nav-footer,
+#seccionCatalogoTrabajos .portal-nav-footer {
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.45;
+}
+#seccionBienvenida .portal-nav-footer small,
+#seccionCatalogoTrabajos .portal-nav-footer small {
+  font-size: .76rem;
+  overflow-wrap: normal;
+  word-break: normal;
+}
