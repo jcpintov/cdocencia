@@ -55,19 +55,18 @@
       <div class="form-group">
         <label for="inputClave">Contraseña:</label>
         <div style="position: relative; display: flex; align-items: center;">
-          <input type="password" id="inputClave" name="login_clave" placeholder="••••••••" autocomplete="current-password" style="padding-right: 104px;">
-          <button type="button" id="btnToggleVerClave" onclick="alternarVisibilidadClaveLogin()" style="position: absolute; right: 10px; background: transparent; border: 1px solid #8293a5; border-radius: 5px; cursor: pointer; font: 600 .85rem Arial,sans-serif; color: #173958; padding: 7px 10px;" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña">Mostrar</button>
+          <input type="password" id="inputClave" name="login_clave" placeholder="••••••••" autocomplete="current-password" style="padding-right: 42px;">
+          <button type="button" id="btnToggleVerClave" onclick="alternarVisibilidadClaveLogin()" style="position: absolute; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 1.15rem; color: var(--text-muted); padding: 0;" aria-label="Mostrar contraseña" aria-pressed="false" title="Mostrar contraseña">👁️</button>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top: -10px; margin-bottom: 16px;">
-        <a href="/primer-acceso.html" class="login-recuperar-enlace" style="font-family: var(--font-ui); font-size: 0.9rem; text-decoration: underline;">Primer acceso</a>
-        <a href="#" class="login-recuperar-enlace" onclick="event.preventDefault(); abrirModalRecuperarClave()" style="font-family: var(--font-ui); font-size: 0.9rem; text-decoration: underline;">
-          ¿Olvidó su contraseña?
-        </a>
+      <div style="display:flex;justify-content:flex-end;margin-top:-8px;margin-bottom:16px;">
+        <a href="/primer-acceso.html" class="login-recuperar-enlace" style="font-family:var(--font-ui);font-size:.95rem;text-decoration:underline;">Primer acceso</a>
       </div>
-
       <button class="btn-primary" type="submit">Acceder a la Cámara</button>
+      <div style="margin-top:24px;text-align:center;">
+        <a href="#" class="login-recuperar-enlace" onclick="event.preventDefault(); abrirModalRecuperarClave()" style="font-family:var(--font-ui);font-size:.95rem;text-decoration:underline;">¿Olvidó su contraseña?</a>
+      </div>
       <p id="errorLogin" class="error-msg"></p>
     </form>
   </main>
