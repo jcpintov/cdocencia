@@ -12,7 +12,7 @@ GRANT SELECT, INSERT, UPDATE ON public.recuperacion_limites TO service_role;
 CREATE OR REPLACE FUNCTION public.recuperacion_consumir_cupo_servidor(
   p_clave text, p_maximo integer, p_ventana interval
 ) RETURNS boolean
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions
 AS $$
 DECLARE v_intentos integer;
 BEGIN
