@@ -170,7 +170,15 @@ async function iniciarSesion() {
       p_clave: clave
     });
 
-    if (error || !data || data.length === 0) {
+    if (error) {
+      const permiso = error.code === '42501' || /permission denied|not allowed|not authorized/i.test(error.message || '');
+      err.innerText = permiso
+        ? 'El servicio de acceso está temporalmente restringido. No cambie su contraseña; contacte al administrador.'
+        : 'No fue posible verificar el acceso. Inténtelo más tarde.';
+      console.error('Error de autenticación:', error.code || 'sin código');
+      return;
+    }
+    if (!data || data.length === 0) {
       err.innerText = "Correo o contraseña no válidos.";
       return;
     }
