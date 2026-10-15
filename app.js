@@ -219,16 +219,22 @@ async function registrarIngresoAuditoria(usuario) {
   });
 }
 
-function recuperarSesionGuardada() {
-  const guardada = sessionStorage.getItem('camara_usuario_sesion');
-  if (guardada) {
-    try {
-      usuarioActual = JSON.parse(guardada);
-      configurarEntornoUsuario();
-    } catch (e) {
-      sessionStorage.removeItem('camara_usuario_sesion');
-    }
+async function recuperarSesionGuardada() {
+  const { data, error } = await sbApp.auth.getUser();
+  if (error || !data?.user) {
+    sessionStorage.removeItem('camara_usuario_sesion');
+    return;
   }
+  const { data: perfil, error: perfilError } = await sbApp.from('usuarios')
+    .select('id,nombre,email,es_admin,debe_cambiar_clave')
+    .eq('auth_user_id', data.user.id).maybeSingle();
+  if (perfilError || !perfil) {
+    sessionStorage.removeItem('camara_usuario_sesion');
+    return;
+  }
+  usuarioActual = perfil;
+  sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(perfil));
+  configurarEntornoUsuario();
 }
 
 function configurarEntornoUsuario() {
@@ -313,6 +319,7 @@ function cerrarSesion() {
   respuestasMarcadas = {};
   archivoBase64Pendiente = null;
   sessionStorage.removeItem('camara_usuario_sesion');
+  void sbApp.auth.signOut();
 
   document.getElementById('errorLogin').innerText = '';
   document.getElementById('inputEmail').value = '';
