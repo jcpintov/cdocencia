@@ -477,16 +477,14 @@ async function cargarListadoUsuariosAdmin() {
 }
 
 function abrirModalCrearUsuario() {
-  document.getElementById('modalAdminUsuarioTitulo').innerText = '👤 Nuevo Hermano en Padrón';
+  if (!usuarioActual?.es_admin) return;
+  document.getElementById('modalAdminUsuarioTitulo').textContent = 'Agregar usuario al padrón';
   document.getElementById('adminUsuarioTargetId').value = '';
   document.getElementById('adminUsuarioNombre').value = '';
   document.getElementById('adminUsuarioEmail').value = '';
-  document.getElementById('adminUsuarioClave').value = '';
-  document.getElementById('adminUsuarioEsAdmin').checked = false;
-  document.getElementById('grupoClaveCreacion').classList.remove('hidden');
-  document.getElementById('errorAdminUsuario').innerText = '';
-  document.getElementById('errorAdminUsuario').innerText = 'Las altas requieren activación segura de Supabase Auth; no se asignan claves desde este panel.';
+  document.getElementById('errorAdminUsuario').textContent = '';
   document.getElementById('modalAdminUsuario').classList.remove('hidden');
+  document.getElementById('adminUsuarioNombre').focus();
 }
 
 function autogenerarClaveNuevoUsuario() {
@@ -509,7 +507,38 @@ function abrirModalEditarUsuario(id, nombre, email, esAdmin) {
 
 async function guardarAdminUsuario() {
   const err = document.getElementById('errorAdminUsuario');
-  err.innerText = 'Operación temporalmente deshabilitada: falta habilitar el servicio de administración de Supabase Auth. No se modificó el padrón.';
+  const nombre = document.getElementById('adminUsuarioNombre').value.trim();
+  const email = document.getElementById('adminUsuarioEmail').value.trim().toLowerCase();
+  if (!usuarioActual?.es_admin) return;
+  if (nombre.length < 3 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    err.textContent = 'Ingrese un nombre y un correo electrónico válido.';
+    return;
+  }
+  const { data: sessionData, error: sessionError } = await sbApp.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (sessionError || !token) { err.textContent = 'Sesión vencida. Vuelva a iniciar sesión.'; return; }
+  const button = document.querySelector('#modalAdminUsuario button[onclick="guardarAdminUsuario()"]');
+  if (button) button.disabled = true;
+  err.textContent = 'Registrando usuario...';
+  try {
+    const response = await fetch('/api/admin-usuarios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ action: 'crear', nombre, email })
+    });
+    const result = await response.json();
+    if (!response.ok || !result.ok) {
+      err.textContent = result.error || 'No se pudo registrar el usuario.';
+      return;
+    }
+    document.getElementById('modalAdminUsuario').classList.add('hidden');
+    await cargarListadoUsuariosAdmin();
+    alert('Usuario incorporado al padrón. No se envió invitación ni se asignó contraseña.');
+  } catch {
+    err.textContent = 'No fue posible conectar con el servicio de administración.';
+  } finally {
+    if (button) button.disabled = false;
+  }
 }
 
 function confirmarEliminarUsuario() {
