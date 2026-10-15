@@ -1,7 +1,9 @@
--- R12 · DEFINICIÓN EFECTIVA, RECUPERADA DE SUPABASE
--- Fecha 2026-10-14. No reejecutar automáticamente en producción.
--- Migración activa: r12_vinculacion_auth_mfa_aal2_superadmin_auditada_sin_invitar
--- Guardado solo para checkpoint/revisión SQL. Ninguna invitación fue enviada.
+-- R12.1 · COPIA EXACTA EFECTIVA EN SUPABASE (2026-10-14).
+-- Se incorporó verificación en vivo de auth.mfa_factors verified además
+-- del nivel AAL2 del JWT. Sin MFA verificado no puede vincular nadie.
+-- Migraciones YA APLICADAS: r12_vinculacion_auth_mfa_aal2_superadmin_auditada_sin_invitar
+-- y r12_factor_mfa_live_verificado_adicional_al_jwt_aal2.
+-- NO reejecutar a ciegas; contrastar permisos, versión y roles.
 
 CREATE OR REPLACE FUNCTION public.maestro_admin_vincular_auth(p_perfil_legacy uuid, p_motivo text)
  RETURNS boolean
@@ -30,6 +32,16 @@ BEGIN
   -- nunca sobre una bandera enviada por JavaScript.
   IF (SELECT auth.jwt()->>'aal') IS DISTINCT FROM 'aal2' THEN
     RAISE EXCEPTION 'Se requiere autenticación multifactor AAL2'
+      USING ERRCODE='42501';
+  END IF;
+
+  -- Segundo control independiente del JWT: factor TOTP realmente verificado
+  -- en Auth para el mismo administrador. Falla cerrado si se revoca el factor.
+  IF NOT EXISTS (
+    SELECT 1 FROM auth.mfa_factors f
+    WHERE f.user_id=v_actor AND f.status='verified'
+  ) THEN
+    RAISE EXCEPTION 'No existe un segundo factor MFA verificado actualmente'
       USING ERRCODE='42501';
   END IF;
 
@@ -95,10 +107,7 @@ $function$
 REVOKE ALL ON FUNCTION public.maestro_admin_vincular_auth(uuid,text) FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.maestro_admin_vincular_auth(uuid,text) TO authenticated;
 
--- Estado esperado del registro privado de operaciones:
--- doctrina.migracion_auth_auditoria: RLS enabled, FORCE RLS,
--- sin políticas/grants para anon ni authenticated.
--- Validación SOLO LECTURA:
+-- Verificación solo lectura:
 SELECT has_function_privilege('anon','public.maestro_admin_vincular_auth(uuid,text)'::regprocedure,'EXECUTE') AS anon,
- has_function_privilege('authenticated','public.maestro_admin_vincular_auth(uuid,text)'::regprocedure,'EXECUTE') AS authenticated,
- (SELECT count(*) FROM doctrina.migracion_auth_auditoria) AS vinculaciones_auditadas;
+ (SELECT count(*) FROM doctrina.migracion_auth_auditoria) AS operaciones_realizadas,
+ (SELECT count(*) FROM public.usuarios WHERE auth_user_id IS NOT NULL) AS vinculados;
