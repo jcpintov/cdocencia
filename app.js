@@ -490,10 +490,11 @@ function abrirModalCrearUsuario() {
   document.getElementById('adminUsuarioTargetId').value = '';
   document.getElementById('adminUsuarioNombre').value = '';
   document.getElementById('adminUsuarioEmail').value = '';
-  document.getElementById('adminUsuarioClave').value = 'OFL.146!';
+  document.getElementById('adminUsuarioClave').value = '';
   document.getElementById('adminUsuarioEsAdmin').checked = false;
   document.getElementById('grupoClaveCreacion').classList.remove('hidden');
   document.getElementById('errorAdminUsuario').innerText = '';
+  document.getElementById('errorAdminUsuario').innerText = 'Las altas requieren activación segura de Supabase Auth; no se asignan claves desde este panel.';
   document.getElementById('modalAdminUsuario').classList.remove('hidden');
 }
 
@@ -516,86 +517,12 @@ function abrirModalEditarUsuario(id, nombre, email, esAdmin) {
 }
 
 async function guardarAdminUsuario() {
-  const targetId = document.getElementById('adminUsuarioTargetId').value;
-  const nombre = document.getElementById('adminUsuarioNombre').value.trim();
-  const email = document.getElementById('adminUsuarioEmail').value.trim().toLowerCase();
-  const esAdmin = document.getElementById('adminUsuarioEsAdmin').checked;
   const err = document.getElementById('errorAdminUsuario');
-
-  if (!nombre || !email) {
-    err.innerText = "El nombre y el correo son obligatorios.";
-    return;
-  }
-
-  err.innerText = "Guardando...";
-
-  try {
-    if (!targetId) {
-      const clave = document.getElementById('adminUsuarioClave').value.trim();
-      const fallo = validarSeguridadClave(clave);
-      if (fallo) {
-        err.innerText = fallo;
-        return;
-      }
-
-      const { error } = await sbApp.rpc('admin_crear_usuario', {
-        p_admin_id: usuarioActual.id,
-        p_nombre: nombre,
-        p_email: email,
-        p_clave: clave,
-        p_es_admin: esAdmin
-      });
-
-      if (error) {
-        err.innerText = "Error: " + error.message;
-        return;
-      }
-      alert("Usuario incorporado exitosamente.");
-    } else {
-      const { error } = await sbApp.rpc('admin_editar_usuario', {
-        p_admin_id: usuarioActual.id,
-        p_target_id: targetId,
-        p_nombre: nombre,
-        p_email: email,
-        p_es_admin: esAdmin
-      });
-
-      if (error) {
-        err.innerText = "Error: " + error.message;
-        return;
-      }
-      alert("Usuario actualizado exitosamente.");
-    }
-
-    cerrarModalUniversalDirecto('modalAdminUsuario');
-    cargarListadoUsuariosAdmin();
-  } catch (ex) {
-    err.innerText = "Error: " + ex.message;
-  }
+  err.innerText = 'Operación temporalmente deshabilitada: falta habilitar el servicio de administración de Supabase Auth. No se modificó el padrón.';
 }
 
-function confirmarEliminarUsuario(targetId, nombre) {
-  abrirModalConfirmacion(
-    "Eliminar Usuario del Padrón",
-    `¿Está seguro de eliminar al usuario "${nombre}"? Esta acción borrará permanentemente sus accesos y progresos registrados.`,
-    async () => {
-      try {
-        const { error } = await sbApp.rpc('admin_eliminar_usuario', {
-          p_admin_id: usuarioActual.id,
-          p_target_id: targetId
-        });
-
-        if (error) {
-          alert("Error al eliminar: " + error.message);
-        } else {
-          alert("Usuario eliminado correctamente.");
-          cargarListadoUsuariosAdmin();
-        }
-      } catch (ex) {
-        alert("Error de conexión: " + ex.message);
-      }
-    }
-  );
+function confirmarEliminarUsuario() {
+  alert('Eliminación temporalmente deshabilitada para proteger las identidades y el historial docente.');
 }
 
 function abrirModalAdminClaveHermano(targetId, nombreHermano) {
@@ -616,37 +543,8 @@ function autogenerarAdminClaveHermano() {
 }
 
 async function guardarAdminClaveHermano() {
-  const targetId = document.getElementById('adminTargetHermanoId').value;
-  const clave = document.getElementById('inputAdminClaveHermano').value.trim();
-  const forzar = document.getElementById('chkForzarCambioAdmin').checked;
-  const err = document.getElementById('errorAdminClaveHermano');
-
-  const fallo = validarSeguridadClave(clave);
-  if (fallo) {
-    err.innerText = fallo;
-    return;
-  }
-
-  err.innerText = "Actualizando...";
-
-  try {
-    const { error } = await sbApp.rpc('admin_cambiar_clave', {
-      p_admin_id: usuarioActual.id,
-      p_target_id: targetId,
-      p_nueva_clave: clave,
-      p_forzar_cambio: forzar
-    });
-
-    if (error) {
-      err.innerText = "Error: " + error.message;
-    } else {
-      alert("Contraseña asignada con éxito al Hermano.");
-      cerrarModalUniversalDirecto('modalAdminClaveHermano');
-      cargarListadoUsuariosAdmin();
-    }
-  } catch (ex) {
-    err.innerText = "Error: " + ex.message;
-  }
+  document.getElementById('errorAdminClaveHermano').innerText =
+    'Cambio administrativo de contraseña no disponible hasta integrar Supabase Auth. Utilice la recuperación individual verificada.';
 }
 
 /* ==========================================================================
