@@ -1825,14 +1825,21 @@ async function abrirModalMisAvances(usuarioObjetivoId = null) {
     const examenTxt = (p && p.completado) ? "✓ 8/8 Finalizado" : (p && p.intentos_preguntas ? `${p.intentos_preguntas}/8` : "—");
     const reflexTxt = (p && p.reflexion) ? `"${p.reflexion}"` : "<em>Sin aporte consagrado</em>";
 
-    tablaCuerpo.innerHTML += `
-      <tr>
-        <td><strong>Trabajo ${m.numero_orden}:</strong> ${m.titulo}</td>
-        <td>${leidoTxt}</td>
-        <td>${examenTxt}</td>
-        <td style="font-size: 0.8rem;">${reflexTxt}</td>
-      </tr>
-    `;
+    const tr = document.createElement('tr');
+    const trabajo = document.createElement('td');
+    const etiqueta = document.createElement('strong');
+    etiqueta.textContent = 'Trabajo ' + m.numero_orden + ':';
+    trabajo.append(etiqueta, document.createTextNode(' ' + String(m.titulo || '')));
+    const lectura = document.createElement('td');
+    lectura.textContent = leidoTxt;
+    const examen = document.createElement('td');
+    examen.textContent = examenTxt;
+    const reflexion = document.createElement('td');
+    reflexion.style.fontSize = '0.8rem';
+    reflexion.textContent = p && p.reflexion ? String(p.reflexion) : 'Sin aporte consagrado';
+    if (!p?.reflexion) reflexion.style.fontStyle = 'italic';
+    tr.append(trabajo, lectura, examen, reflexion);
+    tablaCuerpo.appendChild(tr);
 
     if (p && p.completado) {
       contCerts.innerHTML += `
