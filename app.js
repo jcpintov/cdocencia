@@ -109,8 +109,8 @@ function cambiarTamanoFuente(delta) {
    VALIDACIÓN DE SEGURIDAD Y GENERADOR DE CONTRASEÑA
    ========================================================================== */
 function validarSeguridadClave(clave) {
-  if (!clave || clave.length < 7) {
-    return "La contraseña debe tener al menos 7 caracteres en total.";
+  if (!clave || clave.length < 8) {
+    return "La contraseña debe tener al menos 8 caracteres en total.";
   }
   const alfanumericos = (clave.match(/[a-zA-Z0-9]/g) || []).length;
   if (alfanumericos < 6) {
@@ -828,6 +828,12 @@ async function mostrarDocenciaParaMaestros() {
    MURO Y FORO DE REFLEXIONES
    ========================================================================== */
 async function mostrarMuroReflexionesUsuarios() {
+  await refrescarProgresosUsuario();
+  const accesoMuro = Object.values(misProgresos).some(p => p?.completado === true);
+  if (!usuarioActual || usuarioActual.es_admin || !accesoMuro) {
+    alert('El Muro y Foro se habilita al completar al menos un trabajo de la Cámara.');
+    return;
+  }
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
