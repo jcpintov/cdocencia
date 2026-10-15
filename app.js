@@ -288,16 +288,16 @@ async function guardarNuevaClaveObligatoria() {
   err.innerText = "Actualizando su contraseña...";
 
   try {
-    const { error } = await sbApp.rpc('cambiar_clave_usuario', {
-      p_usuario_id: usuarioActual.id,
-      p_nueva_clave: c1
-    });
+    const { error } = await sbApp.auth.updateUser({ password: c1 });
 
     if (error) {
       err.innerText = "Error: " + error.message;
       return;
     }
 
+    // El indicador se actualiza mediante política de fila propia; nunca concede roles.
+    const { error: flagError } = await sbApp.from('usuarios').update({ debe_cambiar_clave: false }).eq('auth_user_id', (await sbApp.auth.getUser()).data.user.id);
+    if (flagError) { err.innerText = 'Contraseña cambiada. No se pudo actualizar el indicador; contacte al administrador.'; return; }
     usuarioActual.debe_cambiar_clave = false;
     sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
 
@@ -380,10 +380,7 @@ async function guardarMiNuevaClave() {
   err.innerText = "Guardando...";
 
   try {
-    const { error } = await sbApp.rpc('cambiar_clave_usuario', {
-      p_usuario_id: usuarioActual.id,
-      p_nueva_clave: clave
-    });
+    const { error } = await sbApp.auth.updateUser({ password: clave });
 
     if (error) {
       err.innerText = "Error: " + error.message;
