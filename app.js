@@ -124,14 +124,27 @@ function validarSeguridadClave(clave) {
 }
 
 function generarClaveAleatoriaSegura() {
-  const letras = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const simbolos = "!@#$%*?";
-  let p = "";
-  for (let i = 0; i < 6; i++) {
-    p += letras.charAt(Math.floor(Math.random() * letras.length));
+  // Generador criptográfico del navegador; Math.random no es apto para claves.
+  const letras = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ';
+  const numeros = '23456789';
+  const simbolos = '!@#$%*?';
+  const caracteres = letras + numeros + simbolos;
+  const elegir = grupo => {
+    const limite = 256 - (256 % grupo.length);
+    const buffer = new Uint8Array(1);
+    do { crypto.getRandomValues(buffer); } while (buffer[0] >= limite);
+    return grupo[buffer[0] % grupo.length];
+  };
+  const clave = [elegir(letras), elegir(numeros), elegir(simbolos)];
+  while (clave.length < 12) clave.push(elegir(caracteres));
+  for (let i = clave.length - 1; i > 0; i--) {
+    const limite = 256 - (256 % (i + 1));
+    const buffer = new Uint8Array(1);
+    do { crypto.getRandomValues(buffer); } while (buffer[0] >= limite);
+    const j = buffer[0] % (i + 1);
+    [clave[i], clave[j]] = [clave[j], clave[i]];
   }
-  p += simbolos.charAt(Math.floor(Math.random() * simbolos.length));
-  return p;
+  return clave.join('');
 }
 
 function alternarVisibilidadClaveLogin() {
