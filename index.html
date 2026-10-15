@@ -794,6 +794,7 @@
             <select id="filtroUsuarioAcceso" name="filtroUsuarioAcceso" onchange="cargarBitacoraAccesos(this.value)">
               <option value="todos">👥 Todos los Hermanos</option>
             </select>
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem"><input type="checkbox" id="ocultarAdminAccesos" checked onchange="cargarBitacoraAccesos()"> Ocultar administrador</label>
             <button class="admin-link-btn" onclick="cargarBitacoraAccesos()">🔄 Actualizar</button>
           </div>
         </div>
