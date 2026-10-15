@@ -257,6 +257,11 @@ function configurarEntornoUsuario() {
   document.getElementById('btnCambiarMiClave').classList.remove('hidden');
 
   if (usuarioActual.es_admin) {
+    if (usuarioActual.debe_cambiar_clave) {
+      document.getElementById('seccionAdmin').classList.add('hidden');
+      document.getElementById('modalCambioClaveObligatorio').classList.remove('hidden');
+      return;
+    }
     document.getElementById('seccionAdmin').classList.remove('hidden');
     document.getElementById('seccionDocencia').classList.add('hidden');
     document.getElementById('seccionBienvenida').classList.add('hidden');
