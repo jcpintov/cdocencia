@@ -35,13 +35,13 @@ let temporizadorLecturaId = null;
 
 // Temporizador de inactividad estricto (5 minutos)
 let temporizadorInactividad = null;
-const TIEMPO_INACTIVIDAD_MS = 5 * 60 * 1000;
+const TIEMPO_INACTIVIDAD_MS = 15 * 60 * 1000;
 
 function reiniciarTemporizadorInactividad() {
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
   if (usuarioActual) {
     temporizadorInactividad = setTimeout(() => {
-      alert("Por motivos de seguridad, la sesión se ha cerrado tras 5 minutos de inactividad.");
+      alert("Por motivos de seguridad, la sesión se ha cerrado tras 15 minutos de inactividad.");
       cerrarSesion();
     }, TIEMPO_INACTIVIDAD_MS);
   }
