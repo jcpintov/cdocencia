@@ -40,7 +40,37 @@ export default async function handler(req, res) {
     return reply(res, 403, { error: 'Sin autorización' });
   }
 
-  // Por seguridad, las operaciones de escritura permanecerán bloqueadas
-  // hasta validar las credenciales de servidor y el flujo de invitaciones.
-  return reply(res, 501, { error: 'Activación de cuentas pendiente de habilitación' });
+  const { action, usuario_id } = req.body || {};
+  if (action !== 'activar') return reply(res, 400, { error: 'Acción no admitida' });
+  if (typeof usuario_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(usuario_id)) {
+    return reply(res, 400, { error: 'Identificador inválido' });
+  }
+  const { data: target, error: targetError } = await admin.from('usuarios')
+    .select('id,email,nombre,es_admin,auth_user_id')
+    .eq('id', usuario_id)
+    .maybeSingle();
+  if (targetError || !target) return reply(res, 404, { error: 'Usuario no encontrado' });
+  if (target.es_admin || target.auth_user_id) {
+    return reply(res, 409, { error: 'Cuenta vinculada o protegida' });
+  }
+  const email = String(target.email || '').trim().toLowerCase();
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254 ||
+      email.includes('candidatosincorreo')) {
+    return reply(res, 422, { error: 'Dirección de correo pendiente de verificación' });
+  }
+  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: 'https://cmaestros.ofl.cl/recuperar.html',
+    data: { nombre: target.nombre }
+  });
+  if (inviteError || !invited?.user?.id) {
+    return reply(res, inviteError?.status === 429 ? 429 : 502, { error: 'No se pudo enviar la invitación' });
+  }
+  const { data: linked, error: linkError } = await admin.from('usuarios')
+    .update({ auth_user_id: invited.user.id, debe_cambiar_clave: true })
+    .eq('id', target.id).is('auth_user_id', null)
+    .select('auth_user_id').maybeSingle();
+  if (linkError || linked?.auth_user_id !== invited.user.id) {
+    return reply(res, 409, { error: 'Invitación emitida; vinculación pendiente de conciliación' });
+  }
+  return reply(res, 200, { ok: true, estado: 'Invitación enviada y cuenta vinculada' });
 }
