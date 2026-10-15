@@ -840,13 +840,17 @@ async function mostrarDocenciaParaMaestros() {
   cont.innerHTML = "";
 
   bloques.forEach(b => {
-    cont.innerHTML += `
-      <div class="institucional-bloque">
-        <h2>${b.titulo}</h2>
-        <h3>${b.subtitulo}</h3>
-        <p style="white-space: pre-line;">${b.texto}</p>
-      </div>
-    `;
+    const card = document.createElement('div');
+    card.className = 'institucional-bloque';
+    const title = document.createElement('h2');
+    title.textContent = String(b.titulo || '');
+    const subtitle = document.createElement('h3');
+    subtitle.textContent = String(b.subtitulo || '');
+    const paragraph = document.createElement('p');
+    paragraph.style.whiteSpace = 'pre-line';
+    paragraph.textContent = String(b.texto || '');
+    card.append(title, subtitle, paragraph);
+    cont.appendChild(card);
   });
 }
 
