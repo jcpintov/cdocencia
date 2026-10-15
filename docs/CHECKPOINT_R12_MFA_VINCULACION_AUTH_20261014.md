@@ -75,3 +75,11 @@ Archivos:
 6. No fusionar con `main` ni activar Doctrina USER automáticamente.
 
 **Afirmación verificable:** función R12 y UI presentes, controles simulados superados y MFA obligatorio en SQL; invitaciones, enrolamiento real y pruebas E2E todavía pendientes.
+
+## Adenda R12.1 — factor MFA vivo en servidor (14/10/2026)
+
+Migración adicional **YA APLICADA**: `r12_factor_mfa_live_verificado_adicional_al_jwt_aal2`. La función `public.maestro_admin_vincular_auth(uuid,text)` ahora comprueba DOS pruebas independientes: `auth.jwt()->>'aal'='aal2'` **y** existencia vigente de `auth.mfa_factors.status='verified'` para `auth.uid()`. Esto impide que un JWT con un estado AAL2 antiguo autorice vinculaciones si el Superadmin ya no tiene un factor verificado.
+
+Copia SQL exacta recuperada de la base: `docs/sql/R12_VINCULACION_AUTH_MFA_AAL2_APLICADA_20261014.sql`, actualizada. Conteos después del cambio: **0** registros de vinculación, **2** identidades vinculadas y **0** factores MFA verificados para el Superadmin. `anon` no tiene EXECUTE. No se ha enviado ninguna invitación ni cambiado el padrón.
+
+La prueba de navegador actual de MFA es **simulada**, no equivale a enrolamiento real. Hasta escanear el QR, verificar el código y confirmar la sesión real AAL2, ninguna vinculación nueva puede prosperar. El previo READY R12 aloja el código del panel MFA, mientras que esta adenda y el respaldo SQL son posteriores y no introducen cambios a HTML/JS.
