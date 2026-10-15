@@ -2232,14 +2232,30 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     const fechaTxt = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const horaTxt = d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-    tbody.innerHTML += `
-      <tr>
-        <td style="white-space: nowrap;"><strong>${fechaTxt}</strong> <span style="font-size: 0.8rem; color: var(--text-muted);">${horaTxt}</span></td>
-        <td><span style="font-weight: 600;">${r.nombre || "Hermano"}</span></td>
-        <td style="font-family: monospace; font-size: 0.88rem;">${r.email}</td>
-        <td><span style="background: rgba(153,120,57,0.1); color: var(--accent-gold-dark); padding: 3px 8px; border-radius: 4px; font-family: monospace; font-size: 0.85rem;">${r.ip_origen || "—"}</span></td>
-      </tr>
-    `;
+    const tr = document.createElement('tr');
+    const dateCell = document.createElement('td');
+    dateCell.style.whiteSpace = 'nowrap';
+    const strong = document.createElement('strong');
+    strong.textContent = fechaTxt;
+    const time = document.createElement('span');
+    time.style.cssText = 'font-size:0.8rem;color:var(--text-muted)';
+    time.textContent = ' ' + horaTxt;
+    dateCell.append(strong, time);
+    const nameCell = document.createElement('td');
+    const name = document.createElement('span');
+    name.style.fontWeight = '600';
+    name.textContent = String(r.nombre || 'Hermano');
+    nameCell.appendChild(name);
+    const emailCell = document.createElement('td');
+    emailCell.style.cssText = 'font-family:monospace;font-size:0.88rem';
+    emailCell.textContent = String(r.email || '');
+    const ipCell = document.createElement('td');
+    const ip = document.createElement('span');
+    ip.style.cssText = 'background:rgba(153,120,57,0.1);color:var(--accent-gold-dark);padding:3px 8px;border-radius:4px;font-family:monospace;font-size:0.85rem';
+    ip.textContent = String(r.ip_origen || '—');
+    ipCell.appendChild(ip);
+    tr.append(dateCell, nameCell, emailCell, ipCell);
+    tbody.appendChild(tr);
   });
 }
 
