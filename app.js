@@ -599,63 +599,60 @@ function abrirModalRecuperarClave() {
 }
 
 async function enviarSolicitudRecuperacion() {
-  const statusMsg = document.getElementById('recuperarStatusMsg');
+  const status = document.getElementById('recuperarStatusMsg');
   const email = document.getElementById('recuperarEmailInput').value.trim().toLowerCase();
-  if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
-    statusMsg.textContent = 'Ingrese un correo electrónico válido.';
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    status.textContent = 'Ingrese un correo electrónico válido.';
     return;
   }
-  // No solicitar ni revelar tokens mediante RPC: el mecanismo anterior
-  // devolvía el secreto al navegador sin acreditar posesión del correo.
-  // Activar únicamente cuando exista entrega y validación en servidor.
-  statusMsg.textContent = 'La recuperación por correo está temporalmente en preparación. Contacte al administrador para restablecer su acceso.';
+  status.textContent = 'Procesando solicitud...';
+  try {
+    const response = await fetch('/api/recuperacion', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'request', email })
+    });
+    if (!response.ok) throw new Error('Servicio no disponible');
+    status.textContent = 'Solicitud recibida. Si la dirección ingresada es válida, recibirá un correo electrónico con las instrucciones correspondientes.';
+    document.getElementById('recuperarEmailConfirmar').value = email;
+    document.getElementById('modalResetearConToken').classList.remove('hidden');
+  } catch {
+    status.textContent = 'Servicio de recuperación temporalmente no disponible. Contacte al administrador.';
+  }
 }
 
 function verificarTokenUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get('token');
-  if (token) {
-    tokenRecuperacionActivo = token;
-    document.getElementById('modalResetearConToken').classList.remove('hidden');
+  // Enlaces antiguos deshabilitados: la recuperación requiere un código enviado por correo.
+  if (new URLSearchParams(window.location.search).has('token')) {
+    window.history.replaceState({}, document.title, window.location.pathname);
   }
 }
 
 async function guardarResetConToken() {
-  const c1 = document.getElementById('tokenNuevaClave').value;
-  const c2 = document.getElementById('tokenRepetirClave').value;
+  const email = document.getElementById('recuperarEmailConfirmar').value.trim().toLowerCase();
+  const code = document.getElementById('recuperarCodigo').value.trim();
+  const password = document.getElementById('tokenNuevaClave').value;
+  const repeat = document.getElementById('tokenRepetirClave').value;
   const err = document.getElementById('errorResetToken');
-
-  if (c1 !== c2) {
-    err.innerText = "Las contraseñas no coinciden.";
+  if (password !== repeat) { err.textContent = 'Las contraseñas no coinciden.'; return; }
+  if (!/^\\d{8}$/.test(code) || password.length < 10 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+    err.textContent = 'Ingrese el código de ocho dígitos y una clave de al menos diez caracteres, con letras y números.';
     return;
   }
-
-  const falloSeguridad = validarSeguridadClave(c1);
-  if (falloSeguridad) {
-    err.innerText = falloSeguridad;
-    return;
-  }
-
-  err.innerText = "Restableciendo contraseña...";
-
+  err.textContent = 'Validando código...';
   try {
-    const { error } = await sbApp.rpc('resetear_clave_con_token', {
-      p_token: tokenRecuperacionActivo,
-      p_nueva_clave: c1
+    const response = await fetch('/api/recuperacion', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'confirm', email, code, password })
     });
-
-    if (error) {
-      err.innerText = "Error: " + error.message;
+    if (!response.ok) {
+      err.textContent = response.status === 429 ? 'Demasiados intentos. Inténtelo más tarde.' : 'Código inválido, vencido o servicio no disponible.';
       return;
     }
-
-    alert("Contraseña restablecida con éxito. Ingrese con sus nuevas credenciales.");
-    window.history.replaceState({}, document.title, window.location.pathname);
-    document.getElementById('modalResetearConToken').classList.add('hidden');
-    tokenRecuperacionActivo = null;
-  } catch (ex) {
-    err.innerText = "Error: " + ex.message;
-  }
+    err.textContent = '';
+    alert('Contraseña establecida correctamente. Ya puede iniciar sesión.');
+    cerrarModalUniversalDirecto('modalResetearConToken');
+    cerrarModalUniversalDirecto('modalRecuperarClave');
+  } catch { err.textContent = 'Servicio temporalmente no disponible.'; }
 }
 
 /* ==========================================================================
