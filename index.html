@@ -217,7 +217,7 @@
         🔑 Recuperación de Contraseña
       </h3>
       <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
-        Ingrese su correo registrado en el padrón para generar su enlace de restablecimiento seguro.
+        Ingrese su correo electrónico. Si está registrado, recibirá un código temporal para establecer su contraseña.
       </p>
 
       <div class="form-group">
@@ -229,21 +229,29 @@
 
       <div style="display: flex; justify-content: flex-end; gap: 10px;">
         <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalRecuperarClave')">Cancelar</button>
-        <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="enviarSolicitudRecuperacion()">Generar Enlace</button>
+        <button class="btn-primary" style="width: auto; padding: 10px 20px;" onclick="enviarSolicitudRecuperacion()">Enviar código</button>
       </div>
     </div>
   </div>
 
-  <!-- MODAL RESTABLECIMIENTO POR TOKEN DE RECUPERACIÓN -->
+  <!-- MODAL RESTABLECIMIENTO POR CÓDIGO DE RECUPERACIÓN -->
   <div id="modalResetearConToken" class="modal-overlay hidden">
     <div class="modal-content" style="max-width: 500px; text-align: left;">
       <h3 style="color: var(--accent-gold); margin-bottom: 8px; font-family: var(--font-ui);">
         🔄 Restablecer su Contraseña
       </h3>
       <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">
-        Ingrese su nueva contraseña de seguridad (mínimo 6 caracteres normales y al menos 1 símbolo especial).
+        Ingrese el código de ocho dígitos enviado a su correo. Es válido durante 15 minutos. Elija una contraseña de al menos diez caracteres, con letras y números.
       </p>
 
+      <div class="form-group">
+        <label for="recuperarEmailConfirmar">Correo electrónico:</label>
+        <input type="email" id="recuperarEmailConfirmar" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label for="recuperarCodigo">Código recibido:</label>
+        <input type="text" id="recuperarCodigo" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]{8}">
+      </div>
       <div class="form-group">
         <label for="tokenNuevaClave">Nueva Contraseña:</label>
         <input type="password" id="tokenNuevaClave" name="tokenNuevaClave" placeholder="••••••••">
