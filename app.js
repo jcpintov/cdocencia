@@ -599,41 +599,16 @@ function abrirModalRecuperarClave() {
 }
 
 async function enviarSolicitudRecuperacion() {
-  const email = document.getElementById('recuperarEmailInput').value.trim().toLowerCase();
   const statusMsg = document.getElementById('recuperarStatusMsg');
-
-  if (!email) {
-    statusMsg.innerHTML = `<span style="color: var(--error);">Ingrese su correo electrónico.</span>`;
+  const email = document.getElementById('recuperarEmailInput').value.trim().toLowerCase();
+  if (!email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+    statusMsg.textContent = 'Ingrese un correo electrónico válido.';
     return;
   }
-
-  statusMsg.innerHTML = "<em>Generando enlace de recuperación...</em>";
-
-  try {
-    const { data: token, error } = await sbApp.rpc('solicitar_recuperacion_clave', {
-      p_email: email
-    });
-
-    if (error || !token) {
-      statusMsg.innerHTML = `<span style="color: var(--error);">El correo no figura registrado en el padrón.</span>`;
-      return;
-    }
-
-    const enlaceReset = `${window.location.origin}${window.location.pathname}?token=${token}`;
-    statusMsg.innerHTML = `
-      <div style="background: rgba(153,120,57,0.1); padding: 12px; border-radius: 6px; border: 1px solid var(--accent-gold); margin-top: 8px;">
-        <p style="margin: 0 0 6px 0; color: var(--success); font-weight: 700;">✓ Enlace de recuperación generado:</p>
-        <a href="${enlaceReset}" style="font-size: 0.8rem; word-break: break-all; color: var(--accent-gold-dark); text-decoration: underline;">
-          ${enlaceReset}
-        </a>
-        <p style="margin: 6px 0 0 0; font-size: 0.78rem; color: var(--text-muted);">
-          Haga clic en el enlace para restablecer su contraseña de inmediato (válido por 30 minutos).
-        </p>
-      </div>
-    `;
-  } catch (ex) {
-    statusMsg.innerHTML = `<span style="color: var(--error);">Error al procesar: ${ex.message}</span>`;
-  }
+  // No solicitar ni revelar tokens mediante RPC: el mecanismo anterior
+  // devolvía el secreto al navegador sin acreditar posesión del correo.
+  // Activar únicamente cuando exista entrega y validación en servidor.
+  statusMsg.textContent = 'La recuperación por correo está temporalmente en preparación. Contacte al administrador para restablecer su acceso.';
 }
 
 function verificarTokenUrl() {
