@@ -315,8 +315,20 @@ async function guardarNuevaClaveObligatoria() {
     }
 
     // El indicador se actualiza mediante política de fila propia; nunca concede roles.
-    const { error: flagError } = await sbApp.from('usuarios').update({ debe_cambiar_clave: false }).eq('auth_user_id', (await sbApp.auth.getUser()).data.user.id);
-    if (flagError) { err.innerText = 'Contraseña cambiada. No se pudo actualizar el indicador; contacte al administrador.'; return; }
+    const { data: authActual, error: authError } = await sbApp.auth.getUser();
+    if (authError || !authActual?.user?.id) {
+      err.innerText = 'Contraseña cambiada. No fue posible verificar la sesión; vuelva a iniciar sesión.';
+      return;
+    }
+    const { data: perfilActualizado, error: flagError } = await sbApp.from('usuarios')
+      .update({ debe_cambiar_clave: false })
+      .eq('auth_user_id', authActual.user.id)
+      .select('id,debe_cambiar_clave')
+      .maybeSingle();
+    if (flagError || !perfilActualizado || perfilActualizado.debe_cambiar_clave !== false) {
+      err.innerText = 'Contraseña cambiada. No se pudo confirmar el indicador; contacte al administrador.';
+      return;
+    }
     usuarioActual.debe_cambiar_clave = false;
     sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
 
