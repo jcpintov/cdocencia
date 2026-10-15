@@ -212,7 +212,7 @@ async function iniciarSesion() {
   }
 }
 
-async async function registrarIngresoAuditoria(usuario) {
+async function registrarIngresoAuditoria(usuario) {
   let ipDetectada = "No determinada";
   try {
     const res = await fetch('https://api.ipify.org?format=json');
