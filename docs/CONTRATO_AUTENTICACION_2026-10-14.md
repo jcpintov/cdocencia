@@ -32,3 +32,17 @@ Estado: APROBADO / IMPLEMENTACIÓN PENDIENTE
 
 ## Criterio de liberación
 No desplegar el nuevo flujo en producción hasta completar pruebas de extremo a extremo, revisión de permisos y rollback.
+
+## Regla adicional aprobada: correo no registrado
+- Nunca generar ni devolver token para correos ausentes del padrón.
+- Para correo registrado: entregar código temporal por correo y permitir establecer contraseña personal.
+- Para correo no registrado: enviar, sujeto a controles antiabuso, «Su dirección de correo electrónico no se encuentra registrada. Póngase en contacto con el administrador».
+- La respuesta de la interfaz será indistinguible en ambos casos: «Solicitud recibida. Si la dirección ingresada es válida, recibirá un correo electrónico con las instrucciones correspondientes».
+- Enviar correos exclusivamente desde el servidor; límites por dirección e IP; nunca permitir enumeración desde el navegador.
+- No activar este flujo hasta disponer de infraestructura de correo y pruebas de extremo a extremo.
+
+## Comprobación de infraestructura 2026-10-14
+- Vercel cdocencia (producción): no se observaron variables de entorno configuradas.
+- Vercel cdocencia-seguridad-lab: variables SMTP presentes para entorno preview, sin comprobar contenido ni entrega.
+- Supabase: no existen Edge Functions desplegadas.
+- El flujo actual de recuperación está deshabilitado preventivamente en el frontend porque el RPC heredado devuelve un token directamente al cliente.
