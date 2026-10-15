@@ -174,7 +174,7 @@
     if(busy||!client||el('role').textContent!=='SUPERADMIN'||!factorMFA)return;
     const codigo=String(el('codigoMFAAdmin').value||'').trim();
     const estado=el('estadoMFAAdmin');
-    if(!/^\\d{6}$/.test(codigo)){
+    if(!/^[0-9]{6}$/.test(codigo)){
       estado.textContent='Ingrese exactamente los seis dígitos de su aplicación autenticadora.';
       return;
     }
