@@ -4,6 +4,7 @@
   const SUPABASE_PUBLISHABLE_KEY='sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF';
   let client=null, busy=false, trabajos=[], guardandoTrabajo=false, accesosBitacora=[];
   let supervisionDocenciaDatos=[];
+  let factorMFA=null, vinculacionElegida=null, vinculandoAuth=false;
   let misProgresosAuth=[], catalogoMiDocencia=[], comentarioEditandoId=null, operacionDocencia=false;
   const el=id=>document.getElementById(id);
   const status=texto=>{el('status').textContent=texto};
@@ -19,6 +20,19 @@
     el('estadoMiDocenciaAuth').textContent='Sin consulta activa.';
     misProgresosAuth=[];catalogoMiDocencia=[];
     comentarioEditandoId=null;operacionDocencia=false;
+    el('seguridadMFAAdmin').hidden=role!=='SUPERADMIN';
+    el('panelCodigoMFA').hidden=true;
+    el('qrMFAAdmin').hidden=true;
+    el('qrMFAAdmin').removeAttribute('src');
+    el('codigoMFAAdmin').value='';
+    el('estadoMFAAdmin').textContent='Segundo factor no verificado en esta sesión.';
+    factorMFA=null;
+    vinculacionElegida=null;
+    vinculandoAuth=false;
+    el('panelVinculacionAuth').hidden=true;
+    el('destinatarioVinculacionAuth').textContent='';
+    el('motivoVinculacionAuth').value='';
+    el('estadoVinculacionAuth').textContent='No hay vinculación solicitada.';
     el('padronSuperadminLab').hidden=role!=='SUPERADMIN';
     el('indicadoresMigracionAuth').replaceChildren();
     el('estadoMigracionAuth').textContent='Sin diagnóstico de migración.';
@@ -102,6 +116,145 @@
     }catch(_){status('Error de comunicación. No se ha modificado ningún usuario.')}
     finally{el('password').value='';setBusy(false);el('logout').disabled=!client}
   });
+  // R12: enrolamiento/verificación de segundo factor. La autorización para
+  // vincular se valida de nuevo en PostgreSQL mediante JWT AAL2.
+  async function segundoFactorActivo(actual=client){
+    if(!actual?.auth?.mfa?.getAuthenticatorAssuranceLevel)return false;
+    const {data,error}=await actual.auth.mfa.getAuthenticatorAssuranceLevel();
+    return !error && actual===client && data?.currentLevel==='aal2';
+  }
+
+  el('iniciarMFAAdmin').addEventListener('click',async()=>{
+    if(busy||!client||el('role').textContent!=='SUPERADMIN')return;
+    const actual=client;
+    const btn=el('iniciarMFAAdmin');
+    btn.disabled=true;
+    const estado=el('estadoMFAAdmin');
+    estado.textContent='Comprobando el segundo factor con Supabase Auth...';
+    try{
+      if(!await superadminActual())throw new Error('perfil_no_autorizado');
+      if(await segundoFactorActivo(actual)){
+        estado.textContent='Segunda verificación AAL2 activa en esta sesión.';
+        el('panelCodigoMFA').hidden=true;
+        return;
+      }
+      const {data:factores,error:errLista}=await actual.auth.mfa.listFactors();
+      if(actual!==client||el('role').textContent!=='SUPERADMIN')return;
+      if(errLista)throw new Error('lista_factores');
+      const existente=(factores?.totp||[]).find(x=>x.status==='verified');
+      let qr=null;
+      if(existente){
+        factorMFA=existente.id;
+        el('explicacionMFA').textContent=
+          'Abra su aplicación autenticadora ya registrada e introduzca su código actual de seis dígitos.';
+      }else{
+        const {data:creado,error:errAlta}=await actual.auth.mfa.enroll({
+          factorType:'totp',friendlyName:'OFL Superadmin'
+        });
+        if(errAlta||!creado?.id||actual!==client)throw new Error('enrolamiento');
+        factorMFA=creado.id;
+        qr=creado.totp?.qr_code;
+        if(typeof qr!=='string'||!qr.startsWith('data:image/svg+xml')||qr.length>100000)
+          throw new Error('qr_no_disponible');
+        el('explicacionMFA').textContent=
+          'Escanee este QR con su aplicación autenticadora. No comparta el QR ni la clave secreta. Después introduzca el código.';
+        el('qrMFAAdmin').src=qr;
+        el('qrMFAAdmin').hidden=false;
+      }
+      el('panelCodigoMFA').hidden=false;
+      el('codigoMFAAdmin').value='';
+      estado.textContent='Esperando código temporal de seis dígitos.';
+    }catch(_){
+      if(actual===client)estado.textContent=
+        'No se pudo configurar/verificar MFA. Compruebe que TOTP esté habilitado en Supabase Auth.';
+    }finally{btn.disabled=false}
+  });
+
+  el('verificarMFAAdmin').addEventListener('click',async()=>{
+    if(busy||!client||el('role').textContent!=='SUPERADMIN'||!factorMFA)return;
+    const codigo=String(el('codigoMFAAdmin').value||'').trim();
+    const estado=el('estadoMFAAdmin');
+    if(!/^\\d{6}$/.test(codigo)){
+      estado.textContent='Ingrese exactamente los seis dígitos de su aplicación autenticadora.';
+      return;
+    }
+    const actual=client,btn=el('verificarMFAAdmin');
+    btn.disabled=true;
+    el('codigoMFAAdmin').value='';
+    try{
+      const resultado=await actual.auth.mfa.challengeAndVerify({factorId:factorMFA,code:codigo});
+      if(actual!==client||el('role').textContent!=='SUPERADMIN')return;
+      if(resultado.error||!await segundoFactorActivo(actual))
+        throw new Error('segundo_factor_no_verificado');
+      factorMFA=null;
+      el('panelCodigoMFA').hidden=true;
+      el('qrMFAAdmin').hidden=true;
+      el('qrMFAAdmin').removeAttribute('src');
+      estado.textContent='MFA verificado. La sesión alcanzó AAL2 para operaciones administrativas protegidas.';
+    }catch(_){
+      if(actual===client)estado.textContent=
+        'Código no validado o sesión caducada. Intente otra vez con un código vigente.';
+    }finally{btn.disabled=false}
+  });
+  el('cancelarMFAAdmin').addEventListener('click',()=>{
+    factorMFA=null;
+    el('panelCodigoMFA').hidden=true;
+    el('codigoMFAAdmin').value='';
+    el('qrMFAAdmin').hidden=true;
+    el('qrMFAAdmin').removeAttribute('src');
+    el('estadoMFAAdmin').textContent='Configuración cancelada. Ningún código ha sido conservado.';
+  });
+
+  el('cancelarVinculacionAuth').addEventListener('click',()=>{
+    if(vinculandoAuth)return;
+    vinculacionElegida=null;
+    el('panelVinculacionAuth').hidden=true;
+    el('motivoVinculacionAuth').value='';
+    el('estadoVinculacionAuth').textContent='Vinculación cancelada.';
+  });
+
+  el('confirmarVinculacionAuth').addEventListener('click',async()=>{
+    if(busy||vinculandoAuth||!client||el('role').textContent!=='SUPERADMIN'
+      ||!vinculacionElegida)return;
+    const motivo=String(el('motivoVinculacionAuth').value||'').trim();
+    const estado=el('estadoVinculacionAuth');
+    if(motivo.length<12||motivo.length>500){
+      estado.textContent='La justificación debe tener entre 12 y 500 caracteres.';
+      return;
+    }
+    const actual=client, seleccion={...vinculacionElegida};
+    vinculandoAuth=true;
+    const btn=el('confirmarVinculacionAuth');
+    btn.disabled=true;
+    try{
+      if(!await superadminActual()||!await segundoFactorActivo(actual)){
+        estado.textContent='Se requiere SUPERADMIN y MFA/AAL2 vigente antes de vincular. Use el panel de seguridad.';
+        return;
+      }
+      if(actual!==client||el('role').textContent!=='SUPERADMIN')return;
+      const aprobado=window.confirm(
+        'Vincular el perfil de '+seleccion.nombre+' a una cuenta Auth ya confirmada para '+
+        seleccion.email+'? Esto registra un cambio real en la base y no envía invitaciones.'
+      );
+      if(!aprobado){estado.textContent='Vinculación cancelada antes del envío.';return}
+      const {data,error}=await actual.rpc('maestro_admin_vincular_auth',{
+        p_perfil_legacy:seleccion.id,p_motivo:motivo
+      });
+      if(actual!==client||el('role').textContent!=='SUPERADMIN')return;
+      if(error||data!==true){
+        estado.textContent='No se pudo vincular. Compruebe que la cuenta Auth esté confirmada y no tenga otro vínculo.';
+        return;
+      }
+      vinculacionElegida=null;
+      el('motivoVinculacionAuth').value='';
+      el('panelVinculacionAuth').hidden=true;
+      estado.textContent='Vinculación auditada y confirmada por el servidor.';
+      el('consultarPadron').click();
+    }catch(_){
+      if(actual===client)estado.textContent='No fue posible completar la vinculación autorizada.';
+    }finally{vinculandoAuth=false;btn.disabled=false}
+  });
+
   el('consultarPadron').addEventListener('click',async()=>{
     if(busy||!client||el('role').textContent!=='SUPERADMIN')return;
     const boton=el('consultarPadron'),estado=el('estadoPadron');
@@ -126,6 +279,30 @@
         [p.nombre||'',p.email||'',p.es_admin?'SUPERADMIN':'USER',p.auth_vinculada?'Vinculada':'Pendiente'].forEach(value=>{
           const td=document.createElement('td');td.textContent=String(value);tr.appendChild(td);
         });
+        const acciones=document.createElement('td');
+        if(!p.es_admin && !p.auth_vinculada){
+          const btn=document.createElement('button');
+          btn.type='button';
+          btn.className='secondary';
+          btn.textContent='Revisar vinculación';
+          btn.addEventListener('click',()=>{
+            if(!client||el('role').textContent!=='SUPERADMIN')return;
+            vinculacionElegida={id:p.id,nombre:p.nombre||'',email:p.email||''};
+            el('destinatarioVinculacionAuth').textContent=
+              'Perfil: '+vinculacionElegida.nombre+' · Correo: '+vinculacionElegida.email;
+            el('motivoVinculacionAuth').value='';
+            el('estadoVinculacionAuth').textContent=
+              'Aún no se ha vinculado. Se requiere MFA/AAL2, identidad Auth confirmada y una justificación.';
+            el('panelVinculacionAuth').hidden=false;
+            el('panelVinculacionAuth').scrollIntoView?.({block:'nearest'});
+          });
+          acciones.appendChild(btn);
+        }else{
+          const etiqueta=document.createElement('span');
+          etiqueta.textContent=p.es_admin?'Cuenta administrativa': 'Ya vinculada';
+          acciones.appendChild(etiqueta);
+        }
+        tr.appendChild(acciones);
         tbody.appendChild(tr);
       }
       el('tablaPadron').hidden=false;
