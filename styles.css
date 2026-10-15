@@ -2673,3 +2673,19 @@ body.theme-nocturno #seccionDocencia .nav-item-title{color:#f0f4f8!important}
 .admin-kpi span{font-size:.86rem;color:var(--text-muted,#666)}
 .admin-kpi strong{font-size:2rem;line-height:1.1;color:var(--text-main,#222);font-variant-numeric:tabular-nums}
 @media(max-width:600px){.admin-kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.admin-kpi{padding:14px}.admin-kpi strong{font-size:1.6rem}}
+
+
+/* Refinamiento visual accesible — panel SUPERADMIN y formularios */
+#seccionAdmin .admin-main-content{min-width:0}
+#seccionAdmin .card{box-shadow:0 8px 28px rgba(30,32,35,.055)}
+#seccionAdmin .admin-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+#seccionAdmin .admin-kpi{transition:border-color .18s ease,box-shadow .18s ease;min-width:0}
+#seccionAdmin .admin-kpi:hover{border-color:rgba(153,120,57,.52);box-shadow:0 7px 20px rgba(30,32,35,.07)}
+#seccionAdmin .admin-kpi strong{overflow-wrap:anywhere;letter-spacing:-.035em}
+#seccionAdmin .admin-kpi span{font-weight:600;letter-spacing:.015em}
+#seccionAdmin .table-responsive{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#seccionAdmin .metricas-table{min-width:650px}
+#seccionAdmin .metricas-table td{vertical-align:middle}
+#seccionAdmin button:focus-visible,#seccionAdmin a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #ad813e;outline-offset:3px}
+@media(max-width:600px){#seccionAdmin .admin-card-header{align-items:stretch}#seccionAdmin .admin-card-header button{max-width:100%}#seccionAdmin .admin-kpi-grid{gap:12px}#seccionAdmin .admin-kpi{padding:16px 12px}#seccionAdmin .admin-kpi strong{font-size:clamp(1.35rem,6vw,1.8rem)}}
+@media(prefers-reduced-motion:reduce){#seccionAdmin .admin-kpi{transition:none}}
