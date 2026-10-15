@@ -520,6 +520,7 @@
       <hr class="admin-divider">
 
       <nav class="admin-menu-list">
+        <button id="tabNavResumen" class="admin-side-btn" onclick="cambiarSubseccionAdmin('resumen')">Resumen ejecutivo</button>
         <button id="tabNavUsuarios" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('usuarios')">
           👥 Administrar Usuarios
         </button>
@@ -554,6 +555,19 @@
     </aside>
 
     <main class="admin-main-content">
+      <section id="adminSeccionResumen" class="card card-trazado hidden">
+        <div class="admin-card-header"><div><h2>Resumen ejecutivo</h2>
+          <p class="text-instruccion">Actividad de la Cámara de Docencia; progreso sin el administrador.</p></div>
+          <button class="btn-secondary" onclick="cargarResumenAdmin()">Actualizar indicadores</button></div>
+        <div class="admin-kpi-grid">
+          <div class="admin-kpi"><span>Usuarios</span><strong id="kpiUsuarios">—</strong></div>
+          <div class="admin-kpi"><span>Trabajos</span><strong id="kpiModulos">—</strong></div>
+          <div class="admin-kpi"><span>Completados</span><strong id="kpiCompletados">—</strong></div>
+          <div class="admin-kpi"><span>Comentarios</span><strong id="kpiComentarios">—</strong></div>
+        </div>
+        <p id="resumenAdminEstado" class="text-instruccion" role="status"></p>
+        <button class="btn-primary" onclick="cambiarSubseccionAdmin('usuarios')">Administrar usuarios</button>
+      </section>
       <!-- SUBSECCIÓN: ADMINISTRAR USUARIOS -->
       <section id="adminSeccionUsuarios" class="card card-trazado">
         <div class="admin-card-header">
