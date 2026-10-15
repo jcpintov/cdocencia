@@ -58,19 +58,9 @@ export default async function handler(req, res) {
       email.includes('candidatosincorreo')) {
     return reply(res, 422, { error: 'Dirección de correo pendiente de verificación' });
   }
-  const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
-    redirectTo: 'https://cmaestros.ofl.cl/recuperar.html',
-    data: { nombre: target.nombre }
+  // No crear cuentas ni enviar correos durante operaciones administrativas.
+  // El alta y el código de verificación se gestionarán al primer inicio de sesión.
+  return reply(res, 501, {
+    error: 'Activación por primer acceso pendiente de implementación; no se envió correo'
   });
-  if (inviteError || !invited?.user?.id) {
-    return reply(res, inviteError?.status === 429 ? 429 : 502, { error: 'No se pudo enviar la invitación' });
-  }
-  const { data: linked, error: linkError } = await admin.from('usuarios')
-    .update({ auth_user_id: invited.user.id, debe_cambiar_clave: true })
-    .eq('id', target.id).is('auth_user_id', null)
-    .select('auth_user_id').maybeSingle();
-  if (linkError || linked?.auth_user_id !== invited.user.id) {
-    return reply(res, 409, { error: 'Invitación emitida; vinculación pendiente de conciliación' });
-  }
-  return reply(res, 200, { ok: true, estado: 'Invitación enviada y cuenta vinculada' });
 }
