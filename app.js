@@ -2935,27 +2935,22 @@ function eliminarBloqueDoctrinaAdmin(idx) {
 }
 
 async function guardarDoctrinaAdmin() {
+  if (!usuarioActual?.es_admin) return;
   const cont = document.getElementById('contenedorEditorDoctrinaAdmin');
-  const cards = cont.querySelectorAll('.bloque-doctrina-card');
+  if (!cont) return;
   const bloques = [];
-
-  cards.forEach((_, idx) => {
-    const tit = document.getElementById(`doc_tit_${idx}`)?.value.trim();
-    const sub = document.getElementById(`doc_sub_${idx}`)?.value.trim();
-    const txt = document.getElementById(`doc_txt_${idx}`)?.value.trim();
-    if (tit && txt) {
-      bloques.push({ titulo: tit, subtitulo: sub || '', texto: txt });
-    }
-  });
-
-  const { error } = await sbApp
-    .from('config_segura')
+  for (const card of cont.querySelectorAll('.bloque-doctrina-card')) {
+    const tit = card.querySelector('input[id^="doc_tit_"]')?.value.trim();
+    const sub = card.querySelector('input[id^="doc_sub_"]')?.value.trim();
+    const txt = card.querySelector('textarea[id^="doc_txt_"]')?.value.trim();
+    if (tit && txt) bloques.push({ titulo: tit, subtitulo: sub || '', texto: txt });
+  }
+  const { error } = await sbApp.from('config_segura')
     .upsert({ clave: 'doctrina_docencia_maestros', valor: JSON.stringify(bloques) }, { onConflict: 'clave' });
-
   if (error) {
-    alert("Error al guardar doctrina: " + error.message);
+    alert('No se pudo guardar la doctrina. Verifique los permisos de SUPERADMIN.');
   } else {
-    alert("Doctrina institucional actualizada exitosamente.");
+    alert('Borrador doctrinal guardado. No se ha publicado a los usuarios.');
   }
 }
 
