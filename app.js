@@ -33,7 +33,7 @@ let accionConfirmadaCallback = null;
 // Temporizador silencioso de lectura (120 segundos)
 let temporizadorLecturaId = null;
 
-// Temporizador de inactividad estricto (5 minutos)
+// Temporizador de inactividad (15 minutos)
 let temporizadorInactividad = null;
 const TIEMPO_INACTIVIDAD_MS = 15 * 60 * 1000;
 
