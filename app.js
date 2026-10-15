@@ -2015,7 +2015,10 @@ async function cargarDatosAdmin() {
   if (selectMetricas) {
     selectMetricas.innerHTML = "";
     listaModulos.forEach(m => {
-      selectMetricas.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
+      const option = document.createElement('option');
+      option.value = String(m.id);
+      option.textContent = 'Trabajo ' + m.numero_orden + ': ' + m.titulo;
+      selectMetricas.appendChild(option);
     });
   }
   
@@ -2023,7 +2026,10 @@ async function cargarDatosAdmin() {
   if (selectPresencialMod) {
     selectPresencialMod.innerHTML = `<option value="aleatorio">🎲 Todos los Trabajos (Aleatorio)</option>`;
     listaModulos.forEach(m => {
-      selectPresencialMod.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
+      const option = document.createElement('option');
+      option.value = String(m.id);
+      option.textContent = 'Trabajo ' + m.numero_orden + ': ' + m.titulo;
+      selectPresencialMod.appendChild(option);
     });
   }
 
@@ -2031,7 +2037,10 @@ async function cargarDatosAdmin() {
   if (selectAdjunto) {
     selectAdjunto.innerHTML = "";
     listaModulos.forEach(m => {
-      selectAdjunto.innerHTML += `<option value="${m.id}">Trabajo ${m.numero_orden}: ${m.titulo}</option>`;
+      const option = document.createElement('option');
+      option.value = String(m.id);
+      option.textContent = 'Trabajo ' + m.numero_orden + ': ' + m.titulo;
+      selectAdjunto.appendChild(option);
     });
     if (listaModulos.length > 0) {
       verificarEstadoArchivoModulo(selectAdjunto.value || listaModulos[0].id);
@@ -2175,7 +2184,10 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     const { data: usrs } = await sbApp.from('usuarios').select('id, nombre').order('nombre', { ascending: true });
     if (usrs) {
       usrs.forEach(u => {
-        selectFiltro.innerHTML += `<option value="${u.id}">${u.nombre}</option>`;
+        const option = document.createElement('option');
+        option.value = String(u.id);
+        option.textContent = String(u.nombre || '');
+        selectFiltro.appendChild(option);
       });
     }
   }
