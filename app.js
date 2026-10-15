@@ -433,17 +433,17 @@ async function guardarMiNuevaClave() {
    ========================================================================== */
 async function cargarListadoUsuariosAdmin() {
   const tbody = document.getElementById('tablaUsuariosAdminBody');
-  tbody.innerHTML = `<tr><td colspan="5" class="td-loading">Consultando padrón de usuarios...</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="6" class="td-loading">Consultando padrón de usuarios...</td></tr>`;
 
   const { data: usuarios, error } = await sbApp
     .from('usuarios')
-    .select('id, nombre, email, es_admin, debe_cambiar_clave')
+    .select('id, nombre, email, es_admin, debe_cambiar_clave, auth_user_id')
     .order('nombre', { ascending: true });
 
   tbody.innerHTML = '';
 
   if (error || !usuarios || usuarios.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); font-style: italic;">No se encontraron usuarios registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic;">No se encontraron usuarios registrados.</td></tr>`;
     return;
   }
 
@@ -465,6 +465,7 @@ async function cargarListadoUsuariosAdmin() {
         <td style="font-family: monospace; font-size: 0.88rem;">${u.email}</td>
         <td>${rolHtml}</td>
         <td>${estadoClaveHtml}</td>
+        <td>${u.auth_user_id ? 'Vinculado' : 'Pendiente de activación'}</td>
         <td>
           <div style="display: flex; gap: 6px; flex-wrap: wrap;">
             <button class="admin-link-btn" onclick="abrirModalEditarUsuario('${u.id}', '${nombreEscapado}', '${emailEscapado}', ${u.es_admin})">✏️ Editar</button>
