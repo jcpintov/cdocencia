@@ -212,24 +212,10 @@ async function iniciarSesion() {
   }
 }
 
-async function registrarIngresoAuditoria(usuario) {
-  let ipDetectada = "No determinada";
-  try {
-    const res = await fetch('https://api.ipify.org?format=json');
-    if (res.ok) {
-      const data = await res.json();
-      ipDetectada = data.ip || ipDetectada;
-    }
-  } catch (e) {
-    console.warn("No se pudo obtener IP externa:", e);
-  }
-
-  await sbApp.from('registro_accesos').insert({
-    usuario_id: usuario.id,
-    nombre: usuario.nombre,
-    email: usuario.email,
-    ip_origen: ipDetectada
-  });
+async function registrarIngresoAuditoria() {
+  // La identidad y fecha se determinan exclusivamente en el servidor.
+  const { error } = await sbApp.rpc('registrar_acceso_autenticado');
+  if (error) console.warn('No fue posible registrar el acceso:', error.code || 'sin código');
 }
 
 async function recuperarSesionGuardada() {
