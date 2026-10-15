@@ -1822,7 +1822,7 @@ async function abrirModalMisAvances(usuarioObjetivoId = null) {
   
   const { data: usuarioData } = await sbApp
     .from('usuarios')
-    .select('*')
+    .select('id,nombre,email,es_admin,debe_cambiar_clave,auth_user_id')
     .eq('id', idTarget)
     .single();
 
@@ -1954,7 +1954,7 @@ function imprimirInformeAvanceNativo() {
    ========================================================================== */
 async function abrirModalCertificado(moduloId = null, usuarioId = null) {
   const modTarget = moduloId ? listaModulos.find(m => m.id === moduloId) : moduloActual;
-  const userTarget = usuarioId ? (await sbApp.from('usuarios').select('*').eq('id', usuarioId).single()).data : usuarioActual;
+  const userTarget = usuarioId ? (await sbApp.from('usuarios').select('id,nombre,email,es_admin,debe_cambiar_clave,auth_user_id').eq('id', usuarioId).single()).data : usuarioActual;
 
   const { data: prog } = await sbApp
     .from('progreso_maestro')
@@ -2758,7 +2758,7 @@ async function guardarParametrosHermanoBD() {
 
 async function exportarRespaldoCompletoJSON() {
   try {
-    const { data: usuarios } = await sbApp.from('usuarios').select('*');
+    const { data: usuarios } = await sbApp.from('usuarios').select('id,nombre,email,es_admin,debe_cambiar_clave,auth_user_id');
     const { data: modulos } = await sbApp.from('modulos').select('*');
     const { data: progresos } = await sbApp.from('progreso_maestro').select('*');
     const { data: comentarios } = await sbApp.from('comentarios_muro').select('*');
