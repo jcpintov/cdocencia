@@ -463,9 +463,6 @@ async function cargarListadoUsuariosAdmin() {
       ? `<span style="color: #B27B10; font-weight: 600; font-size: 0.82rem;">⚠️ Requiere cambio</span>`
       : `<span style="color: var(--success); font-weight: 600; font-size: 0.82rem;">✓ Al día</span>`;
 
-    const nombreEscapado = (u.nombre || '').replace(/'/g, "\\'");
-    const emailEscapado = (u.email || '').replace(/'/g, "\\'");
-
     tbody.innerHTML += `
       <tr>
         <td><strong>${u.nombre || "Hermano"}</strong></td>
@@ -474,12 +471,7 @@ async function cargarListadoUsuariosAdmin() {
         <td>${estadoClaveHtml}</td>
         <td>${u.auth_user_id ? 'Vinculado' : 'Pendiente de activación'}</td>
         <td>
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button class="admin-link-btn" onclick="abrirModalEditarUsuario('${u.id}', '${nombreEscapado}', '${emailEscapado}', ${u.es_admin})">✏️ Editar</button>
-            <button class="admin-link-btn" style="color: var(--accent-gold-dark);" onclick="abrirModalAdminClaveHermano('${u.id}', '${nombreEscapado}')">🔑 Clave</button>
-            ${u.id !== usuarioActual.id ? `<button class="admin-link-btn" style="color: var(--error); border-color: var(--error);" onclick="confirmarEliminarUsuario('${u.id}', '${nombreEscapado}')">🗑️ Eliminar</button>` : ''}
-          </div>
-        </td>
+          <span class="admin-accion-pendiente" title="Operaciones de cuenta pendientes de integración segura con Supabase Auth">Administración protegida</span>        </td>
       </tr>
     `;
   });
