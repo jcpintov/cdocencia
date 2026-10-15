@@ -154,7 +154,7 @@ function alternarVisibilidadClaveLogin() {
    ========================================================================== */
 async function iniciarSesion() {
   const email = document.getElementById('inputEmail').value.trim().toLowerCase();
-  const clave = document.getElementById('inputClave').value.trim();
+  const clave = document.getElementById('inputClave').value;
   const err = document.getElementById('errorLogin');
 
   if (!email || !clave) {
@@ -165,10 +165,7 @@ async function iniciarSesion() {
   err.innerText = "Verificando credenciales...";
 
   try {
-    const { data, error } = await sbApp.rpc('autenticar_usuario', {
-      p_email: email,
-      p_clave: clave
-    });
+    const { data, error } = await sbApp.auth.signInWithPassword({ email, password: clave });
 
     if (error) {
       const permiso = error.code === '42501' || /permission denied|not allowed|not authorized/i.test(error.message || '');
@@ -178,12 +175,20 @@ async function iniciarSesion() {
       console.error('Error de autenticación:', error.code || 'sin código');
       return;
     }
-    if (!data || data.length === 0) {
+    if (!data?.user) {
       err.innerText = "Correo o contraseña no válidos.";
       return;
     }
 
-    usuarioActual = data[0];
+    const { data: perfil, error: errorPerfil } = await sbApp.from('usuarios')
+      .select('id,nombre,email,es_admin,debe_cambiar_clave')
+      .eq('auth_user_id', data.user.id).maybeSingle();
+    if (errorPerfil || !perfil) {
+      await sbApp.auth.signOut();
+      err.innerText = 'Perfil no disponible. Contacte al administrador.';
+      return;
+    }
+    usuarioActual = perfil;
     sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
 
     err.innerText = "";
