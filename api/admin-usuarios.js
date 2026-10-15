@@ -33,14 +33,36 @@ export default async function handler(req, res) {
     auth: { persistSession: false, autoRefreshToken: false }
   });
   const { data: profile, error: profileError } = await admin.from('usuarios')
-    .select('id,es_admin')
+    .select('id,email,es_admin')
     .eq('auth_user_id', identity.user.id)
     .maybeSingle();
-  if (profileError || !profile?.es_admin) {
+  if (profileError || !profile?.es_admin ||
+      String(identity.user.email || '').toLowerCase() !== 'jpintov@gmail.com' ||
+      String(profile.email || '').toLowerCase() !== 'jpintov@gmail.com') {
     return reply(res, 403, { error: 'Sin autorización' });
   }
 
   const { action, usuario_id } = req.body || {};
+  if (action === 'crear') {
+    const nombre = String(req.body?.nombre || '').trim().replace(/\\s+/g, ' ');
+    const email = String(req.body?.email || '').trim().toLowerCase();
+    if (nombre.length < 3 || nombre.length > 150 ||
+        !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254 ||
+        email.includes('candidatosincorreo')) {
+      return reply(res, 422, { error: 'Verifique el nombre y el correo electrónico real del usuario' });
+    }
+    const { data: existing, error: lookupError } = await admin.from('usuarios')
+      .select('id').ilike('email', email).limit(1);
+    if (lookupError) return reply(res, 503, { error: 'No se pudo verificar el padrón' });
+    if (existing?.length) return reply(res, 409, { error: 'El correo ya está registrado' });
+    const { data: created, error: insertError } = await admin.from('usuarios')
+      .insert({ nombre, email, es_admin: false, debe_cambiar_clave: true,
+        auth_user_id: null, clave_hash: null, terminos_aceptados: false })
+      .select('id,nombre,email').single();
+    if (insertError) return reply(res, insertError.code === '23505' ? 409 : 503,
+      { error: insertError.code === '23505' ? 'El correo ya está registrado' : 'No se pudo registrar el usuario' });
+    return reply(res, 201, { ok: true, usuario: created, estado: 'Pendiente de primer acceso' });
+  }
   if (action !== 'activar') return reply(res, 400, { error: 'Acción no admitida' });
   if (typeof usuario_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(usuario_id)) {
     return reply(res, 400, { error: 'Identificador inválido' });
