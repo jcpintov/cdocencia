@@ -455,25 +455,24 @@ async function cargarListadoUsuariosAdmin() {
   }
 
   usuarios.forEach(u => {
-    const rolHtml = u.es_admin
-      ? `<span style="background: rgba(153,120,57,0.15); color: var(--accent-gold-dark); font-weight: 700; padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;">Superadmin</span>`
-      : `<span style="background: rgba(0,0,0,0.05); color: var(--text-main); padding: 3px 8px; border-radius: 4px; font-size: 0.8rem;">Hermano</span>`;
-
-    const estadoClaveHtml = u.debe_cambiar_clave
-      ? `<span style="color: #B27B10; font-weight: 600; font-size: 0.82rem;">⚠️ Requiere cambio</span>`
-      : `<span style="color: var(--success); font-weight: 600; font-size: 0.82rem;">✓ Al día</span>`;
-
-    tbody.innerHTML += `
-      <tr>
-        <td><strong>${u.nombre || "Hermano"}</strong></td>
-        <td style="font-family: monospace; font-size: 0.88rem;">${u.email}</td>
-        <td>${rolHtml}</td>
-        <td>${estadoClaveHtml}</td>
-        <td>${u.auth_user_id ? 'Vinculado' : 'Pendiente de activación'}</td>
-        <td>
-          <span class="admin-accion-pendiente" title="Operaciones de cuenta pendientes de integración segura con Supabase Auth">Administración protegida</span>        </td>
-      </tr>
-    `;
+    const tr = document.createElement('tr');
+    const celda = (texto, className = '') => {
+      const td = document.createElement('td');
+      if (className) td.className = className;
+      td.textContent = texto;
+      tr.appendChild(td);
+      return td;
+    };
+    const nombre = celda(u.nombre || 'Hermano');
+    nombre.style.fontWeight = '700';
+    const correo = celda(u.email || '');
+    correo.style.fontFamily = 'monospace';
+    correo.style.fontSize = '0.88rem';
+    celda(u.es_admin ? 'Superadmin' : 'Hermano');
+    celda(u.debe_cambiar_clave ? 'Requiere cambio' : 'Al día');
+    celda(u.auth_user_id ? 'Vinculado' : 'Pendiente de activación');
+    celda('Administración protegida', 'admin-accion-pendiente');
+    tbody.appendChild(tr);
   });
 }
 
