@@ -150,16 +150,13 @@ function generarClaveAleatoriaSegura() {
 function alternarVisibilidadClaveLogin() {
   const input = document.getElementById('inputClave');
   const btn = document.getElementById('btnToggleVerClave');
-  if (!input) return;
-  if (input.type === 'password') {
-    input.type = 'text';
-    btn.innerText = '🙈';
-    btn.title = 'Ocultar contraseña';
-  } else {
-    input.type = 'password';
-    btn.innerText = '👁️';
-    btn.title = 'Mostrar contraseña';
-  }
+  if (!input || !btn) return;
+  const visible = input.type === 'password';
+  input.type = visible ? 'text' : 'password';
+  btn.textContent = visible ? 'Ocultar' : 'Mostrar';
+  btn.title = visible ? 'Ocultar contraseña' : 'Mostrar contraseña';
+  btn.setAttribute('aria-label', btn.title);
+  btn.setAttribute('aria-pressed', String(visible));
 }
 
 /* ==========================================================================
