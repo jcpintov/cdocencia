@@ -168,9 +168,9 @@ async function iniciarSesion() {
     const { data, error } = await sbApp.auth.signInWithPassword({ email, password: clave });
 
     if (error) {
-      const permiso = error.code === '42501' || /permission denied|not allowed|not authorized/i.test(error.message || '');
-      err.innerText = permiso
-        ? 'El servicio de acceso está temporalmente restringido. No cambie su contraseña; contacte al administrador.'
+      const invalida = /invalid login credentials|invalid credentials/i.test(error.message || '');
+      err.innerText = invalida
+        ? 'Correo o contraseña no válidos. Utilice Recuperar contraseña si necesita ayuda.'
         : 'No fue posible verificar el acceso. Inténtelo más tarde.';
       console.error('Error de autenticación:', error.code || 'sin código');
       return;
