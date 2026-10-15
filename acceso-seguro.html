@@ -38,6 +38,28 @@
       <dt>Rol validado</dt><dd id="role">—</dd>
       <dt>Administración</dt><dd id="permissions">—</dd>
     </dl>
+    <section id="seguridadMFAAdmin" hidden aria-labelledby="tituloMFAAdmin">
+      <h2 id="tituloMFAAdmin">Seguridad de la cuenta Superadmin</h2>
+      <p>Para vincular nuevas cuentas de Maestros se exige una segunda verificación (MFA/AAL2). Ninguna operación de activación se realiza automáticamente.</p>
+      <p class="status" id="estadoMFAAdmin" role="status" aria-live="polite">Segundo factor aún no comprobado.</p>
+      <div class="actions">
+        <button type="button" id="iniciarMFAAdmin" class="secondary">Configurar o verificar segundo factor</button>
+      </div>
+      <div id="panelCodigoMFA" hidden>
+        <p id="explicacionMFA" class="mi-docencia-explicacion"></p>
+        <img id="qrMFAAdmin" hidden alt="Código QR temporal para vincular una aplicación autenticadora" width="190" height="190">
+        <div class="campos">
+          <div>
+            <label for="codigoMFAAdmin">Código de seis dígitos de su aplicación autenticadora</label>
+            <input id="codigoMFAAdmin" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="000000">
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" id="verificarMFAAdmin">Verificar segundo factor</button>
+          <button type="button" id="cancelarMFAAdmin" class="secondary">Cancelar</button>
+        </div>
+      </div>
+    </section>
     <section id="padronSuperadminLab" hidden aria-label="Padrón de comprobación Superadmin">
       <h2 style="font:500 1.35rem Georgia,serif;margin:0 0 9px">Comprobación de lectura del padrón</h2>
       <p style="line-height:1.55;margin:0 0 12px">Solo para Superadmin verificado. Sin modificaciones y sin credenciales, hashes ni tokens.</p>
@@ -50,9 +72,25 @@
       <div id="indicadoresMigracionAuth" class="mi-docencia-resumen" aria-label="Totales de migración, solo Superadmin"></div>
       <div style="overflow-x:auto">
         <table id="tablaPadron" style="border-collapse:collapse;width:100%;font-size:.87rem" hidden>
-          <thead><tr><th scope="col">Nombre</th><th scope="col">Correo</th><th scope="col">Rol</th><th scope="col">Cuenta Auth</th></tr></thead>
+          <thead><tr><th scope="col">Nombre</th><th scope="col">Correo</th><th scope="col">Rol</th><th scope="col">Cuenta Auth</th><th scope="col">Activación controlada</th></tr></thead>
           <tbody id="padronBody"></tbody>
         </table>
+      </div>
+      <div id="panelVinculacionAuth" hidden class="panel-vinculacion">
+        <h3>Vincular una cuenta Auth confirmada</h3>
+        <p id="destinatarioVinculacionAuth"></p>
+        <p>Esta acción es individual e irreversible desde este panel. No envía invitaciones. Solo funciona si la cuenta Auth ya existe, tiene correo confirmado y no pertenece a otro perfil.</p>
+        <div class="campos">
+          <div>
+            <label for="motivoVinculacionAuth">Justificación institucional (12–500 caracteres)</label>
+            <textarea id="motivoVinculacionAuth" maxlength="500" rows="3" placeholder="Confirmación documental del Maestro y autorización para activar su perfil."></textarea>
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" id="confirmarVinculacionAuth">Vincular con MFA y auditoría</button>
+          <button type="button" id="cancelarVinculacionAuth" class="secondary">Cancelar</button>
+        </div>
+        <p class="status" id="estadoVinculacionAuth" aria-live="polite">No hay vinculación solicitada.</p>
       </div>
     </section>
     <section id="supervisionDocenciaAdmin" hidden aria-labelledby="tituloSupervisionDocencia">
