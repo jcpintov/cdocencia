@@ -42,7 +42,8 @@ export default async function handler(req, res) {
     return reply(res, 403, { error: 'Sin autorización' });
   }
 
-  const { action, usuario_id } = req.body || {};
+  const { action } = req.body || {};
+  if (action !== 'crear') return reply(res, 400, { error: 'Acción no admitida' });
   if (action === 'crear') {
     const nombre = String(req.body?.nombre || '').trim().replace(/\\s+/g, ' ');
     const email = String(req.body?.email || '').trim().toLowerCase();
@@ -55,6 +56,16 @@ export default async function handler(req, res) {
       .select('id').ilike('email', email).limit(1);
     if (lookupError) return reply(res, 503, { error: 'No se pudo verificar el padrón' });
     if (existing?.length) return reply(res, 409, { error: 'El correo ya está registrado' });
+    // Padrón cerrado: 26 integrantes; Superadmin y Dummy no ocupan un cupo.
+    const { count: cuposOcupados, error: countError } = await admin.from('usuarios')
+      .select('id', { count: 'exact', head: true })
+      .eq('es_admin', false).neq('email', 'dummy@ofl.cl');
+    if (countError || cuposOcupados == null) {
+      return reply(res, 503, { error: 'No se pudo verificar el cupo del padrón' });
+    }
+    if (cuposOcupados >= 26) {
+      return reply(res, 409, { error: 'Padrón completo (26 integrantes). No se incorporaron cuentas.' });
+    }
     const { data: created, error: insertError } = await admin.from('usuarios')
       .insert({ nombre, email, es_admin: false, debe_cambiar_clave: true,
         auth_user_id: null, clave_hash: null, terminos_aceptados: false })
@@ -63,26 +74,5 @@ export default async function handler(req, res) {
       { error: insertError.code === '23505' ? 'El correo ya está registrado' : 'No se pudo registrar el usuario' });
     return reply(res, 201, { ok: true, usuario: created, estado: 'Pendiente de primer acceso' });
   }
-  if (action !== 'activar') return reply(res, 400, { error: 'Acción no admitida' });
-  if (typeof usuario_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(usuario_id)) {
-    return reply(res, 400, { error: 'Identificador inválido' });
-  }
-  const { data: target, error: targetError } = await admin.from('usuarios')
-    .select('id,email,nombre,es_admin,auth_user_id')
-    .eq('id', usuario_id)
-    .maybeSingle();
-  if (targetError || !target) return reply(res, 404, { error: 'Usuario no encontrado' });
-  if (target.es_admin || target.auth_user_id) {
-    return reply(res, 409, { error: 'Cuenta vinculada o protegida' });
-  }
-  const email = String(target.email || '').trim().toLowerCase();
-  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254 ||
-      email.includes('candidatosincorreo')) {
-    return reply(res, 422, { error: 'Dirección de correo pendiente de verificación' });
-  }
-  // No crear cuentas ni enviar correos durante operaciones administrativas.
-  // El alta y el código de verificación se gestionarán al primer inicio de sesión.
-  return reply(res, 501, {
-    error: 'Activación por primer acceso pendiente de implementación; no se envió correo'
-  });
+  return reply(res, 400, { error: 'Acción no admitida' });
 }
