@@ -1032,13 +1032,16 @@ async function mostrarMuroReflexionesUsuarios() {
   });
 
   if (modulosPendientesUsuario.length > 0) {
-    let pendientesListado = modulosPendientesUsuario.map(m => `Trabajo ${m.numero_orden}: ${m.titulo}`).join(' • ');
-    cont.innerHTML += `
-      <div style="margin-top: 30px; background: rgba(0,0,0,0.03); border: 1px dashed var(--border-color); padding: 18px; border-radius: 6px; font-family: var(--font-ui); font-size: 0.88rem; color: var(--text-muted);">
-        <strong>🔒 Trabajos con aportes en reserva docente hasta su completación:</strong><br>
-        <span style="font-style: italic;">${pendientesListado}</span>
-      </div>
-    `;
+    const pendientesListado = modulosPendientesUsuario.map(m => 'Trabajo ' + m.numero_orden + ': ' + m.titulo).join(' • ');
+    const aviso = document.createElement('div');
+    aviso.style.cssText = 'margin-top:30px;background:rgba(0,0,0,0.03);border:1px dashed var(--border-color);padding:18px;border-radius:6px;font-family:var(--font-ui);font-size:0.88rem;color:var(--text-muted)';
+    const titulo = document.createElement('strong');
+    titulo.textContent = '🔒 Trabajos con aportes en reserva docente hasta su completación:';
+    const detalle = document.createElement('span');
+    detalle.style.fontStyle = 'italic';
+    detalle.textContent = pendientesListado;
+    aviso.append(titulo, document.createElement('br'), detalle);
+    cont.appendChild(aviso);
   }
 }
 
