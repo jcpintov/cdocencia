@@ -451,6 +451,16 @@ async function cargarListadoUsuariosAdmin() {
     return;
   }
 
+  const cuposOcupados = usuarios.filter(u => !u.es_admin &&
+    String(u.email || '').trim().toLowerCase() !== 'dummy@ofl.cl').length;
+  const botonAgregar = document.getElementById('btnAgregarUsuarioAdmin');
+  if (botonAgregar) {
+    botonAgregar.disabled = cuposOcupados >= 26;
+    botonAgregar.title = cuposOcupados >= 26 ? 'Padrón completo: 26 integrantes' : 'Agregar integrante';
+  }
+  const estadoCupos = document.getElementById('adminCupoUsuarios');
+  if (estadoCupos) estadoCupos.textContent = `${cuposOcupados}/26 integrantes`;
+
   usuarios.forEach(u => {
     const tr = document.createElement('tr');
     const celda = (texto, className = '') => {
@@ -474,7 +484,7 @@ async function cargarListadoUsuariosAdmin() {
 }
 
 function abrirModalCrearUsuario() {
-  if (!usuarioActual?.es_admin) return;
+  if (!usuarioActual?.es_admin || document.getElementById('btnAgregarUsuarioAdmin')?.disabled) return;
   document.getElementById('modalAdminUsuarioTitulo').textContent = 'Agregar usuario al padrón';
   document.getElementById('adminUsuarioTargetId').value = '';
   document.getElementById('adminUsuarioNombre').value = '';
@@ -482,24 +492,6 @@ function abrirModalCrearUsuario() {
   document.getElementById('errorAdminUsuario').textContent = '';
   document.getElementById('modalAdminUsuario').classList.remove('hidden');
   document.getElementById('adminUsuarioNombre').focus();
-}
-
-function autogenerarClaveNuevoUsuario() {
-  const p = generarClaveAleatoriaSegura();
-  document.getElementById('adminUsuarioClave').value = p;
-  navigator.clipboard.writeText(p);
-  alert("Contraseña copiada al portapapeles: " + p);
-}
-
-function abrirModalEditarUsuario(id, nombre, email, esAdmin) {
-  document.getElementById('modalAdminUsuarioTitulo').innerText = '✏️ Editar Datos de Usuario';
-  document.getElementById('adminUsuarioTargetId').value = id;
-  document.getElementById('adminUsuarioNombre').value = nombre;
-  document.getElementById('adminUsuarioEmail').value = email;
-  document.getElementById('adminUsuarioEsAdmin').checked = (esAdmin === true || esAdmin === 'true');
-  document.getElementById('grupoClaveCreacion').classList.add('hidden');
-  document.getElementById('errorAdminUsuario').innerText = '';
-  document.getElementById('modalAdminUsuario').classList.remove('hidden');
 }
 
 async function guardarAdminUsuario() {
