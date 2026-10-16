@@ -2228,12 +2228,14 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   const ocultarAdmin = document.getElementById('ocultarAdminAccesos')?.checked === true;
   let registrosVisibles = registros;
   if (ocultarAdmin) {
-    const { data: admins, error: adminError } = await sbApp.from('usuarios').select('id').eq('es_admin', true);
+    const { data: admins, error: adminError } = await sbApp.from('usuarios').select('id,email,es_admin');
     if (adminError) {
       tbody.innerHTML = '<tr><td colspan="4">No fue posible aplicar el filtro de administrador.</td></tr>';
       return;
     }
-    const idsAdmin = new Set((admins || []).map(u => u.id));
+    const idsAdmin = new Set((admins || [])
+      .filter(u => u.es_admin === true || String(u.email || '').trim().toLowerCase() === 'dummy@ofl.cl')
+      .map(u => u.id));
     registrosVisibles = registros.filter(r => !idsAdmin.has(r.usuario_id));
   }
   if (!registrosVisibles.length) {
