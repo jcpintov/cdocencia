@@ -326,3 +326,45 @@ body.theme-nocturno #seccionDocencia .sidebar-trabajo-actual{color:#bfccd7}
   #seccionDocencia .sidebar-acciones .btn-mis-avances{font-size:.96rem}
   #seccionDocencia .sidebar-info{display:none}
 }
+
+
+/* Un mismo lenguaje visual de iconos tipográficos para User y Superadmin.
+   Sustituye emojis de color únicamente en el sidebar administrativo. */
+#seccionAdmin .admin-brand .admin-brand-glyph {
+  flex:0 0 30px;
+  color:#e9c48b;
+  font:500 1.6rem/1 var(--font-ui,Arial,sans-serif);
+  text-align:center;
+}
+#seccionAdmin .admin-side-btn,
+#seccionAdmin .admin-nav-link-ext {
+  display:flex;
+  align-items:center;
+  gap:11px;
+  min-width:0;
+  min-height:48px;
+  text-align:left;
+  white-space:normal;
+}
+#seccionAdmin .admin-side-btn .portal-nav-glyph,
+#seccionAdmin .admin-nav-link-ext .portal-nav-glyph {
+  flex:0 0 24px;
+  width:24px;
+  color:#e9c48b;
+  font:500 1.35rem/1 var(--font-ui,Arial,sans-serif);
+  text-align:center;
+}
+#seccionAdmin .admin-side-btn .admin-nav-text,
+#seccionAdmin .admin-nav-link-ext > span:last-child {
+  min-width:0;
+  overflow-wrap:break-word;
+  line-height:1.35;
+}
+#seccionAdmin .admin-side-btn.active .portal-nav-glyph {
+  color:#172637;
+}
+#seccionAdmin .admin-side-btn:focus-visible,
+#seccionAdmin .admin-nav-link-ext:focus-visible {
+  outline:3px solid #f1d294;
+  outline-offset:2px;
+}
