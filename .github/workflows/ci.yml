@@ -19,4 +19,4 @@ jobs:
           set -euo pipefail
           find . -type f -name '*.js' -not -path './node_modules/*' -print0 | xargs -0 -r -n1 node --check
       - name: Contrato de primer acceso (sin conexiones externas)
-        run: node --test tests/primer-acceso.test.mjs
+        run: node --test tests/*.test.mjs
