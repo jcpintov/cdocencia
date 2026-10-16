@@ -64,6 +64,12 @@ export default async function handler(req, res) {
         .update({ auth_user_id: authId, debe_cambiar_clave: false, clave_hash: null })
         .eq('id', profileId).is('auth_user_id', null).select('id').maybeSingle();
       if (linkError || !linked) throw new Error('link_failed');
+      // El OTP se elimina solo cuando Supabase Auth quedó vinculado al perfil.
+      // Ante un fallo de Auth, el mismo código puede reintentarse dentro de sus 15 minutos.
+      // Una cuenta vinculada no puede volver a validar el código, aunque falle esta limpieza.
+      const { error: cleanupError } = await admin.from('primer_acceso_codigos')
+        .delete().eq('usuario_id', profileId);
+      if (cleanupError) console.error('Primer acceso: limpieza de código pendiente');
       return reply(res, 200, { mensaje: 'Cuenta activada. Ya puede iniciar sesión.' });
     } catch (err) {
       if (authId) {
