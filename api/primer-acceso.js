@@ -16,6 +16,13 @@ export default async function handler(req, res) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
     return reply(res, 400, { error: 'Correo inválido' });
   }
+  // El piloto se limita a la cuenta de prueba hasta concluir la validación E2E.
+  // Para habilitar el padrón se requiere una decisión explícita en el entorno de producción.
+  if (process.env.PRIMER_ACCESO_GENERAL_ENABLED !== 'true' && email !== 'dummy@ofl.cl') {
+    if (req.body?.accion === 'solicitar') return reply(res, 200, { mensaje: message });
+    if (req.body?.accion === 'confirmar') return reply(res, 400, { error: 'Código inválido o vencido' });
+    return reply(res, 400, { error: 'Acción inválida' });
+  }
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) return reply(res, 503, { error: 'Servicio no configurado' });
