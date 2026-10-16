@@ -1239,14 +1239,25 @@ function renderizarSidebar() {
       badgeHtml = `<span class="badge-estado" style="background:#FEF3C7;color:#92400E;">En Curso</span>`;
     }
 
-    contenedor.innerHTML += `
-      <div class="modulo-nav-item" id="nav_mod_${m.id}" onclick="seleccionarModulo('${m.id}')">
-        <div class="nav-item-header">
-          <span class="nav-item-num">Trabajo ${m.numero_orden}</span>${badgeHtml}
-        </div>
-        <div class="nav-item-title">${m.titulo}</div>
-      </div>
-    `;
+    const item = document.createElement('div');
+    item.className = 'modulo-nav-item';
+    item.id = 'nav_mod_' + m.id;
+    item.addEventListener('click', () => seleccionarModulo(m.id));
+    const header = document.createElement('div');
+    header.className = 'nav-item-header';
+    const num = document.createElement('span');
+    num.className = 'nav-item-num';
+    num.textContent = 'Trabajo ' + m.numero_orden;
+    const badge = document.createElement('span');
+    badge.className = 'badge-estado ' + (prog?.completado ? 'badge-ok' : prog?.leido ? '' : 'badge-pen');
+    badge.textContent = prog?.completado ? '✓ Completado' : prog?.leido ? 'En Curso' : 'Pendiente';
+    if (prog?.leido && !prog?.completado) badge.style.cssText = 'background:#FEF3C7;color:#92400E';
+    header.append(num, badge);
+    const title = document.createElement('div');
+    title.className = 'nav-item-title';
+    title.textContent = String(m.titulo || '');
+    item.append(header, title);
+    contenedor.appendChild(item);
   });
 }
 
