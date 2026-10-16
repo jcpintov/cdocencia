@@ -45,3 +45,15 @@ test('menús móviles ajustables sin depender de desplazamiento horizontal',()=>
   assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(css,/#seccionDocencia \.sidebar-acciones/);
 });
+
+
+test('pie del sidebar usa Docencia para Maestros sin líneas institucionales',()=>{
+  assert.equal(portalMenus.length,2);
+  for (const menu of portalMenus) {
+    assert.match(menu,/<span>DOCENCIA PARA MAESTROS<\/span>/);
+    assert.doesNotMatch(menu,/<span>CÁMARA DE DOCENCIA<\/span>/);
+    assert.doesNotMatch(menu,/Valle de Talagante/);
+    assert.doesNotMatch(menu,/R\.·\.L\.·\. Orestes Frödden Lorenzen Nº 146/);
+    assert.match(menu,/onclick="cerrarSesion\(\)"/);
+  }
+});
