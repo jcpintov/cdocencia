@@ -61,6 +61,7 @@ function setup(options = {}) {
     SMTP_USER: 'test@example.invalid',
     SMTP_PASSWORD: 'test-password'
   };
+  if (options.generalEnabled) env.PRIMER_ACCESO_GENERAL_ENABLED = 'true';
   const ctx = createContext({
     process: { env }, createClient: () => admin,
     randomInt: () => 12345678,
@@ -95,8 +96,20 @@ test('rechaza correo incorrecto antes de consultar Supabase', async () => {
   assert.equal((await s.request({ email: 'incorrecto', accion: 'solicitar' })).code, 400);
   assert.equal(s.calls.length, 0);
 });
-test('correo no registrado recibe respuesta genérica y no genera envío', async () => {
+test('piloto: correo ajeno recibe respuesta uniforme sin consultar base', async () => {
   const s = setup({ issued: false });
+  const r = await s.request({ email: 'desconocido@example.invalid', accion: 'solicitar' });
+  assert.equal(r.code, 200);
+  assert.deepEqual(s.calls, []);
+});
+test('piloto: deniega confirmación para otros correos sin crear Auth', async () => {
+  const s = setup({ profileId: 'profile-test' });
+  const r = await s.request({ email: 'otra-cuenta@example.invalid', accion: 'confirmar', codigo: '12345678', clave: 'Maestro#2026' });
+  assert.equal(r.code, 400);
+  assert.deepEqual(s.calls, []);
+});
+test('habilitación general requiere opción explícita del servidor', async () => {
+  const s = setup({ issued: false, generalEnabled: true });
   const r = await s.request({ email: 'desconocido@example.invalid', accion: 'solicitar' });
   assert.equal(r.code, 200);
   assert.deepEqual(s.calls, ['primer_acceso_emitir']);
