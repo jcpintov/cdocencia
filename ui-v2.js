@@ -153,3 +153,34 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',sincronizarEncabezado);
   else sincronizarEncabezado();
 })();
+
+
+/* Navegación compacta para usuarios: detalles HTML nativos, sin tocar Auth ni permisos. */
+(function(){
+  'use strict';
+  function prepararMenus(){
+    if (typeof window.matchMedia !== 'function') return;
+    const media=window.matchMedia('(max-width: 640px)');
+    const menus=[...document.querySelectorAll('#seccionBienvenida .portal-menu, #seccionCatalogoTrabajos .portal-menu')];
+    const selectorTrabajos=document.getElementById('selectorTrabajosUsuario');
+    function ajustarMenus(){
+      menus.forEach(menu=>{menu.open=!media.matches;});
+      if(selectorTrabajos)selectorTrabajos.open=!media.matches;
+    }
+    ajustarMenus();
+    if(typeof media.addEventListener==='function')media.addEventListener('change',ajustarMenus);
+    else if(typeof media.addListener==='function')media.addListener(ajustarMenus);
+    document.addEventListener('click',function(event){
+      if(!media.matches || !(event.target instanceof Element))return;
+      const opcionPortal=event.target.closest('.portal-menu .portal-nav-link');
+      if(opcionPortal){
+        const menu=opcionPortal.closest('.portal-menu');
+        if(menu)menu.open=false;
+      }
+      const modulo=event.target.closest('#listaModulosNav .modulo-nav-item');
+      if(modulo && selectorTrabajos)selectorTrabajos.open=false;
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',prepararMenus,{once:true});
+  else prepararMenus();
+})();
