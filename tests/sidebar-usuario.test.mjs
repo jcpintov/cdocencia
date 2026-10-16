@@ -1,0 +1,47 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+const app=readFileSync(new URL('../app.js',import.meta.url),'utf8');
+const script=readFileSync(new URL('../ui-v2.js',import.meta.url),'utf8');
+const css=readFileSync(new URL('../ui-v2.css',import.meta.url),'utf8');
+const portalMenus=[...html.matchAll(/<aside class="portal-nav"[^>]*>[\s\S]*?<\/aside>/g)].map(m=>m[0]);
+
+test('inicio y catálogo tienen navegación accesible equivalente',()=>{
+  assert.equal(portalMenus.length,2);
+  for(const menu of portalMenus){
+    assert.match(menu,/<details class="portal-menu" open>/);
+    assert.match(menu,/<summary class="portal-menu-toggle">/);
+    assert.match(menu,/<nav class="portal-nav-list" aria-label=/);
+    assert.equal((menu.match(/class="portal-nav-link/g)||[]).length,5);
+    assert.equal((menu.match(/aria-current="page"/g)||[]).length,1);
+    for(const action of ['volverAInicioPortal()','irACatalogoDocencia()','abrirModalMisAvances()']){
+      assert.ok(menu.includes(action));
+    }
+    assert.match(menu,/mostrarMuroReflexionesUsuarios\(\)/);
+    assert.match(menu,/cerrarSesion\(\)/);
+  }
+});
+test('el sidebar de estudio ofrece selector nativo y mantiene las acciones',()=>{
+  assert.match(html,/id="selectorTrabajosUsuario" class="sidebar-modulos-detalle" open/);
+  assert.match(html,/<nav id="listaModulosNav" aria-label="Elegir trabajo de la Cámara">/);
+  assert.match(html,/id="sidebarTrabajoActual"[^>]*aria-live="polite"/);
+  assert.match(html,/onclick="volverACatalogo\(\)"/);
+  assert.match(html,/onclick="mostrarMuroReflexionesUsuarios\(\)"/);
+  assert.match(app,/const item = document\.createElement\('button'\)/);
+  assert.match(app,/item\.type = 'button'/);
+  assert.match(app,/activeNav\.setAttribute\('aria-current', 'page'\)/);
+});
+test('el foro conserva control de acceso mediante progreso completado',()=>{
+  assert.match(app,/const accesoMuro = Object\.values\(misProgresos\)\.some\(p => p\?\.completado === true\)/);
+  assert.match(app,/if \(!usuarioActual \|\| usuarioActual\.es_admin \|\| !accesoMuro\)/);
+});
+test('menús móviles ajustables sin depender de desplazamiento horizontal',()=>{
+  assert.match(script,/media=window\.matchMedia\('\(max-width: 640px\)'\)/);
+  assert.match(script,/selectorTrabajos\.open=!media\.matches/);
+  assert.match(script,/menu\.open=false/);
+  assert.match(css,/\.portal-menu \.portal-nav-list\s*\{/);
+  assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(css,/#seccionDocencia \.sidebar-acciones/);
+});
