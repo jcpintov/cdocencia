@@ -57,3 +57,37 @@ test('pie del sidebar usa Docencia para Maestros sin líneas institucionales',()
     assert.match(menu,/onclick="cerrarSesion\(\)"/);
   }
 });
+
+test('ambos menús users siguen exactamente el orden y títulos aprobados',()=>{
+  const esperados=['Inicio','Mis avances','Trabajos de la Cámara','Foro Docente','Este Espacio'];
+  assert.equal(portalMenus.length,2);
+  for (const menu of portalMenus) {
+    const titulos=[...menu.matchAll(/<span class="portal-nav-text">([^<]+)<\/span>/g)].map(m=>m[1]);
+    assert.deepEqual(titulos,esperados);
+    assert.doesNotMatch(menu,/portal-nav-intro|portal-nav-brand|Espacio de Maestros/);
+    assert.match(menu,/onclick="volverAInicioPortal\(\)"/);
+    assert.match(menu,/onclick="abrirModalMisAvances\(\)"/);
+    assert.match(menu,/onclick="irACatalogoDocencia\(\)"/);
+    assert.match(menu,/mostrarMuroReflexionesUsuarios\(\)/);
+    assert.match(menu,/mostrarDocenciaParaMaestros\(\)/);
+  }
+});
+test('superadmin usa los mismos iconos tipográficos sin alterar botones',()=>{
+  const sidebar=html.match(/<aside class="sidebar-admin">([\s\S]*?)<\/aside>/)?.[1];
+  assert.ok(sidebar,'existe sidebar exclusivo Superadmin');
+  const botones=[...sidebar.matchAll(/<button id="(tabNav\w+)" class="admin-side-btn[^"]*" onclick="cambiarSubseccionAdmin\('([^']+)'\)">([\s\S]*?)<\/button>/g)];
+  assert.equal(botones.length,9);
+  const idSet=new Set();
+  for(const [,id,section,content] of botones) {
+    assert.ok(id && section);
+    assert.ok(!idSet.has(id),'cada opción tiene identificador único');
+    idSet.add(id);
+    assert.match(content,/<span class="portal-nav-glyph" aria-hidden="true">[^<]+<\/span>/);
+    assert.match(content,/<span class="admin-nav-text">[^<]+<\/span>/);
+  }
+  assert.match(sidebar,/class="portal-nav-glyph admin-brand-glyph"/);
+  assert.match(sidebar,/Repositorio GitHub/);
+  assert.match(sidebar,/Supabase Dashboard/);
+  assert.match(css,/#seccionAdmin \.admin-side-btn \.portal-nav-glyph/);
+  assert.match(css,/#seccionAdmin \.admin-side-btn\.active \.portal-nav-glyph/);
+});
