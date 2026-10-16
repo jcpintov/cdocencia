@@ -499,7 +499,7 @@ async function guardarAdminUsuario() {
   const nombre = document.getElementById('adminUsuarioNombre').value.trim();
   const email = document.getElementById('adminUsuarioEmail').value.trim().toLowerCase();
   if (!usuarioActual?.es_admin) return;
-  if (nombre.length < 3 || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {
+  if (nombre.length < 3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     err.textContent = 'Ingrese un nombre y un correo electrónico válido.';
     return;
   }
