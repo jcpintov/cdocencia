@@ -253,15 +253,19 @@
 
   <!-- PANTALLA 2: BIENVENIDA INSTITUCIONAL -->
   <div id="seccionBienvenida" class="bienvenida-portal hidden">
-    <aside class="portal-nav" aria-label="Navegación de la Cámara">
-      <div class="portal-nav-list">
-        <button class="portal-nav-link active" type="button" aria-current="page" onclick="volverAInicioPortal()">⌂ &nbsp; Inicio</button>
-        <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia()">▤ &nbsp; Trabajos de la Cámara</button>
-        <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())">▣ &nbsp; Docencia para Maestros</button>
-        <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())">▢ &nbsp; Muro y Foro</button>
-        <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()">◷ &nbsp; Mis avances</button>
-      </div>
-      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>CÁMARA DE DOCENCIA</span><small>R.·.L.·. Orestes Frödden Lorenzen Nº 146<br>Valle de Talagante</small><button type="button" onclick="cerrarSesion()">↪ &nbsp; Cerrar sesión</button></div>
+    <aside class="portal-nav" aria-label="Menú del usuario">
+      <div class="portal-nav-intro"><span class="portal-nav-brand">Cámara de Docencia</span><small>Espacio de Maestros</small></div>
+      <details class="portal-menu" open>
+        <summary class="portal-menu-toggle"><span>Menú de navegación</span><span class="portal-menu-chevron" aria-hidden="true">⌄</span></summary>
+        <nav class="portal-nav-list" aria-label="Secciones de la Cámara">
+          <button class="portal-nav-link active" type="button" aria-current="page" onclick="volverAInicioPortal()"><span class="portal-nav-glyph" aria-hidden="true">⌂</span><span class="portal-nav-text">Inicio</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia()"><span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="portal-nav-text">Trabajos de la Cámara</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Docencia para Maestros</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Muro y Foro</span></button>
+          <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()"><span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="portal-nav-text">Mis avances</span></button>
+        </nav>
+      </details>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>CÁMARA DE DOCENCIA</span><small>R.·.L.·. Orestes Frödden Lorenzen Nº 146<br>Valle de Talagante</small><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
     </aside>
     <main class="portal-main">
       <section class="portal-hero" aria-labelledby="portal-saludo">
@@ -285,15 +289,19 @@
   </div>
 
   <!-- PANTALLA 3: CATÁLOGO DE TRABAJOS -->
-  <div id="seccionCatalogoTrabajos" class="catalogo-portal hidden"><aside class="portal-nav" aria-label="Navegación de la Cámara">
-      <div class="portal-nav-list">
-        <button class="portal-nav-link" type="button" onclick="volverAInicioPortal()">⌂ &nbsp; Inicio</button>
-        <button class="portal-nav-link active" type="button" aria-current="page" onclick="irACatalogoDocencia()">▤ &nbsp; Trabajos de la Cámara</button>
-        <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())">▣ &nbsp; Docencia para Maestros</button>
-        <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())">▢ &nbsp; Muro y Foro</button>
-        <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()">◷ &nbsp; Mis avances</button>
-      </div>
-      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>CÁMARA DE DOCENCIA</span><small>R.·.L.·. Orestes Frödden Lorenzen Nº 146<br>Valle de Talagante</small><button type="button" onclick="cerrarSesion()">↪ &nbsp; Cerrar sesión</button></div>
+  <div id="seccionCatalogoTrabajos" class="catalogo-portal hidden"><aside class="portal-nav" aria-label="Menú del usuario">
+      <div class="portal-nav-intro"><span class="portal-nav-brand">Cámara de Docencia</span><small>Espacio de Maestros</small></div>
+      <details class="portal-menu" open>
+        <summary class="portal-menu-toggle"><span>Menú de navegación</span><span class="portal-menu-chevron" aria-hidden="true">⌄</span></summary>
+        <nav class="portal-nav-list" aria-label="Secciones de la Cámara">
+          <button class="portal-nav-link" type="button" onclick="volverAInicioPortal()"><span class="portal-nav-glyph" aria-hidden="true">⌂</span><span class="portal-nav-text">Inicio</span></button>
+          <button class="portal-nav-link active" type="button" aria-current="page" onclick="irACatalogoDocencia()"><span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="portal-nav-text">Trabajos de la Cámara</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Docencia para Maestros</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Muro y Foro</span></button>
+          <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()"><span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="portal-nav-text">Mis avances</span></button>
+        </nav>
+      </details>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>CÁMARA DE DOCENCIA</span><small>R.·.L.·. Orestes Frödden Lorenzen Nº 146<br>Valle de Talagante</small><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
     </aside><main class="bienvenida-container catalogo-contenido">
     <div class="seccion-trabajos-header">
       <div>
@@ -341,39 +349,30 @@
 
   <!-- PANTALLA 6: ENTORNO DE ESTUDIO Y EVALUACIÓN -->
   <div id="seccionDocencia" class="templo-layout hidden">
-    <aside class="sidebar-templo">
-      <div class="sidebar-box sidebar-avances-box">
-        <button class="btn-mis-avances" onclick="volverACatalogo()">
-          ⬅ Volver a Cuadrícula
-        </button>
+    <aside class="sidebar-templo" aria-label="Navegación del trabajo">
+      <nav class="sidebar-box sidebar-acciones" aria-label="Acciones de estudio">
+        <button class="btn-mis-avances sidebar-volver" type="button" onclick="volverACatalogo()">← Volver a trabajos</button>
+        <button class="btn-mis-avances" type="button" onclick="abrirModalMisAvances()">Mis avances</button>
+        <button class="btn-mis-avances" type="button" onclick="mostrarMuroReflexionesUsuarios()">Muro y Foro</button>
+      </nav>
+
+      <div class="sidebar-box sidebar-trabajos">
+        <p id="sidebarTrabajoActual" class="sidebar-trabajo-actual" aria-live="polite">Seleccione un trabajo</p>
+        <details id="selectorTrabajosUsuario" class="sidebar-modulos-detalle" open>
+          <summary class="sidebar-title">
+            <span class="sidebar-title-label">Trabajos de la Cámara</span>
+            <span id="contadorModulos" class="sidebar-title-contador"></span>
+          </summary>
+          <nav id="listaModulosNav" aria-label="Elegir trabajo de la Cámara"></nav>
+        </details>
       </div>
 
-      <div class="sidebar-box sidebar-avances-box" style="margin-top: -6px;">
-        <button class="btn-mis-avances" onclick="abrirModalMisAvances()">
-          📊 Mis Avances y Reportes
-        </button>
-      </div>
-
-      <div class="sidebar-box sidebar-avances-box" style="margin-top: -6px;">
-        <button class="btn-mis-avances" onclick="mostrarMuroReflexionesUsuarios()">
-          💬 Ver Muro y Foro
-        </button>
-      </div>
-
-      <div class="sidebar-box">
-        <div class="sidebar-title">
-          <span class="sidebar-title-label">TRABAJOS DE LA CÁMARA</span>
-          <span id="contadorModulos" class="sidebar-title-contador"></span>
-        </div>
-        <div id="listaModulosNav"></div>
-      </div>
-
-      <div class="sidebar-box sidebar-info">
-        <h4>Metodología de Trabajo</h4>
-        <p>1. Confirme la lectura del trazado tras su análisis.<br>
-           2. Responda el cuestionario formativo (8 preguntas).<br>
-           3. Ingrese sus aportes al tema para acceder al Muro de Reflexiones.</p>
-      </div>
+      <details class="sidebar-box sidebar-info sidebar-metodologia">
+        <summary>Cómo avanzar en un trabajo</summary>
+        <p>1. Lea y confirme el trazado.<br>
+          2. Responda las ocho preguntas formativas.<br>
+          3. Comparta su reflexión para participar en el Muro de la Cámara.</p>
+      </details>
     </aside>
 
     <main>

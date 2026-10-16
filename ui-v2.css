@@ -33,3 +33,296 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible{
 @media(max-width:960px){.admin-layout{grid-template-columns:1fr}.sidebar-admin{border-right:0;border-bottom:3px solid var(--accent-gold)}.admin-menu-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}.admin-main-content{padding:18px}.templo-layout{grid-template-columns:1fr}}
 @media(max-width:600px){.admin-menu-list{grid-template-columns:1fr 1fr}.admin-side-btn{font-size:.95rem}.foro-comentarios-wrapper{padding-left:10px}.foro-comentario-item{padding:12px}.action-buttons-group>*{width:100%}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+
+/* Navegación de usuarios — legibilidad, prioridades claras y menú móvil sin desplazamiento horizontal.
+   Se limita a las vistas de usuario; no modifica la consola Superadmin. */
+@media (min-width:641px) {
+  #seccionBienvenida.bienvenida-portal,
+  #seccionCatalogoTrabajos.catalogo-portal {
+    grid-template-columns:clamp(225px,19vw,260px) minmax(0,1fr);
+  }
+}
+#seccionBienvenida .portal-nav,
+#seccionCatalogoTrabajos .portal-nav {
+  background:linear-gradient(170deg,#0a2339 0%,#102d46 65%,#0b2136 100%);
+  color:#f4f6f8;
+  padding:clamp(16px,2vh,24px) 12px 18px;
+  gap:14px;
+}
+#seccionBienvenida .portal-nav-intro,
+#seccionCatalogoTrabajos .portal-nav-intro {
+  display:grid;
+  gap:3px;
+  padding:5px 12px 17px;
+  border-bottom:1px solid rgba(229,236,242,.18);
+}
+#seccionBienvenida .portal-nav-brand,
+#seccionCatalogoTrabajos .portal-nav-brand {
+  color:#f5e2bb;
+  font:600 1.12rem/1.3 var(--font-ui,Arial,sans-serif);
+  letter-spacing:.012em;
+}
+#seccionBienvenida .portal-nav-intro small,
+#seccionCatalogoTrabajos .portal-nav-intro small {
+  color:#c6d6e2;
+  font:400 .91rem/1.45 var(--font-ui,Arial,sans-serif);
+}
+#seccionBienvenida .portal-menu,
+#seccionCatalogoTrabajos .portal-menu {flex:1;min-width:0}
+#seccionBienvenida .portal-menu-toggle,
+#seccionCatalogoTrabajos .portal-menu-toggle {display:none}
+#seccionBienvenida .portal-nav-list,
+#seccionCatalogoTrabajos .portal-nav-list {
+  display:grid;
+  gap:5px;
+  overflow-x:visible;
+}
+#seccionBienvenida .portal-nav-link,
+#seccionCatalogoTrabajos .portal-nav-link {
+  display:flex;
+  align-items:center;
+  gap:11px;
+  width:100%;
+  min-width:0;
+  min-height:52px;
+  padding:11px 12px;
+  border:1px solid transparent;
+  border-left:3px solid transparent;
+  border-radius:10px;
+  background:transparent;
+  color:#f3f5f7;
+  text-align:left;
+  font:600 1.01rem/1.38 var(--font-ui,Arial,sans-serif);
+  white-space:normal;
+  overflow-wrap:break-word;
+  transition:background .16s ease,border-color .16s ease;
+}
+#seccionBienvenida .portal-nav-link:hover,
+#seccionCatalogoTrabajos .portal-nav-link:hover {background:#28475f;border-color:#59758d}
+#seccionBienvenida .portal-nav-link.active,
+#seccionCatalogoTrabajos .portal-nav-link.active {
+  color:#fff;
+  background:#355169;
+  border-color:#526b7b;
+  border-left-color:#eac48c;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+}
+#seccionBienvenida .portal-nav-glyph,
+#seccionCatalogoTrabajos .portal-nav-glyph {
+  flex:0 0 23px;
+  font:500 1.35rem/1 var(--font-ui,Arial,sans-serif);
+  color:#e9c48b;
+  text-align:center;
+}
+#seccionBienvenida .portal-nav-text,
+#seccionCatalogoTrabajos .portal-nav-text {min-width:0}
+#seccionBienvenida .portal-nav-footer,
+#seccionCatalogoTrabajos .portal-nav-footer {
+  gap:7px;
+  border-top:1px solid rgba(229,236,242,.18);
+  padding:14px 10px 0;
+}
+#seccionBienvenida .portal-nav-footer .portal-logia-logo,
+#seccionCatalogoTrabajos .portal-nav-footer .portal-logia-logo {
+  display:block;
+  width:auto;
+  max-width:88px;
+  max-height:84px;
+  margin:0 auto;
+  object-fit:contain;
+}
+#seccionBienvenida .portal-nav-footer button,
+#seccionCatalogoTrabajos .portal-nav-footer button {
+  min-height:46px;
+  margin-top:5px;
+  border-radius:9px;
+  font:600 .94rem/1.35 var(--font-ui,Arial,sans-serif);
+}
+#seccionBienvenida .portal-nav-link:focus-visible,
+#seccionCatalogoTrabajos .portal-nav-link:focus-visible,
+#seccionBienvenida .portal-menu-toggle:focus-visible,
+#seccionCatalogoTrabajos .portal-menu-toggle:focus-visible {
+  outline:3px solid #f4d495;
+  outline-offset:2px;
+}
+
+/* Navegación dentro del estudio: acciones juntas, botones nativos y un selector plegable. */
+#seccionDocencia .sidebar-templo {gap:11px}
+#seccionDocencia .sidebar-box {padding:14px}
+#seccionDocencia .sidebar-acciones {display:grid;gap:4px;padding:7px}
+#seccionDocencia .sidebar-acciones .btn-mis-avances {
+  justify-content:flex-start;
+  text-align:left;
+  min-height:48px;
+  margin:0;
+  padding:10px 12px;
+  font-size:1rem;
+  line-height:1.35;
+  font-weight:600;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--text-main);
+}
+#seccionDocencia .sidebar-acciones .btn-mis-avances:hover {
+  background:var(--gold-light);
+  border-color:var(--accent-gold);
+  color:var(--text-main);
+}
+#seccionDocencia .sidebar-acciones .sidebar-volver {color:var(--accent-gold-dark);font-weight:700}
+body.theme-nocturno #seccionDocencia .sidebar-acciones .btn-mis-avances {color:#f1f4f7}
+body.theme-nocturno #seccionDocencia .sidebar-acciones .btn-mis-avances:hover {background:#263b4d}
+#seccionDocencia .sidebar-trabajo-actual {
+  margin:0 0 12px;
+  color:var(--text-muted);
+  font:600 .89rem/1.4 var(--font-ui,Arial,sans-serif);
+}
+body.theme-nocturno #seccionDocencia .sidebar-trabajo-actual{color:#bfccd7}
+#seccionDocencia .sidebar-modulos-detalle > summary {
+  cursor:pointer;
+  list-style:none;
+  min-height:46px;
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  margin:0;
+  padding:8px 0;
+  gap:5px 10px;
+  border:0;
+  color:var(--text-main);
+}
+#seccionDocencia .sidebar-modulos-detalle > summary::-webkit-details-marker{display:none}
+#seccionDocencia .sidebar-modulos-detalle > summary::after {
+  content:"⌄";
+  margin-left:auto;
+  font-size:1.3rem;
+  font-weight:500;
+  color:var(--accent-gold-dark);
+  transition:transform .16s ease;
+}
+#seccionDocencia .sidebar-modulos-detalle[open] > summary::after{transform:rotate(180deg)}
+#seccionDocencia .sidebar-modulos-detalle > summary:focus-visible,
+#seccionDocencia .sidebar-metodologia > summary:focus-visible{
+  outline:3px solid #c39a4e;
+  outline-offset:3px;
+}
+#seccionDocencia .sidebar-title-label {
+  font-size:.88rem;
+  white-space:normal;
+  text-transform:none;
+  letter-spacing:0;
+}
+#seccionDocencia .sidebar-title-contador {font-size:.78rem}
+#seccionDocencia .sidebar-modulos-detalle[open] #listaModulosNav {
+  margin-top:8px;
+  padding-top:12px;
+  border-top:1px solid var(--border-color);
+}
+#seccionDocencia #listaModulosNav{display:grid;gap:7px;overflow-x:hidden}
+#seccionDocencia .modulo-nav-item {
+  appearance:none;
+  display:block;
+  width:100%;
+  text-align:left;
+  min-height:64px;
+  padding:11px 12px;
+  margin:0;
+  font-family:var(--font-ui,Arial,sans-serif);
+  border-radius:9px;
+}
+#seccionDocencia .modulo-nav-item.active{border-left-width:4px}
+#seccionDocencia .nav-item-title{
+  font-size:.96rem;
+  line-height:1.42;
+  font-weight:600;
+  overflow-wrap:break-word;
+}
+#seccionDocencia .nav-item-num{font-size:.78rem}
+#seccionDocencia .badge-estado{font-size:.69rem}
+#seccionDocencia .sidebar-metodologia{padding:12px 14px}
+#seccionDocencia .sidebar-metodologia > summary{
+  color:var(--accent-gold-dark);
+  font:600 .9rem/1.4 var(--font-ui,Arial,sans-serif);
+  cursor:pointer;
+}
+#seccionDocencia .sidebar-metodologia p {font-size:.88rem;line-height:1.65;margin:10px 0 0}
+@media(min-width:961px) {
+  #seccionDocencia.templo-layout {grid-template-columns:minmax(260px,288px) minmax(0,1fr);gap:21px}
+  #seccionDocencia .sidebar-templo {
+    align-self:start;
+    position:sticky;
+    top:14px;
+    max-height:calc(100dvh - 28px);
+    overflow-y:auto;
+    scrollbar-width:thin;
+  }
+}
+@media(max-width:960px){
+  #seccionDocencia.templo-layout {grid-template-columns:1fr}
+  #seccionDocencia .sidebar-templo{position:static;max-height:none;overflow:visible}
+  #seccionDocencia .sidebar-acciones{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #seccionDocencia .sidebar-acciones .btn-mis-avances {justify-content:center;text-align:center}
+}
+@media(max-width:640px){
+  #seccionBienvenida .portal-nav,
+  #seccionCatalogoTrabajos .portal-nav {
+    display:block;
+    padding:8px 12px;
+    overflow:visible;
+    flex:0 0 auto;
+  }
+  #seccionBienvenida .portal-nav-intro,
+  #seccionCatalogoTrabajos .portal-nav-intro,
+  #seccionBienvenida .portal-nav-footer,
+  #seccionCatalogoTrabajos .portal-nav-footer{display:none}
+  #seccionBienvenida .portal-menu-toggle,
+  #seccionCatalogoTrabajos .portal-menu-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    list-style:none;
+    min-height:46px;
+    padding:10px 14px;
+    border:1px solid #58718b;
+    border-radius:10px;
+    background:#17354d;
+    color:#fff;
+    font:600 1rem/1.3 var(--font-ui,Arial,sans-serif);
+    cursor:pointer;
+  }
+  #seccionBienvenida .portal-menu-toggle::-webkit-details-marker,
+  #seccionCatalogoTrabajos .portal-menu-toggle::-webkit-details-marker{display:none}
+  #seccionBienvenida .portal-menu[open] .portal-menu-chevron,
+  #seccionCatalogoTrabajos .portal-menu[open] .portal-menu-chevron{transform:rotate(180deg)}
+  #seccionBienvenida .portal-menu .portal-nav-list,
+  #seccionCatalogoTrabajos .portal-menu .portal-nav-list{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+    padding:10px 0 4px;
+    overflow-x:visible;
+  }
+  #seccionBienvenida .portal-nav-link,
+  #seccionCatalogoTrabajos .portal-nav-link {
+    display:flex;
+    width:100%;
+    min-width:0;
+    min-height:53px;
+    white-space:normal;
+    font-size:.96rem;
+    line-height:1.3;
+    padding:9px;
+    border:1px solid #405c76;
+    border-radius:9px;
+  }
+  #seccionBienvenida .portal-nav-glyph,
+  #seccionCatalogoTrabajos .portal-nav-glyph{
+    flex-basis:20px;
+    font-size:1.2rem;
+  }
+  #seccionDocencia .sidebar-templo{max-height:none;overflow:visible}
+  #seccionDocencia .sidebar-acciones{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #seccionDocencia .sidebar-acciones .sidebar-volver{grid-column:1/-1}
+  #seccionDocencia .sidebar-acciones .btn-mis-avances{font-size:.96rem}
+  #seccionDocencia .sidebar-info{display:none}
+}
