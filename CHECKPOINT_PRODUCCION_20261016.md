@@ -63,3 +63,14 @@
 - Afecta exclusivamente `index.html`, `app.js`, `ui-v2.css`, `ui-v2.js` y prueba `tests/sidebar-usuario.test.mjs`. No cambian Auth, permisos, SQL ni pantalla Superadmin.
 - Pruebas GitHub Actions: `https://github.com/jcpintov/cdocencia/actions/runs/38974232304` `SUCCESS`; no se reportaron errores de ejecución Vercel en la ventana consultada. La revisión visual autenticada en dispositivos reales sigue por realizar.
 - El usuario confirmó que Dummy inició sesión exitosamente antes de estos cambios; no significa que su interfaz actual haya sido revisada visualmente después del despliegue.
+
+
+## Menús users y superadmin — 2026-10-16
+- PR #10 integrado y desplegado: código `be42091ed95e79f4e10b6c3578080c7e38f06c42`. Vercel `dpl_B6bWfmkMiF9e59QbDwsUVKHFWCKT` en producción `READY`, dominio `cmaestros.ofl.cl` asociado.
+- Ambos sidebars users (Inicio y Catálogo): eliminado el encabezado redundante «Cámara de Docencia / Espacio de Maestros».
+- Orden exacto de navegación: **Inicio → Mis avances → Trabajos de la Cámara → Foro Docente → Este Espacio**.
+- «Foro Docente» reutiliza la función existente `mostrarMuroReflexionesUsuarios` y conserva sus restricciones. «Este Espacio» conserva `mostrarDocenciaParaMaestros`. No hay cambios en datos ni permisos.
+- Superadmin: iconografía unificada con users mediante glifos tipográficos monocromáticos para encabezado, enlaces de GitHub/Supabase y nueve botones, sin emojis decorativos ni modificación de sus callbacks.
+- Validación: CI del PR https://github.com/jcpintov/cdocencia/actions/runs/38979760578 SUCCESS y del merge https://github.com/jcpintov/cdocencia/actions/runs/38979796178 SUCCESS.
+- Comprobación adicional en GitHub: dos listas de cinco entradas correctas y ningún `portal-nav-intro` en el HTML.
+- La comprobación visual manual tras ingreso con Dummy sigue disponible para contrastar tamaño, espaciados y iconografía en navegadores reales.
