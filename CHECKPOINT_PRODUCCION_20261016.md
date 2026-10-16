@@ -54,3 +54,12 @@
 - Se confirmó Dummy vinculado con Auth y con ingreso exitoso y registro de acceso. La apertura general se realiza exclusivamente por autoservicio sobre direcciones del padrón, sin correo masivo.
 - Avisos security advisor no se incrementaron con la migración: 21 informativos RLS de tablas sin políticas, 24 SECURITY DEFINER y una advertencia de contraseñas filtradas.
 - Último commit de código funcional antes de este documento: `4edc795aed3df805afb3721f62f824c531236ebe`; CI y despliegue se revisan después de cada commit documental.
+
+
+## Mejoras de sidebar de usuarios — 16/10/2026 (tarde)
+- PR #8 integrado, commit de código `bad3aa4123c2de831e1829e64b2b93b2b76a4c79`; Vercel producción `READY` en `dpl_4bP3cw8DWpzGTESqYZZ9FLDk2znn`.
+- Inicio y Catálogo: navegación lateral unificada con etiquetas legibles, iconografía tipográfica sobria, estado activo destacado, botones más grandes y menú móvil `details/summary` sin deslizamiento horizontal obligatorio.
+- Estudio: tres botones de acción reunidos en un panel; selector de trabajos plegable en móvil, expandido en escritorio; enlaces de módulos convertidos en `button` nativos; indicador del trabajo actual y panel de metodología desplegable. Se preservan las acciones existentes y la condición de acceso al Muro (al menos un trabajo completado).
+- Afecta exclusivamente `index.html`, `app.js`, `ui-v2.css`, `ui-v2.js` y prueba `tests/sidebar-usuario.test.mjs`. No cambian Auth, permisos, SQL ni pantalla Superadmin.
+- Pruebas GitHub Actions: `https://github.com/jcpintov/cdocencia/actions/runs/38974232304` `SUCCESS`; no se reportaron errores de ejecución Vercel en la ventana consultada. La revisión visual autenticada en dispositivos reales sigue por realizar.
+- El usuario confirmó que Dummy inició sesión exitosamente antes de estos cambios; no significa que su interfaz actual haya sido revisada visualmente después del despliegue.
