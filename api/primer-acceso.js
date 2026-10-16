@@ -12,7 +12,7 @@ const passwordValid = value => typeof value === 'string' && value.length >= 8 &&
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return reply(res, 405, { error: 'Método no permitido' });
-  const email = String(req.body?.email || '').trim().toLowerCase();
+  const email = typeof req.body?.email === 'string' ? req.body.email.trim().toLowerCase() : '';
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) {
     return reply(res, 400, { error: 'Correo inválido' });
   }
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
       if (issued) {
         const transport = nodemailer.createTransport({
           host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT || 465),
-          secure: process.env.SMTP_SECURE !== 'false',
+          secure: process.env.SMTP_SECURE !== 'false', connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000,
           auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
         });
         await transport.sendMail({
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     }
   }
   if (req.body?.accion === 'confirmar') {
-    const code = String(req.body.codigo || '');
+    const code = typeof req.body.codigo === 'string' ? req.body.codigo : '';
     if (!/^\d{8}$/.test(code)) return reply(res, 400, { error: 'Código inválido' });
     if (!passwordValid(req.body.clave)) return reply(res, 400, { error: 'Contraseña no cumple los requisitos' });
     let authId;
