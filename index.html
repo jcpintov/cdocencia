@@ -254,15 +254,15 @@
   <!-- PANTALLA 2: BIENVENIDA INSTITUCIONAL -->
   <div id="seccionBienvenida" class="bienvenida-portal hidden">
     <aside class="portal-nav" aria-label="Menú del usuario">
-      <div class="portal-nav-intro"><span class="portal-nav-brand">Cámara de Docencia</span><small>Espacio de Maestros</small></div>
+      
       <details class="portal-menu" open>
         <summary class="portal-menu-toggle"><span>Menú de navegación</span><span class="portal-menu-chevron" aria-hidden="true">⌄</span></summary>
         <nav class="portal-nav-list" aria-label="Secciones de la Cámara">
           <button class="portal-nav-link active" type="button" aria-current="page" onclick="volverAInicioPortal()"><span class="portal-nav-glyph" aria-hidden="true">⌂</span><span class="portal-nav-text">Inicio</span></button>
-          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia()"><span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="portal-nav-text">Trabajos de la Cámara</span></button>
-          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Docencia para Maestros</span></button>
-          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Muro y Foro</span></button>
           <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()"><span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="portal-nav-text">Mis avances</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia()"><span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="portal-nav-text">Trabajos de la Cámara</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Foro Docente</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
       <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
@@ -290,15 +290,15 @@
 
   <!-- PANTALLA 3: CATÁLOGO DE TRABAJOS -->
   <div id="seccionCatalogoTrabajos" class="catalogo-portal hidden"><aside class="portal-nav" aria-label="Menú del usuario">
-      <div class="portal-nav-intro"><span class="portal-nav-brand">Cámara de Docencia</span><small>Espacio de Maestros</small></div>
+      
       <details class="portal-menu" open>
         <summary class="portal-menu-toggle"><span>Menú de navegación</span><span class="portal-menu-chevron" aria-hidden="true">⌄</span></summary>
         <nav class="portal-nav-list" aria-label="Secciones de la Cámara">
           <button class="portal-nav-link" type="button" onclick="volverAInicioPortal()"><span class="portal-nav-glyph" aria-hidden="true">⌂</span><span class="portal-nav-text">Inicio</span></button>
-          <button class="portal-nav-link active" type="button" aria-current="page" onclick="irACatalogoDocencia()"><span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="portal-nav-text">Trabajos de la Cámara</span></button>
-          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Docencia para Maestros</span></button>
-          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Muro y Foro</span></button>
           <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()"><span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="portal-nav-text">Mis avances</span></button>
+          <button class="portal-nav-link active" type="button" aria-current="page" onclick="irACatalogoDocencia()"><span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="portal-nav-text">Trabajos de la Cámara</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Foro Docente</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
       <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
@@ -484,46 +484,48 @@
   <div id="seccionAdmin" class="admin-layout hidden">
     <aside class="sidebar-admin">
       <div class="admin-brand">
-        <span style="font-size: 1.4rem;">🏛️</span>
+        <span class="portal-nav-glyph admin-brand-glyph" aria-hidden="true">◇</span>
         <h3>Consola Superadmin</h3>
       </div>
 
       <div class="admin-links-top">
         <a href="https://github.com/jcpintov/cdocencia" target="_blank" class="admin-nav-link-ext">
-          🐙 Repositorio GitHub
+          <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span>Repositorio GitHub</span>
         </a>
         <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq" target="_blank" class="admin-nav-link-ext">
-          ⚡ Supabase Dashboard
+          <span class="portal-nav-glyph" aria-hidden="true">◈</span><span>Supabase Dashboard</span>
         </a>
       </div>
 
       <hr class="admin-divider">
 
       <nav class="admin-menu-list">
-        <button id="tabNavResumen" class="admin-side-btn" onclick="cambiarSubseccionAdmin('resumen')">Resumen ejecutivo</button>
+        <button id="tabNavResumen" class="admin-side-btn" onclick="cambiarSubseccionAdmin('resumen')">
+          <span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="admin-nav-text">Resumen ejecutivo</span>
+        </button>
         <button id="tabNavUsuarios" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('usuarios')">
-          👥 Administrar Usuarios
+          <span class="portal-nav-glyph" aria-hidden="true">♙</span><span class="admin-nav-text">Administrar Usuarios</span>
         </button>
         <button id="tabNavCargar" class="admin-side-btn" onclick="cambiarSubseccionAdmin('cargar')">
-          📁 Adjuntar Archivo Original
+          <span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="admin-nav-text">Adjuntar Archivo Original</span>
         </button>
         <button id="tabNavGestionTrabajos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">
-          ⚙️ Gestión de Trabajos
+          <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span class="admin-nav-text">Gestión de Trabajos</span>
         </button>
         <button id="tabNavPresencial" class="admin-side-btn" onclick="cambiarSubseccionAdmin('presencial')">
-          🏛️ Cámara Presencial (Debate)
+          <span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="admin-nav-text">Cámara Presencial (Debate)</span>
         </button>
         <button id="tabNavMuroGeneral" class="admin-side-btn" onclick="cambiarSubseccionAdmin('muro_general')">
-          💬 Muro General
+          <span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="admin-nav-text">Muro General</span>
         </button>
         <button id="tabNavMetricas" class="admin-side-btn" onclick="cambiarSubseccionAdmin('metricas')">
-          📊 Matriz de Avance
+          <span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="admin-nav-text">Matriz de Avance</span>
         </button>
         <button id="tabNavEditorDoctrina" class="admin-side-btn" onclick="cambiarSubseccionAdmin('editor_doctrina')">
-          📜 Editar Docencia P. Maestros
+          <span class="portal-nav-glyph" aria-hidden="true">▣</span><span class="admin-nav-text">Editar Docencia P. Maestros</span>
         </button>
         <button id="tabNavAccesos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('accesos')">
-          🛡️ Bitácora de Accesos
+          <span class="portal-nav-glyph" aria-hidden="true">◎</span><span class="admin-nav-text">Bitácora de Accesos</span>
         </button>
       </nav>
 
