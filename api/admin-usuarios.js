@@ -45,10 +45,10 @@ export default async function handler(req, res) {
   const { action } = req.body || {};
   if (action !== 'crear') return reply(res, 400, { error: 'Acción no admitida' });
   if (action === 'crear') {
-    const nombre = String(req.body?.nombre || '').trim().replace(/\\s+/g, ' ');
+    const nombre = String(req.body?.nombre || '').trim().replace(/\s+/g, ' ');
     const email = String(req.body?.email || '').trim().toLowerCase();
     if (nombre.length < 3 || nombre.length > 150 ||
-        !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email) || email.length > 254 ||
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254 ||
         email.includes('candidatosincorreo')) {
       return reply(res, 422, { error: 'Verifique el nombre y el correo electrónico real del usuario' });
     }
