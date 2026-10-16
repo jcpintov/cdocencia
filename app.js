@@ -1234,7 +1234,8 @@ function renderizarSidebar() {
       badgeHtml = `<span class="badge-estado" style="background:#FEF3C7;color:#92400E;">En Curso</span>`;
     }
 
-    const item = document.createElement('div');
+    const item = document.createElement('button');
+    item.type = 'button';
     item.className = 'modulo-nav-item';
     item.id = 'nav_mod_' + m.id;
     item.addEventListener('click', () => seleccionarModulo(m.id));
@@ -1262,9 +1263,17 @@ async function seleccionarModulo(idModulo) {
   moduloActual = listaModulos.find(m => m.id === idModulo);
   if (!moduloActual) return;
 
-  document.querySelectorAll('.modulo-nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.modulo-nav-item').forEach(el => {
+    el.classList.remove('active');
+    el.removeAttribute('aria-current');
+  });
   const activeNav = document.getElementById(`nav_mod_${idModulo}`);
-  if (activeNav) activeNav.classList.add('active');
+  if (activeNav) {
+    activeNav.classList.add('active');
+    activeNav.setAttribute('aria-current', 'page');
+  }
+  const actualEnSidebar = document.getElementById('sidebarTrabajoActual');
+  if (actualEnSidebar) actualEnSidebar.textContent = 'En lectura: Trabajo ' + moduloActual.numero_orden;
 
   respuestasMarcadas = {};
   indicePreguntaActiva = 0;
