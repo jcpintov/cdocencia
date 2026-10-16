@@ -46,3 +46,11 @@
 - https://github.com/jcpintov/cdocencia/pull/5
 - https://github.com/jcpintov/cdocencia/pull/6
 - Contrato fuente: `CONTRATO_PRIMER_ACCESO.md`
+
+## Auditoría administrativa final de 2026-10-16
+- SQL: migración Supabase `20261016190153_resumen_docencia_excluye_cuenta_dummy_20261016` aplicada y confirmada. La función de indicadores `maestro_admin_resumen_docencia()` excluye `dummy@ofl.cl`; ya no contabiliza 27 perfiles ordinarios sino 26 integrantes reales.
+- UI: PR #7 `4edc795` corrige el checkbox de bitácora: al ocultar al administrador también oculta Dummy. Los eventos no se borran; solo se filtran en la vista.
+- Pruebas PR #7: https://github.com/jcpintov/cdocencia/actions/runs/38951965656 — SUCCESS.
+- Se confirmó Dummy vinculado con Auth y con ingreso exitoso y registro de acceso. La apertura general se realiza exclusivamente por autoservicio sobre direcciones del padrón, sin correo masivo.
+- Avisos security advisor no se incrementaron con la migración: 21 informativos RLS de tablas sin políticas, 24 SECURITY DEFINER y una advertencia de contraseñas filtradas.
+- Último commit de código funcional antes de este documento: `4edc795aed3df805afb3721f62f824c531236ebe`; CI y despliegue se revisan después de cada commit documental.
