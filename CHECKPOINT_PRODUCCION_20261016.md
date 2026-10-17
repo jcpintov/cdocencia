@@ -85,3 +85,12 @@
 - Se agregaron pruebas `tests/este-espacio.test.mjs` con ejecución de la función mediante DOM simulado (estructura, editor dinámico, fallback, tratamiento de texto), y se amplió la prueba previa a los tres sidebars.
 - CI previo al merge: https://github.com/jcpintov/cdocencia/actions/runs/38992054326 — SUCCESS.
 - Falta constatar manualmente la estética en navegadores autenticados, especialmente la lectura en móvil. No se ha modificado la configuración del entorno ni el padrón de 26 usuarios.
+
+
+## Incidencia de permisos del editor de trabajos — 2026-10-17
+- Síntoma comunicado: consola Superadmin > «Auditoría y Edición», botón «Guardar Encabezado y Texto»: `Error al actualizar trabajo: permission denied for table modulos`. El mismo defecto afectaba `guardarTodasPreguntasAuditoria()`.
+- Causa confirmada: la tabla `public.modulos` tiene RLS para lectura autenticada y edición Superadmin, pero `authenticated` solo contaba con permiso de UPDATE sobre `archivo_pdf_base64` por una corrección previa. Las columnas `numero_orden`, `titulo`, `autor`, `contenido_trazado` y `preguntas_json` seguían denegadas por PostgreSQL, antes de evaluar RLS.
+- Migración Supabase **aplicada** `habilitar_edicion_segura_modulos_superadmin_20261017`: permiso de UPDATE por columna exclusivamente para esos cinco campos; política preexistente renombrada a `modulos_edicion_superadmin`, manteniendo `USING` y `WITH CHECK` basados en `maestro_identidad_actual().rol = 'SUPERADMIN'`. Los usuarios normales no adquieren facultad de editar y `anon` no obtiene UPDATE. DDL fuente en `sql/20261017_habilitar_edicion_segura_modulos_superadmin.sql`.
+- Comprobaciones: `has_column_privilege` confirmó seis columnas editables solo bajo la condición RLS (las cinco de editor + PDF anterior), no `id`, `activo` ni otras columnas; se comprobó la política y se ejecutaron pruebas SQL de actualización reversible como Superadmin (1 fila) y Dummy (0 filas), sin dejar cambios en los datos.
+- Trabajo N.º 6 `SIGNIFICADO DE LA EXALTACIÓN`: título, autor, ocho preguntas y PDF siguen presentes. La corrección es de base de datos: no requiere despliegue de frontend ni cierre de sesión.
+- Instrucción operacional: si el usuario sigue con el formulario editado abierto tras el error, debe pulsar «Guardar Encabezado y Texto» nuevamente **sin refrescar** la página, para no perder modificaciones pendientes; guardar preguntas mediante su propio botón.
