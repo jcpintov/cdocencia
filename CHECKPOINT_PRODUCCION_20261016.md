@@ -94,3 +94,13 @@
 - Comprobaciones: `has_column_privilege` confirmó seis columnas editables solo bajo la condición RLS (las cinco de editor + PDF anterior), no `id`, `activo` ni otras columnas; se comprobó la política y se ejecutaron pruebas SQL de actualización reversible como Superadmin (1 fila) y Dummy (0 filas), sin dejar cambios en los datos.
 - Trabajo N.º 6 `SIGNIFICADO DE LA EXALTACIÓN`: título, autor, ocho preguntas y PDF siguen presentes. La corrección es de base de datos: no requiere despliegue de frontend ni cierre de sesión.
 - Instrucción operacional: si el usuario sigue con el formulario editado abierto tras el error, debe pulsar «Guardar Encabezado y Texto» nuevamente **sin refrescar** la página, para no perder modificaciones pendientes; guardar preguntas mediante su propio botón.
+
+
+## Normalización de cierres de los seis trabajos — 2026-10-17
+- Petición: corregir el editor de Superadmin que no preservaba saltos tras la última línea; todos los trabajos deben terminar con `S.·.F.·.U.·.`, una línea en blanco, nombre del autor sin el tratamiento `Q.·.H.·.` y un espacio final.
+- Causa: `guardarEdicionModuloAdmin` utilizaba `.trim()` sobre todo el trazado y eliminaba líneas vacías al final. Además, `renderizarTrazadoEnriquecido` no diferenciaba una firma del texto normal.
+- Corrección: `app.js` incorpora `normalizarCierreTrabajo` idempotente (respeta párrafos y puntuación del cuerpo, unifica CRLF y retira cierres duplicados); se aplica automáticamente al guardar. Nuevo botón `Aplicar cierre y firma al texto` permite previsualizarlo en el editor, con explicación visible. El renderer separa y escapa el nombre del autor al mostrar la firma; el CSS la presenta con espaciado propio y el textarea tiene 14 filas.
+- Datos: ejecución controlada y verificada en Supabase de `sql/20261017_normalizar_cierre_trabajos.sql`. Los seis `modulos` tienen `cierre_correcto=true` con patrón `\n\nS.·.F.·.U.·.\n\nNombre\n\n`. Los trabajos 1–5 conservan su texto original con firma normalizada; el 6 incorpora `Hugo Adolfo Tapia Romero`, ausente en su versión anterior de plataforma.
+- Se mantienen seis trabajos activos, cada uno con ocho preguntas y PDF asociado. No se modificaron documentos PDF, metadatos, evaluaciones, progreso ni usuarios.
+- Pruebas Node en `tests/cierre-trabajos.test.mjs`: firmas de cinco casos previos y sexto sin autor al pie, idempotencia, CRLF, rechazo de autores vacíos y renderizado de firma; CI de rama en https://github.com/jcpintov/cdocencia/actions/runs/39006018139 SUCCESS.
+- Interfaz móvil y escritorio: pendiente contraste visual final con sesión autenticada. La edición de los seis textos de producción se confirmó por lectura SQL de finales exactos.
