@@ -12,7 +12,7 @@ const inicio = app.indexOf('async function consultarUnidadesDocencia()');
 const fin = app.indexOf('async function renderizarCatalogoTrabajos()', inicio);
 assert.ok(inicio >= 0 && fin > inicio);
 const directory = runInNewContext(
-  app.slice(inicio, fin) + '\n({construirDirectorioUnidadesDocencia,escaparTextoHTMLDocencia,tipoUnidadDocencia})',
+  app.slice(inicio, fin) + '\n({construirDirectorioUnidadesDocencia,construirClasificacionTarjetaDocencia,escaparTextoHTMLDocencia,tipoUnidadDocencia})',
   { console }
 );
 
@@ -123,8 +123,10 @@ test('selección de unidad autocompleta código y conserva valor si falla lectur
 test('presentación: código encima de unidad, directorio final responsivo', () => {
   assert.match(html,/id="gridTrabajosBienvenida"[\s\S]*id="catalogoDirectorioUnidades"/);
   assert.match(app,/class="grid-card-unidad"/);
+  assert.match(app,/class="grid-card-linea-unidad"/);
   assert.match(app,/class="grid-card-codigo"/);
-  assert.match(app,/class="grid-card-detalle"/);
+  assert.match(app,/class="grid-card-unidad-nombre"/);
+  assert.match(app,/class="grid-card-subunidad"/);
   assert.match(app,/renderizarDirectorioUnidadesDocencia\(unidades, listaModulos\)/);
   assert.match(app,/if \(listaModulos\.some\(mod => mod\.id === id\)\) entrarADocenciaConModulo\(id\)/);
   assert.match(css,/#seccionCatalogoTrabajos \.catalogo-directorio-lista/);
@@ -149,4 +151,58 @@ test('catálogo oficial CSV: 112 entradas ordenadas, 2 unidades, 17 subunidades,
   assert.equal(codigos.filter(x=>tipo(x)==='subunidad').length,17);
   assert.equal(codigos.filter(x=>tipo(x)==='tema').length,93);
   assert.equal(entradas.every((x,i)=>Number(x[3])===i+1),true);
+});
+
+
+test('tarjeta user: CÓDIGO - UNIDAD matriz, en la segunda línea SUBUNIDAD',()=>{
+  const catalogo = new Map([
+    ['DOC100',{codigo:'DOC100',detalle:'UNIDAD I: BASAMENTOS DOCTRINARIOS'}],
+    ['DOC120',{codigo:'DOC120',detalle:'1.2 LA EXALTACIÓN'}],
+    ['DOC12B',{codigo:'DOC12B',detalle:'Significado de la Exaltación'}],
+    ['DOC200',{codigo:'DOC200',detalle:'UNIDAD II: CONOCIMIENTO SIMBÓLICO-INICIÁTICO'}],
+    ['DOC2A0',{codigo:'DOC2A0',detalle:'2.10 RITUAL DE APERTURA Y CLAUSURA'}],
+    ['DOC2A5',{codigo:'DOC2A5',detalle:'Posición de la Escuadra y el Compas'}]
+  ]);
+  const bloque=directory.construirClasificacionTarjetaDocencia('DOC12B',catalogo);
+  assert.match(bloque,/<span class="grid-card-codigo">DOC12B<\/span><span class="grid-card-separador"> - <\/span><strong class="grid-card-unidad-nombre">UNIDAD I: BASAMENTOS DOCTRINARIOS<\/strong>/);
+  assert.match(bloque,/<div class="grid-card-subunidad">1\.2 LA EXALTACIÓN<\/div>/);
+  assert.doesNotMatch(bloque,/Significado de la Exaltación/);
+
+  const decimal=directory.construirClasificacionTarjetaDocencia('DOC2A5',catalogo);
+  assert.match(decimal,/DOC2A5/);
+  assert.match(decimal,/UNIDAD II: CONOCIMIENTO SIMBÓLICO-INICIÁTICO/);
+  assert.match(decimal,/2\.10 RITUAL DE APERTURA Y CLAUSURA/);
+});
+
+test('tarjeta con subunidad o unidad asignada no inventa datos faltantes',()=>{
+  const catalogo = new Map([
+    ['DOC100',{codigo:'DOC100',detalle:'UNIDAD I'}],
+    ['DOC120',{codigo:'DOC120',detalle:'1.2 LA EXALTACIÓN'}],
+    ['DOC12B',{codigo:'DOC12B',detalle:'Significado'}]
+  ]);
+  assert.equal(directory.construirClasificacionTarjetaDocencia(null,catalogo),'');
+  assert.equal(directory.construirClasificacionTarjetaDocencia('DOC12C',catalogo),'');
+  const sub=directory.construirClasificacionTarjetaDocencia('DOC120',catalogo);
+  assert.match(sub,/DOC120/);
+  assert.match(sub,/UNIDAD I/);
+  assert.match(sub,/grid-card-subunidad">1\.2 LA EXALTACIÓN/);
+
+  const raiz=directory.construirClasificacionTarjetaDocencia('DOC100',catalogo);
+  assert.match(raiz,/DOC100/);
+  assert.match(raiz,/UNIDAD I/);
+  assert.doesNotMatch(raiz,/class="grid-card-subunidad"/);
+  const incompleto=new Map([['DOC12B',catalogo.get('DOC12B')]]);
+  assert.equal(directory.construirClasificacionTarjetaDocencia('DOC12B',incompleto),'');
+});
+
+test('etiquetas de tarjeta no interpretan títulos de catálogo como HTML',()=>{
+  const catalogo=new Map([
+    ['DOC100',{detalle:'<img onerror=alert(1)>'}],
+    ['DOC120',{detalle:'<script>alert(1)</script>'}],
+    ['DOC12B',{detalle:'Tema'}]
+  ]);
+  const bloque=directory.construirClasificacionTarjetaDocencia('DOC12B',catalogo);
+  assert.match(bloque,/&lt;img/);
+  assert.match(bloque,/&lt;script&gt;/);
+  assert.doesNotMatch(bloque,/<img|<script>/);
 });
