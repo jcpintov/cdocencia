@@ -959,7 +959,13 @@
 
       <div class="form-group">
         <label for="editModTexto">Contenido del Trazado:</label>
-        <textarea id="editModTexto" name="editModTexto" rows="8"></textarea>
+        <textarea id="editModTexto" name="editModTexto" rows="14" spellcheck="true" aria-describedby="formatoCierreTrabajo"></textarea>
+        <p id="formatoCierreTrabajo" class="admin-ayuda-cierre">
+          Al guardar se normalizan los saltos de línea y el cierre del trabajo:
+          S.·.F.·.U.·., línea en blanco, nombre del autor y espacio final.
+          El cuerpo del trazado no se reescribe.
+        </p>
+        <button class="admin-normalizar-cierre" type="button" onclick="normalizarPieEditorTrabajo()">Aplicar cierre y firma al texto</button>
       </div>
 
       <div style="margin-bottom: 24px;">

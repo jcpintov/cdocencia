@@ -1223,22 +1223,78 @@ function eliminarComentarioForo(comentarioId) {
 /* ==========================================================================
    RENDERIZADO DE TRAZADO
    ========================================================================== */
+function obtenerNombreFirmaTrabajo(autor) {
+  // El tratamiento fraternal no es parte del nombre de firma.
+  return String(autor || '').trim().replace(/^Q[.:·\s]+H[.:·\s]+/iu, '').trim();
+}
+
+function normalizarCierreTrabajo(texto, autor) {
+  const nombre = obtenerNombreFirmaTrabajo(autor);
+  if (!nombre) throw new Error('Ingrese el nombre del autor antes de guardar.');
+
+  // Solo normalizar finales de línea y el bloque de firma;
+  // preservar la puntuación y todos los párrafos originales.
+  const lineas = String(texto || '').replace(/\r\n?/g, '\n')
+    .replace(/[ \t]+\n/g, '\n').split('\n');
+  while (lineas.length && !lineas[lineas.length - 1].trim()) lineas.pop();
+
+  const esSigla = linea => /^S[.:·]+F[.:·]+U[.:·]+$/iu.test((linea || '').trim());
+  const ultimo = (lineas[lineas.length - 1] || '').trim();
+  if (ultimo === nombre || ultimo === String(autor || '').trim()) {
+    let previo = lineas.length - 2;
+    while (previo >= 0 && !lineas[previo].trim()) previo--;
+    if (previo >= 0 && esSigla(lineas[previo])) lineas.length = previo;
+  } else if (esSigla(ultimo)) {
+    lineas.pop();
+  }
+
+  while (lineas.length && !lineas[lineas.length - 1].trim()) lineas.pop();
+  const contenido = lineas.join('\n').trimEnd();
+  if (!contenido) throw new Error('El contenido del trabajo no puede quedar vacío.');
+
+  // Línea libre antes del saludo, entre el saludo y el autor, y al final.
+  return contenido + '\n\nS.·.F.·.U.·.\n\n' + nombre + '\n\n';
+}
+
+function normalizarPieEditorTrabajo() {
+  const campo = document.getElementById('editModTexto');
+  const autor = document.getElementById('editModAutor')?.value;
+  if (!campo) return;
+  try {
+    campo.value = normalizarCierreTrabajo(campo.value, autor);
+    campo.focus();
+    campo.setSelectionRange(campo.value.length, campo.value.length);
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
 function renderizarTrazadoEnriquecido(textoBruto) {
-  if (!textoBruto) return "";
-  const parrafos = textoBruto.split(/\n\s*\n/);
-  return parrafos.map(p => {
-    let limpio = p.trim();
-    if (!limpio) return "";
-    
+  if (!textoBruto) return '';
+  const texto = String(textoBruto).replace(/\r\n?/g, '\n');
+  const cierre = /(?:^|\n+)[ \t]*S[.:·]+F[.:·]+U[.:·]+[ \t]*\n+([^\n]+?)[ \t\n]*$/iu.exec(texto);
+  const cuerpo = cierre ? texto.slice(0, cierre.index).trimEnd() : texto;
+  const parrafos = cuerpo.split(/\n\s*\n/);
+  const html = parrafos.map(p => {
+    const limpio = p.trim();
+    if (!limpio) return '';
+
     const esTitulo = /^(I{1,3}|IV|V|VI{0,3}|IX|X|\d+)\.?\s+[A-ZÁÉÍÓÚ\s]{4,}$/m.test(limpio) ||
                      (limpio.length < 90 && limpio.endsWith(':')) ||
                      (limpio.length < 80 && limpio === limpio.toUpperCase() && !limpio.includes('. '));
 
-    if (esTitulo) {
-      return `<h3 class="trazado-subtitulo">${limpio}</h3>`;
-    }
-    return `<p class="trazado-parrafo">${limpio.replace(/\n/g, ' ')}</p>`;
+    if (esTitulo) return '<h3 class="trazado-subtitulo">' + limpio + '</h3>';
+    return '<p class="trazado-parrafo">' + limpio.replace(/\n/g, ' ') + '</p>';
   }).join('');
+
+  if (!cierre) return html;
+  const escaparHtml = valor => valor.replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  return html + '<div class="trazado-cierre" aria-label="Cierre y firma del trabajo">' +
+    '<p class="trazado-saludo">S.·.F.·.U.·.</p>' +
+    '<p class="trazado-firma">' + escaparHtml(cierre[1].trim()) + '</p>' +
+    '</div>';
 }
 
 /* ==========================================================================
@@ -2641,12 +2697,20 @@ async function guardarEdicionModuloAdmin() {
   const nuevoOrden = parseInt(document.getElementById('editModOrden').value);
   const nuevoTitulo = document.getElementById('editModTitulo').value.trim();
   const nuevoAutor = document.getElementById('editModAutor').value.trim();
-  const nuevoTexto = document.getElementById('editModTexto').value.trim();
-
-  if (!nuevoTitulo || !nuevoTexto) {
-    alert("El título y el texto no pueden quedar vacíos.");
+  const campoTexto = document.getElementById('editModTexto');
+  if (!nuevoTitulo || !nuevoAutor || !campoTexto.value.trim()) {
+    alert('El título, el autor y el texto no pueden quedar vacíos.');
     return;
   }
+  let nuevoTexto;
+  try {
+    nuevoTexto = normalizarCierreTrabajo(campoTexto.value, nuevoAutor);
+  } catch (error) {
+    alert(error.message);
+    return;
+  }
+  // La vista conserva los saltos finales: no usar .trim() para guardar.
+  campoTexto.value = nuevoTexto;
 
   const { error } = await sbApp
     .from('modulos')
