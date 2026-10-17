@@ -266,7 +266,8 @@
           <button class="portal-nav-link active" type="button" aria-current="page" onclick="volverAInicioPortal()"><span class="portal-nav-glyph" aria-hidden="true">⌂</span><span class="portal-nav-text">Inicio</span></button>
           <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()"><span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="portal-nav-text">Mis avances</span></button>
           <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia()"><span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="portal-nav-text">Trabajos de la Cámara</span></button>
-          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Foro Docente</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Muro Docente</span></button>
+          <button class="portal-nav-link" type="button" onclick="irAContenidoDocente()"><span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="portal-nav-text">Contenido Docente</span></button>
           <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
@@ -302,7 +303,8 @@
           <button class="portal-nav-link" type="button" onclick="volverAInicioPortal()"><span class="portal-nav-glyph" aria-hidden="true">⌂</span><span class="portal-nav-text">Inicio</span></button>
           <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()"><span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="portal-nav-text">Mis avances</span></button>
           <button class="portal-nav-link active" type="button" aria-current="page" onclick="irACatalogoDocencia()"><span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="portal-nav-text">Trabajos de la Cámara</span></button>
-          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Foro Docente</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Muro Docente</span></button>
+          <button class="portal-nav-link" type="button" onclick="irAContenidoDocente()"><span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="portal-nav-text">Contenido Docente</span></button>
           <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
@@ -317,7 +319,28 @@
     </div>
 
     <div id="gridTrabajosBienvenida" class="trabajos-grid"></div>
-    <section id="catalogoDirectorioUnidades" class="catalogo-directorio-unidades hidden" aria-labelledby="catalogoUnidadesTitulo">
+    
+  </main></div>
+
+  <!-- PANTALLA 4: CONTENIDO DOCENTE (programa independiente de trabajos) -->
+  <div id="seccionContenidoDocente" class="catalogo-portal contenido-docente-pagina hidden">
+    <aside class="portal-nav" aria-label="Menú del usuario">
+      
+      <details class="portal-menu" open>
+        <summary class="portal-menu-toggle"><span>Menú de navegación</span><span class="portal-menu-chevron" aria-hidden="true">⌄</span></summary>
+        <nav class="portal-nav-list" aria-label="Secciones de la Cámara">
+          <button class="portal-nav-link" type="button" onclick="volverAInicioPortal()"><span class="portal-nav-glyph" aria-hidden="true">⌂</span><span class="portal-nav-text">Inicio</span></button>
+          <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()"><span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="portal-nav-text">Mis avances</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia()"><span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="portal-nav-text">Trabajos de la Cámara</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Muro Docente</span></button>
+          <button class="portal-nav-link active" type="button" aria-current="page" onclick="irAContenidoDocente()"><span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="portal-nav-text">Contenido Docente</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
+        </nav>
+      </details>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
+    </aside>
+    <main class="bienvenida-container contenido-docente-main">
+      <section id="catalogoDirectorioUnidades" class="catalogo-directorio-unidades hidden" aria-labelledby="catalogoUnidadesTitulo">
       <header class="catalogo-directorio-encabezado">
         <div><p class="catalogo-directorio-etiqueta">PROGRAMA DE DOCENCIA</p>
           <h2 id="catalogoUnidadesTitulo">Docencia · Unidades y temas</h2>
@@ -326,9 +349,10 @@
       </header>
       <div id="catalogoUnidadesContenido" class="catalogo-directorio-lista"></div>
     </section>
-  </main></div>
+    </main>
+  </div>
 
-  <!-- PANTALLA 4: INSTITUCIONAL "DOCENCIA PARA MAESTROS" -->
+  <!-- PANTALLA 5: INSTITUCIONAL "DOCENCIA PARA MAESTROS" -->
   <div id="seccionDocenciaInstitucional" class="espacio-pagina hidden">
     <aside class="portal-nav" aria-label="Menú del usuario">
       
@@ -338,7 +362,8 @@
           <button class="portal-nav-link" type="button" onclick="volverAInicioPortal()"><span class="portal-nav-glyph" aria-hidden="true">⌂</span><span class="portal-nav-text">Inicio</span></button>
           <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()"><span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="portal-nav-text">Mis avances</span></button>
           <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia()"><span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="portal-nav-text">Trabajos de la Cámara</span></button>
-          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Foro Docente</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Muro Docente</span></button>
+          <button class="portal-nav-link" type="button" onclick="irAContenidoDocente()"><span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="portal-nav-text">Contenido Docente</span></button>
           <button class="portal-nav-link active" type="button" aria-current="page" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
@@ -443,7 +468,8 @@
       <nav class="sidebar-box sidebar-acciones" aria-label="Acciones de estudio">
         <button class="btn-mis-avances sidebar-volver" type="button" onclick="volverACatalogo()">← Volver a trabajos</button>
         <button class="btn-mis-avances" type="button" onclick="abrirModalMisAvances()">Mis avances</button>
-        <button class="btn-mis-avances" type="button" onclick="mostrarMuroReflexionesUsuarios()">Muro y Foro</button>
+        <button class="btn-mis-avances" type="button" onclick="irAContenidoDocente()">Contenido Docente</button>
+        <button class="btn-mis-avances" type="button" onclick="mostrarMuroReflexionesUsuarios()">Muro Docente</button>
       </nav>
 
       <div class="sidebar-box sidebar-trabajos">
