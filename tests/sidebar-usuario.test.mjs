@@ -102,7 +102,7 @@ test('programa y trabajos usan paneles independientes y navegación coherente',(
   assert.match(contenido,/id="catalogoDirectorioUnidades"/);
   assert.match(contenido,/id="catalogoUnidadesContenido"/);
   assert.match(contenido,/aria-current="page" onclick="irAContenidoDocente\(\)"/);
-  assert.match(script,/#seccionContenidoDocente \\.portal-menu/);
+  assert.match(script,/#seccionContenidoDocente \.portal-menu/);
   assert.match(app,/void irAContenidoDocente\(boton\.dataset\.codigoDocencia\)/);
   assert.match(app,/renderizarCatalogoTrabajos\('contenido'\)/);
   assert.match(app,/vista === 'contenido' \? 'seccionContenidoDocente' : 'seccionCatalogoTrabajos'/);
