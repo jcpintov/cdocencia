@@ -855,13 +855,15 @@ function construirClasificacionTarjetaDocencia(codigoAsignado, unidadesPorCodigo
   const escapar = escaparTextoHTMLDocencia;
   return '<div class="grid-card-unidad">' +
     '<div class="grid-card-linea-unidad">' +
-      '<span class="grid-card-codigo">' + escapar(codigo) + '</span>' +
-      '<span class="grid-card-separador"> - </span>' +
       '<strong class="grid-card-unidad-nombre">' + escapar(unidad.detalle) + '</strong>' +
     '</div>' +
     (subunidad
       ? '<div class="grid-card-subunidad">' + escapar(subunidad.detalle) + '</div>'
       : '') +
+    '<button type="button" class="grid-card-codigo-enlace" data-codigo-docencia="' +
+      escapar(codigo) + '" aria-label="Ver código ' + escapar(codigo) +
+      ' en el programa de Docencia">' + escapar(codigo) +
+      '<span aria-hidden="true"> ↗</span></button>' +
   '</div>';
 }
 
@@ -907,6 +909,11 @@ async function renderizarCatalogoTrabajos() {
 
   const grid = document.getElementById('gridTrabajosBienvenida');
   grid.innerHTML = "";
+  grid.onclick = event => {
+    const boton = event.target.closest('button[data-codigo-docencia]');
+    if (!boton || !grid.contains(boton)) return;
+    abrirProgramaDocencia(boton.dataset.codigoDocencia);
+  };
 
   listaModulos.forEach(m => {
     const prog = misProgresos[m.id];
