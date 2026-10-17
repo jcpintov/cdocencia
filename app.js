@@ -732,135 +732,123 @@ async function consultarVinculosDocencia() {
 
 // Catálogo visual: unidades, subunidades y fichas de temas (no una lista plana).
 // Cada vínculo surge de unidad_codigo de un trabajo activo en Supabase.
-function construirDirectorioUnidadesDocencia(unidades, trabajos) {
-  if (!Array.isArray(unidades) || !unidades.length) return '';
-
-  const ordenadas = [...unidades].sort((a,b) => Number(a.orden) - Number(b.orden));
-  const codigosValidos = new Set(ordenadas.map(x => String(x.codigo)));
-  const porCodigo = new Map();
-  for (const trabajo of Array.isArray(trabajos) ? trabajos : []) {
-    const codigo = String(trabajo.unidad_codigo || '');
-    if (!codigosValidos.has(codigo)) continue;
-    if (!porCodigo.has(codigo)) porCodigo.set(codigo, []);
-    porCodigo.get(codigo).push(trabajo);
-  }
-  for (const items of porCodigo.values()) {
-    items.sort((a,b) => Number(a.numero_orden) - Number(b.numero_orden));
-  }
-
-  const escapar = escaparTextoHTMLDocencia;
-  const asociados = codigo => porCodigo.get(codigo) || [];
-  const total = n => n + (n === 1 ? ' trabajo disponible' : ' trabajos disponibles');
-  const tarjetaTrabajo = trabajo =>
-    '<button class="docencia-tarjeta-trabajo" type="button" data-modulo-id="' +
-      escapar(trabajo.id) + '">' +
-      '<span class="docencia-trabajo-numero">Trabajo N.º ' + escapar(trabajo.numero_orden) + '</span>' +
-      '<strong>' + escapar(trabajo.titulo) + '</strong>' +
-      '<span class="docencia-trabajo-acceso">Abrir trabajo <span aria-hidden="true">↗</span></span>' +
-    '</button>';
-
-  const tarjetasAsociadas = codigo => {
-    const publicados = asociados(codigo);
-    if (!publicados.length) return '';
-    return '<div class="docencia-grid-trabajos">' +
-      publicados.map(tarjetaTrabajo).join('') + '</div>';
-  };
-
-  const tarjetaTema = tema => {
-    const publicados = asociados(tema.codigo);
-    const etiqueta = '<span class="docencia-tema-codigo">' + escapar(tema.codigo) + '</span>';
-    let cuerpo;
-    if (publicados.length === 1) {
-      // Solo un tema publicado es negrita y botón hacia su trabajo.
-      cuerpo = '<button type="button" class="docencia-tema-enlace" data-modulo-id="' +
-        escapar(publicados[0].id) + '">' +
-        '<strong class="docencia-tema-titulo">' + escapar(tema.detalle) + '</strong>' +
-        '<span class="docencia-tema-acceso">Ver trabajo <span aria-hidden="true">↗</span></span>' +
-        '</button>';
-    } else if (publicados.length > 1) {
-      cuerpo = '<strong class="docencia-tema-titulo">' + escapar(tema.detalle) + '</strong>' +
-        tarjetasAsociadas(tema.codigo);
-    } else {
-      cuerpo = '<span class="docencia-tema-titulo">' + escapar(tema.detalle) + '</span>' +
-        '<span class="docencia-tema-pendiente">Aún sin trabajo</span>';
+// Cuatro áreas > ocho unidades > veinticuatro subunidades > 139 temas.
+// Objetivos fieles al documento; trabajos enlazados SOLO por códigos guardados.
+function construirDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[]) {
+  if(!Array.isArray(unidades)||!unidades.length)return '';
+  const ordenadas=[...unidades].sort((a,b)=>a.orden-b.orden);
+  const mapa=new Map(ordenadas.map(u=>[u.codigo,u]));
+  const objetivoPorCodigo=new Map((objetivos||[]).map(o=>[o.codigo,o]));
+  const publicados=new Map();
+  for(const m of Array.isArray(trabajos)?trabajos:[]){
+    const codigos=[...new Set([m.unidad_codigo,...(m.codigos_tematicos||[])].filter(Boolean))];
+    for(const c of codigos){
+      if(!mapa.has(c))continue;
+      if(!publicados.has(c))publicados.set(c,[]);
+      if(!publicados.get(c).some(x=>x.id===m.id))publicados.get(c).push(m);
     }
-    return '<article class="docencia-tarjeta-tema ' +
-      (publicados.length ? 'disponible' : 'pendiente') +
-      '" data-codigo-docencia="' + escapar(tema.codigo) + '" tabindex="-1">' +
-      etiqueta + cuerpo + '</article>';
+  }
+  const e=escaparTextoHTMLDocencia,relacionados=c=>publicados.get(c)||[];
+  const tarjetaTrabajo=m=>'<button class="docencia-tarjeta-trabajo" type="button" data-modulo-id="'+e(m.id)+'">'+
+    '<span class="docencia-trabajo-numero">Trabajo N.º '+e(m.numero_orden)+'</span>'+
+    '<strong>'+e(m.titulo)+'</strong>'+
+    '<span class="docencia-trabajo-acceso">Abrir trabajo ↗</span></button>';
+  const tarjetasTrabajos=c=>relacionados(c).length?
+    '<div class="docencia-grid-trabajos">'+relacionados(c).map(tarjetaTrabajo).join('')+'</div>':'';
+
+  const temaHTML=t=>{
+    const mods=relacionados(t.codigo),activo=mods.length>0;
+    return '<article class="docencia-tarjeta-tema '+(activo?'disponible':'pendiente')+
+      '" data-codigo-docencia="'+e(t.codigo)+'" tabindex="-1">'+
+      '<span class="docencia-tema-codigo">'+e(t.codigo)+'</span>'+
+      (mods.length===1?
+        '<button type="button" class="docencia-tema-enlace" data-modulo-id="'+e(mods[0].id)+'">'+
+        '<strong class="docencia-tema-titulo">'+e(t.detalle)+'</strong>'+
+        '<span class="docencia-tema-acceso">Ver trabajo ↗</span></button>'
+      : mods.length>1?
+        '<strong class="docencia-tema-titulo">'+e(t.detalle)+'</strong>'+tarjetasTrabajos(t.codigo)
+      : '<span class="docencia-tema-titulo">'+e(t.detalle)+'</span><span class="docencia-tema-pendiente">Tema por desarrollar</span>')+
+      '</article>';
   };
-
-  const raices = ordenadas.filter(x => tipoUnidadDocencia(x.codigo) === 'unidad');
-  return raices.map((unidad,i) => {
-    const prefijo = unidad.codigo.slice(0,4);
-    const subunidades = ordenadas.filter(x =>
-      tipoUnidadDocencia(x.codigo) === 'subunidad' && x.codigo.slice(0,4) === prefijo);
-
-    const subTarjetas = subunidades.map(sub => {
-      const temas = ordenadas.filter(x => tipoUnidadDocencia(x.codigo) === 'tema' &&
-        x.codigo.slice(0,5) + '0' === sub.codigo);
-      const cantidad = asociados(sub.codigo).length +
-        temas.reduce((n,x) => n + asociados(x.codigo).length,0);
-
-      return '<details class="catalogo-subunidad docencia-tarjeta-subunidad" ' +
-        'data-codigo-docencia="' + escapar(sub.codigo) + '" ' + (cantidad ? 'open' : '') + '>' +
-        '<summary class="catalogo-subunidad-titulo">' +
-          '<span class="catalogo-subunidad-codigo">' + escapar(sub.codigo) + '</span>' +
-          '<strong>' + escapar(sub.detalle) + '</strong>' +
-          '<span class="catalogo-unidad-total">' + total(cantidad) + '</span>' +
-          '<span class="catalogo-plegable-icono" aria-hidden="true">⌄</span>' +
-        '</summary>' +
-        '<div class="catalogo-subunidad-contenido">' +
-          tarjetasAsociadas(sub.codigo) +
-          '<div class="docencia-grid-temas">' + temas.map(tarjetaTema).join('') + '</div>' +
-        '</div></details>';
+  const etiqueta=n=>n===1?'1 trabajo disponible':n+' trabajos disponibles';
+  const areas=ordenadas.filter(u=>tipoUnidadDocencia(u.codigo)==='area');
+  const allAreas=areas.map((a,indice)=>{
+    const objetivo=objetivoPorCodigo.get(a.codigo)?.objetivo_general||'Objetivo general en preparación.';
+    const unidadesArea=ordenadas.filter(u=>tipoUnidadDocencia(u.codigo)==='unidad'&&u.codigo.slice(0,4)===a.codigo.slice(0,4));
+    let totalArea=0;
+    const unidadesHTML=unidadesArea.map(u=>{
+      const subs=ordenadas.filter(s=>tipoUnidadDocencia(s.codigo)==='subunidad'&&
+        padresCodigoDocencia(s.codigo)?.unidad===u.codigo);
+      let totalUnidad=relacionados(u.codigo).length;
+      const subsHTML=subs.map(sub=>{
+        const temas=ordenadas.filter(t=>tipoUnidadDocencia(t.codigo)==='tema'&&
+          padresCodigoDocencia(t.codigo)?.subunidad===sub.codigo);
+        const totalSub=relacionados(sub.codigo).length+
+          temas.reduce((n,t)=>n+relacionados(t.codigo).length,0);
+        totalUnidad+=totalSub;
+        return '<details class="catalogo-subunidad docencia-tarjeta-subunidad" data-codigo-docencia="'+e(sub.codigo)+'" '+(totalSub?'open':'')+'>'+
+          '<summary class="catalogo-subunidad-titulo">'+
+          '<span class="catalogo-subunidad-codigo">'+e(sub.codigo)+'</span>'+
+          '<strong>'+e(sub.detalle)+'</strong>'+
+          '<span class="catalogo-unidad-total">'+etiqueta(totalSub)+'</span>'+
+          '<span class="catalogo-plegable-icono" aria-hidden="true">⌄</span></summary>'+
+          '<div class="catalogo-subunidad-contenido">'+tarjetasTrabajos(sub.codigo)+
+          '<div class="docencia-grid-temas">'+temas.map(temaHTML).join('')+'</div></div></details>';
+      }).join('');
+      totalArea+=totalUnidad;
+      return '<details class="catalogo-unidad-grupo docencia-tarjeta-unidad" data-codigo-docencia="'+e(u.codigo)+'" '+(totalUnidad?'open':'')+'>'+
+        '<summary class="catalogo-unidad-titulo">'+
+        '<span class="catalogo-unidad-codigo">'+e(u.codigo)+'</span>'+
+        '<strong>'+e(u.detalle)+'</strong>'+
+        '<span class="catalogo-unidad-total">'+etiqueta(totalUnidad)+'</span>'+
+        '<span class="catalogo-plegable-icono" aria-hidden="true">⌄</span></summary>'+
+        '<div class="catalogo-unidad-contenido">'+tarjetasTrabajos(u.codigo)+
+        '<div class="docencia-grid-subunidades">'+subsHTML+'</div></div></details>';
     }).join('');
-
-    const cantidadUnidad = asociados(unidad.codigo).length +
-      subunidades.reduce((n,sub) => {
-        const temas = ordenadas.filter(x => tipoUnidadDocencia(x.codigo) === 'tema' &&
-          x.codigo.slice(0,5) + '0' === sub.codigo);
-        return n + asociados(sub.codigo).length +
-          temas.reduce((total,x) => total + asociados(x.codigo).length,0);
-      },0);
-
-    return '<details class="catalogo-unidad-grupo docencia-tarjeta-unidad" ' +
-      'data-codigo-docencia="' + escapar(unidad.codigo) + '" ' + (i === 0 ? 'open' : '') + '>' +
-      '<summary class="catalogo-unidad-titulo">' +
-        '<span class="catalogo-unidad-codigo">' + escapar(unidad.codigo) + '</span>' +
-        '<strong>' + escapar(unidad.detalle) + '</strong>' +
-        '<span class="catalogo-unidad-total">' + total(cantidadUnidad) + '</span>' +
-        '<span class="catalogo-plegable-icono" aria-hidden="true">⌄</span>' +
-      '</summary>' +
-      '<div class="catalogo-unidad-contenido">' + tarjetasAsociadas(unidad.codigo) +
-        '<div class="docencia-grid-subunidades">' + subTarjetas + '</div>' +
-      '</div></details>';
-  }).join('');
+    const presentacion='<article class="docencia-area-presentacion">'+
+      '<span class="docencia-area-codigo">'+e(a.codigo)+'</span>'+
+      '<h3>'+e(a.detalle)+'</h3>'+
+      '<p class="docencia-area-etiqueta">Objetivo general</p>'+
+      '<p class="docencia-area-objetivo">'+e(objetivo)+'</p>'+
+      '<button class="docencia-area-ver" type="button" data-abrir-area="'+e(a.codigo)+'">Explorar unidades y temas <span aria-hidden="true">→</span></button>'+
+      '</article>';
+    const detalle='<details class="docencia-tarjeta-area" data-codigo-docencia="'+e(a.codigo)+'" '+(indice===0?'open':'')+'>'+
+      '<summary class="docencia-area-desplegable">'+
+      '<span class="docencia-area-codigo">'+e(a.codigo)+'</span>'+
+      '<strong>'+e(a.detalle)+'</strong>'+
+      '<span class="catalogo-unidad-total">'+etiqueta(totalArea)+'</span>'+
+      '<span class="catalogo-plegable-icono" aria-hidden="true">⌄</span></summary>'+
+      '<div class="docencia-area-contenido"><p class="docencia-area-objetivo-completo"><strong>Objetivo general: </strong>'+e(objetivo)+'</p>'+
+      '<div class="docencia-grid-unidades">'+unidadesHTML+'</div></div></details>';
+    return {presentacion,detalle};
+  });
+  return '<div class="docencia-areas-grid">'+allAreas.map(x=>x.presentacion).join('')+'</div>'+
+    '<div class="docencia-areas-desarrollo">'+allAreas.map(x=>x.detalle).join('')+'</div>';
 }
 
-function renderizarDirectorioUnidadesDocencia(unidades, trabajos) {
-  const seccion = document.getElementById('catalogoDirectorioUnidades');
-  const contenedor = document.getElementById('catalogoUnidadesContenido');
-  if (!seccion || !contenedor) return;
-  if (!Array.isArray(unidades) || !unidades.length) {
+function renderizarDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[]) {
+  const seccion=document.getElementById('catalogoDirectorioUnidades');
+  const contenedor=document.getElementById('catalogoUnidadesContenido');
+  if(!seccion||!contenedor)return;
+  if(!Array.isArray(unidades)||!unidades.length){
     contenedor.replaceChildren();
     seccion.classList.add('hidden');
     return;
   }
-  contenedor.innerHTML = construirDirectorioUnidadesDocencia(unidades, trabajos);
+  contenedor.innerHTML=construirDirectorioUnidadesDocencia(unidades,trabajos,objetivos);
   seccion.classList.remove('hidden');
-  // Delegación: solo IDs ya cargados en el catálogo permiten abrir un trabajo.
-  contenedor.onclick = evento => {
-    const boton = evento.target.closest('button[data-modulo-id]');
-    if (!boton || !contenedor.contains(boton)) return;
-    const id = boton.dataset.moduloId;
-    if (listaModulos.some(mod => mod.id === id)) entrarADocenciaConModulo(id);
+  contenedor.onclick=event=>{
+    const boton=event.target.closest('button');
+    if(!boton||!contenedor.contains(boton))return;
+    if(boton.dataset.abrirArea){
+      abrirProgramaDocencia(boton.dataset.abrirArea);
+      return;
+    }
+    const id=boton.dataset.moduloId;
+    if(id && listaModulos.some(m=>m.id===id))entrarADocenciaConModulo(id);
   };
 }
 
-// La tarjeta muestra el código del trabajo, la unidad matriz y su subunidad.
-// La relación se resuelve por los códigos oficiales: DOC12B -> DOC100 / DOC120.
-// Tarjeta existente: título y autor, seguido de Unidad / Subunidad / Códigos clicables.
 function construirClasificacionTarjetaDocencia(codigosAsignados, unidadesPorCodigo) {
   const lista=Array.isArray(codigosAsignados)?codigosAsignados:[codigosAsignados];
   const codigos=[...new Set(lista.map(c=>String(c||'').trim().toUpperCase()))]
