@@ -1308,3 +1308,191 @@ body.theme-nocturno #seccionDocencia .sidebar-trabajo-actual{color:#bfccd7}
   font:650 .88rem/1.42 var(--font-ui,Arial,sans-serif);
   overflow-wrap:break-word;
 }
+
+
+/* Clasificación bajo el título: Unidad / Subunidad / Código enlazado a Docencia.
+   Conserva el marco, fondo, color del título y pie de las tarjetas existentes. */
+#seccionCatalogoTrabajos .grid-card-unidad {
+  gap:0;
+  margin:16px 0 8px;
+  padding:11px 12px;
+  border-left:3px solid #ba914b;
+  background:rgba(32,75,110,.07);
+}
+#seccionCatalogoTrabajos .grid-card-linea-unidad {
+  display:block;
+  margin:0;
+  color:#314c63;
+}
+#seccionCatalogoTrabajos .grid-card-unidad-nombre {
+  display:block;
+  color:#314c63;
+  font:650 .89rem/1.42 var(--font-ui,Arial,sans-serif);
+}
+#seccionCatalogoTrabajos .grid-card-subunidad {
+  margin:3px 0 0;
+  padding:0;
+  border:0;
+  color:#425e73;
+  font:500 .86rem/1.43 var(--font-ui,Arial,sans-serif);
+}
+#seccionCatalogoTrabajos .grid-card-codigo-enlace {
+  display:inline-flex;
+  gap:3px;
+  align-items:center;
+  width:auto;
+  min-height:36px;
+  margin-top:7px;
+  padding:4px 7px 4px 0;
+  color:#1f5176;
+  background:transparent;
+  border:0;
+  border-radius:5px;
+  text-decoration:underline;
+  text-underline-offset:3px;
+  font:700 .82rem/1.4 var(--font-ui,Arial,sans-serif);
+  cursor:pointer;
+}
+#seccionCatalogoTrabajos .grid-card-codigo-enlace:hover { color:#97672c }
+#seccionCatalogoTrabajos .grid-card-codigo-enlace:focus-visible {
+  outline:3px solid #b5863e;
+  outline-offset:2px;
+}
+
+/* Programa en tarjetas, sin formato de lista plana. */
+#seccionCatalogoTrabajos .docencia-grid-subunidades {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:start;
+  gap:15px;
+}
+#seccionCatalogoTrabajos .docencia-tarjeta-subunidad {
+  min-width:0;
+  border-radius:10px;
+  border:1px solid #ccdce7;
+  background:#fff;
+  box-shadow:0 3px 10px rgba(21,48,72,.055);
+}
+#seccionCatalogoTrabajos .docencia-tarjeta-subunidad[open]{
+  grid-row:span 2;
+  border-color:#b0c6d7;
+}
+#seccionCatalogoTrabajos .docencia-grid-temas {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+}
+#seccionCatalogoTrabajos .docencia-tarjeta-tema {
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:6px;
+  min-width:0;
+  min-height:100px;
+  padding:13px 12px;
+  border-radius:9px;
+  border:1px solid #d7e1ea;
+  background:#fff;
+  color:#243e52;
+  box-shadow:0 2px 7px rgba(10,32,51,.035);
+  scroll-margin-top:18px;
+}
+#seccionCatalogoTrabajos .docencia-tarjeta-tema.disponible {
+  background:#f2f8f4;
+  border-color:#bbd6c3;
+}
+#seccionCatalogoTrabajos .docencia-tema-codigo {
+  color:#88632a;
+  font:750 .79rem/1.35 var(--font-ui,Arial,sans-serif);
+  letter-spacing:.035em;
+}
+#seccionCatalogoTrabajos .docencia-tema-titulo {
+  color:#203d53;
+  font:.91rem/1.43 var(--font-ui,Arial,sans-serif);
+  overflow-wrap:anywhere;
+}
+#seccionCatalogoTrabajos .docencia-tarjeta-tema.disponible .docencia-tema-titulo {
+  font-weight:750;
+  color:#27533b;
+}
+#seccionCatalogoTrabajos .docencia-tema-pendiente {
+  margin-top:auto;
+  color:#718397;
+  font:.76rem/1.35 var(--font-ui,Arial,sans-serif);
+}
+#seccionCatalogoTrabajos .docencia-tema-enlace {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:9px;
+  text-align:left;
+  width:100%;
+  height:100%;
+  min-height:64px;
+  padding:0;
+  border:0;
+  background:transparent;
+  color:inherit;
+  cursor:pointer;
+}
+#seccionCatalogoTrabajos .docencia-tema-acceso {
+  margin-top:auto;
+  color:#235e41;
+  font:700 .8rem/1.35 var(--font-ui,Arial,sans-serif);
+}
+#seccionCatalogoTrabajos .docencia-tema-enlace:hover .docencia-tema-titulo,
+#seccionCatalogoTrabajos .docencia-tarjeta-trabajo:hover strong {
+  text-decoration:underline;
+}
+#seccionCatalogoTrabajos .docencia-grid-trabajos {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(175px,1fr));
+  gap:9px;
+  margin:8px 0 3px;
+}
+#seccionCatalogoTrabajos .docencia-tarjeta-trabajo {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  align-items:flex-start;
+  width:100%;
+  min-height:103px;
+  padding:12px;
+  text-align:left;
+  border:1px solid #b8d0bc;
+  border-radius:9px;
+  background:#f1f8f3;
+  color:#225239;
+  cursor:pointer;
+}
+#seccionCatalogoTrabajos .docencia-trabajo-numero {
+  color:#59746b;
+  font:.78rem/1.35 var(--font-ui,Arial,sans-serif);
+}
+#seccionCatalogoTrabajos .docencia-tarjeta-trabajo strong {
+  font:.91rem/1.35 var(--font-ui,Arial,sans-serif);
+  overflow-wrap:anywhere;
+}
+#seccionCatalogoTrabajos .docencia-trabajo-acceso {
+  margin-top:auto;
+  font:.8rem/1.3 var(--font-ui,Arial,sans-serif);
+}
+#seccionCatalogoTrabajos .docencia-enfoque {
+  outline:3px solid #c59a4e;
+  outline-offset:3px;
+}
+#seccionCatalogoTrabajos .docencia-tema-enlace:focus-visible,
+#seccionCatalogoTrabajos .docencia-tarjeta-trabajo:focus-visible {
+  outline:3px solid #c59a4e;
+  outline-offset:2px;
+}
+@media(max-width:1280px){
+  #seccionCatalogoTrabajos .docencia-grid-subunidades {grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  #seccionCatalogoTrabajos .docencia-grid-temas {grid-template-columns:1fr}
+  #seccionCatalogoTrabajos .docencia-tarjeta-tema {min-height:85px}
+}
+@media(prefers-reduced-motion:reduce){
+  #seccionCatalogoTrabajos .docencia-enfoque {scroll-behavior:auto}
+}
