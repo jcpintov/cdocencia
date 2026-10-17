@@ -66,7 +66,7 @@ test('sincronización en login/restauración y limpieza al salir',()=>{
   assert.match(logout,/usuarioActual = null;[\s\S]*?sincronizarEncabezadoWorkspaceUsuario\(\)/);
 });
 test('tarjetas originales mantienen título y autor antes de unidad, subunidad y códigos',()=>{
-  const render=app.slice(app.indexOf('async function renderizarCatalogoTrabajos()'),
+  const render=app.slice(app.indexOf('async function renderizarCatalogoTrabajos('),
     app.indexOf('function entrarADocenciaConModulo('));
   const content=render.slice(render.indexOf('grid.innerHTML += '),render.indexOf('renderizarDirectorioUnidadesDocencia('));
   const posiciones=[
