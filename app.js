@@ -2874,32 +2874,32 @@ async function cargarUnidadesEditorTrabajo(codigoActual, moduloId) {
     return;
   }
 
-  // Presentación agrupada para navegar 112 entradas sin una lista plana.
-  // Las cabeceras se distinguen visualmente y siguen disponibles para
-  // clasificaciones que abarquen una unidad o subunidad completa.
-  let grupo = null;
-  for (const unidad of unidades) {
-    const tipo = tipoUnidadDocencia(unidad.codigo);
-    if (tipo === 'unidad') {
-      grupo = null;
-      const encabezado = document.createElement('option');
-      encabezado.value = unidad.codigo;
-      encabezado.textContent = unidad.codigo + ' — ' + unidad.detalle;
-      encabezado.className = 'unidad-opcion-principal';
+  // Cuatro áreas: grupos por unidad, cabeceras de subunidad y códigos de tema.
+  let grupo=null;
+  for(const item of unidades){
+    const tipo=tipoUnidadDocencia(item.codigo);
+    if(tipo==='area'){
+      grupo=null;
+      const encabezado=document.createElement('option');
+      encabezado.value='';
+      encabezado.disabled=true;
+      encabezado.textContent='── '+item.detalle+' ──';
       selector.appendChild(encabezado);
-    } else if (tipo === 'subunidad') {
-      grupo = document.createElement('optgroup');
-      grupo.label = unidad.codigo + ' — ' + unidad.detalle;
+    }else if(tipo==='unidad'){
+      grupo=document.createElement('optgroup');
+      grupo.label=item.codigo+' — '+item.detalle;
       selector.appendChild(grupo);
-      const opcion = document.createElement('option');
-      opcion.value = unidad.codigo;
-      opcion.textContent = 'SUBUNIDAD COMPLETA — ' + unidad.detalle;
-      grupo.appendChild(opcion);
-    } else {
-      const opcion = document.createElement('option');
-      opcion.value = unidad.codigo;
-      opcion.textContent = unidad.codigo + ' — ' + unidad.detalle;
-      (grupo || selector).appendChild(opcion);
+    }else if(tipo==='subunidad'){
+      const cabecera=document.createElement('option');
+      cabecera.value='';
+      cabecera.disabled=true;
+      cabecera.textContent='  '+item.detalle;
+      (grupo||selector).appendChild(cabecera);
+    }else if(tipo==='tema'){
+      const opcion=document.createElement('option');
+      opcion.value=item.codigo;
+      opcion.textContent=item.codigo+' — '+item.detalle;
+      (grupo||selector).appendChild(opcion);
     }
   }
 
