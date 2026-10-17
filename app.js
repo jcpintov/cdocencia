@@ -837,6 +837,34 @@ function renderizarDirectorioUnidadesDocencia(unidades, trabajos) {
   };
 }
 
+// La tarjeta muestra el código del trabajo, la unidad matriz y su subunidad.
+// La relación se resuelve por los códigos oficiales: DOC12B -> DOC100 / DOC120.
+function construirClasificacionTarjetaDocencia(codigoAsignado, unidadesPorCodigo) {
+  const codigo = String(codigoAsignado || '').trim().toUpperCase();
+  if (!codigo || !unidadesPorCodigo.has(codigo)) return '';
+
+  const tipo = tipoUnidadDocencia(codigo);
+  const codigoUnidad = codigo.slice(0, 4) + '00';
+  const codigoSubunidad = tipo === 'unidad' ? null : codigo.slice(0, 5) + '0';
+  const unidad = unidadesPorCodigo.get(codigoUnidad);
+  const subunidad = codigoSubunidad ? unidadesPorCodigo.get(codigoSubunidad) : null;
+
+  // No deducir un nombre de unidad si el catálogo está incompleto.
+  if (!unidad || (codigoSubunidad && !subunidad)) return '';
+
+  const escapar = escaparTextoHTMLDocencia;
+  return '<div class="grid-card-unidad">' +
+    '<div class="grid-card-linea-unidad">' +
+      '<span class="grid-card-codigo">' + escapar(codigo) + '</span>' +
+      '<span class="grid-card-separador"> - </span>' +
+      '<strong class="grid-card-unidad-nombre">' + escapar(unidad.detalle) + '</strong>' +
+    '</div>' +
+    (subunidad
+      ? '<div class="grid-card-subunidad">' + escapar(subunidad.detalle) + '</div>'
+      : '') +
+  '</div>';
+}
+
 async function renderizarCatalogoTrabajos() {
   const { data: dataModulos, error } = await sbApp
     .from('modulos')
@@ -889,13 +917,7 @@ async function renderizarCatalogoTrabajos() {
       badgeHtml = `<span class="badge-estado" style="background:#FEF3C7;color:#92400E;">En Curso</span>`;
     }
 
-    const unidad = unidadesPorCodigo.get(m.unidad_codigo);
-    const bloqueUnidad = unidad
-      ? '<div class="grid-card-unidad"><span class="grid-card-codigo">' +
-        escaparTextoHTMLDocencia(unidad.codigo) + '</span>' +
-        '<strong class="grid-card-detalle">' +
-        escaparTextoHTMLDocencia(unidad.detalle) + '</strong></div>'
-      : '';
+    const bloqueUnidad = construirClasificacionTarjetaDocencia(m.unidad_codigo, unidadesPorCodigo);
 
     const fechaCreacion = m.creado_en 
       ? new Date(m.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
