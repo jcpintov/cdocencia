@@ -215,8 +215,8 @@ test('tarjeta conserva encabezado, título y autor antes de clasificación',()=>
   const block=app.slice(app.indexOf('listaModulos.forEach(m => {'),
     app.indexOf('renderizarDirectorioUnidadesDocencia(unidades, listaModulos)'));
   assert.ok(block.indexOf('grid-card-meta') < block.indexOf('grid-card-cuerpo'));
-  assert.ok(block.indexOf('grid-card-cuerpo') < block.indexOf('grid-card-unidad'));
-  assert.ok(block.indexOf('grid-card-unidad') < block.indexOf('grid-card-footer'));
+  assert.ok(block.indexOf('grid-card-cuerpo') < block.indexOf('${bloqueUnidad}'));
+  assert.ok(block.indexOf('${bloqueUnidad}') < block.indexOf('grid-card-footer'));
   assert.match(block,/class="grid-card-titulo"/);
   assert.match(block,/class="grid-card-autor"/);
   assert.match(block,/class="btn-grid-ir"/);
