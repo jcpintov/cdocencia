@@ -64,12 +64,12 @@ test('directorio: unidades, subunidades destacadas y temas en orden', () => {
   assert.match(rendered,/2 trabajos/);
   assert.match(rendered,/1 trabajo/);
   assert.match(rendered,/0 trabajos/);
-  assert.equal((rendered.match(/class="catalogo-unidad-grupo"/g)||[]).length,2);
-  assert.equal((rendered.match(/class="catalogo-subunidad"/g)||[]).length,3);
-  assert.equal((rendered.match(/class="catalogo-unidad-varias"/g)||[]).length,1);
+  assert.equal((rendered.match(/class="catalogo-unidad-grupo docencia-tarjeta-unidad"/g)||[]).length,2);
+  assert.equal((rendered.match(/class="catalogo-subunidad docencia-tarjeta-subunidad"/g)||[]).length,3);
+  assert.equal((rendered.match(/class="docencia-grid-trabajos"/g)||[]).length,1);
   assert.equal((rendered.match(/data-modulo-id="/g)||[]).length,3);
-  assert.equal((rendered.match(/class="catalogo-tema-enlace"/g)||[]).length,1);
-  assert.match(rendered,/class="catalogo-tema-item pendiente"/);
+  assert.equal((rendered.match(/class="docencia-tema-enlace"/g)||[]).length,1);
+  assert.match(rendered,/class="docencia-tarjeta-tema pendiente"/);
   assert.doesNotMatch(rendered,/Trabajo no clasificado/);
   assert.ok(rendered.indexOf('DOC100') < rendered.indexOf('DOC110'));
   assert.ok(rendered.indexOf('DOC110') < rendered.indexOf('DOC11A'));
@@ -120,11 +120,13 @@ test('selección de unidad autocompleta código y conserva valor si falla lectur
   assert.equal(controls.editModUnidadCodigo.value,'DOC12B');
 });
 
-test('presentación: código encima de unidad, directorio final responsivo', () => {
+test('presentación: título antes de unidad/subunidad/código; Docencia en tarjetas', () => {
   assert.match(html,/id="gridTrabajosBienvenida"[\s\S]*id="catalogoDirectorioUnidades"/);
   assert.match(app,/class="grid-card-unidad"/);
   assert.match(app,/class="grid-card-linea-unidad"/);
-  assert.match(app,/class="grid-card-codigo"/);
+  assert.match(app,/class="docencia-grid-temas"/);
+  assert.match(app,/class="docencia-tarjeta-tema /);
+  assert.match(app,/class="grid-card-codigo-enlace"/);
   assert.match(app,/class="grid-card-unidad-nombre"/);
   assert.match(app,/class="grid-card-subunidad"/);
   assert.match(app,/renderizarDirectorioUnidadesDocencia\(unidades, listaModulos\)/);
@@ -154,7 +156,7 @@ test('catálogo oficial CSV: 112 entradas ordenadas, 2 unidades, 17 subunidades,
 });
 
 
-test('tarjeta user: CÓDIGO - UNIDAD matriz, en la segunda línea SUBUNIDAD',()=>{
+test('tarjeta user: unidad, subunidad, código con enlace al programa Docencia',()=>{
   const catalogo = new Map([
     ['DOC100',{codigo:'DOC100',detalle:'UNIDAD I: BASAMENTOS DOCTRINARIOS'}],
     ['DOC120',{codigo:'DOC120',detalle:'1.2 LA EXALTACIÓN'}],
@@ -164,7 +166,8 @@ test('tarjeta user: CÓDIGO - UNIDAD matriz, en la segunda línea SUBUNIDAD',()=
     ['DOC2A5',{codigo:'DOC2A5',detalle:'Posición de la Escuadra y el Compas'}]
   ]);
   const bloque=directory.construirClasificacionTarjetaDocencia('DOC12B',catalogo);
-  assert.match(bloque,/<span class="grid-card-codigo">DOC12B<\/span><span class="grid-card-separador"> - <\/span><strong class="grid-card-unidad-nombre">UNIDAD I: BASAMENTOS DOCTRINARIOS<\/strong>/);
+  assert.match(bloque,/<strong class="grid-card-unidad-nombre">UNIDAD I: BASAMENTOS DOCTRINARIOS<\/strong>/);
+  assert.match(bloque,/<button type="button" class="grid-card-codigo-enlace" data-codigo-docencia="DOC12B"/);
   assert.match(bloque,/<div class="grid-card-subunidad">1\.2 LA EXALTACIÓN<\/div>/);
   assert.doesNotMatch(bloque,/Significado de la Exaltación/);
 
@@ -205,4 +208,67 @@ test('etiquetas de tarjeta no interpretan títulos de catálogo como HTML',()=>{
   assert.match(bloque,/&lt;img/);
   assert.match(bloque,/&lt;script&gt;/);
   assert.doesNotMatch(bloque,/<img|<script>/);
+});
+
+
+test('tarjeta conserva encabezado, título y autor antes de clasificación',()=>{
+  const block=app.slice(app.indexOf('listaModulos.forEach(m => {'),
+    app.indexOf('renderizarDirectorioUnidadesDocencia(unidades, listaModulos)'));
+  assert.ok(block.indexOf('grid-card-meta') < block.indexOf('grid-card-cuerpo'));
+  assert.ok(block.indexOf('grid-card-cuerpo') < block.indexOf('${bloqueUnidad}'));
+  assert.ok(block.indexOf('${bloqueUnidad}') < block.indexOf('grid-card-footer'));
+  assert.match(block,/class="grid-card-titulo"/);
+  assert.match(block,/class="grid-card-autor"/);
+  assert.match(block,/class="btn-grid-ir"/);
+  assert.match(app,/abrirProgramaDocencia\(boton\.dataset\.codigoDocencia\)/);
+});
+
+test('el código abre su unidad/subunidad y enfoca tema en Docencia',()=>{
+  const focused=[];
+  function node(className){
+    const classes=new Set();
+    return {className,open:false,
+      classList:{add(name){classes.add(name)},remove(name){classes.delete(name)},contains(name){return classes.has(name)}},
+      hasAttribute(){return true},
+      setAttribute(){},
+      scrollIntoView(opt){focused.push({name:className,scroll:opt})},
+      focus(){focused.push({name:className,focus:true})}
+    };
+  }
+  const topic=node('docencia-tarjeta-tema');
+  const sub=node('docencia-tarjeta-subunidad');
+  const unit=node('docencia-tarjeta-unidad');
+  const section=node('docencia-section');
+  const index={
+    '.docencia-tarjeta-unidad[data-codigo-docencia="DOC100"]':unit,
+    '.docencia-tarjeta-subunidad[data-codigo-docencia="DOC120"]':sub,
+    '.docencia-tarjeta-tema[data-codigo-docencia="DOC12B"]':topic
+  };
+  const contenido={
+    querySelectorAll:()=>[],
+    querySelector(selector){return index[selector] || null}
+  };
+  const document={getElementById(id) {
+    return id==='catalogoDirectorioUnidades'?section:id==='catalogoUnidadesContenido'?contenido:null;
+  }};
+  const fn=runInNewContext(app.slice(inicio,fin)+
+    '\n({abrirProgramaDocencia})',{document,console}).abrirProgramaDocencia;
+  fn('DOC12B');
+  assert.equal(unit.open,true);
+  assert.equal(sub.open,true);
+  assert.equal(topic.classList.contains('docencia-enfoque'),true);
+  assert.equal(focused.at(-1).name,'docencia-tarjeta-tema');
+  assert.equal(focused.at(-1).focus,true);
+});
+
+test('presentación Docencia usa mosaicos y no lista plana',()=>{
+  const rendered=directory.construirDirectorioUnidadesDocencia(unidades,trabajos);
+  assert.match(rendered,/class="docencia-grid-subunidades"/);
+  assert.match(rendered,/class="docencia-grid-temas"/);
+  assert.match(rendered,/class="docencia-tarjeta-tema disponible"/);
+  assert.match(rendered,/class="docencia-tarjeta-tema pendiente"/);
+  assert.doesNotMatch(rendered,/<ul|<li/);
+  assert.match(html,/id="catalogoUnidadesTitulo">Docencia · Unidades y temas/);
+  assert.match(css,/#seccionCatalogoTrabajos \.docencia-grid-subunidades/);
+  assert.match(css,/#seccionCatalogoTrabajos \.docencia-tarjeta-tema/);
 });
