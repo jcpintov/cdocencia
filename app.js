@@ -968,7 +968,6 @@ async function renderizarCatalogoTrabajos() {
             <span class="grid-card-orden">Trabajo N° ${m.numero_orden}</span>
             <span>📅 ${fechaCreacion}</span>
           </div>
-          ${bloqueUnidad}
           <div class="grid-card-cuerpo">
             <img class="grid-card-icono" src="imgs/iconos/${obtenerIconoTrabajo(m.titulo)}.webp" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">
             <div class="grid-card-textos">
@@ -976,6 +975,7 @@ async function renderizarCatalogoTrabajos() {
               <p class="grid-card-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara de Docencia"}</p>
             </div>
           </div>
+          ${bloqueUnidad}
         </div>
         <div class="grid-card-footer">
           ${badgeHtml}
