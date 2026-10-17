@@ -161,7 +161,7 @@
   function prepararMenus(){
     if (typeof window.matchMedia !== 'function') return;
     const media=window.matchMedia('(max-width: 640px)');
-    const menus=[...document.querySelectorAll('#seccionBienvenida .portal-menu, #seccionCatalogoTrabajos .portal-menu, #seccionDocenciaInstitucional .portal-menu')];
+    const menus=[...document.querySelectorAll('#seccionBienvenida .portal-menu, #seccionCatalogoTrabajos .portal-menu, #seccionContenidoDocente .portal-menu, #seccionDocenciaInstitucional .portal-menu')];
     const selectorTrabajos=document.getElementById('selectorTrabajosUsuario');
     function ajustarMenus(){
       menus.forEach(menu=>{menu.open=!media.matches;});
