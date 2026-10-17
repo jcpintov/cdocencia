@@ -194,3 +194,11 @@
 - Disposición vigente de las tarjetas de «Trabajos de la Cámara» cotejada contra el código: metadatos, imagen/título/autor, **bajo ellos** Unidad/Subunidad/Códigos y pie original con avance/Ir. Se mantienen imágenes, colores y la ruta de códigos hacia Docencia. No se ha hecho rediseño de tarjetas.
 - Se agregó `tests/encabezado-workspace-usuario.test.mjs` con cinco controles para encabezado, normalización del nombre, ausencia de identidad en login/Superadmin, limpieza en logout y orden de los elementos de tarjeta. PR #20: https://github.com/jcpintov/cdocencia/pull/20. CI https://github.com/jcpintov/cdocencia/actions/runs/39054858160 — SUCCESS.
 - Sin cambios SQL, RLS, roles, fuentes documentales, preguntas ni avances. Pendiente revisión visual en sesión ordinaria autenticada.
+
+
+### Publicación pendiente — encabezado Workspace (2026-10-17)
+- PR #20 fusionado: `658c1a7b57dae1d61ed8d6c83f1c2870435727eb`. GitHub CI del merge: https://github.com/jcpintov/cdocencia/actions/runs/39054949843 **SUCCESS**. Código fuente y cinco pruebas de encabezado conservadas.
+- Personalización solo para users: cabecera `DOCENCIA MASÓNICA DE TERCER GRADO — WORKSPACE DEL Q.·.H.·. [Nombre]`; campo perfil autenticado de Supabase, `textContent`, sin duplicar tratamiento, se oculta durante login, logout y sesión de Superadmin.
+- Confirmación editorial posterior: el ejemplo de tarjeta fijaba **orden**, no paleta. Las tarjetas mantienen los colores e imágenes originales, y la Unidad, Subunidad y Código enlazado siguen **debajo del título y el autor**. Test automatizado confirma el orden.
+- **Bloqueo real de producción:** intento explícito Vercel `create_deployment` para el commit `658c1a7...` devolvió `HTTP 402 api-deployments-free-per-day` (100 despliegues gratuitos en 24 h, `Retry-After: 86400`). No se cambió plan ni facturación. No se encontró CLI local de Vercel como alternativa. Último alias de producción verificado `cmaestros.ofl.cl` servía SHA `ea414f3bbe4b212686ad461e9e85f84a97c9243a` (anterior al PR #20), `READY`.
+- **Acción futura imprescindible:** cuando se libere la cuota, verificar/publicar versión de main que incluya PR #20, comprobar `READY`, alias, CI y sesión user en desktop/móvil. No afirmar que Workspace está actualmente visible en producción.
