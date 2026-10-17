@@ -152,3 +152,13 @@
 - Tests `tests/unidades-docencia.test.mjs` ampliados para comprobar presentación de tarjetas, mosaicos, navegación al tema y prevención de vínculos falsos. Workflow PR: https://github.com/jcpintov/cdocencia/actions/runs/39047384112 — SUCCESS.
 - El mock visual entregado en el chat es una referencia conceptual, **no es una captura fiel de producción** y cualquier código asociado a un trabajo en él es ilustrativo. La UI productiva conserva los estilos actuales de las tarjetas.
 - Estado previo al PR: Vercel producción aún usaba `801f07cd`; catálogo oficial de 112 entradas staged `activo=false` hasta poder desplegar. Revisar estado de cuota/producción antes de activar catálogo mediante `sql/20261017_activar_catalogo_oficial_tras_deploy.sql`.
+
+
+## Publicación efectiva de Docencia en tarjetas y catálogo oficial — 2026-10-17
+- PR #18 integrado al branch `main`, commit `24ea2bbcd45c0e55128f15da5ada5815a68a3f04`. GitHub CI: https://github.com/jcpintov/cdocencia/actions/runs/39047472234, `SUCCESS`.
+- Vercel producción `dpl_AX8UCnwtFPLgtBZBjGf3Vo81wBf7`: `READY`; alias verificado `cmaestros.ofl.cl` apuntando a SHA `24ea2bbc...`, sin error de alias. Límite de despliegues anterior ya no impide esta versión.
+- Supabase: ejecutado el script versionado `sql/20261017_activar_catalogo_oficial_tras_deploy.sql` tras verificar el SHA y alias de producción. Recuentos SQL posteriores: **112 activos de 112**, con **2 unidades, 17 subunidades y 93 temas**.
+- UI de tarjetas users conserva marco, icono, número/fecha, título/autor y pie de progreso/entrada. Entre autor y pie muestra clasificación **UNIDAD → SUBUNIDAD → CÓDIGO**; el código es botón hacia el directorio de Docencia, con apertura automática de unidad/subunidad y foco en el tema.
+- Directorio Docencia al final de Trabajos: tarjetas plegables de unidades, subunidades y temas, en grillas responsivas; un tema con trabajo tiene enlace, dos o más muestran tarjetas individuales; los no publicados no fingen disponibilidad. La captura mock generada en el chat es exclusivamente ilustrativa y NO fija asignaciones concretas.
+- Integridad verificada: seis trabajos activos, seis PDF originales presentes y seis cuestionarios de ocho preguntas completos. **0 trabajos clasificados** a esta fecha: faltan las vinculaciones explícitas `modulos.unidad_codigo`. En consecuencia, la clasificación todavía no aparece en las seis tarjetas y el programa no ofrecerá enlaces de trabajo hasta asignar esos códigos.
+- Monitoreo Vercel: ninguna excepción de ejecución registrada en la hora consultada. Pendiente QA visual autenticada en escritorio y móvil.
