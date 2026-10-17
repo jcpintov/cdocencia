@@ -8,18 +8,19 @@ const script=readFileSync(new URL('../ui-v2.js',import.meta.url),'utf8');
 const css=readFileSync(new URL('../ui-v2.css',import.meta.url),'utf8');
 const portalMenus=[...html.matchAll(/<aside class="portal-nav"[^>]*>[\s\S]*?<\/aside>/g)].map(m=>m[0]);
 
-test('inicio, catálogo y Este Espacio tienen navegación accesible equivalente',()=>{
-  assert.equal(portalMenus.length,3);
+test('inicio, trabajos, Contenido Docente y Este Espacio tienen navegación accesible equivalente',()=>{
+  assert.equal(portalMenus.length,4);
   for(const menu of portalMenus){
     assert.match(menu,/<details class="portal-menu" open>/);
     assert.match(menu,/<summary class="portal-menu-toggle">/);
     assert.match(menu,/<nav class="portal-nav-list" aria-label=/);
-    assert.equal((menu.match(/class="portal-nav-link/g)||[]).length,5);
+    assert.equal((menu.match(/class="portal-nav-link/g)||[]).length,6);
     assert.equal((menu.match(/aria-current="page"/g)||[]).length,1);
     for(const action of ['volverAInicioPortal()','irACatalogoDocencia()','abrirModalMisAvances()']){
       assert.ok(menu.includes(action));
     }
     assert.match(menu,/mostrarMuroReflexionesUsuarios\(\)/);
+    assert.match(menu,/irAContenidoDocente\(\)/);
     assert.match(menu,/cerrarSesion\(\)/);
   }
 });
@@ -47,8 +48,8 @@ test('menús móviles ajustables sin depender de desplazamiento horizontal',()=>
 });
 
 
-test('los sidebars de users usan Docencia para Maestros sin líneas institucionales',()=>{
-  assert.equal(portalMenus.length,3);
+test('los cuatro sidebars de users usan Docencia para Maestros sin líneas institucionales',()=>{
+  assert.equal(portalMenus.length,4);
   for (const menu of portalMenus) {
     assert.match(menu,/<span>DOCENCIA PARA MAESTROS<\/span>/);
     assert.doesNotMatch(menu,/<span>CÁMARA DE DOCENCIA<\/span>/);
@@ -58,9 +59,9 @@ test('los sidebars de users usan Docencia para Maestros sin líneas instituciona
   }
 });
 
-test('tres menús users siguen exactamente el orden y títulos aprobados',()=>{
-  const esperados=['Inicio','Mis avances','Trabajos de la Cámara','Foro Docente','Este Espacio'];
-  assert.equal(portalMenus.length,3);
+test('cuatro menús users siguen exactamente el orden y títulos aprobados',()=>{
+  const esperados=['Inicio','Mis avances','Trabajos de la Cámara','Muro Docente','Contenido Docente','Este Espacio'];
+  assert.equal(portalMenus.length,4);
   for (const menu of portalMenus) {
     const titulos=[...menu.matchAll(/<span class="portal-nav-text">([^<]+)<\/span>/g)].map(m=>m[1]);
     assert.deepEqual(titulos,esperados);
@@ -90,4 +91,19 @@ test('superadmin usa los mismos iconos tipográficos sin alterar botones',()=>{
   assert.match(sidebar,/Supabase Dashboard/);
   assert.match(css,/#seccionAdmin \.admin-side-btn \.portal-nav-glyph/);
   assert.match(css,/#seccionAdmin \.admin-side-btn\.active \.portal-nav-glyph/);
+});
+
+
+test('programa y trabajos usan paneles independientes y navegación coherente',()=>{
+  const trabajos=html.slice(html.indexOf('id="seccionCatalogoTrabajos"'),html.indexOf('id="seccionContenidoDocente"'));
+  const contenido=html.slice(html.indexOf('id="seccionContenidoDocente"'),html.indexOf('id="seccionDocenciaInstitucional"'));
+  assert.match(trabajos,/id="gridTrabajosBienvenida"/);
+  assert.doesNotMatch(trabajos,/id="catalogoDirectorioUnidades"/);
+  assert.match(contenido,/id="catalogoDirectorioUnidades"/);
+  assert.match(contenido,/id="catalogoUnidadesContenido"/);
+  assert.match(contenido,/aria-current="page" onclick="irAContenidoDocente\(\)"/);
+  assert.match(script,/#seccionContenidoDocente \\.portal-menu/);
+  assert.match(app,/void irAContenidoDocente\(boton\.dataset\.codigoDocencia\)/);
+  assert.match(app,/renderizarCatalogoTrabajos\('contenido'\)/);
+  assert.match(app,/vista === 'contenido' \? 'seccionContenidoDocente' : 'seccionCatalogoTrabajos'/);
 });
