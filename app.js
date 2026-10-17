@@ -2795,11 +2795,33 @@ async function cargarUnidadesEditorTrabajo(codigoActual, moduloId) {
     return;
   }
 
+  // Presentación agrupada para navegar 112 entradas sin una lista plana.
+  // Las cabeceras se distinguen visualmente y siguen disponibles para
+  // clasificaciones que abarquen una unidad o subunidad completa.
+  let grupo = null;
   for (const unidad of unidades) {
-    const opcion = document.createElement('option');
-    opcion.value = unidad.codigo;
-    opcion.textContent = unidad.detalle;
-    selector.appendChild(opcion);
+    const tipo = tipoUnidadDocencia(unidad.codigo);
+    if (tipo === 'unidad') {
+      grupo = null;
+      const encabezado = document.createElement('option');
+      encabezado.value = unidad.codigo;
+      encabezado.textContent = unidad.codigo + ' — ' + unidad.detalle;
+      encabezado.className = 'unidad-opcion-principal';
+      selector.appendChild(encabezado);
+    } else if (tipo === 'subunidad') {
+      grupo = document.createElement('optgroup');
+      grupo.label = unidad.codigo + ' — ' + unidad.detalle;
+      selector.appendChild(grupo);
+      const opcion = document.createElement('option');
+      opcion.value = unidad.codigo;
+      opcion.textContent = 'SUBUNIDAD COMPLETA — ' + unidad.detalle;
+      grupo.appendChild(opcion);
+    } else {
+      const opcion = document.createElement('option');
+      opcion.value = unidad.codigo;
+      opcion.textContent = unidad.codigo + ' — ' + unidad.detalle;
+      (grupo || selector).appendChild(opcion);
+    }
   }
 
   // Conservar códigos de unidades archivadas sin permitir pérdida silenciosa.
