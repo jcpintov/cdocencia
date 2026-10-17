@@ -2691,6 +2691,63 @@ async function cargarGestionTrabajosAdmin() {
   });
 }
 
+async function cargarUnidadesEditorTrabajo(codigoActual, moduloId) {
+  const selector = document.getElementById('editModUnidadDetalle');
+  const estado = document.getElementById('editModUnidadEstado');
+  const codigo = document.getElementById('editModUnidadCodigo');
+  if (!selector || !codigo || !estado) return;
+
+  selector.dataset.cargado = 'false';
+  selector.disabled = true;
+  codigo.value = codigoActual || '';
+  estado.textContent = 'Consultando unidades disponibles…';
+
+  const unidades = await consultarUnidadesDocencia();
+  // Evita que una consulta demorada sobrescriba un trabajo abierto después.
+  if (moduloAuditando?.id !== moduloId) return;
+  selector.replaceChildren();
+
+  const vacio = document.createElement('option');
+  vacio.value = '';
+  vacio.textContent = 'Sin unidad asignada';
+  selector.appendChild(vacio);
+
+  if (unidades === null) {
+    estado.textContent = 'No se pudo consultar el catálogo. La unidad anterior no cambiará al guardar.';
+    return;
+  }
+
+  for (const unidad of unidades) {
+    const opcion = document.createElement('option');
+    opcion.value = unidad.codigo;
+    opcion.textContent = unidad.detalle;
+    selector.appendChild(opcion);
+  }
+
+  // Conservar códigos de unidades archivadas sin permitir pérdida silenciosa.
+  if (codigoActual && !unidades.some(unidad => unidad.codigo === codigoActual)) {
+    const anterior = document.createElement('option');
+    anterior.value = codigoActual;
+    anterior.textContent = codigoActual + ' — unidad previamente asignada';
+    selector.appendChild(anterior);
+  }
+
+  selector.value = codigoActual || '';
+  selector.disabled = unidades.length === 0 && !codigoActual;
+  selector.dataset.cargado = 'true';
+  actualizarCodigoUnidadEditor();
+
+  estado.textContent = unidades.length
+    ? 'El código se completa automáticamente al elegir el detalle de la unidad.'
+    : 'Aún no se han cargado las unidades oficiales. Se conservará la clasificación anterior.';
+}
+
+function actualizarCodigoUnidadEditor() {
+  const selector = document.getElementById('editModUnidadDetalle');
+  const codigo = document.getElementById('editModUnidadCodigo');
+  if (selector && codigo) codigo.value = selector.value || '';
+}
+
 function abrirAuditoriaModulo(moduloId) {
   moduloAuditando = listaModulos.find(m => m.id === moduloId);
   if (!moduloAuditando) return;
@@ -2702,6 +2759,7 @@ function abrirAuditoriaModulo(moduloId) {
 
   renderizarEditorPreguntasAuditoria();
   document.getElementById('modalAuditoriaModulo').classList.remove('hidden');
+  void cargarUnidadesEditorTrabajo(moduloAuditando.unidad_codigo || '', moduloAuditando.id);
 }
 
 function renderizarEditorPreguntasAuditoria() {
@@ -2806,14 +2864,21 @@ async function guardarEdicionModuloAdmin() {
   // La vista conserva los saltos finales: no usar .trim() para guardar.
   campoTexto.value = nuevoTexto;
 
+  const cambios = {
+    numero_orden: nuevoOrden,
+    titulo: nuevoTitulo,
+    autor: nuevoAutor,
+    contenido_trazado: nuevoTexto
+  };
+  const selectorUnidad = document.getElementById('editModUnidadDetalle');
+  // Si el catálogo aún está cargando o falló, se conserva el vínculo previo.
+  if (selectorUnidad?.dataset.cargado === 'true') {
+    cambios.unidad_codigo = selectorUnidad.value || null;
+  }
+
   const { error } = await sbApp
     .from('modulos')
-    .update({
-      numero_orden: nuevoOrden,
-      titulo: nuevoTitulo,
-      autor: nuevoAutor,
-      contenido_trazado: nuevoTexto
-    })
+    .update(cambios)
     .eq('id', moduloAuditando.id);
 
   if (error) {
@@ -2823,7 +2888,10 @@ async function guardarEdicionModuloAdmin() {
     moduloAuditando.autor = nuevoAutor;
     moduloAuditando.numero_orden = nuevoOrden;
     moduloAuditando.contenido_trazado = nuevoTexto;
-    alert("Título, encabezado y texto guardados exitosamente.");
+    if (Object.hasOwn(cambios, 'unidad_codigo')) {
+      moduloAuditando.unidad_codigo = cambios.unidad_codigo;
+    }
+    alert("Encabezado, texto y clasificación guardados exitosamente.");
     await cargarDatosAdmin();
     cargarGestionTrabajosAdmin();
   }
