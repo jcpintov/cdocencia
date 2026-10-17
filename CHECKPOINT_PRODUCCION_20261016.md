@@ -74,3 +74,14 @@
 - Validación: CI del PR https://github.com/jcpintov/cdocencia/actions/runs/38979760578 SUCCESS y del merge https://github.com/jcpintov/cdocencia/actions/runs/38979796178 SUCCESS.
 - Comprobación adicional en GitHub: dos listas de cinco entradas correctas y ningún `portal-nav-intro` en el HTML.
 - La comprobación visual manual tras ingreso con Dummy sigue disponible para contrastar tamaño, espaciados y iconografía en navegadores reales.
+
+
+## «Este Espacio» — mejora de experiencia de usuarios (2026-10-16)
+- PR #11 integrado en main, código `b27fa21267e4ebb9a6100986df71a77492683cca`. Fuente: `index.html`, `app.js`, `ui-v2.css`, `ui-v2.js`.
+- La antigua vista de bloques simples se reemplaza por una página editorial con introducción, tres pasos (lectura, cuestionario, reflexión), navegación hacia Trabajos/Mis avances, índice de fundamentos y presentación legible en escritorio/móvil.
+- El sidebar users permanece visible en «Este Espacio», con el mismo menú aprobado de cinco entradas, «Este Espacio» como sección activa; menú móvil plegable mediante `ui-v2.js`.
+- Se conserva la fuente documental del Superadmin `config_segura.clave='doctrina_docencia_maestros'`, así como los valores locales de respaldo; no se han reescrito contenidos ni modificado permisos, SQL, roles, Auth o cuentas.
+- El índice de apartados se genera al leer los bloques vigentes; cada sección es navegable con teclado, los textos se asignan mediante `textContent` y se admite fallback cuando no hay configuración.
+- Se agregaron pruebas `tests/este-espacio.test.mjs` con ejecución de la función mediante DOM simulado (estructura, editor dinámico, fallback, tratamiento de texto), y se amplió la prueba previa a los tres sidebars.
+- CI previo al merge: https://github.com/jcpintov/cdocencia/actions/runs/38992054326 — SUCCESS.
+- Falta constatar manualmente la estética en navegadores autenticados, especialmente la lectura en móvil. No se ha modificado la configuración del entorno ni el padrón de 26 usuarios.
