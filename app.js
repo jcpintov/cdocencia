@@ -821,28 +821,65 @@ async function obtenerDoctrinaBD() {
 }
 
 async function mostrarDocenciaParaMaestros() {
-  document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
-  document.getElementById('seccionDocencia').classList.add('hidden');
-  document.getElementById('seccionMuroUsuarios').classList.add('hidden');
+  ['seccionBienvenida', 'seccionCatalogoTrabajos', 'seccionDocencia', 'seccionMuroUsuarios']
+    .forEach(id => document.getElementById(id)?.classList.add('hidden'));
+
+  const seccion = document.getElementById('seccionDocenciaInstitucional');
   const cont = document.getElementById('contenidoInstitucionalDocencia');
-  cont.innerHTML = "<p class='td-loading'>Consultando fundamentos doctrinales...</p>";
-  document.getElementById('seccionDocenciaInstitucional').classList.remove('hidden');
+  const indice = document.getElementById('espacioIndice');
+  if (!seccion || !cont || !indice) return;
 
-  const bloques = await obtenerDoctrinaBD();
-  cont.innerHTML = "";
+  seccion.classList.remove('hidden');
+  cont.innerHTML = "<p class='td-loading'>Consultando contenidos…</p>";
+  indice.innerHTML = "<p>Preparando índice…</p>";
 
-  bloques.forEach(b => {
-    const card = document.createElement('div');
-    card.className = 'institucional-bloque';
-    const title = document.createElement('h2');
-    title.textContent = String(b.titulo || '');
-    const subtitle = document.createElement('h3');
+  // Los textos siguen siendo los bloques configurados por el Superadmin.
+  // Solo cambia la presentación y se genera el índice con títulos reales.
+  const respuesta = await obtenerDoctrinaBD();
+  const bloques = Array.isArray(respuesta)
+    ? respuesta.filter(b => b && typeof b === 'object' && !Array.isArray(b))
+    : [];
+  const visibles = bloques.length ? bloques : DOCTRINA_DEFAULT;
+  cont.replaceChildren();
+  indice.replaceChildren();
+
+  visibles.forEach((b, i) => {
+    const id = 'espacio-bloque-' + (i + 1);
+    const titulo = String(b.titulo || 'Fundamento ' + (i + 1));
+    const card = document.createElement('section');
+    card.id = id;
+    card.className = 'institucional-bloque espacio-bloque';
+    card.tabIndex = -1;
+    card.setAttribute('aria-labelledby', id + '-titulo');
+
+    const numero = document.createElement('span');
+    numero.className = 'espacio-bloque-numero';
+    numero.textContent = String(i + 1).padStart(2, '0');
+    numero.setAttribute('aria-hidden', 'true');
+
+    const title = document.createElement('h3');
+    title.id = id + '-titulo';
+    title.textContent = titulo;
+    const subtitle = document.createElement('h4');
     subtitle.textContent = String(b.subtitulo || '');
     const paragraph = document.createElement('p');
-    paragraph.style.whiteSpace = 'pre-line';
+    paragraph.className = 'espacio-bloque-texto';
     paragraph.textContent = String(b.texto || '');
-    card.append(title, subtitle, paragraph);
+    card.append(numero, title);
+    if (subtitle.textContent.trim()) card.appendChild(subtitle);
+    card.appendChild(paragraph);
     cont.appendChild(card);
+
+    const enlace = document.createElement('button');
+    enlace.type = 'button';
+    enlace.className = 'espacio-indice-link';
+    enlace.textContent = titulo;
+    enlace.setAttribute('aria-label', 'Ir a ' + titulo);
+    enlace.addEventListener('click', () => {
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      card.focus({ preventScroll: true });
+    });
+    indice.appendChild(enlace);
   });
 }
 

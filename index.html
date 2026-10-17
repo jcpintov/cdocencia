@@ -315,17 +315,93 @@
   </main></div>
 
   <!-- PANTALLA 4: INSTITUCIONAL "DOCENCIA PARA MAESTROS" -->
-  <main id="seccionDocenciaInstitucional" class="bienvenida-container hidden">
-    <div class="card card-trazado institucional-wrapper">
-      <div class="institucional-top-bar">
-        <button class="btn-secondary" onclick="volverACatalogo()">⬅ Volver a Trabajos</button>
-        <div class="insignia-centro-wrapper" style="margin: 0;">
-          <img src="https://cmaestros.ofl.cl/imgs/escuadra.png" class="img-escuadra-discreta" alt="Escuadra">
+  <div id="seccionDocenciaInstitucional" class="espacio-pagina hidden">
+    <aside class="portal-nav" aria-label="Menú del usuario">
+      
+      <details class="portal-menu" open>
+        <summary class="portal-menu-toggle"><span>Menú de navegación</span><span class="portal-menu-chevron" aria-hidden="true">⌄</span></summary>
+        <nav class="portal-nav-list" aria-label="Secciones de la Cámara">
+          <button class="portal-nav-link" type="button" onclick="volverAInicioPortal()"><span class="portal-nav-glyph" aria-hidden="true">⌂</span><span class="portal-nav-text">Inicio</span></button>
+          <button class="portal-nav-link" type="button" onclick="abrirModalMisAvances()"><span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="portal-nav-text">Mis avances</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia()"><span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="portal-nav-text">Trabajos de la Cámara</span></button>
+          <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarMuroReflexionesUsuarios())"><span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="portal-nav-text">Foro Docente</span></button>
+          <button class="portal-nav-link active" type="button" aria-current="page" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
+        </nav>
+      </details>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
+    </aside>
+    <main class="espacio-main" aria-labelledby="espacioTitulo">
+      <div class="espacio-content-wrap">
+        <div class="espacio-breadcrumb">
+          <button type="button" onclick="volverAInicioPortal()">← Volver al inicio</button>
+          <span>Orientación docente</span>
+        </div>
+        <header class="espacio-hero">
+          <div class="espacio-hero-copy">
+            <p class="espacio-eyebrow">CÁMARA DE MAESTROS · ESPACIO DE FORMACIÓN</p>
+            <h1 id="espacioTitulo">Este Espacio</h1>
+            <p class="espacio-hero-texto">Un lugar para estudiar con profundidad, compartir reflexiones y llevar el aprendizaje a nuestra conducta cotidiana.</p>
+            <div class="espacio-hero-acciones">
+              <button type="button" class="espacio-btn-primario" onclick="irACatalogoDocencia()">Explorar trabajos <span aria-hidden="true">→</span></button>
+              <button type="button" class="espacio-btn-secundario" onclick="abrirModalMisAvances()">Consultar mis avances</button>
+            </div>
+          </div>
+          <div class="espacio-hero-sello" aria-hidden="true"><img src="imgs/logo_ofl.png" alt="" loading="lazy"></div>
+        </header>
+
+        <section class="espacio-recorrido" aria-labelledby="espacioRecorridoTitulo">
+          <div class="espacio-encabezado-seccion">
+            <p class="espacio-eyebrow">CÓMO PARTICIPAR</p>
+            <h2 id="espacioRecorridoTitulo">Un camino de estudio en tres etapas</h2>
+            <p>Cada trabajo propone un proceso de lectura, comprensión y reflexión personal.</p>
+          </div>
+          <div class="espacio-pasos">
+            <div class="espacio-paso">
+              <span class="espacio-paso-numero" aria-hidden="true">01</span>
+              <h3>Leer y comprender</h3>
+              <p>Examine el trazado con atención y confirme su lectura.</p>
+            </div>
+            <div class="espacio-paso">
+              <span class="espacio-paso-numero" aria-hidden="true">02</span>
+              <h3>Profundizar</h3>
+              <p>Responda las ocho preguntas del cuestionario formativo.</p>
+            </div>
+            <div class="espacio-paso">
+              <span class="espacio-paso-numero" aria-hidden="true">03</span>
+              <h3>Reflexionar y compartir</h3>
+              <p>Registre su reflexión y, una vez completado un trabajo, participe en el Foro Docente.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="espacio-fundamentos" aria-labelledby="espacioFundamentosTitulo">
+          <aside class="espacio-indice">
+            <div class="espacio-indice-interior">
+              <p class="espacio-eyebrow">GUÍA DE LECTURA</p>
+              <h2>En esta sección</h2>
+              <nav id="espacioIndice" aria-label="Índice de fundamentos docentes">
+                <p>Consultando contenidos…</p>
+              </nav>
+            </div>
+          </aside>
+          <div class="espacio-documento">
+            <div class="espacio-encabezado-seccion espacio-fundamentos-encabezado">
+              <p class="espacio-eyebrow">FUNDAMENTOS INSTITUCIONALES</p>
+              <h2 id="espacioFundamentosTitulo">Propósito y sentido de la docencia</h2>
+              <p>Conozca los principios y la metodología que orientan este espacio de formación.</p>
+            </div>
+            <div id="contenidoInstitucionalDocencia" class="institucional-body" aria-live="polite">
+              <p class="td-loading">Consultando contenidos…</p>
+            </div>
+          </div>
+        </section>
+        <div class="espacio-cierre">
+          <div><strong>La formación continúa con cada trabajo.</strong><p>Regrese al catálogo y elija el tema que desea estudiar.</p></div>
+          <button type="button" class="espacio-btn-primario" onclick="irACatalogoDocencia()">Ir a los trabajos <span aria-hidden="true">→</span></button>
         </div>
       </div>
-      <div id="contenidoInstitucionalDocencia" class="institucional-body"></div>
-    </div>
-  </main>
+    </main>
+  </div>
 
   <!-- PANTALLA 5: MURO DE REFLEXIONES DE USUARIOS -->
   <main id="seccionMuroUsuarios" class="bienvenida-container hidden">

@@ -8,8 +8,8 @@ const script=readFileSync(new URL('../ui-v2.js',import.meta.url),'utf8');
 const css=readFileSync(new URL('../ui-v2.css',import.meta.url),'utf8');
 const portalMenus=[...html.matchAll(/<aside class="portal-nav"[^>]*>[\s\S]*?<\/aside>/g)].map(m=>m[0]);
 
-test('inicio y catálogo tienen navegación accesible equivalente',()=>{
-  assert.equal(portalMenus.length,2);
+test('inicio, catálogo y Este Espacio tienen navegación accesible equivalente',()=>{
+  assert.equal(portalMenus.length,3);
   for(const menu of portalMenus){
     assert.match(menu,/<details class="portal-menu" open>/);
     assert.match(menu,/<summary class="portal-menu-toggle">/);
@@ -47,8 +47,8 @@ test('menús móviles ajustables sin depender de desplazamiento horizontal',()=>
 });
 
 
-test('pie del sidebar usa Docencia para Maestros sin líneas institucionales',()=>{
-  assert.equal(portalMenus.length,2);
+test('los sidebars de users usan Docencia para Maestros sin líneas institucionales',()=>{
+  assert.equal(portalMenus.length,3);
   for (const menu of portalMenus) {
     assert.match(menu,/<span>DOCENCIA PARA MAESTROS<\/span>/);
     assert.doesNotMatch(menu,/<span>CÁMARA DE DOCENCIA<\/span>/);
@@ -58,9 +58,9 @@ test('pie del sidebar usa Docencia para Maestros sin líneas institucionales',()
   }
 });
 
-test('ambos menús users siguen exactamente el orden y títulos aprobados',()=>{
+test('tres menús users siguen exactamente el orden y títulos aprobados',()=>{
   const esperados=['Inicio','Mis avances','Trabajos de la Cámara','Foro Docente','Este Espacio'];
-  assert.equal(portalMenus.length,2);
+  assert.equal(portalMenus.length,3);
   for (const menu of portalMenus) {
     const titulos=[...menu.matchAll(/<span class="portal-nav-text">([^<]+)<\/span>/g)].map(m=>m[1]);
     assert.deepEqual(titulos,esperados);

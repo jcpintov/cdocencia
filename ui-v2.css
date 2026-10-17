@@ -368,3 +368,435 @@ body.theme-nocturno #seccionDocencia .sidebar-trabajo-actual{color:#bfccd7}
   outline:3px solid #f1d294;
   outline-offset:2px;
 }
+
+
+/* Este Espacio — orientación editorial, navegación constante y lectura accesible. */
+#seccionDocenciaInstitucional.espacio-pagina {
+  display:grid;
+  grid-template-columns:clamp(225px,19vw,260px) minmax(0,1fr);
+  align-items:stretch;
+  flex:1;
+  width:100%;
+  min-height:calc(100dvh - 77px);
+  background:var(--bg-color);
+}
+#seccionDocenciaInstitucional.espacio-pagina.hidden {display:none!important}
+#seccionDocenciaInstitucional .portal-nav {
+  position:sticky;
+  top:0;
+  align-self:start;
+  height:calc(100dvh - 77px);
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  padding:clamp(16px,2vh,24px) 12px 18px;
+  background:linear-gradient(170deg,#0a2339 0%,#102d46 65%,#0b2136 100%);
+  color:#f3f5f7;
+  font-family:var(--font-ui,Arial,sans-serif);
+}
+#seccionDocenciaInstitucional .portal-menu{flex:1;min-width:0}
+#seccionDocenciaInstitucional .portal-menu-toggle{display:none}
+#seccionDocenciaInstitucional .portal-nav-list{display:grid;gap:5px}
+#seccionDocenciaInstitucional .portal-nav-link {
+  display:flex;
+  align-items:center;
+  gap:11px;
+  width:100%;
+  min-height:52px;
+  padding:11px 12px;
+  border:1px solid transparent;
+  border-left:3px solid transparent;
+  border-radius:10px;
+  background:transparent;
+  color:#f3f5f7;
+  text-align:left;
+  font:600 1.01rem/1.38 var(--font-ui,Arial,sans-serif);
+  cursor:pointer;
+}
+#seccionDocenciaInstitucional .portal-nav-glyph{
+  flex:0 0 23px;
+  color:#e9c48b;
+  font:500 1.35rem/1 var(--font-ui,Arial,sans-serif);
+  text-align:center;
+}
+#seccionDocenciaInstitucional .portal-nav-text{min-width:0;overflow-wrap:break-word}
+#seccionDocenciaInstitucional .portal-nav-link:hover{background:#28475f;border-color:#59758d}
+#seccionDocenciaInstitucional .portal-nav-link.active{
+  color:#fff;
+  background:#355169;
+  border-color:#526b7b;
+  border-left-color:#eac48c;
+}
+#seccionDocenciaInstitucional .portal-nav-footer {
+  display:grid;
+  gap:7px;
+  text-align:center;
+  border-top:1px solid rgba(229,236,242,.18);
+  padding:14px 10px 0;
+  color:#e4e9ee;
+  font-size:.82rem;
+}
+#seccionDocenciaInstitucional .portal-nav-footer img{
+  display:block;
+  width:auto;
+  max-width:88px;
+  max-height:84px;
+  margin:0 auto;
+  object-fit:contain;
+}
+#seccionDocenciaInstitucional .portal-nav-footer button{
+  min-height:46px;
+  margin-top:5px;
+  padding:10px;
+  border:1px solid #7b91a7;
+  border-radius:9px;
+  background:transparent;
+  color:#fff;
+  font:600 .94rem/1.35 var(--font-ui,Arial,sans-serif);
+  cursor:pointer;
+}
+#seccionDocenciaInstitucional .portal-nav-footer button:hover{background:#28475f}
+#seccionDocenciaInstitucional .espacio-main{
+  min-width:0;
+  padding:clamp(16px,3vw,42px);
+  font-family:var(--font-ui,Arial,sans-serif);
+  line-height:1.55;
+}
+#seccionDocenciaInstitucional .espacio-content-wrap{
+  width:100%;
+  max-width:1210px;
+  margin:0 auto;
+}
+#seccionDocenciaInstitucional .espacio-breadcrumb {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:20px;
+  color:var(--text-muted);
+  font:500 .89rem/1.4 var(--font-ui,Arial,sans-serif);
+}
+#seccionDocenciaInstitucional .espacio-breadcrumb button{
+  padding:8px 0;
+  background:transparent;
+  color:var(--accent-gold-dark);
+  border:0;
+  font:600 .95rem/1.45 var(--font-ui,Arial,sans-serif);
+  cursor:pointer;
+}
+#seccionDocenciaInstitucional .espacio-breadcrumb button:hover{text-decoration:underline}
+#seccionDocenciaInstitucional .espacio-hero {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 165px;
+  align-items:center;
+  gap:24px;
+  padding:clamp(26px,3.2vw,48px);
+  border:1px solid #35546c;
+  border-radius:18px;
+  background:linear-gradient(120deg,#0b2943,#153b56 70%,#25475b);
+  color:#fff;
+  box-shadow:0 18px 40px rgba(12,35,54,.14);
+  font-family:var(--font-ui,Arial,sans-serif);
+}
+#seccionDocenciaInstitucional .espacio-eyebrow {
+  color:var(--accent-gold-dark);
+  font:700 .74rem/1.5 var(--font-ui,Arial,sans-serif);
+  letter-spacing:.095em;
+  text-transform:uppercase;
+}
+#seccionDocenciaInstitucional .espacio-hero .espacio-eyebrow{color:#f0d09c}
+#seccionDocenciaInstitucional .espacio-hero h1{
+  margin:12px 0 16px;
+  color:#fff;
+  font:600 clamp(2.15rem,3.3vw,3.2rem)/1.14 var(--font-reading,Georgia,serif);
+  letter-spacing:-.035em;
+}
+#seccionDocenciaInstitucional .espacio-hero-texto{
+  max-width:58ch;
+  color:#e5edf3;
+  font:400 clamp(1rem,1.3vw,1.15rem)/1.65 var(--font-reading,Georgia,serif);
+}
+#seccionDocenciaInstitucional .espacio-hero-sello{
+  width:165px;
+  height:165px;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(236,199,141,.28);
+  border-radius:50%;
+  background:rgba(255,255,255,.045);
+}
+#seccionDocenciaInstitucional .espacio-hero-sello img {
+  display:block;
+  width:108px;
+  max-height:130px;
+  object-fit:contain;
+  opacity:.95;
+}
+#seccionDocenciaInstitucional .espacio-hero-acciones{
+  display:flex;
+  flex-wrap:wrap;
+  gap:11px;
+  margin-top:26px;
+}
+#seccionDocenciaInstitucional .espacio-btn-primario,
+#seccionDocenciaInstitucional .espacio-btn-secundario{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  min-height:48px;
+  padding:11px 18px;
+  border-radius:10px;
+  cursor:pointer;
+  text-align:center;
+  font:700 .94rem/1.4 var(--font-ui,Arial,sans-serif);
+}
+#seccionDocenciaInstitucional .espacio-btn-primario{
+  color:#172537;
+  border:1px solid #e1c18c;
+  background:#eac994;
+}
+#seccionDocenciaInstitucional .espacio-btn-primario:hover{background:#f6deb5}
+#seccionDocenciaInstitucional .espacio-btn-secundario{
+  border:1px solid #94aabc;
+  color:#fff;
+  background:rgba(255,255,255,.07);
+}
+#seccionDocenciaInstitucional .espacio-btn-secundario:hover{background:#294f68}
+#seccionDocenciaInstitucional .espacio-recorrido{margin:36px 0 40px}
+#seccionDocenciaInstitucional .espacio-encabezado-seccion h2{
+  margin:7px 0 9px;
+  color:var(--text-main);
+  font:600 clamp(1.45rem,2.1vw,2rem)/1.25 var(--font-reading,Georgia,serif);
+}
+#seccionDocenciaInstitucional .espacio-encabezado-seccion > p:last-child{
+  max-width:72ch;
+  font-size:.98rem;
+  color:var(--text-muted);
+  line-height:1.55;
+}
+#seccionDocenciaInstitucional .espacio-pasos{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:14px;
+  margin-top:21px;
+}
+#seccionDocenciaInstitucional .espacio-paso{
+  min-width:0;
+  padding:22px 20px 24px;
+  background:var(--card-bg);
+  border:1px solid var(--border-color);
+  border-radius:13px;
+  box-shadow:0 4px 16px rgba(17,34,51,.035);
+}
+#seccionDocenciaInstitucional .espacio-paso-numero{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:41px;
+  height:39px;
+  padding:4px 9px;
+  color:var(--accent-gold-dark);
+  background:var(--gold-light);
+  border-radius:8px;
+  font:700 1rem/1 var(--font-ui,Arial,sans-serif);
+}
+#seccionDocenciaInstitucional .espacio-paso h3{
+  margin:17px 0 8px;
+  font:700 1.08rem/1.35 var(--font-ui,Arial,sans-serif);
+  color:var(--text-main);
+}
+#seccionDocenciaInstitucional .espacio-paso p{
+  color:var(--text-muted);
+  font:.97rem/1.63 var(--font-ui,Arial,sans-serif);
+}
+#seccionDocenciaInstitucional .espacio-fundamentos{
+  display:grid;
+  grid-template-columns:minmax(175px,235px) minmax(0,1fr);
+  gap:21px;
+  align-items:start;
+}
+#seccionDocenciaInstitucional .espacio-indice{
+  position:sticky;
+  top:22px;
+  min-width:0;
+}
+#seccionDocenciaInstitucional .espacio-indice-interior,
+#seccionDocenciaInstitucional .espacio-documento{
+  border:1px solid var(--border-color);
+  border-radius:13px;
+  background:var(--card-bg);
+  box-shadow:0 4px 16px rgba(17,34,51,.035);
+}
+#seccionDocenciaInstitucional .espacio-indice-interior{padding:22px 15px}
+#seccionDocenciaInstitucional .espacio-indice h2{
+  margin:8px 0 17px;
+  font:700 1.12rem/1.25 var(--font-ui,Arial,sans-serif);
+  color:var(--text-main);
+}
+#seccionDocenciaInstitucional #espacioIndice{display:grid;gap:5px}
+#seccionDocenciaInstitucional #espacioIndice > p{font-size:.9rem;color:var(--text-muted)}
+#seccionDocenciaInstitucional .espacio-indice-link{
+  display:block;
+  width:100%;
+  min-height:44px;
+  padding:11px 10px;
+  background:transparent;
+  border:0;
+  border-left:3px solid transparent;
+  border-radius:6px;
+  text-align:left;
+  cursor:pointer;
+  color:var(--text-main);
+  font:600 .86rem/1.42 var(--font-ui,Arial,sans-serif);
+  overflow-wrap:break-word;
+}
+#seccionDocenciaInstitucional .espacio-indice-link:hover,
+#seccionDocenciaInstitucional .espacio-indice-link:focus-visible{
+  color:var(--accent-gold-dark);
+  background:var(--gold-light);
+  border-left-color:var(--accent-gold);
+}
+#seccionDocenciaInstitucional .espacio-documento{min-width:0;padding:clamp(20px,2.8vw,38px)}
+#seccionDocenciaInstitucional .espacio-fundamentos-encabezado{
+  padding-bottom:22px;
+  border-bottom:1px solid var(--border-color);
+  margin-bottom:16px;
+}
+#seccionDocenciaInstitucional .institucional-body{
+  font-family:var(--font-reading,Georgia,serif);
+  line-height:1.75;
+}
+#seccionDocenciaInstitucional .espacio-bloque{
+  position:relative;
+  padding:27px 0 29px;
+  margin:0;
+  border-bottom:1px solid var(--border-color);
+  scroll-margin-top:22px;
+}
+#seccionDocenciaInstitucional .espacio-bloque:last-child{border-bottom:0;padding-bottom:0}
+#seccionDocenciaInstitucional .espacio-bloque:focus{outline:none}
+#seccionDocenciaInstitucional .espacio-bloque:focus-visible{outline:3px solid var(--accent-gold);outline-offset:4px}
+#seccionDocenciaInstitucional .espacio-bloque-numero{
+  display:block;
+  color:var(--accent-gold-dark);
+  font:700 .83rem/1.5 var(--font-ui,Arial,sans-serif);
+  letter-spacing:.075em;
+}
+#seccionDocenciaInstitucional .espacio-bloque h3{
+  color:var(--text-main);
+  margin:5px 0 9px;
+  font:600 clamp(1.22rem,1.8vw,1.52rem)/1.35 var(--font-reading,Georgia,serif);
+}
+#seccionDocenciaInstitucional .espacio-bloque h4{
+  color:var(--accent-gold-dark);
+  margin:0 0 13px;
+  font:700 .99rem/1.5 var(--font-ui,Arial,sans-serif);
+}
+#seccionDocenciaInstitucional .espacio-bloque-texto{
+  white-space:pre-line;
+  color:var(--text-main);
+  font:400 1.04rem/1.85 var(--font-reading,Georgia,serif);
+  overflow-wrap:break-word;
+}
+#seccionDocenciaInstitucional .espacio-cierre{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:16px;
+  margin-top:25px;
+  padding:23px clamp(18px,2vw,29px);
+  border:1px solid var(--border-color);
+  border-radius:12px;
+  background:var(--gold-light);
+}
+#seccionDocenciaInstitucional .espacio-cierre strong{
+  color:var(--text-main);
+  font:700 1rem/1.4 var(--font-ui,Arial,sans-serif);
+}
+#seccionDocenciaInstitucional .espacio-cierre p{
+  margin-top:5px;
+  color:var(--text-muted);
+  font:.93rem/1.5 var(--font-ui,Arial,sans-serif);
+}
+#seccionDocenciaInstitucional button:focus-visible,
+#seccionDocenciaInstitucional summary:focus-visible{
+  outline:3px solid #c39a4e;
+  outline-offset:3px;
+}
+@media(max-width:1100px){
+  #seccionDocenciaInstitucional .espacio-hero{grid-template-columns:minmax(0,1fr) 110px}
+  #seccionDocenciaInstitucional .espacio-hero-sello{width:110px;height:110px}
+  #seccionDocenciaInstitucional .espacio-hero-sello img{width:75px;max-height:95px}
+  #seccionDocenciaInstitucional .espacio-fundamentos{grid-template-columns:minmax(155px,195px) minmax(0,1fr);gap:14px}
+}
+@media(max-width:900px){
+  #seccionDocenciaInstitucional .espacio-main{padding:20px}
+  #seccionDocenciaInstitucional .espacio-hero{grid-template-columns:1fr}
+  #seccionDocenciaInstitucional .espacio-hero-sello{display:none}
+  #seccionDocenciaInstitucional .espacio-pasos{grid-template-columns:1fr;gap:10px}
+  #seccionDocenciaInstitucional .espacio-paso{padding:16px 20px}
+  #seccionDocenciaInstitucional .espacio-paso h3{margin-top:8px}
+  #seccionDocenciaInstitucional .espacio-fundamentos{grid-template-columns:1fr}
+  #seccionDocenciaInstitucional .espacio-indice{position:static}
+  #seccionDocenciaInstitucional .espacio-indice-interior{padding:17px}
+  #seccionDocenciaInstitucional #espacioIndice{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:640px){
+  #seccionDocenciaInstitucional.espacio-pagina{display:flex;flex-direction:column;min-height:calc(100dvh - 70px)}
+  #seccionDocenciaInstitucional .portal-nav{
+    position:static;
+    height:auto;
+    overflow:visible;
+    flex:0 0 auto;
+    display:block;
+    padding:8px 12px;
+  }
+  #seccionDocenciaInstitucional .portal-nav-footer{display:none}
+  #seccionDocenciaInstitucional .portal-menu-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    min-height:46px;
+    padding:10px 14px;
+    border:1px solid #58718b;
+    border-radius:10px;
+    background:#17354d;
+    color:#fff;
+    font:600 1rem/1.3 var(--font-ui,Arial,sans-serif);
+    list-style:none;
+    cursor:pointer;
+  }
+  #seccionDocenciaInstitucional .portal-menu-toggle::-webkit-details-marker{display:none}
+  #seccionDocenciaInstitucional .portal-menu[open] .portal-menu-chevron{transform:rotate(180deg)}
+  #seccionDocenciaInstitucional .portal-nav-list{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:7px;
+    padding:10px 0 4px;
+  }
+  #seccionDocenciaInstitucional .portal-nav-link{
+    min-height:53px;
+    padding:9px;
+    border:1px solid #405c76;
+    border-radius:9px;
+    font-size:.96rem;
+    line-height:1.3;
+  }
+  #seccionDocenciaInstitucional .portal-nav-glyph{flex-basis:20px;font-size:1.2rem}
+  #seccionDocenciaInstitucional .espacio-main{padding:16px 12px 28px}
+  #seccionDocenciaInstitucional .espacio-hero{padding:28px 21px;border-radius:13px}
+  #seccionDocenciaInstitucional .espacio-hero h1{font-size:2.1rem}
+  #seccionDocenciaInstitucional .espacio-hero-acciones{flex-direction:column}
+  #seccionDocenciaInstitucional .espacio-hero-acciones > button{width:100%}
+  #seccionDocenciaInstitucional .espacio-recorrido{margin:28px 0}
+  #seccionDocenciaInstitucional #espacioIndice{grid-template-columns:1fr}
+  #seccionDocenciaInstitucional .espacio-documento{padding:19px 17px}
+  #seccionDocenciaInstitucional .espacio-bloque-texto{font-size:1rem}
+  #seccionDocenciaInstitucional .espacio-cierre .espacio-btn-primario{width:100%}
+}
+@media(prefers-reduced-motion:reduce){
+  #seccionDocenciaInstitucional .espacio-hero,
+  #seccionDocenciaInstitucional .espacio-indice-link{scroll-behavior:auto;transition:none}
+}
