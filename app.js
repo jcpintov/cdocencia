@@ -703,9 +703,31 @@ function escaparTextoHTMLDocencia(valor) {
 // de que el cuarto carácter del código sea numérico.
 function tipoUnidadDocencia(codigo) {
   const valor = String(codigo || '').toUpperCase();
-  if (/^DOC[0-9]00$/.test(valor)) return 'unidad';
-  if (/^DOC[0-9][0-9A-Z]0$/.test(valor)) return 'subunidad';
+  if (!/^(INCI|INST|FILO|ETIC)(000|[0-9]{2}[0-9A-Z]{2})$/.test(valor)) return 'desconocido';
+  if (valor.endsWith('000') && valor.length === 7) return 'area';
+  if (/^(INCI|INST|FILO|ETIC)[0-9]{2}00$/.test(valor)) return 'unidad';
+  if (/^(INCI|INST|FILO|ETIC)[0-9]{2}[0-9A-Z]0$/.test(valor)) return 'subunidad';
   return 'tema';
+}
+function padresCodigoDocencia(codigo) {
+  const c=String(codigo||'').toUpperCase(),nivel=tipoUnidadDocencia(c);
+  if(nivel==='desconocido')return null;
+  return {
+    area:c.slice(0,4)+'000',
+    unidad:nivel==='area'?null:c.slice(0,6)+'00',
+    subunidad:nivel==='area'||nivel==='unidad'?null:c.slice(0,7)+'0'
+  };
+}
+async function consultarObjetivosDocencia() {
+  const {data,error}=await sbApp.from('areas_docencia')
+    .select('codigo,objetivo_general,paginas_fuente');
+  if(error){console.warn('No se pudieron leer objetivos docentes:',error.message);return [];}
+  return Array.isArray(data)?data:[];
+}
+async function consultarVinculosDocencia() {
+  const {data,error}=await sbApp.from('modulos_temas').select('modulo_id,codigo');
+  if(error){console.warn('No se pudieron leer asociaciones temáticas:',error.message);return [];}
+  return Array.isArray(data)?data:[];
 }
 
 // Catálogo visual: unidades, subunidades y fichas de temas (no una lista plana).
@@ -838,39 +860,34 @@ function renderizarDirectorioUnidadesDocencia(unidades, trabajos) {
 
 // La tarjeta muestra el código del trabajo, la unidad matriz y su subunidad.
 // La relación se resuelve por los códigos oficiales: DOC12B -> DOC100 / DOC120.
-function construirClasificacionTarjetaDocencia(codigoAsignado, unidadesPorCodigo) {
-  const codigo = String(codigoAsignado || '').trim().toUpperCase();
-  if (!codigo || !unidadesPorCodigo.has(codigo)) return '';
+// Tarjeta existente: título y autor, seguido de Unidad / Subunidad / Códigos clicables.
+function construirClasificacionTarjetaDocencia(codigosAsignados, unidadesPorCodigo) {
+  const lista=Array.isArray(codigosAsignados)?codigosAsignados:[codigosAsignados];
+  const codigos=[...new Set(lista.map(c=>String(c||'').trim().toUpperCase()))]
+    .filter(c=>tipoUnidadDocencia(c)!=='desconocido' && unidadesPorCodigo.has(c));
+  if(!codigos.length)return '';
+  const padres=padresCodigoDocencia(codigos[0]);
+  const unidad=padres?.unidad?unidadesPorCodigo.get(padres.unidad):null;
+  const subunidad=padres?.subunidad?unidadesPorCodigo.get(padres.subunidad):null;
+  if(!unidad || !subunidad)return '';
 
-  const tipo = tipoUnidadDocencia(codigo);
-  const codigoUnidad = codigo.slice(0, 4) + '00';
-  const codigoSubunidad = tipo === 'unidad' ? null : codigo.slice(0, 5) + '0';
-  const unidad = unidadesPorCodigo.get(codigoUnidad);
-  const subunidad = codigoSubunidad ? unidadesPorCodigo.get(codigoSubunidad) : null;
-
-  // No deducir un nombre de unidad si el catálogo está incompleto.
-  if (!unidad || (codigoSubunidad && !subunidad)) return '';
-
-  const escapar = escaparTextoHTMLDocencia;
-  return '<div class="grid-card-unidad">' +
-    '<div class="grid-card-linea-unidad">' +
-      '<strong class="grid-card-unidad-nombre">' + escapar(unidad.detalle) + '</strong>' +
-    '</div>' +
-    (subunidad
-      ? '<div class="grid-card-subunidad">' + escapar(subunidad.detalle) + '</div>'
-      : '') +
+  // Cada código apunta al tema propio: un trazado puede abarcar 2 o más temas.
+  const escapar=escaparTextoHTMLDocencia;
+  const enlaces=codigos.map(c=>
     '<button type="button" class="grid-card-codigo-enlace" data-codigo-docencia="' +
-      escapar(codigo) + '" aria-label="Ver código ' + escapar(codigo) +
-      ' en el programa de Docencia">' + escapar(codigo) +
-      '<span aria-hidden="true"> ↗</span></button>' +
-  '</div>';
+    escapar(c) + '" aria-label="Ver tema '+escapar(c)+' en Docencia">'+
+    escapar(c)+' <span aria-hidden="true">↗</span></button>').join('');
+  return '<div class="grid-card-unidad">'+
+    '<div class="grid-card-linea-unidad"><strong class="grid-card-unidad-nombre">'+escapar(unidad.detalle)+'</strong></div>'+
+    '<div class="grid-card-subunidad">'+escapar(subunidad.detalle)+'</div>'+
+    '<div class="grid-card-codigos">'+enlaces+'</div></div>';
 }
 
 // El código de la tarjeta conduce al programa docente, no al lector del trabajo.
 // Abre su unidad/subunidad, enfoca la tarjeta del tema y desplaza a esa sección.
 function abrirProgramaDocencia(codigoSolicitado) {
   const codigo = String(codigoSolicitado || '').trim().toUpperCase();
-  if (!/^DOC[0-9A-Z]{3}$/.test(codigo)) return;
+  if(tipoUnidadDocencia(codigo)==='desconocido')return;
 
   const seccion = document.getElementById('catalogoDirectorioUnidades');
   const contenido = document.getElementById('catalogoUnidadesContenido');
@@ -879,19 +896,23 @@ function abrirProgramaDocencia(codigoSolicitado) {
   contenido.querySelectorAll('.docencia-enfoque')
     .forEach(elemento => elemento.classList.remove('docencia-enfoque'));
 
-  const codigoUnidad = codigo.slice(0,4) + '00';
-  const codigoSub = tipoUnidadDocencia(codigo) === 'unidad'
-    ? null : codigo.slice(0,5) + '0';
+  const padres=padresCodigoDocencia(codigo);
+  const codigoUnidad=padres.unidad;
+  const codigoSub=padres.subunidad;
+  const codigoArea=padres.area;
   const buscar = (clase,valor) =>
     contenido.querySelector('.' + clase + '[data-codigo-docencia="' + valor + '"]');
-  const unidad = buscar('docencia-tarjeta-unidad',codigoUnidad);
+  const area = buscar('docencia-tarjeta-area',codigoArea);
+  if(area)area.open=true;
+  const unidad = codigoUnidad?buscar('docencia-tarjeta-unidad',codigoUnidad):null;
   const subunidad = codigoSub ? buscar('docencia-tarjeta-subunidad',codigoSub) : null;
   if (unidad) unidad.open = true;
   if (subunidad) subunidad.open = true;
 
   const destino = buscar('docencia-tarjeta-tema',codigo) ||
     buscar('docencia-tarjeta-subunidad',codigo) ||
-    buscar('docencia-tarjeta-unidad',codigo) || unidad || seccion;
+    buscar('docencia-tarjeta-unidad',codigo) ||
+    buscar('docencia-tarjeta-area',codigo) || unidad || area || seccion;
   destino.classList.add('docencia-enfoque');
   if (!destino.hasAttribute('tabindex')) destino.setAttribute('tabindex','-1');
   destino.scrollIntoView({behavior:'smooth',block:'center'});
@@ -910,6 +931,14 @@ async function renderizarCatalogoTrabajos() {
   await refrescarProgresosUsuario();
   const unidades = await consultarUnidadesDocencia();
   const unidadesPorCodigo = new Map((unidades || []).map(u => [u.codigo, u]));
+  const [objetivos,relaciones]=await Promise.all([
+    consultarObjetivosDocencia(),consultarVinculosDocencia()
+  ]);
+  const codigosPorModulo=new Map();
+  for(const r of relaciones){
+    if(!codigosPorModulo.has(r.modulo_id))codigosPorModulo.set(r.modulo_id,[]);
+    codigosPorModulo.get(r.modulo_id).push(r.codigo);
+  }
 
   const btnMuroHome = document.getElementById('btnMuroHome');
   const tieneCompletados = Object.values(misProgresos).some(p => p && p.completado === true);
@@ -955,7 +984,9 @@ async function renderizarCatalogoTrabajos() {
       badgeHtml = `<span class="badge-estado" style="background:#FEF3C7;color:#92400E;">En Curso</span>`;
     }
 
-    const bloqueUnidad = construirClasificacionTarjetaDocencia(m.unidad_codigo, unidadesPorCodigo);
+    const codigos=[m.unidad_codigo,...(codigosPorModulo.get(m.id)||[])].filter(Boolean);
+    m.codigos_tematicos=[...new Set(codigos)];
+    const bloqueUnidad = construirClasificacionTarjetaDocencia(m.codigos_tematicos, unidadesPorCodigo);
 
     const fechaCreacion = m.creado_en 
       ? new Date(m.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -987,7 +1018,7 @@ async function renderizarCatalogoTrabajos() {
     `;
   });
 
-  renderizarDirectorioUnidadesDocencia(unidades, listaModulos);
+  renderizarDirectorioUnidadesDocencia(unidades, listaModulos, objetivos);
   document.getElementById('seccionCatalogoTrabajos').classList.remove('hidden');
 }
 
