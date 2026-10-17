@@ -312,6 +312,15 @@
     </div>
 
     <div id="gridTrabajosBienvenida" class="trabajos-grid"></div>
+    <section id="catalogoDirectorioUnidades" class="catalogo-directorio-unidades hidden" aria-labelledby="catalogoUnidadesTitulo">
+      <header class="catalogo-directorio-encabezado">
+        <div><p class="catalogo-directorio-etiqueta">PROGRAMA DE DOCENCIA</p>
+          <h2 id="catalogoUnidadesTitulo">Unidades y temas de estudio</h2>
+          <p>Consulte las unidades del programa. Los temas disponibles aparecen destacados y permiten abrir sus trabajos.</p>
+        </div>
+      </header>
+      <div id="catalogoUnidadesContenido" class="catalogo-directorio-lista"></div>
+    </section>
   </main></div>
 
   <!-- PANTALLA 4: INSTITUCIONAL "DOCENCIA PARA MAESTROS" -->
@@ -956,6 +965,23 @@
           <input type="text" id="editModAutor" name="editModAutor">
         </div>
       </div>
+      <fieldset class="admin-unidad-edicion" aria-describedby="editModUnidadEstado">
+        <legend>Unidad</legend>
+        <div class="admin-unidad-campos">
+          <div class="form-group">
+            <label for="editModUnidadDetalle">Detalle:</label>
+            <select id="editModUnidadDetalle" name="editModUnidadDetalle" onchange="actualizarCodigoUnidadEditor()" disabled>
+              <option value="">Cargando unidades…</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="editModUnidadCodigo">Código:</label>
+            <input id="editModUnidadCodigo" name="editModUnidadCodigo" type="text" readonly aria-readonly="true" placeholder="Automático">
+          </div>
+        </div>
+        <p id="editModUnidadEstado" class="admin-unidad-estado" role="status" aria-live="polite">El catálogo de unidades se cargará desde la base de Docencia.</p>
+      </fieldset>
+
 
       <div class="form-group">
         <label for="editModTexto">Contenido del Trazado:</label>

@@ -676,6 +676,89 @@ function obtenerIconoTrabajo(titulo) {
   return 'libro_abierto';
 }
 
+// Catálogo de unidades facilitado por Superadmin.
+// No asigna códigos por parecido de títulos: solo usa vínculos guardados en DB.
+async function consultarUnidadesDocencia() {
+  const { data, error } = await sbApp
+    .from('unidades_docencia')
+    .select('codigo,detalle,orden,activo')
+    .eq('activo', true)
+    .order('orden', { ascending: true })
+    .order('codigo', { ascending: true });
+  if (error) {
+    console.warn('No se pudo leer el catálogo de unidades:', error.message);
+    return null;
+  }
+  return Array.isArray(data) ? data : [];
+}
+
+function escaparTextoHTMLDocencia(valor) {
+  return String(valor ?? '').replace(/[&<>"']/g, caracter => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[caracter]);
+}
+
+// Este directorio recorre los códigos de los trabajos activos; nunca inventa
+// vínculos para los temas todavía no cargados.
+function construirDirectorioUnidadesDocencia(unidades, trabajos) {
+  if (!Array.isArray(unidades) || unidades.length === 0) return '';
+  const porCodigo = new Map();
+  for (const trabajo of trabajos) {
+    if (!trabajo.unidad_codigo) continue;
+    const codigo = String(trabajo.unidad_codigo);
+    if (!porCodigo.has(codigo)) porCodigo.set(codigo, []);
+    porCodigo.get(codigo).push(trabajo);
+  }
+  return unidades.map(unidad => {
+    const codigo = String(unidad.codigo);
+    const temas = (porCodigo.get(codigo) || [])
+      .slice().sort((a, b) => Number(a.numero_orden) - Number(b.numero_orden));
+    const cabecera = '<div class="catalogo-unidad-cabecera">' +
+      '<span class="catalogo-unidad-codigo">' + escaparTextoHTMLDocencia(codigo) + '</span>' +
+      '<h3>' + escaparTextoHTMLDocencia(unidad.detalle) + '</h3>' +
+      '<span class="catalogo-unidad-total">' + temas.length +
+      (temas.length === 1 ? ' trabajo' : ' trabajos') + '</span></div>';
+    const tarjetaTema = trabajo =>
+      '<button type="button" class="catalogo-unidad-tema" data-modulo-id="' +
+      escaparTextoHTMLDocencia(trabajo.id) + '">' +
+      '<span class="catalogo-unidad-tema-orden">Trabajo N.º ' +
+      escaparTextoHTMLDocencia(trabajo.numero_orden) + '</span>' +
+      '<strong>' + escaparTextoHTMLDocencia(trabajo.titulo) + '</strong>' +
+      '<span class="catalogo-unidad-tema-abrir" aria-hidden="true">↗</span>' +
+      '</button>';
+    let contenido;
+    if (temas.length === 0) {
+      contenido = '<p class="catalogo-unidad-vacia">Todavía no hay trabajos publicados en esta unidad.</p>';
+    } else if (temas.length === 1) {
+      contenido = '<div class="catalogo-unidad-una">' + tarjetaTema(temas[0]) + '</div>';
+    } else {
+      contenido = '<div class="catalogo-unidad-varias" aria-label="Trabajos de la unidad">' +
+        temas.map(tarjetaTema).join('') + '</div>';
+    }
+    return '<article class="catalogo-unidad-item">' + cabecera + contenido + '</article>';
+  }).join('');
+}
+
+function renderizarDirectorioUnidadesDocencia(unidades, trabajos) {
+  const seccion = document.getElementById('catalogoDirectorioUnidades');
+  const contenedor = document.getElementById('catalogoUnidadesContenido');
+  if (!seccion || !contenedor) return;
+  if (!Array.isArray(unidades) || !unidades.length) {
+    contenedor.replaceChildren();
+    seccion.classList.add('hidden');
+    return;
+  }
+  contenedor.innerHTML = construirDirectorioUnidadesDocencia(unidades, trabajos);
+  seccion.classList.remove('hidden');
+  // Delegación: solo IDs ya cargados en el catálogo permiten abrir un trabajo.
+  contenedor.onclick = evento => {
+    const boton = evento.target.closest('button[data-modulo-id]');
+    if (!boton || !contenedor.contains(boton)) return;
+    const id = boton.dataset.moduloId;
+    if (listaModulos.some(mod => mod.id === id)) entrarADocenciaConModulo(id);
+  };
+}
+
 async function renderizarCatalogoTrabajos() {
   const { data: dataModulos, error } = await sbApp
     .from('modulos')
@@ -686,6 +769,8 @@ async function renderizarCatalogoTrabajos() {
   if (error || !dataModulos) return;
 
   await refrescarProgresosUsuario();
+  const unidades = await consultarUnidadesDocencia();
+  const unidadesPorCodigo = new Map((unidades || []).map(u => [u.codigo, u]));
 
   const btnMuroHome = document.getElementById('btnMuroHome');
   const tieneCompletados = Object.values(misProgresos).some(p => p && p.completado === true);
@@ -726,6 +811,14 @@ async function renderizarCatalogoTrabajos() {
       badgeHtml = `<span class="badge-estado" style="background:#FEF3C7;color:#92400E;">En Curso</span>`;
     }
 
+    const unidad = unidadesPorCodigo.get(m.unidad_codigo);
+    const bloqueUnidad = unidad
+      ? '<div class="grid-card-unidad"><span class="grid-card-codigo">' +
+        escaparTextoHTMLDocencia(unidad.codigo) + '</span>' +
+        '<strong class="grid-card-detalle">' +
+        escaparTextoHTMLDocencia(unidad.detalle) + '</strong></div>'
+      : '';
+
     const fechaCreacion = m.creado_en 
       ? new Date(m.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' })
       : "Consagrado";
@@ -737,6 +830,7 @@ async function renderizarCatalogoTrabajos() {
             <span class="grid-card-orden">Trabajo N° ${m.numero_orden}</span>
             <span>📅 ${fechaCreacion}</span>
           </div>
+          ${bloqueUnidad}
           <div class="grid-card-cuerpo">
             <img class="grid-card-icono" src="imgs/iconos/${obtenerIconoTrabajo(m.titulo)}.webp" alt="" loading="lazy" decoding="async" onerror="this.style.display='none'">
             <div class="grid-card-textos">
@@ -744,7 +838,6 @@ async function renderizarCatalogoTrabajos() {
               <p class="grid-card-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara de Docencia"}</p>
             </div>
           </div>
-          <p class="grid-card-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara de Docencia"}</p>
         </div>
         <div class="grid-card-footer">
           ${badgeHtml}
@@ -756,6 +849,7 @@ async function renderizarCatalogoTrabajos() {
     `;
   });
 
+  renderizarDirectorioUnidadesDocencia(unidades, listaModulos);
   document.getElementById('seccionCatalogoTrabajos').classList.remove('hidden');
 }
 
@@ -2597,6 +2691,63 @@ async function cargarGestionTrabajosAdmin() {
   });
 }
 
+async function cargarUnidadesEditorTrabajo(codigoActual, moduloId) {
+  const selector = document.getElementById('editModUnidadDetalle');
+  const estado = document.getElementById('editModUnidadEstado');
+  const codigo = document.getElementById('editModUnidadCodigo');
+  if (!selector || !codigo || !estado) return;
+
+  selector.dataset.cargado = 'false';
+  selector.disabled = true;
+  codigo.value = codigoActual || '';
+  estado.textContent = 'Consultando unidades disponibles…';
+
+  const unidades = await consultarUnidadesDocencia();
+  // Evita que una consulta demorada sobrescriba un trabajo abierto después.
+  if (moduloAuditando?.id !== moduloId) return;
+  selector.replaceChildren();
+
+  const vacio = document.createElement('option');
+  vacio.value = '';
+  vacio.textContent = 'Sin unidad asignada';
+  selector.appendChild(vacio);
+
+  if (unidades === null) {
+    estado.textContent = 'No se pudo consultar el catálogo. La unidad anterior no cambiará al guardar.';
+    return;
+  }
+
+  for (const unidad of unidades) {
+    const opcion = document.createElement('option');
+    opcion.value = unidad.codigo;
+    opcion.textContent = unidad.detalle;
+    selector.appendChild(opcion);
+  }
+
+  // Conservar códigos de unidades archivadas sin permitir pérdida silenciosa.
+  if (codigoActual && !unidades.some(unidad => unidad.codigo === codigoActual)) {
+    const anterior = document.createElement('option');
+    anterior.value = codigoActual;
+    anterior.textContent = codigoActual + ' — unidad previamente asignada';
+    selector.appendChild(anterior);
+  }
+
+  selector.value = codigoActual || '';
+  selector.disabled = unidades.length === 0 && !codigoActual;
+  selector.dataset.cargado = 'true';
+  actualizarCodigoUnidadEditor();
+
+  estado.textContent = unidades.length
+    ? 'El código se completa automáticamente al elegir el detalle de la unidad.'
+    : 'Aún no se han cargado las unidades oficiales. Se conservará la clasificación anterior.';
+}
+
+function actualizarCodigoUnidadEditor() {
+  const selector = document.getElementById('editModUnidadDetalle');
+  const codigo = document.getElementById('editModUnidadCodigo');
+  if (selector && codigo) codigo.value = selector.value || '';
+}
+
 function abrirAuditoriaModulo(moduloId) {
   moduloAuditando = listaModulos.find(m => m.id === moduloId);
   if (!moduloAuditando) return;
@@ -2608,6 +2759,7 @@ function abrirAuditoriaModulo(moduloId) {
 
   renderizarEditorPreguntasAuditoria();
   document.getElementById('modalAuditoriaModulo').classList.remove('hidden');
+  void cargarUnidadesEditorTrabajo(moduloAuditando.unidad_codigo || '', moduloAuditando.id);
 }
 
 function renderizarEditorPreguntasAuditoria() {
@@ -2712,14 +2864,21 @@ async function guardarEdicionModuloAdmin() {
   // La vista conserva los saltos finales: no usar .trim() para guardar.
   campoTexto.value = nuevoTexto;
 
+  const cambios = {
+    numero_orden: nuevoOrden,
+    titulo: nuevoTitulo,
+    autor: nuevoAutor,
+    contenido_trazado: nuevoTexto
+  };
+  const selectorUnidad = document.getElementById('editModUnidadDetalle');
+  // Si el catálogo aún está cargando o falló, se conserva el vínculo previo.
+  if (selectorUnidad?.dataset.cargado === 'true') {
+    cambios.unidad_codigo = selectorUnidad.value || null;
+  }
+
   const { error } = await sbApp
     .from('modulos')
-    .update({
-      numero_orden: nuevoOrden,
-      titulo: nuevoTitulo,
-      autor: nuevoAutor,
-      contenido_trazado: nuevoTexto
-    })
+    .update(cambios)
     .eq('id', moduloAuditando.id);
 
   if (error) {
@@ -2729,7 +2888,10 @@ async function guardarEdicionModuloAdmin() {
     moduloAuditando.autor = nuevoAutor;
     moduloAuditando.numero_orden = nuevoOrden;
     moduloAuditando.contenido_trazado = nuevoTexto;
-    alert("Título, encabezado y texto guardados exitosamente.");
+    if (Object.hasOwn(cambios, 'unidad_codigo')) {
+      moduloAuditando.unidad_codigo = cambios.unidad_codigo;
+    }
+    alert("Encabezado, texto y clasificación guardados exitosamente.");
     await cargarDatosAdmin();
     cargarGestionTrabajosAdmin();
   }
