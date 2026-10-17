@@ -173,3 +173,16 @@
 - El editor de Superadmin presenta áreas y unidades agrupadas y permite elegir únicamente temas reales; Código continúa siendo de solo lectura y autocompletado.
 - Tests `tests/unidades-docencia.test.mjs`: taxonomía 175=4+8+24+139, jerarquía alfanumérica `INCI02A0`, textos escapados, objetivos y vínculos múltiples. CI del PR #19 https://github.com/jcpintov/cdocencia/actions/runs/39052912263 SUCCESS.
 - **Orden de release obligatorio:** PR aprobado y merge → Vercel `READY` en `cmaestros.ofl.cl` con commit de release → aplicar SQL versionada → verificar 175 códigos, cuatro objetivos, seis trabajos con ocho vínculos, conservación de PDF/preguntas/progreso y estado de RLS → comprobación del frontend. Nunca aplicar la migración mientras esté sirviéndose frontend antiguo compatible solo con códigos `DOC`.
+
+
+## Release verificado — clasificación y nueva Docencia — 2026-10-17
+- PR #19 integrado a main, commit `9ef646eaa1758f9dfcd77e3685d33b3d247ae17b`. CI del merge https://github.com/jcpintov/cdocencia/actions/runs/39053024768 **SUCCESS** (41 pruebas).
+- Vercel producción `dpl_3YRFo2HQzAXxUFCvSNzjGQkDuBiA` **READY**, alias `cmaestros.ofl.cl` verificado sin error, apuntando a la revisión correcta antes de migrar Supabase.
+- Migración SQL `sql/20261017_reemplazo_programa_cuatro_areas_y_asociaciones.sql` aplicada a Supabase `pwnnpjygnviyzyyvfxnq` con nombre `programa_docencia_cuatro_areas_175_y_seis_trabajos_20261017`. Resultado: **175/175 activos**, 4 áreas, 8 unidades, 24 subunidades, 139 temas, 0 códigos `DOC` antiguos, orden 1–175.
+- Tabla `areas_docencia`: objetivos íntegros y páginas de fuente para `INCI000`, `INST000`, `FILO000`, `ETIC000`, con permiso SELECT autenticado y RLS.
+- Trabajos `modulos` siguen siendo seis; códigos principales: N.º 1 `INCI013A`; N.º 2 `INCI025E`; N.º 3 `INCI012A`; N.º 4 `INCI028C`; N.º 5 `INCI028B`; N.º 6 `INCI012B`. Tabla `modulos_temas`: ocho relaciones (trabajo 1 en `INCI013A`, `INCI013B`, `INCI013C`). No se clonó ningún trabajo.
+- Integridad SQL confirmada: seis PDF originales presentes y 8 preguntas en cada módulo, 8 relaciones, todos con código principal. Los contenidos y avances no se alteraron.
+- Prueba de acceso: simulación SQL con identidad `Dummy` (`authenticated`) verificó lectura de 4 objetivos, 175 códigos, 8 relaciones y 6 módulos mediante RLS. `anon` sin permiso SELECT de objetivos ni vínculos y clientes autenticados sin permiso INSERT en `modulos_temas`.
+- UI en el dominio: tarjetas actuales ahora muestran Unidad, Subunidad y códigos enlazables debajo del autor. Docencia presenta cuatro tarjetas de áreas con objetivos generales, seguido de la jerarquía de ocho unidades y sus 139 temas en tarjetas de estudio; solo los publicados tienen enlace. «Este Espacio» no se modificó.
+- Vercel no reportó excepciones de ejecución en la última hora consultada. **Pendiente de validación manual visual y funcional en sesión real con Dummy/Superadmin**, escritorio y móvil.
+- Nota para edición posterior: al cambiar el código principal de un trabajo con múltiples vínculos en `modulos_temas`, revisar sus vínculos adicionales; el editor actual selecciona un código principal y los múltiples vínculos se mantienen en la tabla complementaria.
