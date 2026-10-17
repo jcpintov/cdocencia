@@ -1054,3 +1054,217 @@ body.theme-nocturno #seccionDocencia .sidebar-trabajo-actual{color:#bfccd7}
   #seccionCatalogoTrabajos .catalogo-unidad-cabecera {grid-template-columns:1fr}
   #modalAuditoriaModulo .admin-unidad-campos {grid-template-columns:1fr}
 }
+
+
+/* Plan oficial de Docencia: jerarquía visible Unidad > Subunidad > Tema.
+   Conserva el orden y el texto originales del catálogo. */
+#seccionCatalogoTrabajos .catalogo-directorio-lista {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:18px;
+}
+#seccionCatalogoTrabajos .catalogo-unidad-grupo {
+  min-width:0;
+  border:1px solid #b8c9d8;
+  border-radius:13px;
+  background:#fff;
+  overflow:hidden;
+}
+#seccionCatalogoTrabajos .catalogo-unidad-titulo,
+#seccionCatalogoTrabajos .catalogo-subunidad-titulo {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto auto;
+  align-items:center;
+  gap:10px 16px;
+  min-height:65px;
+  padding:17px 19px;
+  cursor:pointer;
+  list-style:none;
+}
+#seccionCatalogoTrabajos .catalogo-unidad-titulo::-webkit-details-marker,
+#seccionCatalogoTrabajos .catalogo-subunidad-titulo::-webkit-details-marker {display:none}
+#seccionCatalogoTrabajos .catalogo-unidad-titulo {
+  background:linear-gradient(110deg,#0b2a43,#1c4661);
+  color:#fff;
+}
+#seccionCatalogoTrabajos .catalogo-unidad-titulo .catalogo-unidad-codigo{
+  grid-column:auto;
+  color:#f2cf94;
+  font-size:.87rem;
+}
+#seccionCatalogoTrabajos .catalogo-unidad-titulo > strong {
+  font:700 clamp(1.02rem,1.35vw,1.23rem)/1.42 var(--font-ui,Arial,sans-serif);
+  letter-spacing:.025em;
+  overflow-wrap:anywhere;
+}
+#seccionCatalogoTrabajos .catalogo-unidad-titulo .catalogo-unidad-total{
+  background:rgba(255,255,255,.13);
+  color:#fff;
+}
+#seccionCatalogoTrabajos .catalogo-unidad-contenido {
+  display:grid;
+  gap:11px;
+  padding:18px;
+}
+#seccionCatalogoTrabajos .catalogo-subunidad{
+  border:1px solid #d3dee7;
+  border-radius:10px;
+  background:#f9fbfc;
+  overflow:hidden;
+}
+#seccionCatalogoTrabajos .catalogo-subunidad-titulo{
+  min-height:55px;
+  padding:13px 16px;
+  background:#e8eff5;
+  color:#143955;
+  border-left:4px solid #ac8240;
+}
+#seccionCatalogoTrabajos .catalogo-subunidad-titulo > strong{
+  font:750 .99rem/1.4 var(--font-ui,Arial,sans-serif);
+  overflow-wrap:anywhere;
+}
+#seccionCatalogoTrabajos .catalogo-subunidad-codigo{
+  padding:4px 6px;
+  border:1px solid #b9ccd9;
+  background:#fff;
+  border-radius:5px;
+  color:#235171;
+  font:750 .83rem/1.3 var(--font-ui,Arial,sans-serif);
+  letter-spacing:.025em;
+}
+#seccionCatalogoTrabajos .catalogo-plegable-icono{
+  font:700 1.2rem/1 var(--font-ui,Arial,sans-serif);
+  color:inherit;
+  transition:transform .18s ease;
+}
+#seccionCatalogoTrabajos details[open] > summary .catalogo-plegable-icono{
+  transform:rotate(180deg);
+}
+#seccionCatalogoTrabajos .catalogo-subunidad-contenido{
+  padding:14px 15px 16px;
+}
+#seccionCatalogoTrabajos .catalogo-lista-temas{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  padding:0;
+  margin:0;
+  list-style:none;
+}
+#seccionCatalogoTrabajos .catalogo-tema-item{
+  min-width:0;
+  min-height:43px;
+  border-radius:8px;
+  border:1px solid #e0e7ee;
+  background:#fff;
+}
+#seccionCatalogoTrabajos .catalogo-tema-item.pendiente{
+  display:grid;
+  grid-template-columns:71px minmax(0,1fr);
+  gap:8px;
+  align-items:start;
+  padding:10px 11px;
+  color:#546a7d;
+}
+#seccionCatalogoTrabajos .catalogo-tema-codigo{
+  display:block;
+  color:#6b7887;
+  font:700 .81rem/1.43 var(--font-ui,Arial,sans-serif);
+  letter-spacing:.02em;
+  white-space:nowrap;
+}
+#seccionCatalogoTrabajos .catalogo-tema-titulo{
+  font:.91rem/1.52 var(--font-ui,Arial,sans-serif);
+  overflow-wrap:break-word;
+}
+#seccionCatalogoTrabajos .catalogo-tema-item.disponible{
+  border-color:#bad1bc;
+  background:#f4faf5;
+}
+#seccionCatalogoTrabajos .catalogo-tema-enlace{
+  display:grid;
+  grid-template-columns:71px minmax(0,1fr) 18px;
+  gap:8px;
+  width:100%;
+  min-height:43px;
+  padding:10px 11px;
+  border:0;
+  border-radius:8px;
+  text-align:left;
+  cursor:pointer;
+  color:#163b33;
+  background:transparent;
+  align-items:start;
+}
+#seccionCatalogoTrabajos .catalogo-tema-enlace strong,
+#seccionCatalogoTrabajos .catalogo-tema-varios-cabecera strong{
+  font-weight:800;
+  color:#15513b;
+}
+#seccionCatalogoTrabajos .catalogo-tema-enlace:hover{
+  background:#e3f2e7;
+  text-decoration:underline;
+}
+#seccionCatalogoTrabajos .catalogo-tema-item.disponible .catalogo-tema-codigo{
+  color:#235e40;
+}
+#seccionCatalogoTrabajos .catalogo-tema-icono{
+  color:#326747;
+  font:700 1.06rem/1.4 var(--font-ui,Arial,sans-serif);
+}
+#seccionCatalogoTrabajos .catalogo-tema-varios-cabecera{
+  display:grid;
+  grid-template-columns:71px minmax(0,1fr) auto;
+  gap:8px;
+  align-items:center;
+  padding:10px 11px;
+}
+#seccionCatalogoTrabajos .catalogo-tema-item .catalogo-unidad-varias{
+  margin:0 10px 10px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:9px;
+}
+#seccionCatalogoTrabajos .catalogo-unidad-titulo:focus-visible,
+#seccionCatalogoTrabajos .catalogo-subunidad-titulo:focus-visible,
+#seccionCatalogoTrabajos .catalogo-tema-enlace:focus-visible{
+  outline:3px solid #d3a258;
+  outline-offset:2px;
+}
+@media(max-width:1180px){
+  #seccionCatalogoTrabajos .catalogo-lista-temas{grid-template-columns:1fr}
+}
+@media(max-width:640px){
+  #seccionCatalogoTrabajos .catalogo-unidad-titulo,
+  #seccionCatalogoTrabajos .catalogo-subunidad-titulo{
+    grid-template-columns:1fr auto;
+    gap:7px;
+    padding:14px 12px;
+  }
+  #seccionCatalogoTrabajos .catalogo-unidad-titulo > strong,
+  #seccionCatalogoTrabajos .catalogo-subunidad-titulo > strong {
+    grid-column:1;
+    grid-row:2;
+  }
+  #seccionCatalogoTrabajos .catalogo-unidad-titulo .catalogo-unidad-total,
+  #seccionCatalogoTrabajos .catalogo-subunidad-titulo .catalogo-unidad-total{
+    grid-column:1;
+    grid-row:3;
+    justify-self:start;
+  }
+  #seccionCatalogoTrabajos .catalogo-plegable-icono {
+    grid-column:2;
+    grid-row:1;
+  }
+  #seccionCatalogoTrabajos .catalogo-unidad-contenido{padding:9px}
+  #seccionCatalogoTrabajos .catalogo-subunidad-contenido{padding:10px 8px}
+  #seccionCatalogoTrabajos .catalogo-tema-item.pendiente,
+  #seccionCatalogoTrabajos .catalogo-tema-enlace{
+    grid-template-columns:67px minmax(0,1fr) auto;
+    gap:6px;
+    padding:9px;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #seccionCatalogoTrabajos .catalogo-plegable-icono{transition:none}
+}
