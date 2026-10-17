@@ -41,7 +41,7 @@ const modulos=[
  {id:'m6',numero_orden:6,titulo:'SIGNIFICADO DE LA EXALTACIÓN',unidad_codigo:'INCI012B',codigos_tematicos:['INCI012B']}
 ];
 test('175 códigos únicos, cuatro áreas, 8 unidades, 24 subunidades y 139 temas',()=>{
- const x=[...sql.matchAll(/^\s*\('((?:INCI|INST|FILO|ETIC)[0-9A-Z]{3,4})','(?:''|[^'])*',(\d+),true\),?$/gm)];
+ const x=[...sql.matchAll(/^\s*\('((?:INCI|INST|FILO|ETIC)[0-9A-Z]{3,4})','(?:''|[^'])*',(\d+),true\)[,;]?$/gm)];
  assert.equal(x.length,175);
  const codes=x.map(a=>a[1]);assert.equal(new Set(codes).size,175);
  assert.deepEqual(codes.filter(c=>lib.tipoUnidadDocencia(c)==='area'),['INCI000','INST000','FILO000','ETIC000']);
