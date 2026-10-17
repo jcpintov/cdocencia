@@ -254,7 +254,31 @@ async function recuperarSesionGuardada() {
   configurarEntornoUsuario();
 }
 
+// Encabezado compartido por todas las pantallas: se identifica al Maestro,
+// pero nunca se muestra su nombre durante login o en la cuenta Superadmin.
+function limpiarNombreWorkspaceUsuario(nombre) {
+  return String(nombre || '').replace(/^\s*(?:Q[.·:\s]+H[.·:\s]+)+/iu, '')
+    .replace(/\s+/g, ' ').trim();
+}
+
+function sincronizarEncabezadoWorkspaceUsuario() {
+  const bloque = document.getElementById('encabezadoWorkspaceUsuario');
+  const campoNombre = document.getElementById('encabezadoNombreUsuario');
+  if (!bloque || !campoNombre) return;
+
+  campoNombre.textContent = '';
+  bloque.classList.add('hidden');
+
+  if (!usuarioActual || usuarioActual.es_admin) return;
+  const nombre = limpiarNombreWorkspaceUsuario(usuarioActual.nombre);
+  if (!nombre) return;
+
+  campoNombre.textContent = 'Q.·.H.·. ' + nombre;
+  bloque.classList.remove('hidden');
+}
+
 function configurarEntornoUsuario() {
+  sincronizarEncabezadoWorkspaceUsuario();
   reiniciarTemporizadorInactividad();
   document.getElementById('seccionLogin').classList.add('hidden');
   document.getElementById('btnSalir').classList.remove('hidden');
@@ -353,6 +377,7 @@ function cerrarSesion() {
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
   if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
   usuarioActual = null;
+  sincronizarEncabezadoWorkspaceUsuario();
   moduloActual = null;
   misProgresos = {};
   respuestasMarcadas = {};
