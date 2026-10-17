@@ -112,7 +112,7 @@ test('editor y base de datos preservan vinculación y seguridad',()=>{
  assert.match(app,/tipo==='area'/);
  assert.match(app,/tipo==='tema'/);
  assert.match(html,/id="editModUnidadCodigo"[^>]*readonly/);
- assert.match(css,/#seccionCatalogoTrabajos \.docencia-areas-grid/);
+ assert.match(css,/#seccionContenidoDocente \\.docencia-areas-grid/);
  assert.match(sql,/CREATE TABLE IF NOT EXISTS public\.areas_docencia/);
  assert.match(sql,/CREATE TABLE IF NOT EXISTS public\.modulos_temas/);
  assert.match(sql,/ENABLE ROW LEVEL SECURITY/);
