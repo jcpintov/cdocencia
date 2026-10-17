@@ -101,7 +101,7 @@ test('selección de unidad autocompleta código y conserva valor si falla lectur
   assert.ok(start>=0&&end>start);
   const loaded=runInNewContext(app.slice(start,end)+
     '\n({cargarUnidadesEditorTrabajo,actualizarCodigoUnidadEditor})',{
-      document,moduloAuditando:{id:'test-work'},consultarUnidadesDocencia:async()=>unidades
+      document,moduloAuditando:{id:'test-work'},tipoUnidadDocencia:directory.tipoUnidadDocencia,consultarUnidadesDocencia:async()=>unidades
     });
   await loaded.cargarUnidadesEditorTrabajo('DOC12B','test-work');
   assert.equal(controls.editModUnidadDetalle.value,'DOC12B');
@@ -113,7 +113,7 @@ test('selección de unidad autocompleta código y conserva valor si falla lectur
 
   const failed=runInNewContext(app.slice(start,end)+
     '\n({cargarUnidadesEditorTrabajo,actualizarCodigoUnidadEditor})',{
-      document,moduloAuditando:{id:'test-work'},consultarUnidadesDocencia:async()=>null
+      document,moduloAuditando:{id:'test-work'},tipoUnidadDocencia:directory.tipoUnidadDocencia,consultarUnidadesDocencia:async()=>null
     });
   await failed.cargarUnidadesEditorTrabajo('DOC12B','test-work');
   assert.equal(controls.editModUnidadDetalle.dataset.cargado,'false');
