@@ -294,6 +294,7 @@ function configurarEntornoUsuario() {
     document.getElementById('seccionDocencia').classList.add('hidden');
     document.getElementById('seccionBienvenida').classList.add('hidden');
     document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
+    document.getElementById('seccionContenidoDocente')?.classList.add('hidden');
     document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
     document.getElementById('seccionMuroUsuarios').classList.add('hidden');
     cargarDatosAdmin();
@@ -395,6 +396,7 @@ function cerrarSesion() {
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionBienvenida').classList.add('hidden');
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
+    document.getElementById('seccionContenidoDocente')?.classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   document.getElementById('seccionMuroUsuarios').classList.add('hidden');
   document.getElementById('seccionAdmin').classList.add('hidden');
@@ -662,19 +664,26 @@ async function guardarResetConToken() {
 /* ==========================================================================
    CATÁLOGO DE TRABAJOS Y ENTORNO
    ========================================================================== */
+function ocultarPantallasUsuario() {
+  ['seccionBienvenida','seccionCatalogoTrabajos','seccionContenidoDocente',
+   'seccionDocencia','seccionDocenciaInstitucional','seccionMuroUsuarios']
+    .forEach(id => document.getElementById(id)?.classList.add('hidden'));
+}
+
 function volverAInicioPortal() {
-  ['seccionCatalogoTrabajos','seccionDocencia','seccionDocenciaInstitucional','seccionMuroUsuarios'].forEach(id=>{
-    const el=document.getElementById(id);if(el)el.classList.add('hidden');
-  });
-  const inicio=document.getElementById('seccionBienvenida');
-  if(inicio)inicio.classList.remove('hidden');
+  ocultarPantallasUsuario();
+  document.getElementById('seccionBienvenida')?.classList.remove('hidden');
 }
 
 async function irACatalogoDocencia() {
-  document.getElementById('seccionBienvenida').classList.add('hidden');
-  document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
-  document.getElementById('seccionMuroUsuarios').classList.add('hidden');
-  await renderizarCatalogoTrabajos();
+  ocultarPantallasUsuario();
+  await renderizarCatalogoTrabajos('trabajos');
+}
+
+async function irAContenidoDocente(codigo = null) {
+  ocultarPantallasUsuario();
+  await renderizarCatalogoTrabajos('contenido');
+  if (codigo) abrirProgramaDocencia(codigo);
 }
 
 function obtenerIconoTrabajo(titulo) {
@@ -932,7 +941,7 @@ function abrirProgramaDocencia(codigoSolicitado) {
   destino.focus({preventScroll:true});
 }
 
-async function renderizarCatalogoTrabajos() {
+async function renderizarCatalogoTrabajos(vista = 'trabajos') {
   const { data: dataModulos, error } = await sbApp
     .from('modulos')
     .select('*')
@@ -985,7 +994,7 @@ async function renderizarCatalogoTrabajos() {
   grid.onclick = event => {
     const boton = event.target.closest('button[data-codigo-docencia]');
     if (!boton || !grid.contains(boton)) return;
-    abrirProgramaDocencia(boton.dataset.codigoDocencia);
+    void irAContenidoDocente(boton.dataset.codigoDocencia);
   };
 
   listaModulos.forEach(m => {
@@ -1032,10 +1041,12 @@ async function renderizarCatalogoTrabajos() {
   });
 
   renderizarDirectorioUnidadesDocencia(unidades, listaModulos, objetivos);
-  document.getElementById('seccionCatalogoTrabajos').classList.remove('hidden');
+  const destino = vista === 'contenido' ? 'seccionContenidoDocente' : 'seccionCatalogoTrabajos';
+  document.getElementById(destino)?.classList.remove('hidden');
 }
 
 function entrarADocenciaConModulo(idModulo) {
+  document.getElementById('seccionContenidoDocente')?.classList.add('hidden');
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   document.getElementById('seccionMuroUsuarios').classList.add('hidden');
@@ -1047,6 +1058,7 @@ function entrarADocenciaConModulo(idModulo) {
 
 function volverACatalogo() {
   if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
+  document.getElementById('seccionContenidoDocente')?.classList.add('hidden');
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   document.getElementById('seccionMuroUsuarios').classList.add('hidden');
@@ -1097,7 +1109,7 @@ async function obtenerDoctrinaBD() {
 }
 
 async function mostrarDocenciaParaMaestros() {
-  ['seccionBienvenida', 'seccionCatalogoTrabajos', 'seccionDocencia', 'seccionMuroUsuarios']
+  ['seccionBienvenida', 'seccionCatalogoTrabajos', 'seccionContenidoDocente', 'seccionDocencia', 'seccionMuroUsuarios']
     .forEach(id => document.getElementById(id)?.classList.add('hidden'));
 
   const seccion = document.getElementById('seccionDocenciaInstitucional');
@@ -1171,6 +1183,7 @@ async function mostrarMuroReflexionesUsuarios() {
   }
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
+    document.getElementById('seccionContenidoDocente')?.classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   
   const cont = document.getElementById('contenedorMuroUsuariosDirecto');

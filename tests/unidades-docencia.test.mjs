@@ -7,7 +7,7 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 const css=readFileSync(new URL('../ui-v2.css',import.meta.url),'utf8');
 const sql=readFileSync(new URL('../sql/20261017_reemplazo_programa_cuatro_areas_y_asociaciones.sql',import.meta.url),'utf8');
 const inicio=app.indexOf('async function consultarUnidadesDocencia()');
-const fin=app.indexOf('async function renderizarCatalogoTrabajos()',inicio);
+const fin=app.indexOf('async function renderizarCatalogoTrabajos(',inicio);
 assert.ok(inicio>=0 && fin>inicio);
 const code=app.slice(inicio,fin);
 const lib=runInNewContext(code+'\n({tipoUnidadDocencia,padresCodigoDocencia,construirClasificacionTarjetaDocencia,construirDirectorioUnidadesDocencia})',{console});
@@ -112,7 +112,7 @@ test('editor y base de datos preservan vinculación y seguridad',()=>{
  assert.match(app,/tipo==='area'/);
  assert.match(app,/tipo==='tema'/);
  assert.match(html,/id="editModUnidadCodigo"[^>]*readonly/);
- assert.match(css,/#seccionCatalogoTrabajos \.docencia-areas-grid/);
+ assert.match(css,/:is\(#seccionCatalogoTrabajos,#seccionContenidoDocente\) \.docencia-areas-grid/);
  assert.match(sql,/CREATE TABLE IF NOT EXISTS public\.areas_docencia/);
  assert.match(sql,/CREATE TABLE IF NOT EXISTS public\.modulos_temas/);
  assert.match(sql,/ENABLE ROW LEVEL SECURITY/);
