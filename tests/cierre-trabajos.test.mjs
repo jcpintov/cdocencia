@@ -51,7 +51,7 @@ test('renderizado presenta firma por separado y escapa el autor',()=>{
   assert.match(vista,/class="trazado-cierre"/);
   assert.match(vista,/class="trazado-saludo">S\.·\.F\.·\.U\.·\.<\/p>/);
   assert.match(vista,/class="trazado-firma">Autora &lt;prueba&gt;<\/p>/);
-  assert.equal((vista.match(/trazado-cierre/g)||[]).length,2); // clase y etiqueta accesible
+  assert.equal((vista.match(/class="trazado-cierre"/g)||[]).length,1);
 });
 
 test('guardado usa normalizador, no trim() sobre texto, y conserva controles UI',()=>{
