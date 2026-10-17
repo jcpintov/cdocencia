@@ -1268,3 +1268,43 @@ body.theme-nocturno #seccionDocencia .sidebar-trabajo-actual{color:#bfccd7}
 @media(prefers-reduced-motion:reduce){
   #seccionCatalogoTrabajos .catalogo-plegable-icono{transition:none}
 }
+
+
+/* Tarjetas de usuario: [CÓDIGO] - [UNIDAD] / [SUBUNIDAD]. */
+#seccionCatalogoTrabajos .grid-card-unidad {
+  gap:6px;
+  margin:10px 0 12px;
+  padding:11px 12px;
+  background:#edf3f8;
+  border-left:3px solid #ba914b;
+}
+#seccionCatalogoTrabajos .grid-card-linea-unidad {
+  display:block;
+  color:#123b59;
+  line-height:1.45;
+  overflow-wrap:break-word;
+}
+#seccionCatalogoTrabajos .grid-card-linea-unidad .grid-card-codigo {
+  display:inline;
+  font-weight:800;
+  color:#1f5073;
+  letter-spacing:.035em;
+  font-size:.83rem;
+}
+#seccionCatalogoTrabajos .grid-card-separador {
+  font-size:.88rem;
+  color:#506779;
+}
+#seccionCatalogoTrabajos .grid-card-unidad-nombre {
+  display:inline;
+  color:#133753;
+  font:750 .86rem/1.45 var(--font-ui,Arial,sans-serif);
+}
+#seccionCatalogoTrabajos .grid-card-subunidad {
+  display:block;
+  padding-top:6px;
+  border-top:1px solid #d4e0e8;
+  color:#476074;
+  font:650 .88rem/1.42 var(--font-ui,Arial,sans-serif);
+  overflow-wrap:break-word;
+}
