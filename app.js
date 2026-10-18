@@ -3055,7 +3055,7 @@ async function solicitarGuardadoTrabajoSuperadmin(payload) {
 async function guardarTodasPreguntasAuditoria() {
   if (!moduloAuditando) return;
 
-  const preguntas = moduloAuditando.preguntas_json?.preguntas || [];
+  const preguntas = structuredClone(moduloAuditando.preguntas_json?.preguntas || []);
   preguntas.forEach((p, idx) => {
     p.enunciado = document.getElementById(`edit_p_${idx}_enunciado`).value.trim();
     p.respuesta_correcta = document.getElementById(`edit_p_${idx}_correcta`).value;
