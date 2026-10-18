@@ -11,7 +11,6 @@ let usuarioActual = null;
 let listaModulos = [];
 let moduloActual = null;
 let misProgresos = {};
-let tamanoBase = 19;
 
 // Control de token activo de recuperación
 let tokenRecuperacionActivo = null;
@@ -98,11 +97,6 @@ function aplicarTema(tema) {
     tema = 'dia';
   }
   localStorage.setItem('camara_tema', tema);
-}
-
-function cambiarTamanoFuente(delta) {
-  tamanoBase = Math.min(Math.max(tamanoBase + delta, 16), 28);
-  document.body.style.fontSize = tamanoBase + 'px';
 }
 
 /* ==========================================================================
