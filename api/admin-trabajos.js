@@ -39,7 +39,7 @@ export default async function handler(req,res) {
     const impacto={titulo:anterior.titulo,numero_orden:anterior.numero_orden};
     for(let i=0;i<tablas.length;i++){
       const {count,error}=await admin.from(tablas[i])
-        .select('id',{count:'exact',head:true}).eq('modulo_id',id);
+        .select('*',{count:'exact',head:true}).eq('modulo_id',id);
       if(error)return respond(res,503,{error:'No fue posible calcular el impacto'});
       impacto[nombres[i]]=count||0;
     }
