@@ -1009,6 +1009,16 @@
           </div>
         </div>
         <p id="editModUnidadEstado" class="admin-unidad-estado" role="status" aria-live="polite">El catálogo de unidades se cargará desde la base de Docencia.</p>
+        <div class="admin-temas-multiples">
+          <label for="editModTemasFiltro"><strong>Temas vinculados al trabajo</strong></label>
+          <p class="admin-unidad-estado">Seleccione uno o más temas. Cada vínculo permite localizar este mismo trabajo desde Contenido Docente, sin duplicarlo.</p>
+          <input id="editModTemasFiltro" type="search" placeholder="Buscar por código o nombre del tema" oninput="filtrarTemasEditorTrabajo()" disabled>
+          <div id="editModTemasLista" class="admin-temas-lista" role="group" aria-label="Temas vinculados">
+            <p class="td-loading">Cargando temas disponibles…</p>
+          </div>
+          <p id="editModTemasEstado" role="status" aria-live="polite" class="admin-unidad-estado"></p>
+          <button id="btnGuardarVinculosTrabajo" class="btn-secondary" type="button" onclick="guardarVinculosEditorTrabajo()" disabled>Guardar vínculos temáticos</button>
+        </div>
       </fieldset>
 
 
