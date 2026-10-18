@@ -60,46 +60,6 @@ function formatearAutorMasonico(autor) {
 }
 
 /* ==========================================================================
-   LUMINOSIDAD Y TEMAS
-   ========================================================================== */
-function inicializarLuminosidad() {
-  const temaGuardado = localStorage.getItem('camara_tema') || 'dia';
-  aplicarTema(temaGuardado);
-}
-
-function alternarTemaLuminosidad() {
-  const body = document.body;
-  if (body.classList.contains('theme-nocturno')) {
-    aplicarTema('dia');
-  } else if (body.classList.contains('theme-sepia')) {
-    aplicarTema('nocturno');
-  } else {
-    aplicarTema('sepia');
-  }
-}
-
-function aplicarTema(tema) {
-  const body = document.body;
-  const btn = document.getElementById('btnTema');
-  body.classList.remove('theme-sepia', 'theme-nocturno');
-
-  if (tema === 'sepia') {
-    body.classList.add('theme-sepia');
-    btn.innerText = '📜';
-    btn.title = 'Modo Sepia (clic para Nocturno)';
-  } else if (tema === 'nocturno') {
-    body.classList.add('theme-nocturno');
-    btn.innerText = '🌙';
-    btn.title = 'Modo Nocturno (clic para Día)';
-  } else {
-    btn.innerText = '☀️';
-    btn.title = 'Modo Día (clic para Sepia)';
-    tema = 'dia';
-  }
-  localStorage.setItem('camara_tema', tema);
-}
-
-/* ==========================================================================
    VALIDACIÓN DE SEGURIDAD Y GENERADOR DE CONTRASEÑA
    ========================================================================== */
 function validarSeguridadClave(clave) {
@@ -3458,7 +3418,7 @@ async function guardarDoctrinaAdmin() {
    INICIALIZACIÓN AL CARGAR LA PÁGINA
    ========================================================================== */
 window.addEventListener('DOMContentLoaded', () => {
-  inicializarLuminosidad();
+  
   verificarTokenUrl();
   recuperarSesionGuardada();
 });

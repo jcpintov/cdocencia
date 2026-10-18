@@ -7,7 +7,7 @@ const css=readFileSync(new URL('../styles.css',import.meta.url),'utf8');
 test('A+ y A- no aparecen en el encabezado ni llaman a función eliminada',()=>{
  const cabecera=html.slice(html.indexOf('<header>'),html.indexOf('</header>'));
  assert.doesNotMatch(cabecera,/font-btn|cambiarTamanoFuente|>A\+<|>A-</);
- assert.match(cabecera,/alternarTemaLuminosidad\(\)/);
+ assert.doesNotMatch(cabecera,/alternarTemaLuminosidad|btnTema/);
  assert.match(cabecera,/cerrarSesion\(\)/);
 });
 test('función y estado de aumento de texto completamente retirados',()=>{
