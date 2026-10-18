@@ -3214,7 +3214,7 @@ async function eliminarModuloYReordenar(moduloId) {
     const resultado=await solicitarGuardadoTrabajoSuperadmin({action:'impacto',id:moduloId});
     const i=resultado.impacto;
     const advertencia='Trabajo N.º '+i.numero_orden+': '+i.titulo+
-      '\\n\\nLa eliminación es permanente e incluye '+i.avances+
+      '\n\nLa eliminación es permanente e incluye '+i.avances+
       ' registros de avance, '+i.comentarios+' comentarios y '+i.vinculos+
       ' vínculos temáticos. Los números de los demás trabajos se reorganizarán.';
     abrirModalConfirmacion('Eliminar trabajo y sus registros',advertencia,async()=>{
