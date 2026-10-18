@@ -27,12 +27,48 @@ export default async function handler(req,res) {
   const {action,id}=req.body||{};
   if(!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id||'')))
     return respond(res,422,{error:'Identificador de trabajo inválido'});
-  if(!['editar','preguntas'].includes(action))
+  if(!['editar','preguntas','impacto','eliminar','vinculos'].includes(action))
     return respond(res,422,{error:'Acción no admitida'});
   const {data:anterior,error:findError}=await admin.from('modulos')
-    .select('id,unidad_codigo').eq('id',id).maybeSingle();
+    .select('id,unidad_codigo,titulo,numero_orden').eq('id',id).maybeSingle();
   if(findError)return respond(res,503,{error:'No fue posible consultar el trabajo'});
   if(!anterior)return respond(res,404,{error:'Trabajo no encontrado'});
+  if(action==='impacto'){
+    const tablas=['progreso_maestro','comentarios_muro','modulos_temas'];
+    const nombres=['avances','comentarios','vinculos'];
+    const impacto={titulo:anterior.titulo,numero_orden:anterior.numero_orden};
+    for(let i=0;i<tablas.length;i++){
+      const {count,error}=await admin.from(tablas[i])
+        .select('id',{count:'exact',head:true}).eq('modulo_id',id);
+      if(error)return respond(res,503,{error:'No fue posible calcular el impacto'});
+      impacto[nombres[i]]=count||0;
+    }
+    return respond(res,200,{ok:true,impacto});
+  }
+  if(action==='eliminar'){
+    const confirmado=String(req.body?.confirmacion||'');
+    if(confirmado!==('ELIMINAR '+anterior.numero_orden))
+      return respond(res,422,{error:'Confirmación de eliminación inválida'});
+    const {data,error}=await admin.rpc('admin_eliminar_modulo_seguro',{p_modulo_id:id});
+    return error?respond(res,503,{error:'No se pudo completar el borrado seguro'}):
+      respond(res,200,{ok:true,restantes:data});
+  }
+  if(action==='vinculos'){
+    const codigos=req.body?.codigos;
+    const principal=req.body?.principal??null;
+    if(!Array.isArray(codigos)||codigos.length>30||
+      !codigos.every(c=>typeof c==='string'&&/^(INCI|INST|FILO|ETIC)[0-9]{2}[0-9A-Z][A-Z]$/.test(c))||
+      (principal!==null&&!codigos.includes(principal))||
+      (principal===null&&codigos.length>0)||
+      new Set(codigos).size!==codigos.length)
+      return respond(res,422,{error:'Verifique los códigos y la clasificación principal'});
+    const {data,error}=await admin.rpc('admin_configurar_temas_modulo',{
+      p_modulo_id:id,p_principal:principal,p_codigos:codigos
+    });
+    return error?respond(res,503,{error:'No fue posible guardar los vínculos temáticos'}):
+      respond(res,200,{ok:true,total:data,unidad_codigo:principal});
+  }
+
 
   if(action==='preguntas'){
     const preguntas=req.body.preguntas_json;
