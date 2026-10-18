@@ -2163,6 +2163,22 @@ async function cargarMuroReflexiones() {
 /* ==========================================================================
    MIS AVANCES E INFORME
    ========================================================================== */
+function desplazarInformeAvances(seccion) {
+  const modal = document.getElementById('modalMisAvances');
+  const contenedor = modal?.querySelector('.modal-certificado-wrapper');
+  if (!contenedor || modal.classList.contains('hidden')) return;
+  const destinos = {
+    inicio: document.getElementById('documentoInformeAvance'),
+    detalle: document.getElementById('tituloDetalleAvances'),
+    certificados: document.getElementById('seccionCertificadosDisponibles')
+  };
+  const destino = destinos[seccion];
+  if (!destino) return;
+  const offset = destino.getBoundingClientRect().top - contenedor.getBoundingClientRect().top;
+  const margen = seccion === 'inicio' ? 0 : 82;
+  contenedor.scrollTo({ top: Math.max(0, contenedor.scrollTop + offset - margen), behavior: 'smooth' });
+}
+
 async function abrirModalMisAvances(usuarioObjetivoId = null) {
   const idTarget = usuarioObjetivoId || usuarioActual.id;
   
@@ -2247,6 +2263,7 @@ async function abrirModalMisAvances(usuarioObjetivoId = null) {
 
   document.getElementById('informeCodigoVerif').innerText = `ID REGISTRO: ${usuarioData.id.slice(0, 8)}-${Date.now().toString().slice(-6)}`;
   document.getElementById('modalMisAvances').classList.remove('hidden');
+  document.querySelector('#modalMisAvances .modal-certificado-wrapper')?.scrollTo({ top: 0 });
 }
 
 function cerrarModalMisAvances() {
