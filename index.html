@@ -1045,7 +1045,12 @@
   <!-- MODAL: MIS AVANCES / INFORME CARTA -->
   <div id="modalMisAvances" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalMisAvances')">
     <div class="modal-certificado-wrapper">
-      <div class="modal-cert-actions">
+      <div class="modal-cert-actions avances-actions" aria-label="Acciones del informe de avances">
+        <nav class="avances-nav-rapida" aria-label="Navegación del informe">
+          <button type="button" class="avances-nav-btn" onclick="desplazarInformeAvances('inicio')">↑ Resumen</button>
+          <button type="button" class="avances-nav-btn" onclick="desplazarInformeAvances('detalle')">↓ Trabajos</button>
+          <button type="button" class="avances-nav-btn" onclick="desplazarInformeAvances('certificados')">↓ Certificados</button>
+        </nav>
         <button class="btn-cert-descargar" onclick="imprimirInformeAvanceNativo()">
           🖨️ Descargar / Imprimir Informe en PDF
         </button>
@@ -1092,7 +1097,7 @@
           </div>
         </div>
 
-        <h4 style="font-family: var(--font-ui); font-size: 0.95rem; color: #152433; margin: 18px 0 10px 0; text-transform: uppercase;">
+        <h4 id="tituloDetalleAvances" style="font-family: var(--font-ui); font-size: 0.95rem; color: #152433; margin: 18px 0 10px 0; text-transform: uppercase;">
           Detalle de Trabajos y Aportes
         </h4>
         <table class="informe-table">
