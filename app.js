@@ -3039,10 +3039,23 @@ function renderizarEditorPreguntasAuditoria() {
   });
 }
 
+async function solicitarGuardadoTrabajoSuperadmin(payload) {
+  const {data:{session}}=await sbApp.auth.getSession();
+  if(!session?.access_token)throw new Error('La sesión ha vencido. Inicie sesión nuevamente.');
+  const resp=await fetch('/api/admin-trabajos',{
+    method:'POST',
+    headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},
+    body:JSON.stringify(payload)
+  });
+  const data=await resp.json().catch(()=>({}));
+  if(!resp.ok||!data.ok)throw new Error(data.error||'No se pudo guardar el trabajo');
+  return data;
+}
+
 async function guardarTodasPreguntasAuditoria() {
   if (!moduloAuditando) return;
 
-  const preguntas = moduloAuditando.preguntas_json?.preguntas || [];
+  const preguntas = structuredClone(moduloAuditando.preguntas_json?.preguntas || []);
   preguntas.forEach((p, idx) => {
     p.enunciado = document.getElementById(`edit_p_${idx}_enunciado`).value.trim();
     p.respuesta_correcta = document.getElementById(`edit_p_${idx}_correcta`).value;
@@ -3058,16 +3071,12 @@ async function guardarTodasPreguntasAuditoria() {
     preguntas: preguntas
   };
 
-  const { error } = await sbApp
-    .from('modulos')
-    .update({ preguntas_json: nuevoJson })
-    .eq('id', moduloAuditando.id);
-
-  if (error) {
-    alert("Error al actualizar preguntas: " + error.message);
-  } else {
+  try {
+    await solicitarGuardadoTrabajoSuperadmin({action:'preguntas',id:moduloAuditando.id,preguntas_json:nuevoJson});
     moduloAuditando.preguntas_json = nuevoJson;
-    alert("Batería de 8 preguntas actualizada exitosamente.");
+    alert("Cuestionario actualizado exitosamente.");
+  } catch(error) {
+    alert("Error al actualizar preguntas: " + error.message);
   }
 }
 
@@ -3104,24 +3113,18 @@ async function guardarEdicionModuloAdmin() {
     cambios.unidad_codigo = selectorUnidad.value || null;
   }
 
-  const { error } = await sbApp
-    .from('modulos')
-    .update(cambios)
-    .eq('id', moduloAuditando.id);
-
-  if (error) {
-    alert("Error al actualizar trabajo: " + error.message);
-  } else {
+  try {
+    await solicitarGuardadoTrabajoSuperadmin({action:'editar',id:moduloAuditando.id,...cambios});
     moduloAuditando.titulo = nuevoTitulo;
     moduloAuditando.autor = nuevoAutor;
     moduloAuditando.numero_orden = nuevoOrden;
     moduloAuditando.contenido_trazado = nuevoTexto;
-    if (Object.hasOwn(cambios, 'unidad_codigo')) {
-      moduloAuditando.unidad_codigo = cambios.unidad_codigo;
-    }
+    if (Object.hasOwn(cambios,'unidad_codigo')) moduloAuditando.unidad_codigo=cambios.unidad_codigo;
     alert("Encabezado, texto y clasificación guardados exitosamente.");
     await cargarDatosAdmin();
     cargarGestionTrabajosAdmin();
+  } catch(error) {
+    alert("Error al actualizar trabajo: " + error.message);
   }
 }
 
