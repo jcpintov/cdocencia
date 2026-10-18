@@ -1970,3 +1970,62 @@ body > header .header-controls {flex:0 0 auto}
 @media(prefers-reduced-motion:reduce){
   #modalMisAvances .modal-certificado-wrapper{scroll-behavior:auto}
 }
+
+/* Refinamiento de metadatos temáticos: nota discreta bajo título y autor.
+   No modifica el encabezado global, imagen, título ni botones de la tarjeta. */
+#seccionCatalogoTrabajos .grid-card-unidad {
+  margin-top:10px;
+  margin-bottom:7px;
+  padding:7px 9px;
+  gap:1px;
+  border:1px solid rgba(192,207,219,.53);
+  border-left:2px solid rgba(179,151,103,.47);
+  border-radius:6px;
+  background:rgba(232,240,246,.34);
+  box-shadow:none;
+}
+#seccionCatalogoTrabajos .grid-card-unidad-nombre {
+  color:#607586;
+  font-size:.72rem;
+  font-weight:600;
+  line-height:1.44;
+  letter-spacing:.005em;
+}
+#seccionCatalogoTrabajos .grid-card-subunidad {
+  margin-top:2px;
+  padding:0;
+  border:0;
+  color:#718392;
+  font-size:.71rem;
+  font-weight:450;
+  line-height:1.4;
+}
+#seccionCatalogoTrabajos .grid-card-codigos {
+  margin-top:1px;
+  gap:2px 9px;
+}
+#seccionCatalogoTrabajos .grid-card-codigo-enlace {
+  min-height:30px;
+  margin-top:0;
+  padding:4px 4px 4px 0;
+  color:#687f92;
+  font-size:.69rem;
+  font-weight:600;
+  text-decoration-thickness:1px;
+  text-underline-offset:2px;
+}
+#seccionCatalogoTrabajos .grid-card-codigo-enlace:hover {
+  color:#345c79;
+}
+#seccionCatalogoTrabajos .grid-card-codigo-enlace:focus-visible {
+  outline:2px solid #9a774b;
+  outline-offset:2px;
+}
+body.theme-nocturno #seccionCatalogoTrabajos .grid-card-unidad {
+  background:rgba(130,157,179,.12);
+  border-color:rgba(171,190,205,.23);
+  border-left-color:rgba(210,180,128,.45);
+}
+body.theme-nocturno #seccionCatalogoTrabajos .grid-card-unidad-nombre {color:#b4c5d3}
+body.theme-nocturno #seccionCatalogoTrabajos .grid-card-subunidad {color:#9fb1bf}
+body.theme-nocturno #seccionCatalogoTrabajos .grid-card-codigo-enlace {color:#bbd0de}
