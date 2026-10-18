@@ -2964,10 +2964,91 @@ async function cargarUnidadesEditorTrabajo(codigoActual, moduloId) {
   selector.disabled = unidades.length === 0 && !codigoActual;
   selector.dataset.cargado = 'true';
   actualizarCodigoUnidadEditor();
+  void cargarVinculosEditorTrabajo(unidades,moduloId,codigoActual);
 
   estado.textContent = unidades.length
     ? 'El código se completa automáticamente al elegir el detalle de la unidad.'
     : 'Aún no se han cargado las unidades oficiales. Se conservará la clasificación anterior.';
+}
+
+
+async function cargarVinculosEditorTrabajo(unidades,moduloId,codigoPrincipal) {
+  const lista=document.getElementById('editModTemasLista');
+  const filtro=document.getElementById('editModTemasFiltro');
+  const estado=document.getElementById('editModTemasEstado');
+  const btn=document.getElementById('btnGuardarVinculosTrabajo');
+  if(!lista||!filtro||!estado||!btn)return;
+  btn.disabled=true;
+  filtro.disabled=true;
+  const {data,error}=await sbApp.from('modulos_temas')
+    .select('codigo').eq('modulo_id',moduloId);
+  if(moduloAuditando?.id!==moduloId)return;
+  lista.replaceChildren();
+  if(error){
+    estado.textContent='No se pudieron consultar los vínculos; no se guardarán cambios.';
+    return;
+  }
+  const seleccionados=new Set((data||[]).map(x=>x.codigo));
+  if(codigoPrincipal)seleccionados.add(codigoPrincipal);
+  const temas=unidades.filter(x=>tipoUnidadDocencia(x.codigo)==='tema');
+  const fragment=document.createDocumentFragment();
+  for(const t of temas){
+    const label=document.createElement('label');
+    label.className='admin-tema-opcion';
+    label.dataset.busqueda=(t.codigo+' '+t.detalle).toLocaleLowerCase('es');
+    const checkbox=document.createElement('input');
+    checkbox.type='checkbox';
+    checkbox.value=t.codigo;
+    checkbox.checked=seleccionados.has(t.codigo);
+    const desc=document.createElement('span');
+    desc.textContent=t.codigo+' — '+t.detalle;
+    label.append(checkbox,desc);
+    fragment.appendChild(label);
+  }
+  lista.appendChild(fragment);
+  filtro.value='';
+  filtro.disabled=false;
+  btn.disabled=false;
+  estado.textContent=seleccionados.size+' tema(s) vinculados. Los cambios se guardan solo al pulsar el botón.';
+}
+
+function filtrarTemasEditorTrabajo(){
+  const filtro=document.getElementById('editModTemasFiltro');
+  const buscado=(filtro?.value||'').trim().toLocaleLowerCase('es');
+  document.querySelectorAll('#editModTemasLista .admin-tema-opcion').forEach(label=>{
+    label.hidden=Boolean(buscado&&!label.dataset.busqueda.includes(buscado));
+  });
+}
+
+async function guardarVinculosEditorTrabajo() {
+  if(!moduloAuditando)return;
+  const boton=document.getElementById('btnGuardarVinculosTrabajo');
+  const estado=document.getElementById('editModTemasEstado');
+  if(!boton||boton.disabled)return;
+  const principal=document.getElementById('editModUnidadDetalle')?.value||null;
+  const codigos=[...document.querySelectorAll('#editModTemasLista input[type="checkbox"]:checked')]
+    .map(x=>x.value);
+  if(principal&&!codigos.includes(principal)){
+    estado.textContent='Marque también el código principal de la unidad seleccionada.';
+    return;
+  }
+  if(!principal&&codigos.length){
+    estado.textContent='Seleccione primero el código principal en el campo Detalle.';
+    return;
+  }
+  boton.disabled=true;
+  try{
+    const resultado=await solicitarGuardadoTrabajoSuperadmin({
+      action:'vinculos',id:moduloAuditando.id,principal,codigos
+    });
+    moduloAuditando.unidad_codigo=resultado.unidad_codigo;
+    estado.textContent='Vínculos guardados: '+resultado.total+' tema(s).';
+    await cargarGestionTrabajosAdmin();
+  }catch(error){
+    estado.textContent='No se guardaron los vínculos: '+error.message;
+  }finally{
+    boton.disabled=false;
+  }
 }
 
 function actualizarCodigoUnidadEditor() {
@@ -3128,30 +3209,25 @@ async function guardarEdicionModuloAdmin() {
   }
 }
 
-function eliminarModuloYReordenar(moduloId) {
-  abrirModalConfirmacion(
-    "Eliminar Trabajo",
-    "¿Está seguro de eliminar este trabajo? Todos los módulos restantes se renumerarán correlativamente (1, 2, 3...).",
-    async () => {
-      await sbApp.from('progreso_maestro').delete().eq('modulo_id', moduloId);
-      await sbApp.from('modulos').delete().eq('id', moduloId);
-
-      const { data: restantes } = await sbApp
-        .from('modulos')
-        .select('id')
-        .eq('activo', true)
-        .order('numero_orden', { ascending: true });
-
-      if (restantes) {
-        for (let i = 0; i < restantes.length; i++) {
-          await sbApp.from('modulos').update({ numero_orden: i + 1 }).eq('id', restantes[i].id);
-        }
-      }
-
-      await cargarDatosAdmin();
-      cargarGestionTrabajosAdmin();
-    }
-  );
+async function eliminarModuloYReordenar(moduloId) {
+  try{
+    const resultado=await solicitarGuardadoTrabajoSuperadmin({action:'impacto',id:moduloId});
+    const i=resultado.impacto;
+    const advertencia='Trabajo N.º '+i.numero_orden+': '+i.titulo+
+      '\\n\\nLa eliminación es permanente e incluye '+i.avances+
+      ' registros de avance, '+i.comentarios+' comentarios y '+i.vinculos+
+      ' vínculos temáticos. Los números de los demás trabajos se reorganizarán.';
+    abrirModalConfirmacion('Eliminar trabajo y sus registros',advertencia,async()=>{
+      try{
+        await solicitarGuardadoTrabajoSuperadmin({
+          action:'eliminar',id:moduloId,confirmacion:'ELIMINAR '+i.numero_orden
+        });
+        await cargarDatosAdmin();
+        await cargarGestionTrabajosAdmin();
+        alert('Trabajo eliminado y numeración actualizada.');
+      }catch(error){alert('No se eliminó el trabajo: '+error.message);}
+    });
+  }catch(error){alert('No se pudo verificar el impacto: '+error.message);}
 }
 
 /* ==========================================================================
