@@ -1819,3 +1819,154 @@ body > header .header-controls {flex:0 0 auto}
   font-weight:650;
   text-underline-offset:2px;
 }
+
+
+/* Mis avances: desplazamiento utilizable y controles grandes, sin tocar PDF. */
+#modalMisAvances {
+  padding:clamp(8px,2vw,20px);
+  overflow:hidden;
+}
+#modalMisAvances .modal-certificado-wrapper {
+  width:min(100%,1100px);
+  max-width:1100px;
+  max-height:calc(100dvh - 24px);
+  align-items:stretch;
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior:contain;
+  scrollbar-width:auto;
+  scrollbar-color:#b78a3d #dde7ee;
+  scroll-padding-top:95px;
+  -webkit-overflow-scrolling:touch;
+  padding-right:8px;
+}
+#modalMisAvances .modal-certificado-wrapper::-webkit-scrollbar{width:17px}
+#modalMisAvances .modal-certificado-wrapper::-webkit-scrollbar-track{
+  background:#dce5ec;border-radius:12px;
+}
+#modalMisAvances .modal-certificado-wrapper::-webkit-scrollbar-thumb{
+  background:#9c6d28;border:3px solid #dce5ec;border-radius:12px;
+}
+#modalMisAvances .avances-actions{
+  position:sticky;
+  top:0;
+  z-index:5;
+  width:100%!important;
+  max-width:none!important;
+  display:flex!important;
+  justify-content:flex-end!important;
+  flex-wrap:wrap;
+  gap:9px!important;
+  margin:0 0 10px!important;
+  padding:13px!important;
+  border-radius:10px;
+  background:#102d44;
+  box-shadow:0 5px 18px rgba(0,0,0,.22);
+}
+#modalMisAvances .avances-nav-rapida{
+  display:flex;
+  flex:1 1 320px;
+  gap:9px;
+  flex-wrap:wrap;
+}
+#modalMisAvances .avances-nav-btn {
+  min-height:49px;
+  flex:1 1 112px;
+  padding:11px 13px;
+  background:#ecf2f6;
+  border:2px solid #b7ccdb;
+  border-radius:9px;
+  color:#193750;
+  font:700 .94rem/1.2 var(--font-ui,Arial,sans-serif);
+  cursor:pointer;
+}
+#modalMisAvances .avances-nav-btn:hover,
+#modalMisAvances .avances-nav-btn:focus-visible {
+  background:#fff5df;
+  border-color:#c29241;
+}
+#modalMisAvances .avances-actions .btn-cert-descargar,
+#modalMisAvances .avances-actions .btn-cert-cerrar {
+  min-height:49px;
+  padding:11px 16px!important;
+  margin:0!important;
+  white-space:normal;
+}
+#modalMisAvances .avances-actions button:focus-visible {
+  outline:3px solid #edc978;
+  outline-offset:3px;
+}
+#modalMisAvances #documentoInformeAvance{
+  width:100%!important;
+  max-width:none;
+  min-width:0;
+  padding:clamp(15px,3vw,38px);
+  border-radius:9px;
+}
+#modalMisAvances .informe-header-box{gap:13px;flex-wrap:wrap}
+#modalMisAvances .informe-table {
+  table-layout:fixed;
+  width:100%;
+}
+#modalMisAvances .informe-table th,
+#modalMisAvances .informe-table td {
+  overflow-wrap:anywhere;
+  word-break:normal;
+  font-size:.91rem;
+  line-height:1.55;
+  padding:12px;
+}
+#modalMisAvances .informe-table th:first-child{width:25%}
+#modalMisAvances .informe-table th:last-child{width:45%}
+#modalMisAvances #contenedorBotonesCertificados button{
+  min-height:48px;
+  font-size:.91rem!important;
+  padding:12px 14px!important;
+}
+@media(max-width:750px){
+  #modalMisAvances .avances-actions {padding:10px!important;gap:7px!important}
+  #modalMisAvances .avances-nav-rapida{flex:1 1 100%}
+  #modalMisAvances .avances-actions .btn-cert-descargar{flex:1 1 170px}
+  #modalMisAvances .avances-actions .btn-cert-cerrar{flex:1 1 110px}
+  #modalMisAvances .informe-kpis-flex{flex-wrap:wrap}
+  #modalMisAvances .kpi-card-flex{flex:1 1 140px;min-width:0}
+  #modalMisAvances .informe-table,
+  #modalMisAvances .informe-table tbody{display:block;width:100%}
+  #modalMisAvances .informe-table thead{display:none}
+  #modalMisAvances .informe-table tr{
+    display:grid;
+    grid-template-columns:minmax(0,1fr);
+    margin-bottom:13px;
+    border:2px solid #d1dde7;
+    border-left:5px solid #b68a44;
+    border-radius:10px;
+    overflow:hidden;
+    background:#fff;
+  }
+  #modalMisAvances .informe-table td{
+    display:grid;
+    grid-template-columns:minmax(92px,34%) minmax(0,1fr);
+    align-items:start;
+    gap:12px;
+    padding:12px 14px;
+    border:0;
+    border-bottom:1px solid #e1e9f0;
+  }
+  #modalMisAvances .informe-table td:last-child{border-bottom:0}
+  #modalMisAvances .informe-table td::before{
+    font-weight:750;
+    color:#314f64;
+  }
+  #modalMisAvances .informe-table td:nth-child(1)::before{content:"Trabajo"}
+  #modalMisAvances .informe-table td:nth-child(2)::before{content:"Lectura"}
+  #modalMisAvances .informe-table td:nth-child(3)::before{content:"Cuestionario"}
+  #modalMisAvances .informe-table td:nth-child(4)::before{content:"Reflexión"}
+}
+@media(max-width:410px){
+  #modalMisAvances .avances-nav-btn{flex-basis:80px;min-width:0;font-size:.84rem;padding:9px 5px}
+  #modalMisAvances .informe-table td{grid-template-columns:1fr;gap:3px}
+  #modalMisAvances .modal-certificado-wrapper{padding-right:4px}
+}
+@media(prefers-reduced-motion:reduce){
+  #modalMisAvances .modal-certificado-wrapper{scroll-behavior:auto}
+}
