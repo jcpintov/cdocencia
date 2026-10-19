@@ -2465,7 +2465,11 @@ function cambiarSubseccionAdmin(seccion) {
   const btns = ['tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
   const secs = ['adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
 
-  btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
+  btns.forEach(b => {
+    const boton = document.getElementById(b);
+    boton?.classList.remove('active');
+    boton?.removeAttribute('aria-current');
+  });
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
 
   if (seccion === 'resumen') {
@@ -2506,6 +2510,7 @@ function cambiarSubseccionAdmin(seccion) {
       cargarMetricasAvance(select.value || listaModulos[0].id);
     }
   }
+  document.querySelector('#seccionAdmin .admin-side-btn.active')?.setAttribute('aria-current', 'page');
 }
 
 /* ==========================================================================
