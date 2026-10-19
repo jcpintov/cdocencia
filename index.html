@@ -612,34 +612,43 @@
 
       <hr class="admin-divider">
 
-      <nav class="admin-menu-list">
-        <button id="tabNavResumen" class="admin-side-btn" onclick="cambiarSubseccionAdmin('resumen')">
-          <span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="admin-nav-text">Resumen ejecutivo</span>
-        </button>
-        <button id="tabNavUsuarios" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('usuarios')">
-          <span class="portal-nav-glyph" aria-hidden="true">♙</span><span class="admin-nav-text">Administrar Usuarios</span>
-        </button>
-        <button id="tabNavCargar" class="admin-side-btn" onclick="cambiarSubseccionAdmin('cargar')">
-          <span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="admin-nav-text">Adjuntar Archivo Original</span>
-        </button>
-        <button id="tabNavGestionTrabajos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">
-          <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span class="admin-nav-text">Gestión de Trabajos</span>
-        </button>
-        <button id="tabNavPresencial" class="admin-side-btn" onclick="cambiarSubseccionAdmin('presencial')">
-          <span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="admin-nav-text">Cámara Presencial (Debate)</span>
-        </button>
-        <button id="tabNavMuroGeneral" class="admin-side-btn" onclick="cambiarSubseccionAdmin('muro_general')">
-          <span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="admin-nav-text">Muro General</span>
-        </button>
-        <button id="tabNavMetricas" class="admin-side-btn" onclick="cambiarSubseccionAdmin('metricas')">
-          <span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="admin-nav-text">Matriz de Avance</span>
-        </button>
-        <button id="tabNavEditorDoctrina" class="admin-side-btn" onclick="cambiarSubseccionAdmin('editor_doctrina')">
-          <span class="portal-nav-glyph" aria-hidden="true">▣</span><span class="admin-nav-text">Editar Docencia P. Maestros</span>
-        </button>
-        <button id="tabNavAccesos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('accesos')">
-          <span class="portal-nav-glyph" aria-hidden="true">◎</span><span class="admin-nav-text">Bitácora de Accesos</span>
-        </button>
+      <nav class="admin-menu-list" aria-label="Secciones del Superadmin">
+        <div class="admin-nav-group">
+          <p class="admin-nav-label">VISIÓN GENERAL</p>
+          <button type="button" id="tabNavResumen" class="admin-side-btn" onclick="cambiarSubseccionAdmin('resumen')">
+            <span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="admin-nav-text">Resumen ejecutivo</span>
+          </button>
+          <button type="button" id="tabNavUsuarios" class="admin-side-btn" onclick="cambiarSubseccionAdmin('usuarios')">
+            <span class="portal-nav-glyph" aria-hidden="true">♙</span><span class="admin-nav-text">Usuarios y accesos</span>
+          </button>
+        </div>
+        <div class="admin-nav-group">
+          <p class="admin-nav-label">DOCENCIA Y CONTENIDOS</p>
+          <button type="button" id="tabNavGestionTrabajos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">
+            <span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="admin-nav-text">Gestión de trabajos</span>
+          </button>
+          <button type="button" id="tabNavCargar" class="admin-side-btn" onclick="cambiarSubseccionAdmin('cargar')">
+            <span class="portal-nav-glyph" aria-hidden="true">↥</span><span class="admin-nav-text">Archivos originales</span>
+          </button>
+          <button type="button" id="tabNavEditorDoctrina" class="admin-side-btn" onclick="cambiarSubseccionAdmin('editor_doctrina')">
+            <span class="portal-nav-glyph" aria-hidden="true">▣</span><span class="admin-nav-text">Editor · Este Espacio</span>
+          </button>
+          <button type="button" id="tabNavPresencial" class="admin-side-btn" onclick="cambiarSubseccionAdmin('presencial')">
+            <span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="admin-nav-text">Cámara presencial</span>
+          </button>
+        </div>
+        <div class="admin-nav-group">
+          <p class="admin-nav-label">SEGUIMIENTO Y CONTROL</p>
+          <button type="button" id="tabNavMetricas" class="admin-side-btn" onclick="cambiarSubseccionAdmin('metricas')">
+            <span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="admin-nav-text">Matriz de avance</span>
+          </button>
+          <button type="button" id="tabNavMuroGeneral" class="admin-side-btn" onclick="cambiarSubseccionAdmin('muro_general')">
+            <span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="admin-nav-text">Muro general</span>
+          </button>
+          <button type="button" id="tabNavAccesos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('accesos')">
+            <span class="portal-nav-glyph" aria-hidden="true">◎</span><span class="admin-nav-text">Bitácora de accesos</span>
+          </button>
+        </div>
       </nav>
 
       <div class="admin-side-footer">
@@ -650,6 +659,14 @@
     </aside>
 
     <main class="admin-main-content">
+      <header class="admin-workspace-header">
+        <div>
+          <p class="admin-workspace-eyebrow">CÁMARA DE DOCENCIA / ADMINISTRACIÓN</p>
+          <h1>Panel Superadmin</h1>
+          <p>Administración del padrón, contenidos docentes, seguimiento y registros de actividad.</p>
+        </div>
+        <span class="admin-workspace-tag">Acceso reservado</span>
+      </header>
       <section id="adminSeccionResumen" class="card card-trazado hidden">
         <div class="admin-card-header"><div><h2>Resumen ejecutivo</h2>
           <p class="text-instruccion">Actividad de la Cámara de Docencia; progreso sin el administrador.</p></div>
@@ -661,7 +678,15 @@
           <div class="admin-kpi"><span>Comentarios</span><strong id="kpiComentarios">—</strong></div>
         </div>
         <p id="resumenAdminEstado" class="text-instruccion" role="status"></p>
-        <button class="btn-primary" onclick="cambiarSubseccionAdmin('usuarios')">Administrar usuarios</button>
+        <div class="admin-acciones-rapidas" aria-label="Acciones rápidas">
+          <button type="button" onclick="cambiarSubseccionAdmin('usuarios')">Administrar usuarios</button>
+          <button type="button" onclick="cambiarSubseccionAdmin('gestion_trabajos')">Gestionar trabajos</button>
+          <button type="button" onclick="cambiarSubseccionAdmin('accesos')">Revisar bitácora</button>
+        </div>
+        <div class="admin-estado-doctrina" role="note">
+          <div><strong>Doctrina y Reglamentos</strong><span class="admin-estado-pendiente">NO COMPROBADO</span></div>
+          <p>La documentación, sus fuentes y las respuestas requieren validación. La consulta doctrinal permanece inhabilitada para los usuarios.</p>
+        </div>
       </section>
 
       <!-- SUBSECCIÓN: ADMINISTRAR USUARIOS -->
