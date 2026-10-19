@@ -1024,24 +1024,40 @@ function volverACatalogo() {
    ========================================================================== */
 const DOCTRINA_DEFAULT = [
   {
-    titulo: "1. Descripción General",
-    subtitulo: "La Cámara de Docencia como Escuela de Formación Activa",
-    texto: "La Plataforma de Docencia para la Cámara de Maestros es un espacio reservado para los Maestros Masones de la R.·.L.·. Orestes Frödden Lorenzen N° 146. Está concebida como un entorno asíncrono para el análisis conceptual y moral de los trazados de instrucción previa a cada Tenida."
+    "tipo": "introduccion",
+    "titulo": "Propósito y sentido de la docencia",
+    "subtitulo": "",
+    "texto": "La docencia del Tercer Grado encuentra su sentido en una convicción fundamental: **el conocimiento masónico exige comprensión, reflexión y coherencia de conducta**. Desde esta perspectiva, el estudio no persigue la mera acumulación de nociones doctrinales, sino el perfeccionamiento de quien las recibe, interpreta y procura vivir conforme a ellas.\n\nEste espacio surge de la necesidad de fortalecer y dar continuidad a la labor docente del Tercer Grado mediante una plataforma digital de aprendizaje asincrónico, destinada a los Maestros del Taller. Su propósito es facilitar el acceso permanente a los contenidos formativos, permitiendo que cada Hermano pueda estudiarlos, revisarlos y profundizar en ellos de acuerdo con su disponibilidad y ritmo personal, sin las restricciones de un horario común. De este modo, la docencia trasciende las instancias presenciales de formación y encuentra una oportunidad adicional para mantenerse activa en la vida cotidiana del Maestro.\n\nJunto con presentar el sentido y los objetivos de este espacio, compartimos una reflexión sobre los principios y lineamientos generales que deben orientar el estudio y la investigación personal en el Tercer Grado. Esta labor comprende la profundización en sus fundamentos éticos, simbólicos, filosóficos e institucionales, procurando que el conocimiento adquirido no permanezca únicamente en el ámbito intelectual, sino que contribuya al discernimiento, al perfeccionamiento moral y a la práctica consciente de las enseñanzas masónicas.\n\nFinalmente, este espacio aspira a que las reflexiones surgidas del estudio individual encuentren una expresión colectiva en el **Muro Docente**, concebido como un lugar de encuentro e intercambio fraternal. Allí, las distintas perspectivas podrán enriquecer la comprensión de los temas estudiados, fortalecer el diálogo entre Hermanos y contribuir a la construcción de una reflexión compartida que **dé unidad, continuidad y sentido al trabajo docente de la Columna de Maestros**."
   },
   {
-    titulo: "2. Objetivos Principales",
-    subtitulo: "Compromiso Moral y Coherencia Doctrinal",
-    texto: "Fomentar el estudio riguroso de la docencia del Tercer Grado, verificar la asimilación conceptual de los símbolos y deberes éticos, y consolidar un repositorio de reflexiones que fortalezca la vida interior del taller."
+    "tipo": "fundamento",
+    "titulo": "Naturaleza y sentido de la docencia",
+    "subtitulo": "La formación del Maestro como tarea permanente",
+    "texto": "La condición de Maestro no señala el término del aprendizaje masónico, sino una responsabilidad más consciente frente a él. Profundizar en los símbolos, el ritual y los deberes de la Maestría supone interrogar su significado, confrontarlo con la propia experiencia y reconocer cuánto resta por perfeccionar en uno mismo.\n\nEste espacio, reservado al trabajo docente de la Cámara de Maestros, acompaña esa labor mediante el estudio personal de los trazados y la reflexión fraterna acerca de su aplicación en la vida dentro y fuera de la Logia. Su soporte digital facilita la continuidad del aprendizaje; **no reemplaza la enseñanza compartida ni el ejercicio personal de la virtud**, sino que constituye un recurso de apoyo que reúne los contenidos docentes y los pone a disposición de cada Maestro para que pueda estudiarlos a su propio tiempo y ritmo.\n\nEl propósito es que cada enseñanza pueda convertirse, progresivamente, en criterio de juicio y orientación para la acción."
   },
   {
-    titulo: "3. Metodología Docente en Tres Fases",
-    subtitulo: "Lectura, Diagnóstico Simbólico y Consagración",
-    texto: "Fase I: Lectura atenta con tiempo mínimo de análisis reflexivo.\nFase II: Examen formativo de 8 preguntas que culmina en un dilema ético profundo.\nFase III: Consagración de la reflexión personal y acceso al Muro."
+    "tipo": "fundamento",
+    "titulo": "Propósito formativo y objetivos",
+    "subtitulo": "Comprender, discernir y obrar con coherencia",
+    "texto": "La docencia procura una comprensión fundada de los contenidos del Tercer Grado y de sus implicancias éticas, filosóficas y simbólicas. Esa comprensión debe favorecer una conciencia esclarecida, capaz de discernir, examinar las propias convicciones y enfrentar con mayor responsabilidad los dilemas que plantea la vida individual y colectiva.\n\nPor ello, el estudio propuesto, las preguntas formativas y la participación en el Muro Docente no constituyen fines en sí mismos: permiten revisar el entendimiento alcanzado, descubrir nuevas interrogantes y elaborar reflexiones que puedan enriquecer el diálogo entre Hermanos.\n\n**El resultado más valioso no es la respuesta acertada, sino la relación honesta entre lo que se comprende, lo que se proclama y lo que se hace.**\n\nLos contenidos de este espacio son elaborados por Maestros de la Logia, procurando mantener su concordancia con el programa de docencia vigente de la Gran Logia de Chile, así como con sus principios y orientaciones formativas."
   },
   {
-    titulo: "4. La Trascendencia de la Maestría",
-    subtitulo: "Deber, Coherencia y Rectitud en el Mundo y en el Taller",
-    texto: "La Maestría no constituye una investidura de privilegio ni un reposo en la senda, sino la asunción consciente de una responsabilidad inextinguible. Ser Maestro es erigirse en centro de unión y modelo de templanza; es juzgarse con rigor antes de corregir al semejante, amparar con lealtad el honor del hermano ausente y custodiar en la intimidad de la conciencia el juramento consagrado sobre el Ara."
+    "tipo": "fundamento",
+    "titulo": "Método de estudio y reflexión",
+    "subtitulo": "Tres momentos de una misma labor formativa",
+    "texto": "Esta plataforma propone tres momentos complementarios de una misma labor formativa, sin reducir el aprendizaje a una secuencia mecánica:\n\n**a) Lectura comprensiva.** Cada trazado se estudia con atención, buscando comprender sus argumentos, símbolos y enseñanzas esenciales. El tiempo dedicado a la lectura favorece la concentración, pero no sustituye la profundidad de la reflexión.\n\n**b) Evaluación formativa.** Una serie de preguntas invita a revisar la comprensión del tema y a considerar sus implicancias éticas. Su función es favorecer el discernimiento y reconocer los aspectos que requieren mayor estudio, no establecer jerarquías personales entre quienes participan ni distinguir a los Hermanos por la cantidad de respuestas acertadas.\n\n**c) Reflexión y participación.** El Maestro elabora su propia reflexión a partir del trabajo estudiado. Al completar un trabajo conforme a las reglas de la plataforma, puede participar en el **Muro Docente**, donde el intercambio fraternal permite contrastar perspectivas, compartir experiencias y enriquecer el aprendizaje común.\n\nLas tres fases son complementarias: **leer para comprender, examinar para discernir y reflexionar para obrar con mayor conciencia**."
+  },
+  {
+    "tipo": "fundamento",
+    "titulo": "El sentido de la Maestría",
+    "subtitulo": "La responsabilidad de hacer vida lo aprendido",
+    "texto": "La Maestría no se justifica por la sola posesión de un grado. Su valor se manifiesta en la responsabilidad de quien procura ejercerlo con prudencia, rectitud, templanza y espíritu fraternal.\n\nEllo exige una disposición permanente a revisar el propio juicio antes de juzgar al otro, sostener la palabra comprometida, reconocer los errores y actuar con respeto aun frente a la discrepancia.\n\nPor ello, la enseñanza masónica adquiere verdadero significado cuando deja de ser únicamente materia de estudio y se hace reconocible en las relaciones humanas, en el cumplimiento del deber y en la conducta dentro y fuera del Templo.\n\n**La docencia, entonces, no pretende definir al Maestro ideal, sino contribuir al trabajo constante de llegar a serlo.**"
+  },
+  {
+    "tipo": "cierre",
+    "titulo": "Invitación a la reflexión",
+    "subtitulo": "",
+    "texto": "Esperamos que este espacio constituya un aporte significativo a tu formación como Maestro y un estímulo permanente para profundizar en el conocimiento, la reflexión y el perfeccionamiento personal.\n\nQue cada trabajo estudiado sea una oportunidad para examinar nuestras convicciones, enriquecer nuestro discernimiento y fortalecer la coherencia entre lo que pensamos, expresamos y hacemos.\n\n**Te invitamos a compartir con tus Hermanos las reflexiones que surjan de este aprendizaje, contribuyendo así a un diálogo fraterno, respetuoso y enriquecedor, donde el conocimiento compartido fortalezca nuestra labor docente y el compromiso común con los ideales de la Orden.**"
   }
 ];
 
@@ -1085,40 +1101,60 @@ async function mostrarDocenciaParaMaestros() {
   cont.replaceChildren();
   indice.replaceChildren();
 
+  let numeroFundamento = 0;
   visibles.forEach((b, i) => {
     const id = 'espacio-bloque-' + (i + 1);
     const titulo = String(b.titulo || 'Fundamento ' + (i + 1));
+    const tipo = ['introduccion','fundamento','cierre'].includes(b.tipo) ? b.tipo : 'fundamento';
     const card = document.createElement('section');
     card.id = id;
-    card.className = 'institucional-bloque espacio-bloque';
+    card.className = 'institucional-bloque espacio-bloque espacio-tipo-' + tipo;
     card.tabIndex = -1;
     card.setAttribute('aria-labelledby', id + '-titulo');
 
-    const numero = document.createElement('span');
-    numero.className = 'espacio-bloque-numero';
-    numero.textContent = String(i + 1).padStart(2, '0');
-    numero.setAttribute('aria-hidden', 'true');
-
+    if (tipo === 'fundamento') {
+      numeroFundamento++;
+      const numero = document.createElement('span');
+      numero.className = 'espacio-bloque-numero';
+      numero.textContent = String(numeroFundamento).padStart(2, '0');
+      numero.setAttribute('aria-hidden', 'true');
+      card.appendChild(numero);
+    }
     const title = document.createElement('h3');
     title.id = id + '-titulo';
-    title.textContent = titulo;
-    const subtitle = document.createElement('h4');
-    subtitle.textContent = String(b.subtitulo || '');
-    const paragraph = document.createElement('p');
-    paragraph.className = 'espacio-bloque-texto';
-    paragraph.textContent = String(b.texto || '');
-    card.append(numero, title);
-    if (subtitle.textContent.trim()) card.appendChild(subtitle);
-    card.appendChild(paragraph);
+    title.textContent = (tipo==='fundamento' ? numeroFundamento+'. ' : '') + titulo;
+    card.appendChild(title);
+    if (String(b.subtitulo || '').trim()) {
+      const subtitle = document.createElement('h4');
+      subtitle.textContent = String(b.subtitulo);
+      card.appendChild(subtitle);
+    }
+    // Texto editorial: párrafos separados, negritas **...** y texto seguro.
+    for (const textoParrafo of String(b.texto || '').split(/\n\s*\n/)) {
+      if (!textoParrafo.trim()) continue;
+      const paragraph = document.createElement('p');
+      paragraph.className = 'espacio-bloque-texto';
+      const fragmentos = textoParrafo.split(/(\*\*[^*]+\*\*)/g);
+      for (const fragmento of fragmentos) {
+        if (fragmento.startsWith('**') && fragmento.endsWith('**')) {
+          const strong = document.createElement('strong');
+          strong.textContent = fragmento.slice(2, -2);
+          paragraph.appendChild(strong);
+        } else {
+          paragraph.appendChild(document.createTextNode(fragmento));
+        }
+      }
+      card.appendChild(paragraph);
+    }
     cont.appendChild(card);
 
     const enlace = document.createElement('button');
     enlace.type = 'button';
-    enlace.className = 'espacio-indice-link';
-    enlace.textContent = titulo;
+    enlace.className = 'espacio-indice-link' + (tipo!=='fundamento' ? ' espacio-indice-'+tipo : '');
+    enlace.textContent = (tipo==='fundamento' ? numeroFundamento+'. ' : '') + titulo;
     enlace.setAttribute('aria-label', 'Ir a ' + titulo);
     enlace.addEventListener('click', () => {
-      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      card.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
       card.focus({ preventScroll: true });
     });
     indice.appendChild(enlace);
