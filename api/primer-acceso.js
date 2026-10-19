@@ -32,9 +32,11 @@ export default async function handler(req, res) {
       return reply(res, 503, { error: 'Correo institucional no configurado' });
     }
     const code = String(randomInt(0, 100000000)).padStart(8, '0');
+    let issued = false;
     try {
-      const { data: issued, error } = await admin.rpc('primer_acceso_emitir', { p_email: email, p_codigo: code });
+      const { data: emitted, error } = await admin.rpc('primer_acceso_emitir', { p_email: email, p_codigo: code });
       if (error) throw error;
+      issued = Boolean(emitted);
       if (issued) {
         const transport = nodemailer.createTransport({
           host: process.env.SMTP_HOST, port: Number(process.env.SMTP_PORT || 465),
@@ -49,6 +51,14 @@ export default async function handler(req, res) {
       }
       return reply(res, 200, { mensaje: message });
     } catch (err) {
+      if (issued) {
+        try {
+          const { error: cancelError } = await admin.rpc('primer_acceso_cancelar', { p_email: email, p_codigo: code });
+          if (cancelError) console.error('Primer acceso: revocación pendiente');
+        } catch {
+          console.error('Primer acceso: revocación pendiente');
+        }
+      }
       console.error('Primer acceso: error de emisión', err?.code || err?.name || 'unknown');
       return reply(res, 503, { error: 'Servicio temporalmente no disponible' });
     }

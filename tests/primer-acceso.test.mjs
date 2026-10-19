@@ -12,8 +12,14 @@ assert.notEqual(source, raw, 'El handler debe poder aislarse para pruebas');
 function setup(options = {}) {
   const calls = [];
   const admin = {
-    rpc: async (name) => {
+    rpc: async (name, args) => {
       calls.push(name);
+      if (name === 'primer_acceso_cancelar') {
+        assert.equal(args.p_email, 'dummy@ofl.cl');
+        assert.equal(args.p_codigo, '12345678');
+        if (options.cancelThrow) throw new Error('cancel mock failure');
+        return { data: true, error: options.cancelFail ? { code: 'mock' } : null };
+      }
       return name === 'primer_acceso_emitir'
         ? { data: options.issued ?? false, error: null }
         : { data: options.profileId ?? null, error: null };
@@ -142,5 +148,15 @@ test('fallo SMTP no se reporta como correo entregado', async () => {
   const s = setup({ issued: true, smtpFail: true });
   const r = await s.request({ email: 'dummy@ofl.cl', accion: 'solicitar' });
   assert.equal(r.code, 503);
-  assert.deepEqual(s.calls, ['primer_acceso_emitir', 'sendMail']);
+  assert.deepEqual(s.calls, ['primer_acceso_emitir', 'sendMail', 'primer_acceso_cancelar']);
 });
+
+for (const failure of ['cancelFail', 'cancelThrow']) {
+  test(`fallo de revocación ${failure} conserva respuesta controlada`, async () => {
+    const s = setup({ issued: true, smtpFail: true, [failure]: true });
+    const r = await s.request({ email: 'dummy@ofl.cl', accion: 'solicitar' });
+    assert.equal(r.code, 503);
+    assert.deepEqual(s.calls, ['primer_acceso_emitir', 'sendMail', 'primer_acceso_cancelar']);
+    assert.equal(JSON.stringify(r.body).includes('12345678'), false);
+  });
+}

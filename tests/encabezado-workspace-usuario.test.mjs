@@ -33,8 +33,12 @@ test('cabecera preserva título y añade Workspace y nombre dinámico',()=>{
   assert.match(html,/id="encabezadoWorkspaceUsuario" class="header-workspace-usuario hidden"/);
   assert.match(html,/class="header-workspace-etiqueta">WORKSPACE DEL<\/span>/);
   assert.match(html,/id="encabezadoNombreUsuario"/);
-  assert.match(css,/body > header \.header-workspace-usuario/);
+  assert.match(css,/body > \.header-workspace-usuario/);
   assert.match(css,/@media\(max-width:640px\)/);
+});
+test('franja dorada precede al navbar y usa el dorado aprobado',()=>{
+ assert.ok(html.indexOf('id="encabezadoWorkspaceUsuario"')<html.indexOf('  <header>'));
+ assert.match(css,/background:#e7d4ab/);
 });
 test('nombre fraternal aparece solo tras autenticación y no duplica tratamiento',()=>{
   const {methods,nodes}=entorno();
