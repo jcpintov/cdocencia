@@ -2078,6 +2078,7 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-codigo-enlace {color:#bb
 
 /* Este Espacio: diseño editorial sereno, introducción y cierre distinguibles. */
 #seccionDocenciaInstitucional .espacio-bloque {
+  padding-inline:clamp(22px,2.6vw,32px);
   scroll-margin-top:28px;
   box-shadow:0 2px 10px rgba(17,39,56,.055);
   transition:border-color .18s ease,box-shadow .18s ease;
@@ -2123,6 +2124,10 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-codigo-enlace {color:#bb
   border-left:4px solid #b99b67;
   background:linear-gradient(140deg,#eaf2f6,#f8fafb);
   padding:clamp(22px,3vw,34px);
+  padding-bottom:42px;
+}
+#seccionDocenciaInstitucional .espacio-tipo-cierre .espacio-bloque-texto:last-child {
+  margin-bottom:12px;
 }
 #seccionDocenciaInstitucional .espacio-tipo-cierre h3 {
   color:#173e56;
@@ -2133,8 +2138,10 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-codigo-enlace {color:#bb
   font-weight:650;
 }
 @media (max-width:640px){
+  #seccionDocenciaInstitucional .espacio-bloque{padding-inline:18px}
   #seccionDocenciaInstitucional .espacio-tipo-introduccion,
-  #seccionDocenciaInstitucional .espacio-tipo-cierre{padding:20px 17px}
+  #seccionDocenciaInstitucional .espacio-tipo-cierre{padding:20px 18px}
+  #seccionDocenciaInstitucional .espacio-tipo-cierre{padding-bottom:30px}
   #seccionDocenciaInstitucional .espacio-bloque-texto{font-size:.98rem;line-height:1.72}
 }
 @media (prefers-reduced-motion:reduce){
