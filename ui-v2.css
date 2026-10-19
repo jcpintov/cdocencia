@@ -1683,44 +1683,25 @@ body > header .brand-title {
 body > header .brand-title-text {
   overflow-wrap:break-word;
 }
-body > header .header-workspace-usuario {
-  display:inline-flex;
-  flex-wrap:wrap;
-  align-items:baseline;
-  gap:3px 7px;
-  min-width:0;
-  color:rgba(255,255,255,.9);
-  font:500 .86rem/1.4 var(--font-ui,Arial,sans-serif);
-  letter-spacing:0;
-}
-body > header .header-workspace-separador {
-  color:#d8b47b;
-  font-weight:700;
-}
-body > header .header-workspace-etiqueta {
-  white-space:nowrap;
-  color:#e8c894;
-  font-size:.78rem;
-  font-weight:700;
-  letter-spacing:.045em;
-}
-body > header .header-workspace-nombre {
-  min-width:0;
-  overflow-wrap:anywhere;
-  color:#fff;
-  font:650 .9rem/1.4 var(--font-ui,Arial,sans-serif);
-}
 body > header .header-controls {flex:0 0 auto}
-@media(max-width:900px) {
-  body > header .brand-title {flex-basis:100%}
-  body > header .header-workspace-usuario {flex-basis:100%;padding-left:32px}
-  body > header .header-workspace-separador {display:none}
+body > .header-workspace-usuario {
+  display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;
+  gap:4px 8px;width:100%;padding:11px 24px;box-sizing:border-box;
+  background:#e7d4ab;color:#283e4c;border-bottom:1px solid #ceb988;
+  font:500 .86rem/1.5 var(--font-ui,Arial,sans-serif);text-align:center;
 }
-@media(max-width:640px) {
-  body > header .brand-title {gap:3px 7px}
-  body > header .header-workspace-usuario {padding-left:0;font-size:.79rem}
-  body > header .header-workspace-nombre {font-size:.83rem}
-  body > header .header-workspace-etiqueta {font-size:.74rem}
+body > .header-workspace-usuario .header-workspace-etiqueta {
+  color:#283e4c;font-size:.75rem;font-weight:650;letter-spacing:.055em;
+}
+body > .header-workspace-usuario .header-workspace-nombre {
+  min-width:0;overflow-wrap:anywhere;color:#203849;
+  font:650 .9rem/1.5 var(--font-ui,Arial,sans-serif);
+}
+@media(max-width:900px){body > header .brand-title{flex-basis:100%}}
+@media(max-width:640px){
+ body > header .brand-title{gap:3px 7px}
+ body > .header-workspace-usuario{padding:10px 16px;gap:2px 6px}
+ body > .header-workspace-usuario .header-workspace-nombre{font-size:.84rem}
 }
 
 
@@ -2146,4 +2127,72 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-codigo-enlace {color:#bb
 }
 @media (prefers-reduced-motion:reduce){
   #seccionDocenciaInstitucional .espacio-bloque{transition:none}
+}
+
+/* Navegación Superadmin: gestión primero, herramientas al final. */
+#seccionAdmin.admin-layout{grid-template-columns:264px minmax(0,1fr)}
+#seccionAdmin .sidebar-admin{padding:24px 16px;background:#112635;border-right:1px solid #284252;align-self:start;position:sticky;top:0;max-height:100dvh;overflow-y:auto;min-height:100vh}
+#seccionAdmin .admin-brand{align-items:flex-start;padding:0 8px 22px;margin-bottom:16px}
+#seccionAdmin .admin-brand-eyebrow{display:block;font-size:.62rem;letter-spacing:.12em;color:#afc2ce;margin-bottom:7px}
+#seccionAdmin .admin-brand h3{margin:0;font-size:1.04rem;color:#fff}
+#seccionAdmin .admin-brand-glyph{color:#d5b377;margin-top:22px}
+#seccionAdmin .admin-navigation{display:flex;flex-direction:column;flex:1}
+#seccionAdmin .admin-menu-toggle{display:none}
+#seccionAdmin .admin-menu-list{gap:22px;flex:initial}
+#seccionAdmin .admin-menu-group{display:grid;gap:5px;min-width:0}
+#seccionAdmin .admin-menu-label{font:600 .68rem/1.5 var(--font-ui,Arial,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:#a8bfcd;margin:0 10px 6px}
+#seccionAdmin .admin-side-btn{display:flex;align-items:center;min-height:44px;padding:11px 12px;color:#d0dce4;border-radius:7px;width:100%;font-size:.86rem}
+#seccionAdmin .admin-side-btn:hover{background:#203e51;color:#fff}
+#seccionAdmin .admin-side-btn.active{background:#29475a;color:#fff;border-color:#486477;box-shadow:inset 3px 0 0 #d5b377;font-weight:650}
+#seccionAdmin .admin-side-btn.active .portal-nav-glyph{color:#e5c68e}
+#seccionAdmin .admin-side-btn:focus-visible,
+#seccionAdmin .admin-nav-link-ext:focus-visible,
+#seccionAdmin .admin-menu-toggle:focus-visible,
+#seccionAdmin .admin-logout:focus-visible{outline:2px solid #e5c68e;outline-offset:3px}
+#seccionAdmin .admin-side-footer{margin-top:24px;padding:18px 0 0;border-top:1px solid #344c5c}
+#seccionAdmin .admin-logout{width:100%;color:#d9e4eb;border:1px solid #59717f;background:transparent;min-height:44px}
+#seccionAdmin .admin-logout:hover{background:#203e51}
+#seccionAdmin .admin-links-bottom{display:flex;flex-direction:column;gap:6px;padding-top:24px;margin-top:8px}
+#seccionAdmin .admin-nav-link-ext{display:flex;align-items:center;background:transparent;border:1px solid transparent;color:#afc4d1;font-size:.78rem;padding:8px 10px;min-height:40px}
+#seccionAdmin .admin-nav-link-ext:hover{color:#fff;border-color:#486477;background:#203e51}
+#seccionAdmin .admin-external-mark{margin-left:auto;color:#d5b377}
+#seccionAdmin .admin-workspace-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 24px;padding:4px 0 20px;border-bottom:1px solid #ccd8e0}
+#seccionAdmin .admin-workspace-eyebrow{font:600 .71rem/1.5 var(--font-ui,Arial,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:#657d8d;margin:0 0 7px}
+#seccionAdmin .admin-workspace-header h1{font:650 clamp(1.3rem,2.1vw,1.7rem)/1.3 var(--font-ui,Arial,sans-serif);color:#193c53;margin:0}
+#seccionAdmin .admin-workspace-badge{font:600 .71rem/1.4 var(--font-ui,Arial,sans-serif);color:#38586b;background:#e8f0f5;border:1px solid #cbdbe5;border-radius:30px;padding:7px 12px;white-space:nowrap}
+#seccionAdmin .admin-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+@media(max-width:960px){
+ #seccionAdmin.admin-layout{grid-template-columns:minmax(0,1fr)}
+ #seccionAdmin .sidebar-admin{position:static;max-height:none;min-height:0;padding:16px;overflow:visible}
+ #seccionAdmin .admin-brand{padding-bottom:14px;margin-bottom:8px}
+ #seccionAdmin .admin-menu-toggle{display:flex;justify-content:space-between;align-items:center;cursor:pointer;list-style:none;min-height:44px;color:#e2edf3;font:600 .87rem/1.4 var(--font-ui,Arial,sans-serif);padding:8px}
+ #seccionAdmin .admin-menu-toggle::-webkit-details-marker{display:none}
+ #seccionAdmin .admin-navigation:not([open])>:not(summary){display:none}
+ #seccionAdmin .admin-navigation[open] .admin-menu-toggle span{transform:rotate(180deg)}
+ #seccionAdmin .admin-menu-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;padding-top:16px}
+ #seccionAdmin .admin-links-bottom{flex-direction:row;flex-wrap:wrap;padding-top:14px}
+ #seccionAdmin .admin-links-bottom .admin-menu-label{width:100%}
+}
+@media(max-width:600px){
+ #seccionAdmin .admin-menu-list{grid-template-columns:minmax(0,1fr)}
+ #seccionAdmin .admin-workspace-header{align-items:flex-start;flex-direction:column;gap:10px;margin-bottom:18px}
+ #seccionAdmin .admin-side-btn{font-size:.87rem}
+}
+
+/* Gestión de trabajos: búsqueda y estados de consulta. */
+#seccionAdmin .admin-list-toolbar{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:12px;flex-wrap:wrap}
+#seccionAdmin .admin-search-field{flex:1;max-width:540px;min-width:200px}
+#seccionAdmin .admin-search-field label{display:block;font:600 .82rem/1.5 var(--font-ui);margin-bottom:6px;color:var(--text-main)}
+#seccionAdmin .admin-search-field input{width:100%;box-sizing:border-box;min-height:44px}
+#seccionAdmin #gestionTrabajosConteo{font:500 .8rem/1.5 var(--font-ui);color:var(--text-muted);padding-bottom:10px}
+#seccionAdmin .admin-list-status{min-height:1.5em;font:.82rem/1.5 var(--font-ui);color:var(--text-muted);margin:8px 0 18px}
+#seccionAdmin .admin-empty-state{padding:28px 20px;border:1px dashed var(--border-color);border-radius:8px;color:var(--text-muted);text-align:center;line-height:1.6}
+#seccionAdmin .gestion-trabajo-titulo{overflow-wrap:anywhere}
+#seccionAdmin .gestion-trabajo-botones{display:flex;gap:8px;flex-wrap:wrap}
+#seccionAdmin .btn-eliminar-trabajo{background:transparent;border-color:#bca6a6;color:#854444}
+#seccionAdmin #btnActualizarTrabajosAdmin:disabled{cursor:wait;opacity:.6}
+@media(max-width:600px){
+ #seccionAdmin .admin-search-field{max-width:none;min-width:0;flex-basis:100%}
+ #seccionAdmin .gestion-trabajo-botones{width:100%}
+ #seccionAdmin .gestion-trabajo-botones button{min-height:44px;flex:1}
 }

@@ -77,7 +77,7 @@ test('superadmin usa los mismos iconos tipográficos sin alterar botones',()=>{
   const sidebar=html.match(/<aside class="sidebar-admin">([\s\S]*?)<\/aside>/)?.[1];
   assert.ok(sidebar,'existe sidebar exclusivo Superadmin');
   const botones=[...sidebar.matchAll(/<button id="(tabNav\w+)" class="admin-side-btn[^"]*" onclick="cambiarSubseccionAdmin\('([^']+)'\)">([\s\S]*?)<\/button>/g)];
-  assert.equal(botones.length,9);
+  assert.equal(botones.length,10);
   const idSet=new Set();
   for(const [,id,section,content] of botones) {
     assert.ok(id && section);
