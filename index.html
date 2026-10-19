@@ -744,10 +744,17 @@
             <p class="text-instruccion" style="margin: 0;">Edite títulos, autor, orden, textos, batería de 8 preguntas o elimine trabajos.</p>
           </div>
           <div class="admin-header-actions">
-            <button class="admin-link-btn" onclick="cargarGestionTrabajosAdmin()">🔄 Refrescar Lista</button>
+            <button id="btnActualizarTrabajosAdmin" type="button" class="admin-link-btn" onclick="cargarGestionTrabajosAdmin()">Actualizar lista</button>
           </div>
         </div>
-        <div id="listaGestionTrabajosAdmin" class="gestion-trabajos-lista"></div>
+        <div class="admin-list-toolbar">
+          <div class="admin-search-field"><label for="buscarTrabajoAdmin">Buscar trabajo</label>
+            <input id="buscarTrabajoAdmin" type="search" name="buscarTrabajoAdmin" placeholder="Título, autor, número o código" oninput="renderizarGestionTrabajosAdmin()" aria-controls="listaGestionTrabajosAdmin">
+          </div>
+          <span id="gestionTrabajosConteo" role="status" aria-live="polite"></span>
+        </div>
+        <p id="gestionTrabajosEstado" class="admin-list-status" role="status" aria-live="polite"></p>
+        <div id="listaGestionTrabajosAdmin" class="gestion-trabajos-lista" aria-busy="false"></div>
       </section>
 
       <!-- SUBSECCIÓN 3: CÁMARA INTERACTIVA PRESENCIAL -->

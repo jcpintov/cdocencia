@@ -2886,34 +2886,94 @@ function modificarPuntosMesa(mesaId, delta) {
 /* ==========================================================================
    GESTIÓN DIRECTA DE TRABAJOS
    ========================================================================== */
+let consultaGestionTrabajosAdmin = 0;
+let trabajosGestionAdmin = [];
+function normalizarBusquedaAdmin(valor) {
+  return String(valor ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es').trim();
+}
+function filtrarTrabajosGestionAdmin(trabajos, consulta) {
+  const palabras = normalizarBusquedaAdmin(consulta).split(/\s+/).filter(Boolean);
+  return trabajos.filter(m => {
+    const texto = normalizarBusquedaAdmin([m.numero_orden, m.titulo, m.autor, m.unidad_codigo].join(' '));
+    return palabras.every(palabra => texto.includes(palabra));
+  });
+}
+function renderizarGestionTrabajosAdmin() {
+  const cont = document.getElementById('listaGestionTrabajosAdmin');
+  if (!cont) return;
+  const consulta = document.getElementById('buscarTrabajoAdmin')?.value || '';
+  const trabajos = filtrarTrabajosGestionAdmin(trabajosGestionAdmin, consulta);
+  cont.replaceChildren();
+  const contador = document.getElementById('gestionTrabajosConteo');
+  if (contador) contador.textContent = `${trabajos.length} de ${trabajosGestionAdmin.length} trabajos`;
+  if (!trabajos.length) {
+    const vacio = document.createElement('p');
+    vacio.className = 'admin-empty-state';
+    vacio.textContent = trabajosGestionAdmin.length ? 'No hay coincidencias. Pruebe con otro título, autor o número.' : 'Todavía no hay trabajos activos.';
+    cont.appendChild(vacio);
+    return;
+  }
+  trabajos.forEach(m => {
+    const card = document.createElement('article');
+    card.className = 'card card-gestion-trabajo';
+    const info = document.createElement('div');
+    info.className = 'gestion-trabajo-info';
+    const orden = document.createElement('span');
+    orden.className = 'gestion-trabajo-orden';
+    orden.textContent = `TRABAJO N.º ${m.numero_orden}`;
+    const titulo = document.createElement('h4');
+    titulo.className = 'gestion-trabajo-titulo';
+    titulo.textContent = m.titulo || 'Sin título';
+    const autor = document.createElement('p');
+    autor.className = 'gestion-trabajo-autor';
+    autor.textContent = m.autor ? formatearAutorMasonico(m.autor) : 'Cámara de Docencia';
+    info.append(orden, titulo, autor);
+    const acciones = document.createElement('div');
+    acciones.className = 'gestion-trabajo-botones';
+    const editar = document.createElement('button');
+    editar.type = 'button';
+    editar.className = 'admin-link-btn';
+    editar.textContent = 'Revisar y editar';
+    editar.setAttribute('aria-label', `Revisar y editar: ${m.titulo || 'trabajo'}`);
+    editar.addEventListener('click', () => abrirAuditoriaModulo(m.id));
+    const eliminar = document.createElement('button');
+    eliminar.type = 'button';
+    eliminar.className = 'admin-link-btn btn-eliminar-trabajo';
+    eliminar.textContent = 'Eliminar';
+    eliminar.setAttribute('aria-label', `Eliminar: ${m.titulo || 'trabajo'}`);
+    eliminar.addEventListener('click', () => eliminarModuloYReordenar(m.id));
+    acciones.append(editar, eliminar);
+    card.append(info, acciones);
+    cont.appendChild(card);
+  });
+}
 async function cargarGestionTrabajosAdmin() {
   const cont = document.getElementById('listaGestionTrabajosAdmin');
-  cont.innerHTML = "<p class='td-loading'>Cargando trabajos...</p>";
-
-  const { data: mods } = await sbApp
-    .from('modulos')
-    .select('*')
-    .eq('activo', true)
-    .order('numero_orden', { ascending: true });
-
-  listaModulos = mods || [];
-  cont.innerHTML = "";
-
-  listaModulos.forEach(m => {
-    cont.innerHTML += `
-      <div class="card card-gestion-trabajo">
-        <div class="gestion-trabajo-info">
-          <span class="gestion-trabajo-orden">TRABAJO N° ${m.numero_orden}</span>
-          <h4 class="gestion-trabajo-titulo">${m.titulo}</h4>
-          <p class="gestion-trabajo-autor">${m.autor ? formatearAutorMasonico(m.autor) : "Cámara de Docencia"}</p>
-        </div>
-        <div class="gestion-trabajo-botones">
-          <button class="admin-link-btn" onclick="abrirAuditoriaModulo('${m.id}')">🔍 Auditar / Editar 8 Preguntas</button>
-          <button class="admin-link-btn btn-eliminar-trabajo" onclick="eliminarModuloYReordenar('${m.id}')">🗑️ Eliminar</button>
-        </div>
-      </div>
-    `;
-  });
+  if (!cont) return;
+  const consulta = ++consultaGestionTrabajosAdmin;
+  const estado = document.getElementById('gestionTrabajosEstado');
+  const refrescar = document.getElementById('btnActualizarTrabajosAdmin');
+  cont.setAttribute('aria-busy', 'true');
+  if (estado) estado.textContent = 'Consultando trabajos…';
+  if (refrescar) refrescar.disabled = true;
+  try {
+    const { data: mods, error } = await sbApp.from('modulos').select('*')
+      .eq('activo', true).order('numero_orden', { ascending: true });
+    if (consulta !== consultaGestionTrabajosAdmin) return;
+    if (error || !Array.isArray(mods)) throw new Error('consulta_trabajos');
+    trabajosGestionAdmin = mods;
+    listaModulos = mods;
+    renderizarGestionTrabajosAdmin();
+    if (estado) estado.textContent = 'Lista actualizada.';
+  } catch {
+    if (consulta !== consultaGestionTrabajosAdmin) return;
+    if (estado) estado.textContent = 'No se pudo actualizar. Puede reintentar; los datos anteriores se conservan.';
+  } finally {
+    if (consulta === consultaGestionTrabajosAdmin) {
+      cont.setAttribute('aria-busy', 'false');
+      if (refrescar) refrescar.disabled = false;
+    }
+  }
 }
 
 async function cargarUnidadesEditorTrabajo(codigoActual, moduloId) {
