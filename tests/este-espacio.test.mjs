@@ -42,7 +42,8 @@ function buildScreen(response) {
   ]) nodes[id] = element();
   const document = {
     getElementById(id) { return nodes[id] || null; },
-    createElement(tag) { return element(tag); }
+    createElement(tag) { return element(tag); },
+    createTextNode(text) { return {textContent:String(text)}; }
   };
   const start = app.indexOf('async function mostrarDocenciaParaMaestros() {');
   const end = app.indexOf('/* ==========================================================================', start + 1);
@@ -50,6 +51,7 @@ function buildScreen(response) {
   const source = app.slice(start, end);
   const ctx = {
     document,
+    window: {matchMedia:()=>({matches:false})},
     obtenerDoctrinaBD: async () => response,
     DOCTRINA_DEFAULT: [{ titulo: 'Fundamento de respaldo', subtitulo: '', texto: 'Texto local' }]
   };
@@ -81,10 +83,10 @@ test('el índice respeta títulos y cuerpos definidos por el Superadmin', async 
   assert.equal(sections.length, 2);
   assert.equal(links.length, 2);
   assert.equal(sections[0].id, 'espacio-bloque-1');
-  assert.equal(sections[0].children[1].textContent, '1. Primer fundamento');
+  assert.equal(sections[0].children[1].textContent, '1. 1. Primer fundamento');
   assert.equal(sections[0].children[2].textContent, 'Sentido de la formación');
-  assert.equal(sections[0].children[3].textContent, 'Texto con\nsegundo renglón');
-  assert.equal(links[1].textContent, '2. Segundo fundamento');
+  assert.equal(sections[0].children[3].children[0].textContent, 'Texto con\nsegundo renglón');
+  assert.equal(links[1].textContent, '2. 2. Segundo fundamento');
   links[0].handlers.click();
   assert.equal(sections[0].scrolled.block, 'start');
   assert.equal(sections[0].focused.preventScroll, true);
@@ -96,7 +98,7 @@ test('se presenta respaldo local si la configuración está vacía', async () =>
   const { render, nodes } = buildScreen([]);
   await render();
   assert.equal(nodes.contenidoInstitucionalDocencia.children.length, 1);
-  assert.equal(nodes.espacioIndice.children[0].textContent, 'Fundamento de respaldo');
+  assert.equal(nodes.espacioIndice.children[0].textContent, '1. Fundamento de respaldo');
 });
 
 test('el texto institucional se trata como texto, no como HTML ejecutable', async () => {
@@ -105,7 +107,7 @@ test('el texto institucional se trata como texto, no como HTML ejecutable', asyn
   ]);
   await render();
   const section = nodes.contenidoInstitucionalDocencia.children[0];
-  assert.equal(section.children[1].textContent, '<img src=x onerror=alert(1)>');
-  assert.equal(section.children[2].textContent, '<script>alert(1)</script>');
-  assert.equal(nodes.espacioIndice.children[0].textContent, '<img src=x onerror=alert(1)>');
+  assert.equal(section.children[1].textContent, '1. <img src=x onerror=alert(1)>');
+  assert.equal(section.children[2].children[0].textContent, '<script>alert(1)</script>');
+  assert.equal(nodes.espacioIndice.children[0].textContent, '1. <img src=x onerror=alert(1)>');
 });

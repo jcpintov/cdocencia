@@ -2075,3 +2075,68 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-codigo-enlace {color:#bb
 @media(prefers-reduced-motion:reduce){
  #seccionAdmin *{animation:none!important;transition:none!important}
 }
+
+/* Este Espacio: diseño editorial sereno, introducción y cierre distinguibles. */
+#seccionDocenciaInstitucional .espacio-bloque {
+  scroll-margin-top:28px;
+  box-shadow:0 2px 10px rgba(17,39,56,.055);
+  transition:border-color .18s ease,box-shadow .18s ease;
+}
+#seccionDocenciaInstitucional .espacio-bloque:focus-visible {
+  outline:2px solid #b38a53;
+  outline-offset:3px;
+}
+#seccionDocenciaInstitucional .espacio-bloque-texto {
+  white-space:normal;
+  font-size:clamp(.98rem,1.1vw,1.045rem);
+  line-height:1.82;
+  letter-spacing:.005em;
+  color:#334d60;
+  max-width:78ch;
+  margin:0 0 1rem;
+}
+#seccionDocenciaInstitucional .espacio-bloque-texto:last-child {margin-bottom:0}
+#seccionDocenciaInstitucional .espacio-bloque-texto strong {
+  color:#19374d;
+  font-weight:680;
+}
+#seccionDocenciaInstitucional .espacio-tipo-introduccion {
+  border:1px solid #d4e0e9;
+  border-top:3px solid #c5a472;
+  background:linear-gradient(165deg,#fff,#f4f8fa);
+  padding:clamp(22px,3vw,36px);
+}
+#seccionDocenciaInstitucional .espacio-tipo-introduccion h3 {
+  font:650 clamp(1.42rem,2.3vw,1.85rem)/1.3 var(--font-reading,Georgia,serif);
+  color:#173b55;
+  margin-bottom:18px;
+}
+#seccionDocenciaInstitucional .espacio-tipo-fundamento {
+  border-left:3px solid #d1b27e;
+}
+#seccionDocenciaInstitucional .espacio-tipo-fundamento h3 {
+  color:#193c53;
+  overflow-wrap:break-word;
+}
+#seccionDocenciaInstitucional .espacio-tipo-cierre {
+  border:1px solid #b7ccda;
+  border-left:4px solid #b99b67;
+  background:linear-gradient(140deg,#eaf2f6,#f8fafb);
+  padding:clamp(22px,3vw,34px);
+}
+#seccionDocenciaInstitucional .espacio-tipo-cierre h3 {
+  color:#173e56;
+  font-size:clamp(1.28rem,2vw,1.65rem);
+}
+#seccionDocenciaInstitucional .espacio-indice-introduccion,
+#seccionDocenciaInstitucional .espacio-indice-cierre {
+  font-weight:650;
+}
+@media (max-width:640px){
+  #seccionDocenciaInstitucional .espacio-tipo-introduccion,
+  #seccionDocenciaInstitucional .espacio-tipo-cierre{padding:20px 17px}
+  #seccionDocenciaInstitucional .espacio-bloque-texto{font-size:.98rem;line-height:1.72}
+}
+@media (prefers-reduced-motion:reduce){
+  #seccionDocenciaInstitucional .espacio-bloque{transition:none}
+}
