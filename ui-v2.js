@@ -184,3 +184,17 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',prepararMenus,{once:true});
   else prepararMenus();
 })();
+
+/* Menú de administración plegable en pantallas pequeñas. */
+(function () {
+  function prepararMenuAdmin() {
+    const menu = document.getElementById('adminNavegacion');
+    if (!menu) return;
+    const media = window.matchMedia('(max-width: 960px)');
+    const adaptar = () => { menu.open = !media.matches; };
+    adaptar();
+    media.addEventListener('change', adaptar);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', prepararMenuAdmin, { once: true });
+  else prepararMenuAdmin();
+})();
