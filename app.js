@@ -416,32 +416,33 @@ async function guardarMiNuevaClave() {
 /* ==========================================================================
    SUPERADMIN: MÓDULO ADMINISTRAR USUARIOS
    ========================================================================== */
-async function cargarListadoUsuariosAdmin() {
+let padronUsuariosAdmin = [];
+let consultaPadronAdmin = 0;
+function filtrarPadronAdmin(usuarios, busqueda, estado = 'todos') {
+  const palabras = normalizarBusquedaAdmin(busqueda).split(/\s+/).filter(Boolean);
+  return usuarios.filter(u => {
+    const especial = u.es_admin || String(u.email || '').trim().toLowerCase() === 'dummy@ofl.cl';
+    const coincideEstado = estado === 'todos' || (estado === 'activos' && !especial && !!u.auth_user_id)
+      || (estado === 'pendientes' && !especial && !u.auth_user_id) || (estado === 'especiales' && especial);
+    const texto = normalizarBusquedaAdmin(`${u.nombre || ''} ${u.email || ''}`);
+    return coincideEstado && palabras.every(p => texto.includes(p));
+  });
+}
+function renderizarPadronAdmin() {
   const tbody = document.getElementById('tablaUsuariosAdminBody');
-  tbody.innerHTML = `<tr><td colspan="6" class="td-loading">Consultando padrón de usuarios...</td></tr>`;
-
-  const { data: usuarios, error } = await sbApp
-    .from('usuarios')
-    .select('id, nombre, email, es_admin, debe_cambiar_clave, auth_user_id')
-    .order('nombre', { ascending: true });
-
-  tbody.innerHTML = '';
-
-  if (error || !usuarios || usuarios.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic;">No se encontraron usuarios registrados.</td></tr>`;
-    return;
+  if (!tbody) return;
+  const usuarios = filtrarPadronAdmin(padronUsuariosAdmin, document.getElementById('buscarUsuarioAdmin')?.value || '', document.getElementById('filtrarEstadoUsuarioAdmin')?.value || 'todos');
+  tbody.replaceChildren();
+  const contador = document.getElementById('padronUsuariosConteo');
+  if (contador) contador.textContent = `${usuarios.length} de ${padronUsuariosAdmin.length} cuentas`;
+  if (!usuarios.length) {
+    const fila = document.createElement('tr');
+    const celda = document.createElement('td');
+    celda.colSpan = 6;
+    celda.className = 'admin-empty-state';
+    celda.textContent = padronUsuariosAdmin.length ? 'No hay cuentas que coincidan con estos filtros.' : 'No hay cuentas registradas.';
+    fila.appendChild(celda);tbody.appendChild(fila);
   }
-
-  const cuposOcupados = usuarios.filter(u => !u.es_admin &&
-    String(u.email || '').trim().toLowerCase() !== 'dummy@ofl.cl').length;
-  const botonAgregar = document.getElementById('btnAgregarUsuarioAdmin');
-  if (botonAgregar) {
-    botonAgregar.disabled = cuposOcupados >= 26;
-    botonAgregar.title = cuposOcupados >= 26 ? 'Padrón completo: 26 integrantes' : 'Agregar integrante';
-  }
-  const estadoCupos = document.getElementById('adminCupoUsuarios');
-  if (estadoCupos) estadoCupos.textContent = `${cuposOcupados}/26 integrantes`;
-
   usuarios.forEach(u => {
     const tr = document.createElement('tr');
     const celda = (texto, className = '') => {
@@ -462,6 +463,43 @@ async function cargarListadoUsuariosAdmin() {
     celda('Administración protegida', 'admin-accion-pendiente');
     tbody.appendChild(tr);
   });
+}
+async function cargarListadoUsuariosAdmin() {
+  const tbody = document.getElementById('tablaUsuariosAdminBody');
+  if (!tbody) return;
+  const consulta = ++consultaPadronAdmin;
+  const estado = document.getElementById('padronUsuariosEstado');
+  const refrescar = document.getElementById('btnActualizarPadronAdmin');
+  const botonAgregar = document.getElementById('btnAgregarUsuarioAdmin');
+  tbody.setAttribute('aria-busy', 'true');
+  if (estado) estado.textContent = 'Consultando padrón…';
+  if (refrescar) refrescar.disabled = true;
+  if (botonAgregar) botonAgregar.disabled = true;
+  try {
+    const {data: usuarios, error} = await sbApp.from('usuarios')
+      .select('id, nombre, email, es_admin, debe_cambiar_clave, auth_user_id').order('nombre', {ascending:true});
+    if (consulta !== consultaPadronAdmin) return;
+    if (error || !Array.isArray(usuarios)) throw new Error('consulta_padron');
+    padronUsuariosAdmin = usuarios;
+    const cuposOcupados = usuarios.filter(u => !u.es_admin && String(u.email || '').trim().toLowerCase() !== 'dummy@ofl.cl').length;
+    if (botonAgregar) {
+      botonAgregar.disabled = cuposOcupados >= 26;
+      botonAgregar.title = cuposOcupados >= 26 ? 'Padrón completo: 26 integrantes' : 'Agregar integrante';
+    }
+    const estadoCupos = document.getElementById('adminCupoUsuarios');
+    if (estadoCupos) estadoCupos.textContent = `${cuposOcupados}/26 integrantes`;
+    renderizarPadronAdmin();
+    if (estado) estado.textContent = 'Padrón actualizado. Los filtros no modifican el cupo de integrantes.';
+  } catch {
+    if (consulta !== consultaPadronAdmin) return;
+    if (estado) estado.textContent = 'No se pudo actualizar el padrón. Reintente; se conservan los datos anteriores.';
+    if (!padronUsuariosAdmin.length) tbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No se pudo cargar el padrón. Pulse Actualizar padrón para reintentar.</td></tr>';
+  } finally {
+    if (consulta === consultaPadronAdmin) {
+      tbody.setAttribute('aria-busy', 'false');
+      if (refrescar) refrescar.disabled = false;
+    }
+  }
 }
 
 function abrirModalCrearUsuario() {

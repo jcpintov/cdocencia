@@ -680,10 +680,16 @@
           <div class="admin-header-actions">
             <button class="btn-primary" id="btnAgregarUsuarioAdmin" type="button" onclick="abrirModalCrearUsuario()">Agregar usuario</button>
             <span id="adminCupoUsuarios" role="status" aria-live="polite" style="font-size:.85rem;opacity:.85">Comprobando cupos…</span>
-            <button class="admin-link-btn" onclick="cargarListadoUsuariosAdmin()">🔄 Refrescar Padrón</button>
+            <button id="btnActualizarPadronAdmin" type="button" class="admin-link-btn" onclick="cargarListadoUsuariosAdmin()">Actualizar padrón</button>
           </div>
         </div>
 
+        <div class="admin-list-toolbar">
+          <div class="admin-search-field"><label for="buscarUsuarioAdmin">Buscar integrante</label><input id="buscarUsuarioAdmin" type="search" name="buscarUsuarioAdmin" placeholder="Nombre o correo" aria-controls="tablaUsuariosAdminBody" oninput="renderizarPadronAdmin()"></div>
+          <div class="admin-search-field"><label for="filtrarEstadoUsuarioAdmin">Estado de acceso</label><select id="filtrarEstadoUsuarioAdmin" onchange="renderizarPadronAdmin()"><option value="todos">Todas las cuentas</option><option value="activos">Integrantes con acceso activo</option><option value="pendientes">Integrantes pendientes de activación</option><option value="especiales">Administrador y cuenta de prueba</option></select></div>
+          <span id="padronUsuariosConteo" role="status" aria-live="polite"></span>
+        </div>
+        <p id="padronUsuariosEstado" class="admin-list-status" role="status" aria-live="polite"></p>
         <div class="table-responsive">
           <table class="metricas-table">
             <thead>
