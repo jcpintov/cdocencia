@@ -2124,10 +2124,10 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-codigo-enlace {color:#bb
   border-left:4px solid #b99b67;
   background:linear-gradient(140deg,#eaf2f6,#f8fafb);
   padding:clamp(22px,3vw,34px);
-  padding-bottom:42px;
+  padding-bottom:56px;
 }
 #seccionDocenciaInstitucional .espacio-tipo-cierre .espacio-bloque-texto:last-child {
-  margin-bottom:12px;
+  margin-bottom:18px;
 }
 #seccionDocenciaInstitucional .espacio-tipo-cierre h3 {
   color:#173e56;
@@ -2141,9 +2141,159 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-codigo-enlace {color:#bb
   #seccionDocenciaInstitucional .espacio-bloque{padding-inline:18px}
   #seccionDocenciaInstitucional .espacio-tipo-introduccion,
   #seccionDocenciaInstitucional .espacio-tipo-cierre{padding:20px 18px}
-  #seccionDocenciaInstitucional .espacio-tipo-cierre{padding-bottom:30px}
+  #seccionDocenciaInstitucional .espacio-tipo-cierre{padding-bottom:42px}
   #seccionDocenciaInstitucional .espacio-bloque-texto{font-size:.98rem;line-height:1.72}
 }
 @media (prefers-reduced-motion:reduce){
   #seccionDocenciaInstitucional .espacio-bloque{transition:none}
+}
+
+
+/* Superadmin · fase frontend. Sin modificaciones a permisos ni a servicios. */
+#seccionAdmin .admin-menu-list {
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:18px;
+}
+#seccionAdmin .admin-nav-group {
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-width:0;
+}
+#seccionAdmin .admin-nav-label {
+  margin:0 0 5px;
+  padding:0 11px;
+  font:650 .66rem/1.5 var(--font-ui,Arial,sans-serif);
+  letter-spacing:.095em;
+  color:#a9b9c7;
+}
+#seccionAdmin .admin-side-btn {
+  width:100%;
+  justify-content:flex-start;
+  text-align:left;
+}
+#seccionAdmin .admin-side-btn.active {
+  background:#263b4c;
+  color:#fff;
+  box-shadow:inset 3px 0 0 #d6b77e;
+}
+#seccionAdmin .admin-workspace-header {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:16px;
+  margin-bottom:22px;
+  padding:4px 0 20px;
+  border-bottom:1px solid #d9e1e7;
+  font-family:var(--font-ui,Arial,sans-serif);
+}
+#seccionAdmin .admin-workspace-eyebrow {
+  margin:0 0 7px;
+  font-size:.71rem;
+  font-weight:650;
+  letter-spacing:.095em;
+  color:#687a8a;
+}
+#seccionAdmin .admin-workspace-header h1 {
+  margin:0 0 6px;
+  color:#163247;
+  font-size:clamp(1.35rem,2.2vw,1.75rem);
+  line-height:1.25;
+}
+#seccionAdmin .admin-workspace-header p:not(.admin-workspace-eyebrow) {
+  margin:0;
+  max-width:64ch;
+  color:#526775;
+  font-size:.88rem;
+  line-height:1.55;
+}
+#seccionAdmin .admin-workspace-tag {
+  display:inline-flex;
+  align-items:center;
+  min-height:30px;
+  padding:5px 11px;
+  border:1px solid #cbd8e0;
+  border-radius:5px;
+  color:#405c70;
+  background:#f3f7f8;
+  font-size:.75rem;
+  font-weight:650;
+  white-space:nowrap;
+}
+#seccionAdmin .admin-acciones-rapidas {
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:20px;
+}
+#seccionAdmin .admin-acciones-rapidas button {
+  min-height:42px;
+  padding:10px 15px;
+  border:1px solid #c6d3dc;
+  border-radius:5px;
+  color:#173b52;
+  background:#f8fafb;
+  font:.84rem/1.3 var(--font-ui,Arial,sans-serif);
+  font-weight:650;
+  cursor:pointer;
+}
+#seccionAdmin .admin-acciones-rapidas button:hover {
+  background:#ebf1f4;
+  border-color:#8ca8b9;
+}
+#seccionAdmin .admin-acciones-rapidas button:focus-visible,
+#seccionAdmin .admin-side-btn:focus-visible {
+  outline:3px solid #bb9057;
+  outline-offset:2px;
+}
+#seccionAdmin .admin-estado-doctrina {
+  margin-top:24px;
+  padding:16px 18px;
+  border:1px solid #d5dfe5;
+  border-left:3px solid #9e8c71;
+  border-radius:5px;
+  background:#f7f8f8;
+  color:#405665;
+  font-family:var(--font-ui,Arial,sans-serif);
+}
+#seccionAdmin .admin-estado-doctrina > div {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+}
+#seccionAdmin .admin-estado-doctrina strong {
+  color:#17384f;
+  font-size:.9rem;
+}
+#seccionAdmin .admin-estado-doctrina p {
+  margin:9px 0 0;
+  font-size:.84rem;
+  line-height:1.6;
+}
+#seccionAdmin .admin-estado-pendiente {
+  padding:3px 8px;
+  border:1px solid #c6b7a6;
+  border-radius:4px;
+  color:#72543b;
+  font-size:.69rem;
+  font-weight:700;
+  letter-spacing:.04em;
+}
+@media (max-width:960px) {
+  #seccionAdmin .admin-menu-list {
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:12px;
+  }
+  #seccionAdmin .admin-nav-group {align-self:start}
+}
+@media (max-width:640px) {
+  #seccionAdmin .admin-menu-list {grid-template-columns:1fr;gap:12px}
+  #seccionAdmin .admin-nav-group {gap:3px}
+  #seccionAdmin .admin-workspace-header {padding-bottom:14px}
+  #seccionAdmin .admin-acciones-rapidas button {flex:1 1 100%}
 }
