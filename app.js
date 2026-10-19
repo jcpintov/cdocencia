@@ -329,6 +329,7 @@ async function guardarNuevaClaveObligatoria() {
 }
 
 function cerrarSesion() {
+  limpiarBibliotecaDoctrina();
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
   if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
   usuarioActual = null;
@@ -2505,6 +2506,7 @@ function cambiarSubseccionAdmin(seccion) {
     cargar: ['tabNavCargar', 'Archivos originales'], gestion_trabajos: ['tabNavGestionTrabajos', 'Trabajos y cuestionarios'],
     presencial: ['tabNavPresencial', 'Cámara presencial'], muro_general: ['tabNavMuroGeneral', 'Muro docente'],
     metricas: ['tabNavMetricas', 'Avance de los maestros'], editor_doctrina: ['tabNavEditorDoctrina', 'Contenido institucional'],
+    doctrina: ['tabNavDoctrina', 'Doctrina y Reglamentos'],
     accesos: ['tabNavAccesos', 'Bitácora de accesos']
   };
   if (!Object.prototype.hasOwnProperty.call(vistasAdmin, seccion)) return;
@@ -2523,13 +2525,17 @@ function cambiarSubseccionAdmin(seccion) {
     if (focoEnMenu) tituloVista?.focus({ preventScroll: true });
   }
 
-  const btns = ['tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
-  const secs = ['adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
+  const btns = ['tabNavDoctrina', 'tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
+  const secs = ['adminSeccionDoctrina', 'adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
 
   btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
 
-  if (seccion === 'resumen') {
+  if (seccion === 'doctrina') {
+    document.getElementById('tabNavDoctrina')?.classList.add('active');
+    document.getElementById('adminSeccionDoctrina')?.classList.remove('hidden');
+    cargarBibliotecaDoctrina();
+  } else if (seccion === 'resumen') {
     document.getElementById('tabNavResumen')?.classList.add('active');
     document.getElementById('adminSeccionResumen')?.classList.remove('hidden');
     cargarResumenAdmin();

@@ -2196,3 +2196,14 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-codigo-enlace {color:#bb
  #seccionAdmin .gestion-trabajo-botones{width:100%}
  #seccionAdmin .gestion-trabajo-botones button{min-height:44px;flex:1}
 }
+
+/* Biblioteca privada: incorporación y revisión documental. */
+#seccionAdmin .doctrina-upload-form{max-width:720px;padding:22px;background:#f1f5f8;border:1px solid #d2dfe8;border-radius:8px;margin:22px 0}
+#seccionAdmin .doctrina-upload-form label{display:block;font-weight:600;font-size:.85rem;margin:16px 0 7px}
+#seccionAdmin .doctrina-upload-form input,#seccionAdmin .doctrina-upload-form select{width:100%;box-sizing:border-box}
+#seccionAdmin .doctrina-upload-form p{font-size:.83rem;line-height:1.6;margin:14px 0}
+#seccionAdmin .doctrina-documento{padding:18px 0;border-bottom:1px solid var(--border-color);overflow-wrap:anywhere}
+#seccionAdmin .doctrina-documento h4{margin:0 0 8px;font-size:1rem}
+#seccionAdmin .doctrina-documento p{color:var(--text-muted);font-size:.84rem;line-height:1.6;margin-bottom:12px}
+#seccionAdmin .doctrina-inventario{margin-top:28px;padding:18px;border:1px solid var(--border-color);border-radius:8px}
+#seccionAdmin .doctrina-inventario summary{cursor:pointer;font-weight:600;line-height:1.6}
