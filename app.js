@@ -2462,6 +2462,29 @@ async function cargarDatosAdmin() {
 }
 
 function cambiarSubseccionAdmin(seccion) {
+  const vistasAdmin = {
+    resumen: ['tabNavResumen', 'Resumen ejecutivo'], usuarios: ['tabNavUsuarios', 'Usuarios y padrón'],
+    cargar: ['tabNavCargar', 'Archivos originales'], gestion_trabajos: ['tabNavGestionTrabajos', 'Trabajos y cuestionarios'],
+    presencial: ['tabNavPresencial', 'Cámara presencial'], muro_general: ['tabNavMuroGeneral', 'Muro docente'],
+    metricas: ['tabNavMetricas', 'Avance de los maestros'], editor_doctrina: ['tabNavEditorDoctrina', 'Contenido institucional'],
+    accesos: ['tabNavAccesos', 'Bitácora de accesos']
+  };
+  if (!Object.prototype.hasOwnProperty.call(vistasAdmin, seccion)) return;
+  const [botonActual, tituloActual] = vistasAdmin[seccion];
+  Object.values(vistasAdmin).forEach(([id]) => {
+    const boton = document.getElementById(id);
+    if (id === botonActual) boton?.setAttribute('aria-current', 'page');
+    else boton?.removeAttribute('aria-current');
+  });
+  const tituloVista = document.getElementById('adminVistaActual');
+  if (tituloVista) tituloVista.textContent = tituloActual;
+  const menuAdmin = document.getElementById('adminNavegacion');
+  if (window.matchMedia('(max-width: 960px)').matches && menuAdmin) {
+    const focoEnMenu = menuAdmin.contains(document.activeElement);
+    menuAdmin.open = false;
+    if (focoEnMenu) tituloVista?.focus({ preventScroll: true });
+  }
+
   const btns = ['tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
   const secs = ['adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
 

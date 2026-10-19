@@ -598,59 +598,66 @@
     <aside class="sidebar-admin">
       <div class="admin-brand">
         <span class="portal-nav-glyph admin-brand-glyph" aria-hidden="true">◇</span>
-        <h3>Consola Superadmin</h3>
+        <div><span class="admin-brand-eyebrow">DOCENCIA PARA MAESTROS</span><h3>Consola Superadmin</h3></div>
       </div>
-
-      <div class="admin-links-top">
-        <a href="https://github.com/jcpintov/cdocencia" target="_blank" class="admin-nav-link-ext">
-          <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span>Repositorio GitHub</span>
-        </a>
-        <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq" target="_blank" class="admin-nav-link-ext">
-          <span class="portal-nav-glyph" aria-hidden="true">◈</span><span>Supabase Dashboard</span>
-        </a>
-      </div>
-
-      <hr class="admin-divider">
-
-      <nav class="admin-menu-list">
-        <button id="tabNavResumen" class="admin-side-btn" onclick="cambiarSubseccionAdmin('resumen')">
+      <details id="adminNavegacion" class="admin-navigation" open>
+        <summary class="admin-menu-toggle">Menú de administración<span aria-hidden="true">⌄</span></summary>
+        <nav class="admin-menu-list" aria-label="Administración de la plataforma">
+<div class="admin-menu-group"><p class="admin-menu-label">Vista general</p>
+<button id="tabNavResumen" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('resumen')">
           <span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="admin-nav-text">Resumen ejecutivo</span>
         </button>
-        <button id="tabNavUsuarios" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('usuarios')">
-          <span class="portal-nav-glyph" aria-hidden="true">♙</span><span class="admin-nav-text">Administrar Usuarios</span>
+<button id="tabNavUsuarios" class="admin-side-btn" onclick="cambiarSubseccionAdmin('usuarios')">
+          <span class="portal-nav-glyph" aria-hidden="true">♙</span><span class="admin-nav-text">Usuarios y padrón</span>
         </button>
-        <button id="tabNavCargar" class="admin-side-btn" onclick="cambiarSubseccionAdmin('cargar')">
-          <span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="admin-nav-text">Adjuntar Archivo Original</span>
+</div>
+<div class="admin-menu-group"><p class="admin-menu-label">Gestión docente</p>
+<button id="tabNavGestionTrabajos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">
+          <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span class="admin-nav-text">Trabajos y cuestionarios</span>
         </button>
-        <button id="tabNavGestionTrabajos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">
-          <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span class="admin-nav-text">Gestión de Trabajos</span>
+<button id="tabNavCargar" class="admin-side-btn" onclick="cambiarSubseccionAdmin('cargar')">
+          <span class="portal-nav-glyph" aria-hidden="true">▤</span><span class="admin-nav-text">Archivos originales</span>
         </button>
-        <button id="tabNavPresencial" class="admin-side-btn" onclick="cambiarSubseccionAdmin('presencial')">
-          <span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="admin-nav-text">Cámara Presencial (Debate)</span>
+<button id="tabNavEditorDoctrina" class="admin-side-btn" onclick="cambiarSubseccionAdmin('editor_doctrina')">
+          <span class="portal-nav-glyph" aria-hidden="true">▣</span><span class="admin-nav-text">Contenido institucional</span>
         </button>
-        <button id="tabNavMuroGeneral" class="admin-side-btn" onclick="cambiarSubseccionAdmin('muro_general')">
-          <span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="admin-nav-text">Muro General</span>
+</div>
+<div class="admin-menu-group"><p class="admin-menu-label">Participación y seguimiento</p>
+<button id="tabNavPresencial" class="admin-side-btn" onclick="cambiarSubseccionAdmin('presencial')">
+          <span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="admin-nav-text">Cámara presencial</span>
         </button>
-        <button id="tabNavMetricas" class="admin-side-btn" onclick="cambiarSubseccionAdmin('metricas')">
-          <span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="admin-nav-text">Matriz de Avance</span>
+<button id="tabNavMuroGeneral" class="admin-side-btn" onclick="cambiarSubseccionAdmin('muro_general')">
+          <span class="portal-nav-glyph" aria-hidden="true">◌</span><span class="admin-nav-text">Muro docente</span>
         </button>
-        <button id="tabNavEditorDoctrina" class="admin-side-btn" onclick="cambiarSubseccionAdmin('editor_doctrina')">
-          <span class="portal-nav-glyph" aria-hidden="true">▣</span><span class="admin-nav-text">Editar Docencia P. Maestros</span>
+<button id="tabNavMetricas" class="admin-side-btn" onclick="cambiarSubseccionAdmin('metricas')">
+          <span class="portal-nav-glyph" aria-hidden="true">◷</span><span class="admin-nav-text">Avance de los maestros</span>
         </button>
-        <button id="tabNavAccesos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('accesos')">
-          <span class="portal-nav-glyph" aria-hidden="true">◎</span><span class="admin-nav-text">Bitácora de Accesos</span>
+<button id="tabNavAccesos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('accesos')">
+          <span class="portal-nav-glyph" aria-hidden="true">◎</span><span class="admin-nav-text">Bitácora de accesos</span>
         </button>
-      </nav>
-
-      <div class="admin-side-footer">
-        <button class="btn-secondary" style="width: 100%; border-color: rgba(255,255,255,0.3); color: #fff;" onclick="cerrarSesion()">
-          Cerrar Sesión
-        </button>
-      </div>
+</div>
+        </nav>
+        <div class="admin-side-footer">
+          <button class="btn-secondary admin-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+        </div>
+        <div class="admin-links-bottom" aria-label="Herramientas externas">
+          <p class="admin-menu-label">Herramientas externas</p>
+          <a href="https://github.com/jcpintov/cdocencia" target="_blank" rel="noopener noreferrer" class="admin-nav-link-ext">
+            <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span>Repositorio GitHub</span><span class="admin-external-mark" aria-hidden="true">↗</span><span class="admin-sr-only"> (abre en otra pestaña)</span>
+          </a>
+          <a href="https://supabase.com/dashboard/project/pwnnpjygnviyzyyvfxnq" target="_blank" rel="noopener noreferrer" class="admin-nav-link-ext">
+            <span class="portal-nav-glyph" aria-hidden="true">◈</span><span>Supabase Dashboard</span><span class="admin-external-mark" aria-hidden="true">↗</span><span class="admin-sr-only"> (abre en otra pestaña)</span>
+          </a>
+        </div>
+      </details>
     </aside>
 
     <main class="admin-main-content">
-      <section id="adminSeccionResumen" class="card card-trazado hidden">
+      <header class="admin-workspace-header">
+        <div><p class="admin-workspace-eyebrow">Administración de la Cámara</p><h1 id="adminVistaActual" tabindex="-1">Resumen ejecutivo</h1></div>
+        <span class="admin-workspace-badge">Acceso Superadmin</span>
+      </header>
+      <section id="adminSeccionResumen" class="card card-trazado">
         <div class="admin-card-header"><div><h2>Resumen ejecutivo</h2>
           <p class="text-instruccion">Actividad de la Cámara de Docencia; progreso sin el administrador.</p></div>
           <button class="btn-secondary" onclick="cargarResumenAdmin()">Actualizar indicadores</button></div>
@@ -665,7 +672,7 @@
       </section>
 
       <!-- SUBSECCIÓN: ADMINISTRAR USUARIOS -->
-      <section id="adminSeccionUsuarios" class="card card-trazado">
+      <section id="adminSeccionUsuarios" class="card card-trazado hidden">
         <div class="admin-card-header">
           <div>
             <h2>Padrón y Administración de Usuarios</h2>
