@@ -1683,44 +1683,25 @@ body > header .brand-title {
 body > header .brand-title-text {
   overflow-wrap:break-word;
 }
-body > header .header-workspace-usuario {
-  display:inline-flex;
-  flex-wrap:wrap;
-  align-items:baseline;
-  gap:3px 7px;
-  min-width:0;
-  color:rgba(255,255,255,.9);
-  font:500 .86rem/1.4 var(--font-ui,Arial,sans-serif);
-  letter-spacing:0;
-}
-body > header .header-workspace-separador {
-  color:#d8b47b;
-  font-weight:700;
-}
-body > header .header-workspace-etiqueta {
-  white-space:nowrap;
-  color:#e8c894;
-  font-size:.78rem;
-  font-weight:700;
-  letter-spacing:.045em;
-}
-body > header .header-workspace-nombre {
-  min-width:0;
-  overflow-wrap:anywhere;
-  color:#fff;
-  font:650 .9rem/1.4 var(--font-ui,Arial,sans-serif);
-}
 body > header .header-controls {flex:0 0 auto}
-@media(max-width:900px) {
-  body > header .brand-title {flex-basis:100%}
-  body > header .header-workspace-usuario {flex-basis:100%;padding-left:32px}
-  body > header .header-workspace-separador {display:none}
+body > .header-workspace-usuario {
+  display:flex;flex-wrap:wrap;justify-content:center;align-items:baseline;
+  gap:4px 8px;width:100%;padding:11px 24px;box-sizing:border-box;
+  background:#e7d4ab;color:#283e4c;border-bottom:1px solid #ceb988;
+  font:500 .86rem/1.5 var(--font-ui,Arial,sans-serif);text-align:center;
 }
-@media(max-width:640px) {
-  body > header .brand-title {gap:3px 7px}
-  body > header .header-workspace-usuario {padding-left:0;font-size:.79rem}
-  body > header .header-workspace-nombre {font-size:.83rem}
-  body > header .header-workspace-etiqueta {font-size:.74rem}
+body > .header-workspace-usuario .header-workspace-etiqueta {
+  color:#283e4c;font-size:.75rem;font-weight:650;letter-spacing:.055em;
+}
+body > .header-workspace-usuario .header-workspace-nombre {
+  min-width:0;overflow-wrap:anywhere;color:#203849;
+  font:650 .9rem/1.5 var(--font-ui,Arial,sans-serif);
+}
+@media(max-width:900px){body > header .brand-title{flex-basis:100%}}
+@media(max-width:640px){
+ body > header .brand-title{gap:3px 7px}
+ body > .header-workspace-usuario{padding:10px 16px;gap:2px 6px}
+ body > .header-workspace-usuario .header-workspace-nombre{font-size:.84rem}
 }
 
 
