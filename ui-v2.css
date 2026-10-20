@@ -2290,3 +2290,28 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 #seccionAdmin .opciones-asignacion-dialog .asignacion-botones button{min-height:48px}
 #seccionAdmin .admin-main-content button:disabled{cursor:not-allowed;opacity:.65}
 @media(max-width:700px){#seccionAdmin #btnAbrirNuevaAsignacion{width:100%}#seccionAdmin .opciones-asignacion-dialog .asignacion-botones{bottom:-15px}}
+
+/* Resumen Ejecutivo · seis indicadores en casillas proporcionadas.
+   Los tres indicadores de trabajos comparten el mismo ancho que el resto. */
+#adminSeccionResumen > .admin-kpi-grid-resumen{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:clamp(12px,1.6vw,18px);
+}
+#adminSeccionResumen > .admin-kpi-grid-resumen .admin-kpi{
+  min-width:0;
+  min-height:112px;
+  padding:clamp(15px,1.6vw,22px);
+  justify-content:space-between;
+}
+#adminSeccionResumen > .admin-kpi-grid-resumen .admin-kpi span{
+  color:#3d5362;
+  line-height:1.35;
+}
+@media(max-width:960px){
+  #adminSeccionResumen > .admin-kpi-grid-resumen{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:480px){
+  #adminSeccionResumen > .admin-kpi-grid-resumen{gap:10px}
+  #adminSeccionResumen > .admin-kpi-grid-resumen .admin-kpi{min-height:96px;padding:14px 12px}
+}
