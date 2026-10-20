@@ -3569,24 +3569,23 @@ window.addEventListener('DOMContentLoaded', () => {
 async function cargarResumenAdmin() {
   const status = document.getElementById('resumenAdminEstado');
   if (!status) return;
-  void window.cargarCronogramaAdmin?.();
   status.textContent = 'Actualizando indicadores...';
-  const campos = ['kpiUsuarios','kpiModulos','kpiCompletados','kpiComentarios'];
-  campos.forEach(id => { document.getElementById(id).textContent = '—'; });
+  const campos = ['kpiUsuarios','kpiResumenAsignados','kpiResumenEntregados','kpiResumenPendientes','kpiCompletados','kpiComentarios'];
+  campos.forEach(id => { const campo=document.getElementById(id);if(campo)campo.textContent = '—'; });
+  // La misma consulta autenticada del cronograma alimenta los tres KPI de trabajos.
+  void window.cargarCronogramaAdmin?.();
   try {
-    const [users, modules, progress, comments] = await Promise.all([
-      sbApp.from('usuarios').select('id,es_admin'),
-      sbApp.from('modulos').select('id', { count: 'exact', head: true }),
+    const [users, progress, comments] = await Promise.all([
+      sbApp.from('usuarios').select('id,email,es_admin'),
       sbApp.from('progreso_maestro').select('usuario_id,completado').eq('completado',true),
-      sbApp.from('comentarios_muro').select('id', { count: 'exact', head: true })
+      sbApp.from('comentarios_muro').select('id', { count: 'exact', head: true }).eq('activo',true)
     ]);
-    if ([users,modules,progress,comments].some(result => result.error)) throw new Error('Sin permisos de lectura para indicadores');
-    const estudiantes = new Set(users.data.filter(u => !u.es_admin).map(u => u.id));
+    if ([users,progress,comments].some(result => result.error)) throw new Error('Sin permisos de lectura para indicadores');
+    const estudiantes = new Set(users.data.filter(u => !u.es_admin && String(u.email||'').trim().toLowerCase()!=='dummy@ofl.cl').map(u => u.id));
     document.getElementById('kpiUsuarios').textContent = estudiantes.size.toLocaleString('es-CL');
-    document.getElementById('kpiModulos').textContent = (modules.count ?? 0).toLocaleString('es-CL');
     document.getElementById('kpiCompletados').textContent = progress.data.filter(p => estudiantes.has(p.usuario_id)).length.toLocaleString('es-CL');
     document.getElementById('kpiComentarios').textContent = (comments.count ?? 0).toLocaleString('es-CL');
-    status.textContent = 'Indicadores actualizados.';
+    status.textContent = 'Indicadores actualizados. Las cifras de trabajos se obtienen del cronograma.';
   } catch {
     status.textContent = 'No fue posible consultar los indicadores con los permisos actuales.';
   }
