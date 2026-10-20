@@ -5,6 +5,7 @@ on:
       - 'app.js'
       - 'index.html'
       - 'ui-v2.css'
+      - 'styles.css'
       - 'asignaciones-admin.js'
       - 'api/admin-asignaciones.js'
       - 'lib/correo-asignacion.js'
@@ -32,4 +33,5 @@ jobs:
       - name: Probar formulario y catálogo escritorio y móvil
         env:
           QA_PLAYWRIGHT_ROOT: ${{ runner.temp }}/qa
+          QA_VISUAL_CAPTURE: 1
         run: node tests/browser/asignaciones-smoke.mjs

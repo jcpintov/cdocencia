@@ -658,7 +658,6 @@
     <main class="admin-main-content">
       <header class="admin-workspace-header">
         <div><p class="admin-workspace-eyebrow">Administración de la Cámara</p><h1 id="adminVistaActual" tabindex="-1">Resumen ejecutivo</h1></div>
-        <span class="admin-workspace-badge">Acceso Superadmin</span>
       </header>
       <section id="adminSeccionResumen" class="card card-trazado">
         <div class="admin-card-header"><div><h2>Resumen ejecutivo</h2>
@@ -724,7 +723,7 @@
       <section id="adminSeccionAsignaciones" class="card card-trazado hidden" aria-labelledby="asignacionesTitulo">
         <div class="admin-card-header"><div><h2 id="asignacionesTitulo">Asignación de trabajos</h2><p class="text-instruccion">Asigne temas y gestione sus plazos. Abra las opciones de cada trabajo para editarlo o enviar su solicitud inicial. El recordatorio de atraso es automático.</p></div><button id="btnActualizarAsignaciones" type="button" class="admin-link-btn" onclick="cargarAsignacionesAdmin()">Actualizar</button></div>
         <p id="asignacionesEstado" role="status" aria-live="polite"></p>
-        <button type="button" id="btnAbrirNuevaAsignacion" class="btn-primary" onclick="abrirNuevaAsignacionDocente()">Nueva asignación</button>
+        <button type="button" id="btnAbrirNuevaAsignacion" class="btn-primary" onclick="abrirNuevaAsignacionDocente()">Asignar trabajo</button>
         <p class="asignacion-aviso">Recordatorio automático único: revisión diaria después de siete días de atraso, si la solicitud original fue enviada y el tema aún no está publicado. Todos los correos llevan copia oculta a jpintov@gmail.com.</p>
         <div class="asignacion-lista-cabecera"><p id="asignacionesConteo"></p><label><input type="checkbox" id="asignacionesVerAnuladas" onchange="renderizarAsignacionesDocentes()"> Mostrar anuladas</label></div>
         <div class="table-responsive"><table class="metricas-table asignaciones-table"><thead><tr><th>Hermano</th><th>Tema</th><th>Asignación</th><th>Entrega · 23:30 h</th><th>Estado y correo</th><th>Acción</th></tr></thead><tbody id="asignacionesBody"><tr><td colspan="6">Abra esta sección para consultar las asignaciones.</td></tr></tbody></table></div>
@@ -743,7 +742,7 @@
             <p id="asignacionDisponibilidad" class="asignacion-aviso">Los temas asignados se mostrarán deshabilitados e identificarán al hermano responsable.</p>
           </fieldset>
           <p id="asignacionModalEstado" role="status" aria-live="polite"></p>
-          <div class="asignacion-botones"><button type="submit" id="btnAsignarTrabajo" class="btn-primary">Asignar</button><button type="button" id="btnModificarAsignacion" class="btn-secondary" onclick="modificarAsignacionDocente()" disabled>Modificar</button><button type="button" id="btnEliminarAsignacion" class="btn-secondary" onclick="eliminarAsignacionDocente()" disabled>Eliminar</button><button type="button" id="btnCorreoAsignacion" class="btn-secondary" onclick="abrirCorreoAsignacion()" disabled>Correo</button></div>
+          <div class="asignacion-botones"><button type="submit" id="btnAsignarTrabajo" class="btn-primary">Asignar trabajo</button><button type="button" id="btnModificarAsignacion" class="btn-secondary" onclick="modificarAsignacionDocente()" disabled>Modificar</button><button type="button" id="btnEliminarAsignacion" class="btn-secondary" onclick="eliminarAsignacionDocente()" disabled>Eliminar</button><button type="button" id="btnCorreoAsignacion" class="btn-secondary" onclick="abrirCorreoAsignacion()" disabled>Correo</button></div>
           <button type="button" id="btnNuevaAsignacion" class="admin-link-btn" onclick="nuevaAsignacionDocente()">Limpiar selección / Nueva asignación</button>
         </form>
         <section id="asignacionRecordatorioPanel" class="asignacion-recordatorio-panel" aria-labelledby="recordatorioAutomaticoTitulo" hidden>

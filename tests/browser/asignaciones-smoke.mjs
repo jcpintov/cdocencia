@@ -44,12 +44,38 @@ const url='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true});
 try{
  const page=await browser.newPage({viewport:{width:1440,height:900}});
+ const comprobarContraste=async selector=>{
+  const resultado=await page.locator(selector).evaluate(el=>{
+   const rgb=s=>(s.match(/[\d.]+/g)||[]).map(Number);
+   const luminancia=c=>c.slice(0,3).map(x=>{x/=255;return x<=.04045?x/12.92:((x+.055)/1.055)**2.4;}).reduce((v,x,i)=>v+x*[.2126,.7152,.0722][i],0);
+   const frente=rgb(getComputedStyle(el).color);let bg=[255,255,255,1];
+   for(let n=el;n;n=n.parentElement){const c=rgb(getComputedStyle(n).backgroundColor);if(c.length>=3&&(c.length===3||c[3]>=1)){bg=c;break;}}
+   const l1=luminancia(frente),l2=luminancia(bg);return {ratio:(Math.max(l1,l2)+.05)/(Math.min(l1,l2)+.05),color:getComputedStyle(el).color,fondo:bg};
+  });assert.ok(resultado.ratio>=4.5,selector+' requiere contraste 4,5:1: '+JSON.stringify(resultado));
+ };
+
  await page.route('https://**/*',r=>r.abort());
  await page.goto(url);await page.waitForLoadState('domcontentloaded');
  await page.evaluate(()=>{usuarioActual={id:'admin-fixture',es_admin:true};document.getElementById('seccionLogin').classList.add('hidden');document.getElementById('seccionAdmin').classList.remove('hidden');cambiarSubseccionAdmin('asignaciones');});
  await page.locator('#asignacionesEstado').filter({hasText:'Asignaciones actualizadas. Guardar o modificar nunca envía correos.'}).waitFor();
- await page.getByRole('button',{name:'Nueva asignación',exact:true}).click();
+
+ assert.equal(await page.getByText('Acceso Superadmin',{exact:true}).count(),0);
+ assert.equal(await page.locator('#btnAbrirNuevaAsignacion').textContent(),'Asignar trabajo');
+ await comprobarContraste('#adminVistaActual');await comprobarContraste('.admin-workspace-eyebrow');
+ if(process.env.QA_VISUAL_CAPTURE)console.log('UI_CAPTURE_LISTA:'+ (await page.screenshot({type:'jpeg',quality:55})).toString('base64'));
+ await page.locator('#btnAbrirNuevaAsignacion').click();
  assert.equal(await page.locator('#dialogOpcionesAsignacion').isVisible(),true);
+ for(const selector of ['#asignacionUsuario','#asignacionTema','#asignacionFecha','#asignacionEntrega','#btnAsignarTrabajo'])await comprobarContraste(selector);
+ await page.evaluate(()=>document.body.classList.add('theme-nocturno'));
+ for(const selector of ['#adminVistaActual','#asignacionUsuario','#asignacionTema','#asignacionEntrega','#btnAsignarTrabajo'])await comprobarContraste(selector);
+ await page.evaluate(()=>document.body.classList.remove('theme-nocturno'));
+ if(process.env.QA_VISUAL_CAPTURE){
+  console.log('UI_CAPTURE_MODAL:'+ (await page.screenshot({type:'jpeg',quality:55})).toString('base64'));
+  await page.setViewportSize({width:390,height:844});
+  console.log('UI_CAPTURE_MOVIL:'+ (await page.screenshot({type:'jpeg',quality:55})).toString('base64'));
+  await page.setViewportSize({width:1440,height:900});
+ }
+
  assert.equal(await page.locator('#asignacionTema option').count(),140);
  assert.match(await page.locator('#asignacionFecha').inputValue(),/^\d{4}-\d{2}-\d{2}$/);
  await page.getByLabel('Hermano',{exact:true}).selectOption(user.id);
@@ -57,7 +83,7 @@ try{
  await page.getByLabel('Fecha de asignación',{exact:true}).fill('2026-10-20');
  await page.getByLabel('Fecha de asignación',{exact:true}).press('Tab');
  assert.equal(await page.locator('#asignacionEntrega').inputValue(),'2026-11-10');
- await page.getByRole('button',{name:'Asignar',exact:true}).click();
+ await page.locator('#btnAsignarTrabajo').click();
  await page.locator('#asignacionModalEstado').filter({hasText:'Asignación guardada. No se ha enviado ningún correo.'}).waitFor();
  assert.equal(assignments.length,1);assert.equal(mailCount,0);
  await page.getByRole('button',{name:'Limpiar selección / Nueva asignación'}).click();
@@ -106,10 +132,10 @@ try{
  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Eliminar',exact:true}).click();
  await page.locator('#asignacionesEstado').filter({hasText:'Asignación anulada. Tema liberado; historial conservado.'}).waitFor();
  assert.equal(assignments[0].vigente,false);assert.equal(mailCount,0);
- await page.getByRole('button',{name:'Nueva asignación',exact:true}).click();
+ await page.locator('#btnAbrirNuevaAsignacion').click();
  assert.equal(await page.locator('#asignacionTema option[value="INCI011A"]').isDisabled(),false);
  await page.getByRole('button',{name:'Cerrar',exact:true}).click();
- console.log('PASS interfaz: modal escritorio/móvil, fecha comprometida editable, CCO, recordatorio sin botón, cronograma KPI y vistas previas sin envío');
+ console.log('PASS interfaz: contraste WCAG 4,5:1, sin etiqueta Acceso Superadmin, botón Asignar trabajo, modal escritorio/móvil, fecha comprometida editable, CCO, recordatorio sin botón, cronograma KPI y vistas previas sin envío');
  await page.evaluate(data=>{
   document.getElementById('seccionAdmin').classList.add('hidden');
   document.getElementById('seccionContenidoDocente').classList.remove('hidden');
