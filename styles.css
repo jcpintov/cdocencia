@@ -95,7 +95,7 @@ body.theme-nocturno .trazado-subtitulo {
   color: var(--accent-gold);
 }
 
-header {
+body > header {
   background: var(--primary);
   color: #FFFFFF;
   padding: 16px 24px;
@@ -2711,3 +2711,4 @@ body.theme-nocturno #seccionDocencia .nav-item-title{color:#f0f4f8!important}
   overflow-wrap: normal;
   word-break: normal;
 }
+

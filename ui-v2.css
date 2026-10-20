@@ -2206,7 +2206,6 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 #seccionAdmin .admin-workspace-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:0 0 24px;padding:4px 0 20px;border-bottom:1px solid #ccd8e0}
 #seccionAdmin .admin-workspace-eyebrow{font:600 .71rem/1.5 var(--font-ui,Arial,sans-serif);letter-spacing:.08em;text-transform:uppercase;color:#657d8d;margin:0 0 7px}
 #seccionAdmin .admin-workspace-header h1{font:650 clamp(1.3rem,2.1vw,1.7rem)/1.3 var(--font-ui,Arial,sans-serif);color:#193c53;margin:0}
-#seccionAdmin .admin-workspace-badge{font:600 .71rem/1.4 var(--font-ui,Arial,sans-serif);color:#38586b;background:#e8f0f5;border:1px solid #cbdbe5;border-radius:30px;padding:7px 12px;white-space:nowrap}
 #seccionAdmin .admin-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 @media(max-width:960px){
  #seccionAdmin.admin-layout{grid-template-columns:minmax(0,1fr)}
@@ -2273,3 +2272,21 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 .cronograma-vencido{border-left-color:#9e4d3d}.cronograma-publicado{border-left-color:#397863}
 .cronograma-item button{min-height:44px}
 @media(max-width:700px){.cronograma-item{grid-template-columns:minmax(0,1fr);gap:7px;padding:14px}.cronograma-item button{justify-self:start}.cronograma-filtros select{width:100%}}
+
+/* Cabeceras internas claras y formularios con contraste estable. */
+#seccionAdmin .admin-workspace-header{background:transparent;color:#193c53}
+#seccionAdmin .admin-workspace-eyebrow{color:#53697b}
+#seccionAdmin .admin-main-content,
+#seccionAdmin .correo-asignacion-dialog{--bg-color:#f8f7f4;--card-bg:#fff;--text-main:#182d3c;--text-muted:#53697b;--primary:#193c53;--accent-gold:#997839;--border-color:#b7c9d6;color:#182d3c;color-scheme:light}
+#seccionAdmin .admin-main-content .card{background:#fff;color:#182d3c}
+#seccionAdmin .admin-main-content :is(input:not([type=checkbox]):not([type=radio]),select,textarea){background:#fff;color:#182d3c;border:1px solid #9bafbe;min-height:44px;padding:10px 12px;font-family:var(--font-ui);font-size:1rem}
+#seccionAdmin .admin-main-content :is(select option,select optgroup){background:#fff;color:#182d3c}
+#seccionAdmin .admin-main-content :is(input,textarea)::placeholder{color:#53697b;opacity:1}
+#seccionAdmin .admin-main-content .btn-primary{background:#193c53;color:#fff}
+#seccionAdmin .admin-main-content :is(.btn-secondary,.admin-link-btn){background:#f6f8fa;color:#193c53}
+#seccionAdmin .admin-main-content :is(button,input,select,textarea):focus-visible{outline:3px solid #997839;outline-offset:3px}
+#seccionAdmin #btnAbrirNuevaAsignacion{width:auto;min-width:210px;min-height:48px;font-size:1rem;margin:16px 0}
+#seccionAdmin .opciones-asignacion-dialog .asignacion-botones{position:sticky;bottom:-24px;z-index:2;background:#fff;border-top:1px solid #c8d5df;padding:12px 0;margin-bottom:0}
+#seccionAdmin .opciones-asignacion-dialog .asignacion-botones button{min-height:48px}
+#seccionAdmin .admin-main-content button:disabled{cursor:not-allowed;opacity:.65}
+@media(max-width:700px){#seccionAdmin #btnAbrirNuevaAsignacion{width:100%}#seccionAdmin .opciones-asignacion-dialog .asignacion-botones{bottom:-15px}}

@@ -5,6 +5,7 @@ on:
       - 'app.js'
       - 'index.html'
       - 'ui-v2.css'
+      - 'styles.css'
       - 'asignaciones-admin.js'
       - 'api/admin-asignaciones.js'
       - 'lib/correo-asignacion.js'
