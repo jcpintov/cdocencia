@@ -2315,3 +2315,44 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
   #adminSeccionResumen > .admin-kpi-grid-resumen{gap:10px}
   #adminSeccionResumen > .admin-kpi-grid-resumen .admin-kpi{min-height:96px;padding:14px 12px}
 }
+
+
+/* Padrón Superadmin: nombre accionable, foco visible y modal legible. */
+#adminSeccionUsuarios .admin-usuario-nombre-btn {
+  appearance:none;
+  display:inline-block;
+  max-width:100%;
+  margin:0;
+  padding:5px 2px;
+  color:#153b53;
+  background:transparent;
+  border:0;
+  border-bottom:1px solid #b8cbd6;
+  border-radius:0;
+  text-align:left;
+  font:700 .93rem/1.4 var(--font-ui,Arial,sans-serif);
+  white-space:normal;
+  overflow-wrap:anywhere;
+  cursor:pointer;
+}
+#adminSeccionUsuarios .admin-usuario-nombre-btn:hover {
+  color:#6c4d19;
+  border-bottom-color:#a58449;
+}
+#adminSeccionUsuarios .admin-usuario-nombre-btn:focus-visible{
+  outline:3px solid #ad813e;
+  outline-offset:3px;
+}
+#modalAdminUsuario .admin-usuario-campo-info {
+  display:block;
+  margin-top:7px;
+  color:#526474;
+  font-size:.83rem;
+  line-height:1.5;
+}
+#modalAdminUsuario .admin-usuario-campo-info[hidden]{display:none!important}
+#modalAdminUsuario input[readonly]{
+  background:#ecf1f4!important;
+  color:#385060!important;
+  cursor:default;
+}
