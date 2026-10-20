@@ -28,9 +28,19 @@ function setup(options = {}) {
               error: null
             }) }) };
           }
+          if (fields === 'id,email,es_admin,auth_user_id') {
+            return { eq: () => ({ maybeSingle: async () => {
+              calls.push('target');
+              return {data:options.targetMissing?null:{
+                id:'22345678-1234-4234-8234-123456789abc',
+                email:'persona@example.invalid',es_admin:options.targetAdmin??false,
+                auth_user_id:options.targetLinked?'auth-linked':null
+              },error:null};
+            } }) };
+          }
           return { ilike: () => ({ limit: async () => {
             calls.push('lookup');
-            return { data: options.duplicate ? [{id:'exists'}] : [], error: null };
+            return { data: options.duplicate ? [{id:'exists'}] : options.lookupOwn ? [{id:'22345678-1234-4234-8234-123456789abc'}]: [], error: null };
           } }) };
         },
         insert(payload) {
@@ -39,6 +49,11 @@ function setup(options = {}) {
           assert.equal(payload.clave_hash, null);
           assert.equal(payload.es_admin, false);
           return { select: () => ({ single: async () => ({ data: { id: 'new', nombre: payload.nombre, email: payload.email }, error: null }) }) };
+        },
+        update(payload) {
+          calls.push('update');
+          assert.deepEqual(Object.keys(payload).sort(),['email','nombre']);
+          return {eq(){return this;},select:()=>({maybeSingle:async()=>({data:{id:'22345678-1234-4234-8234-123456789abc',...payload},error:null})})};
         }
       };
     }
@@ -95,4 +110,43 @@ test('no permite duplicar correos existentes', async () => {
   const s=setup({duplicate:true,count:25});
   assert.equal((await s.request({action:'crear',nombre:'Nombre Prueba',email:'test@example.invalid'})).statusCode,409);
   assert.deepEqual(s.calls,['lookup']);
+});
+
+const idEdicion='22345678-1234-4234-8234-123456789abc';
+test('alta normaliza prefijo QH una sola vez',async()=>{
+  const s=setup();
+  const r=await s.request({action:'crear',nombre:'Q.·.H.·. Nombre Prueba',email:'test@example.invalid'});
+  assert.equal(r.statusCode,201);
+  assert.equal(r.body.usuario.nombre,'Q.·.H.·. Nombre Prueba');
+});
+test('nombre sin tratamiento queda normalizado automáticamente',async()=>{
+  const s=setup();
+  const r=await s.request({action:'crear',nombre:'Orson Corvalán Nehme',email:'nueva@example.invalid'});
+  assert.equal(r.statusCode,201);
+  assert.equal(r.body.usuario.nombre,'Q.·.H.·. Orson Corvalán Nehme');
+});
+test('superadmin edita nombre y correo de integrante no vinculado',async()=>{
+  const s=setup({lookupOwn:true});
+  const r=await s.request({action:'editar',id:idEdicion,nombre:'Q.·.H.·. Orson Corvalán Nehme',email:'persona@example.invalid'});
+  assert.equal(r.statusCode,200);
+  assert.equal(r.body.usuario.nombre,'Q.·.H.·. Orson Corvalán Nehme');
+  assert.deepEqual(s.calls,['target','lookup','update']);
+});
+test('rechaza cambios de correo de usuario vinculado a Auth',async()=>{
+  const s=setup({targetLinked:true});
+  const r=await s.request({action:'editar',id:idEdicion,nombre:'Nombre Nuevo',email:'otro@example.invalid'});
+  assert.equal(r.statusCode,422);
+  assert.deepEqual(s.calls,['target']);
+});
+test('no permite edición de perfil administrativo',async()=>{
+  const s=setup({targetAdmin:true});
+  const r=await s.request({action:'editar',id:idEdicion,nombre:'Nombre Nuevo',email:'persona@example.invalid'});
+  assert.equal(r.statusCode,403);
+  assert.deepEqual(s.calls,['target']);
+});
+test('rechaza edición de un correo ocupado por otro integrante',async()=>{
+  const s=setup({duplicate:true});
+  const r=await s.request({action:'editar',id:idEdicion,nombre:'Nombre Nuevo',email:'persona@example.invalid'});
+  assert.equal(r.statusCode,409);
+  assert.deepEqual(s.calls,['target','lookup']);
 });
