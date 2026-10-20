@@ -83,13 +83,15 @@ try{
  assert.equal(assignments[0].fecha_entrega,'2026-11-17');
  assert.match(await page.locator('#asignacionRecordatorioEstado').textContent(),/falta un correo de solicitud/);
  // Simula un envío original confirmado; sigue sin utilizar SMTP.
+ assignments[0].avisos_publicacion=[{id:'qa-aviso',estado:'enviado',finalizado_en:'2026-10-20T18:00:00Z',copia_estado:'aceptada'}];
  assignments[0].recordatorio={estado:'programado',programado_para:'2026-11-25T02:30:00Z',solicitud_enviada_en:'2026-10-20T17:00:00Z',publicado:false,trabajos_publicados:[]};
  await page.getByRole('button',{name:'Cerrar',exact:true}).click();
  await page.evaluate(()=>cargarCronogramaAdmin());
  await page.getByRole('button',{name:'Ver opciones de INCI011A de José Pérez'}).click();
- await page.locator('#asignacionRecordatorioPreviewEstado').filter({hasText:'Texto que utilizará'}).waitFor();
  await page.locator('#asignacionRecordatorioDetalle summary').click();
+ await page.locator('#asignacionRecordatorioPreviewEstado').filter({hasText:'Texto que utilizará'}).waitFor();
  await page.frameLocator('#asignacionRecordatorioVista').getByText('Si ya envió su trabajo, agradeceré hacer caso omiso de esta comunicación.',{exact:true}).waitFor();
+ assert.match(await page.locator('#asignacionPublicacionAviso').textContent(),/Aviso de publicación enviado al autor/);
  const recordatorioTexto=await page.frameLocator('#asignacionRecordatorioVista').locator('body').textContent();assert.ok(!recordatorioTexto.includes('Chile'));assert.ok(recordatorioTexto.includes('20 de octubre de 2026'));
  for(const width of [1440,390]){
   await page.setViewportSize({width,height:900});const layout=await page.locator('#dialogOpcionesAsignacion').evaluate(d=>({scroll:d.scrollWidth,client:d.clientWidth}));assert.ok(layout.scroll<=layout.client+1,'Modal sin recorte horizontal a '+width);
