@@ -1617,17 +1617,13 @@ function renderizarTrazadoEnriquecido(textoBruto) {
    ENTORNO DOCENTE Y LECTURA CON TEMPORIZADOR
    ========================================================================== */
 async function refrescarProgresosUsuario() {
-  const { data: dataProgreso } = await sbApp
-    .from('progreso_maestro')
-    .select('*')
-    .eq('usuario_id', usuarioActual.id);
-
-  misProgresos = {};
-  if (dataProgreso) {
-    dataProgreso.forEach(p => { 
-      misProgresos[p.modulo_id] = p; 
-    });
-  }
+  const usuarioId=usuarioActual?.id;
+  if(!usuarioId)return false;
+  const {data,error}=await sbApp.from('progreso_maestro').select('*').eq('usuario_id',usuarioId);
+  if(error||!Array.isArray(data)){console.warn('No se pudo actualizar el avance; se conservan los datos anteriores.');return false;}
+  if(usuarioActual?.id!==usuarioId)return false;
+  misProgresos=Object.fromEntries(data.map(p=>[p.modulo_id,p]));
+  return true;
 }
 
 function renderizarSidebar() {
@@ -1799,6 +1795,19 @@ async function evaluarEstadoFasesModulo() {
     return;
   }
 
+  if (prog && prog.leido && cuestionarioRespondido(prog.respuestas_evaluacion,moduloActual.preguntas_json?.preguntas||[])) {
+    respuestasMarcadas = {...prog.respuestas_evaluacion};
+    contConfLectura.classList.add('hidden');
+    bloqueFaseDos.classList.add('hidden');
+    bloqueFaseTres.classList.remove('hidden');
+    btnCert.classList.add('hidden');
+    txtRef.value=prog.reflexion || '';
+    txtRef.disabled=false;
+    btnConsagrar.classList.remove('hidden');
+    btnEditar.classList.add('hidden');
+    document.getElementById('bloqueMuro').classList.add('hidden');
+    return;
+  }
   if (prog && prog.leido) {
     contConfLectura.classList.add('hidden');
     bloqueFaseDos.classList.remove('hidden');
@@ -1826,32 +1835,33 @@ async function evaluarEstadoFasesModulo() {
   }, 120000);
 }
 
+async function guardarProgresoDocente(cambios) {
+  const usuarioId=usuarioActual?.id, moduloId=moduloActual?.id;
+  if(!usuarioId||!moduloId||usuarioActual.es_admin)throw new Error('Sesión docente no disponible.');
+  const {data:anterior,error:consultaError}=await sbApp.from('progreso_maestro')
+    .select('*').eq('usuario_id',usuarioId).eq('modulo_id',moduloId).maybeSingle();
+  if(consultaError)throw new Error('No se pudo consultar el avance. Sus respuestas se conservan en pantalla.');
+  const consulta=anterior
+    ? sbApp.from('progreso_maestro').update(cambios).eq('id',anterior.id).eq('usuario_id',usuarioId)
+    : sbApp.from('progreso_maestro').insert({usuario_id:usuarioId,modulo_id:moduloId,reflexion:'',completado:false,...cambios});
+  const {data:guardado,error}=await consulta.select('*').single();
+  if(error||!guardado)throw new Error('No se pudo guardar el avance. Revise la conexión y vuelva a intentar.');
+  misProgresos[moduloId]=guardado;
+  if(usuarioActual?.id!==usuarioId||moduloActual?.id!==moduloId)
+    throw new Error('El avance se guardó en el trabajo anterior. Vuelva a abrirlo para continuar.');
+  return guardado;
+}
+function cuestionarioRespondido(respuestas,preguntas) {
+  return preguntas.length===8 && preguntas.every((_p,i)=>['A','B','C','D'].includes(respuestas?.[i]));
+}
+
 async function confirmarLecturaFaseUno() {
   const btn = document.getElementById('btnConfirmarLectura');
   btn.disabled = true;
   btn.innerText = "Registrando lectura...";
 
   try {
-    const { data: existente } = await sbApp
-      .from('progreso_maestro')
-      .select('id')
-      .eq('usuario_id', usuarioActual.id)
-      .eq('modulo_id', moduloActual.id)
-      .maybeSingle();
-
-    if (existente) {
-      await sbApp.from('progreso_maestro').update({ leido: true }).eq('id', existente.id);
-    } else {
-      await sbApp.from('progreso_maestro').insert({
-        usuario_id: usuarioActual.id,
-        modulo_id: moduloActual.id,
-        leido: true,
-        reflexion: "",
-        completado: false
-      });
-    }
-
-    await refrescarProgresosUsuario();
+    await guardarProgresoDocente({leido:true});
     renderizarSidebar();
 
     document.getElementById('contenedorConfirmarLectura').classList.add('hidden');
@@ -1926,11 +1936,6 @@ function renderizarPreguntaActual() {
 async function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
   if (respuestasMarcadas[indicePreguntaActiva]) return;
 
-  sbApp.from('progreso_maestro')
-    .update({ leido: true })
-    .eq('usuario_id', usuarioActual.id)
-    .eq('modulo_id', moduloActual.id);
-
   respuestasMarcadas[indicePreguntaActiva] = letraSeleccionada;
 
   const radios = document.querySelectorAll(`input[name="preg_paso_radio_${indicePreguntaActiva}"]`);
@@ -1952,7 +1957,7 @@ async function evaluarRespuestaPasoAPaso(letraSeleccionada, letraCorrecta) {
 
   feedbackBox.style.display = "block";
 
-  const totalPreguntas = moduloActual.preguntas_json?.preguntas || 8;
+  const totalPreguntas = moduloActual.preguntas_json?.preguntas?.length || 0;
   if (indicePreguntaActiva < totalPreguntas - 1) {
     document.getElementById('btnSiguientePregunta').classList.remove('hidden');
   } else {
@@ -1971,32 +1976,10 @@ async function finalizarCuestionarioFaseDos() {
   btnFinalizar.innerText = "Registrando respuestas...";
 
   try {
-    const { data: existente } = await sbApp
-      .from('progreso_maestro')
-      .select('id')
-      .eq('usuario_id', usuarioActual.id)
-      .eq('modulo_id', moduloActual.id)
-      .maybeSingle();
-
-    const payload = {
-      respuestas_evaluacion: respuestasMarcadas,
-      intentos_preguntas: Object.keys(respuestasMarcadas).length,
-      leido: true
-    };
-
-    if (existente) {
-      await sbApp.from('progreso_maestro').update(payload).eq('id', existente.id);
-    } else {
-      await sbApp.from('progreso_maestro').insert({
-        usuario_id: usuarioActual.id,
-        modulo_id: moduloActual.id,
-        reflexion: "",
-        completado: false,
-        ...payload
-      });
-    }
-
-    await refrescarProgresosUsuario();
+    const preguntas=moduloActual.preguntas_json?.preguntas || [];
+    if(!cuestionarioRespondido(respuestasMarcadas,preguntas))
+      throw new Error('Debe responder las ocho preguntas antes de finalizar.');
+    await guardarProgresoDocente({respuestas_evaluacion:respuestasMarcadas,intentos_preguntas:preguntas.length,leido:true});
     renderizarSidebar();
 
     document.getElementById('bloqueFaseDos').classList.add('hidden');
@@ -2046,43 +2029,27 @@ async function guardarReflexionYCompletar() {
     return;
   }
 
-  const { data: existente } = await sbApp
-    .from('progreso_maestro')
-    .select('id')
-    .eq('usuario_id', usuarioActual.id)
-    .eq('modulo_id', moduloActual.id)
-    .maybeSingle();
-
-  const payload = {
-    respuestas_evaluacion: respuestasMarcadas,
-    reflexion: texto,
-    leido: true,
-    completado: true,
-    completado_en: new Date().toISOString()
-  };
-
-  let error = null;
-  if (existente) {
-    const res = await sbApp.from('progreso_maestro').update(payload).eq('id', existente.id);
-    error = res.error;
-  } else {
-    const res = await sbApp.from('progreso_maestro').insert({
-      usuario_id: usuarioActual.id,
-      modulo_id: moduloActual.id,
-      ...payload
+  const boton=document.getElementById('btnConsagrarReflexion');
+  if(boton?.disabled)return;
+  if(boton)boton.disabled=true;
+  try {
+    const anterior=misProgresos[moduloActual.id];
+    const respuestas=cuestionarioRespondido(respuestasMarcadas,moduloActual.preguntas_json?.preguntas||[])
+      ? respuestasMarcadas : anterior?.respuestas_evaluacion;
+    if(!cuestionarioRespondido(respuestas,moduloActual.preguntas_json?.preguntas||[]))
+      throw new Error('Complete primero las ocho preguntas. Su reflexión se mantiene en pantalla.');
+    await guardarProgresoDocente({
+      respuestas_evaluacion:respuestas,intentos_preguntas:8,reflexion:texto,leido:true,completado:true,
+      completado_en:anterior?.completado_en || new Date().toISOString()
     });
-    error = res.error;
+    renderizarSidebar();
+    await evaluarEstadoFasesModulo();
+    alert('Reflexión guardada y módulo completado.');
+  } catch(error) {
+    alert(error.message || 'No se pudo guardar la reflexión. Vuelva a intentar.');
+  } finally {
+    if(boton)boton.disabled=false;
   }
-
-  if (error) {
-    alert("Error al guardar reflexión: " + error.message);
-    return;
-  }
-
-  alert("Módulo completado con éxito. Se ha desbloqueado el Muro de Reflexiones y su Certificado Oficial.");
-  await refrescarProgresosUsuario();
-  renderizarSidebar();
-  await evaluarEstadoFasesModulo();
 }
 
 function habilitarEdicionReflexion() {
