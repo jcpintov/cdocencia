@@ -17,6 +17,7 @@ begin
  perform public.admin_asignaciones_docentes(actor,'reservar_correo',jsonb_build_object('id',asig->>'id','version',1,'intento',correo_id,'reenviar',false,'correo',msg));
  perform public.admin_asignaciones_docentes(actor,'finalizar_correo',jsonb_build_object('id',asig->>'id','version',1,'intento',correo_id,'estado','enviado','copia_estado','aceptada'));
  ctx:=public.docencia_asignacion_contexto((asig->>'id')::uuid);
+ assert jsonb_array_length(public.docencia_recordatorios_servicio('candidatos'))=1,'Consulta real del planificador identifica al elegible';
  assert ctx->'recordatorio'->>'estado'='pendiente','Debe ser elegible tras siete días';
  assert ctx->'recordatorio'->>'solicitud_enviada_en' is not null,'Debe conservar fecha real de envío';
  assert ctx->'correos'->0->>'copia_estado'='aceptada','CCO registrada';

@@ -68,8 +68,8 @@ begin
  if auth.role() is distinct from 'service_role' then raise exception 'Servicio exclusivo del servidor' using errcode='42501';end if;
  if p_accion='candidatos' then
   return coalesce((select jsonb_agg(public.docencia_asignacion_contexto(x.id)) from (
-   select a.id from public.docencia_asignaciones a where a.vigente and public.docencia_recordatorio_contexto(a.id)->>'estado'='pendiente'
-   order by a.fecha_entrega,a.id limit 100) x),'[]'::jsonb);
+   select asignada.id from public.docencia_asignaciones asignada where asignada.vigente and public.docencia_recordatorio_contexto(asignada.id)->>'estado'='pendiente'
+   order by asignada.fecha_entrega,asignada.id limit 100) x),'[]'::jsonb);
  end if;
  v_id:=(p_datos->>'id')::uuid;v_intento:=(p_datos->>'intento')::uuid;
  if p_accion in ('reservar','confirmar') then
