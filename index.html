@@ -672,6 +672,13 @@
         </div>
         <p id="resumenAdminEstado" class="text-instruccion" role="status"></p>
         <button class="btn-primary" onclick="cambiarSubseccionAdmin('usuarios')">Administrar usuarios</button>
+        <section id="cronogramaTrabajosAdmin" class="cronograma-trabajos" aria-labelledby="cronogramaTrabajosTitulo">
+          <div class="admin-card-header"><div><h2 id="cronogramaTrabajosTitulo">Cronograma de trabajos</h2><p class="text-instruccion">Asignaciones vigentes, ordenadas por fecha de entrega. Cada trabajo abre sus opciones.</p></div><button type="button" class="admin-link-btn" onclick="cargarCronogramaAdmin()">Actualizar cronograma</button></div>
+          <div class="admin-kpi-grid"><div class="admin-kpi"><span>Asignados</span><strong id="kpiTrabajosAsignados">—</strong></div><div class="admin-kpi"><span>Pendientes</span><strong id="kpiTrabajosPendientes">—</strong></div><div class="admin-kpi"><span>Vencidos</span><strong id="kpiTrabajosVencidos">—</strong></div><div class="admin-kpi"><span>Publicados</span><strong id="kpiTrabajosPublicados">—</strong></div></div>
+          <div class="cronograma-filtros"><label for="cronogramaFiltro">Mostrar</label><select id="cronogramaFiltro" name="cronograma_filtro" onchange="renderizarCronogramaAdmin()"><option value="todos">Todas las asignaciones vigentes</option><option value="proximos">Entregas en los próximos 7 días</option><option value="vencidos">Pendientes vencidos</option><option value="publicados">Publicados</option></select></div>
+          <p id="cronogramaEstado" role="status" aria-live="polite">Consultando cronograma…</p>
+          <ol id="cronogramaLista" class="cronograma-lista"></ol>
+        </section>
       </section>
 
       <!-- SUBSECCIÓN: ADMINISTRAR USUARIOS -->
@@ -715,28 +722,42 @@
 
       <!-- SUBSECCIÓN 1: ASOCIACIÓN Y ADJUNCIÓN DE ARCHIVOS ORIGINALES -->
       <section id="adminSeccionAsignaciones" class="card card-trazado hidden" aria-labelledby="asignacionesTitulo">
-        <div class="admin-card-header"><div><h2 id="asignacionesTitulo">Asignación de trabajos</h2><p class="text-instruccion">Asigne temas del programa y gestione sus plazos. Los correos se envían únicamente desde el botón Correo.</p></div><button id="btnActualizarAsignaciones" type="button" class="admin-link-btn" onclick="cargarAsignacionesAdmin()">Actualizar</button></div>
+        <div class="admin-card-header"><div><h2 id="asignacionesTitulo">Asignación de trabajos</h2><p class="text-instruccion">Asigne temas y gestione sus plazos. Abra las opciones de cada trabajo para editarlo o enviar su solicitud inicial. El recordatorio de atraso es automático.</p></div><button id="btnActualizarAsignaciones" type="button" class="admin-link-btn" onclick="cargarAsignacionesAdmin()">Actualizar</button></div>
         <p id="asignacionesEstado" role="status" aria-live="polite"></p>
+        <button type="button" id="btnAbrirNuevaAsignacion" class="btn-primary" onclick="abrirNuevaAsignacionDocente()">Nueva asignación</button>
+        <p class="asignacion-aviso">Recordatorio automático único: revisión diaria después de siete días de atraso, si la solicitud original fue enviada y el tema aún no está publicado. Todos los correos llevan copia oculta a jpintov@gmail.com.</p>
+        <div class="asignacion-lista-cabecera"><p id="asignacionesConteo"></p><label><input type="checkbox" id="asignacionesVerAnuladas" onchange="renderizarAsignacionesDocentes()"> Mostrar anuladas</label></div>
+        <div class="table-responsive"><table class="metricas-table asignaciones-table"><thead><tr><th>Hermano</th><th>Tema</th><th>Asignación</th><th>Entrega · 23:30 h</th><th>Estado y correo</th><th>Acción</th></tr></thead><tbody id="asignacionesBody"><tr><td colspan="6">Abra esta sección para consultar las asignaciones.</td></tr></tbody></table></div>
+      </section>
+      <dialog id="dialogOpcionesAsignacion" class="correo-asignacion-dialog opciones-asignacion-dialog" aria-labelledby="opcionesAsignacionTitulo">
+        <div class="correo-asignacion-cabecera"><h2 id="opcionesAsignacionTitulo">Opciones del trabajo asignado</h2><button type="button" id="btnCerrarOpcionesAsignacion" class="btn-secondary" onclick="cerrarOpcionesAsignacion()">Cerrar</button></div>
         <form id="asignacionForm" onsubmit="event.preventDefault(); guardarAsignacionDocente();">
           <fieldset id="asignacionCampos" class="asignacion-campos"><legend id="asignacionModo">Nueva asignación</legend>
             <div class="asignacion-form-grid">
               <div class="form-group"><label for="asignacionUsuario">Hermano</label><select id="asignacionUsuario" name="asignacion_usuario" required><option value="">Seleccione un hermano</option></select></div>
               <div class="form-group"><label for="asignacionTema">Trabajo por preparar</label><select id="asignacionTema" name="asignacion_tema" required onchange="cambioTemaAsignacion()"><option value="">Seleccione un tema del programa</option></select></div>
               <div class="form-group"><label for="asignacionFecha">Fecha de asignación</label><input id="asignacionFecha" name="asignacion_fecha" type="date" required onchange="cambioFechaAsignacion()"><small>Editable. Al modificar una asignación, el plazo se conserva hasta que usted lo cambie.</small></div>
-              <div class="form-group"><label for="asignacionEntrega">Fecha de entrega · 23:30 h de Chile</label><input id="asignacionEntrega" name="asignacion_entrega" type="date" required><button type="button" class="admin-link-btn" onclick="recalcularEntregaAsignacion()">Recalcular 21 días desde la asignación</button></div>
+              <div class="form-group"><label for="asignacionEntrega">Fecha de entrega comprometida · 23:30 h</label><input id="asignacionEntrega" name="asignacion_entrega" type="date" required><button type="button" class="admin-link-btn" onclick="recalcularEntregaAsignacion()">Recalcular 21 días desde la asignación</button></div>
             </div>
             <dl class="asignacion-contexto"><div><dt>Unidad</dt><dd id="asignacionUnidad">—</dd></div><div><dt>Subunidad</dt><dd id="asignacionSubunidad">—</dd></div><div><dt>Código</dt><dd id="asignacionCodigo">—</dd></div></dl>
             <p id="asignacionDisponibilidad" class="asignacion-aviso">Los temas asignados se mostrarán deshabilitados e identificarán al hermano responsable.</p>
           </fieldset>
+          <p id="asignacionModalEstado" role="status" aria-live="polite"></p>
           <div class="asignacion-botones"><button type="submit" id="btnAsignarTrabajo" class="btn-primary">Asignar</button><button type="button" id="btnModificarAsignacion" class="btn-secondary" onclick="modificarAsignacionDocente()" disabled>Modificar</button><button type="button" id="btnEliminarAsignacion" class="btn-secondary" onclick="eliminarAsignacionDocente()" disabled>Eliminar</button><button type="button" id="btnCorreoAsignacion" class="btn-secondary" onclick="abrirCorreoAsignacion()" disabled>Correo</button></div>
           <button type="button" id="btnNuevaAsignacion" class="admin-link-btn" onclick="nuevaAsignacionDocente()">Limpiar selección / Nueva asignación</button>
         </form>
-        <div class="asignacion-lista-cabecera"><p id="asignacionesConteo"></p><label><input type="checkbox" id="asignacionesVerAnuladas" onchange="renderizarAsignacionesDocentes()"> Mostrar anuladas</label></div>
-        <div class="table-responsive"><table class="metricas-table asignaciones-table"><thead><tr><th>Hermano</th><th>Tema</th><th>Asignación</th><th>Entrega · Chile</th><th>Estado y correo</th><th>Acción</th></tr></thead><tbody id="asignacionesBody"><tr><td colspan="6">Abra esta sección para consultar las asignaciones.</td></tr></tbody></table></div>
-      </section>
+        <section id="asignacionRecordatorioPanel" class="asignacion-recordatorio-panel" aria-labelledby="recordatorioAutomaticoTitulo" hidden>
+          <h3 id="recordatorioAutomaticoTitulo">Recordatorio automático</h3>
+          <p id="asignacionRecordatorioEstado" role="status"></p>
+          <dl class="asignacion-contexto"><div><dt>Solicitud original enviada</dt><dd id="asignacionSolicitudEnviada">—</dd></div><div><dt>Desde siete días de atraso</dt><dd id="asignacionRecordatorioFecha">—</dd></div><div><dt>Último resultado</dt><dd id="asignacionRecordatorioResultado">—</dd></div></dl>
+          <p id="asignacionPublicacionEstado"></p>
+          <p class="text-instruccion">Revisión diaria. La publicación se comprueba por el código del tema asociado a un trabajo activo en Docencia. Un envío sin confirmación requiere revisión y no se repite automáticamente.</p>
+          <details id="asignacionRecordatorioDetalle"><summary>Ver texto del recordatorio</summary><p>CCO: jpintov@gmail.com</p><p id="asignacionRecordatorioPreviewEstado" role="status"></p><iframe id="asignacionRecordatorioVista" title="Vista previa del recordatorio automático" sandbox="" referrerpolicy="no-referrer"></iframe></details>
+        </section>
+      </dialog>
       <dialog id="dialogCorreoAsignacion" class="correo-asignacion-dialog" aria-labelledby="correoAsignacionTitulo">
         <div class="correo-asignacion-cabecera"><h2 id="correoAsignacionTitulo">Correo de solicitud de trabajo</h2><button type="button" id="btnCerrarCorreoAsignacion" class="btn-secondary" onclick="cerrarCorreoAsignacion()">Volver</button></div>
-        <p><strong>Para:</strong> <span id="correoAsignacionDestino"></span></p><p><strong>Asunto:</strong> <span id="correoAsignacionAsunto"></span></p>
+        <p><strong>Para:</strong> <span id="correoAsignacionDestino"></span></p><p><strong>CCO:</strong> jpintov@gmail.com</p><p><strong>Asunto:</strong> <span id="correoAsignacionAsunto"></span></p>
         <iframe id="correoAsignacionVista" title="Vista previa del correo aprobado" sandbox="" referrerpolicy="no-referrer"></iframe>
         <p id="correoAsignacionEstado" role="status" aria-live="polite"></p>
         <label id="correoAsignacionReenvioLabel" hidden><input id="correoAsignacionReenvio" type="checkbox"> Revisé los intentos anteriores y solicito expresamente reenviar este correo.</label>

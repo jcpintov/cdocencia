@@ -3567,6 +3567,7 @@ window.addEventListener('DOMContentLoaded', () => {
 async function cargarResumenAdmin() {
   const status = document.getElementById('resumenAdminEstado');
   if (!status) return;
+  void window.cargarCronogramaAdmin?.();
   status.textContent = 'Actualizando indicadores...';
   const campos = ['kpiUsuarios','kpiModulos','kpiCompletados','kpiComentarios'];
   campos.forEach(id => { document.getElementById(id).textContent = '—'; });

@@ -10,7 +10,7 @@ const root=resolve('.');
 const fixture=JSON.parse(await readFile('tests/browser/catalogo-fixture.json','utf8'));
 const user={id:'12345678-1234-4234-8234-123456789abc',nombre:'José Pérez',email:'jose@example.invalid'};
 let assignments=[],rpcCalls=[],mailCount=0;
-const makeContext=a=>({...a,nombre:user.nombre,email:user.email,tema:fixture.catalogo.find(t=>t.codigo===a.codigo).detalle,unidad:'UNIDAD 1: BASAMENTOS DOCTRINARIOS',subunidad:'1.1 CONCEPTOS FUNDAMENTALES DEL GRADO',correos:[]});
+const makeContext=a=>({...a,nombre:user.nombre,email:user.email,tema:fixture.catalogo.find(t=>t.codigo===a.codigo).detalle,unidad:'UNIDAD 1: BASAMENTOS DOCTRINARIOS',subunidad:'1.1 CONCEPTOS FUNDAMENTALES DEL GRADO',correos:[],recordatorio:{estado:'sin_solicitud',programado_para:a.fecha_entrega+'T23:30:00-03:00',solicitud_enviada_en:null,publicado:false,trabajos_publicados:[],...a.recordatorio}});
 const stub=`<script>window.supabase={createClient:()=>({auth:{getUser:async()=>({data:{user:null},error:null}),getSession:async()=>({data:{session:{access_token:'qa-no-secret'}}}),onAuthStateChange:()=>{},signOut:async()=>({})}})};</script>`;
 const server=createServer(async(req,res)=>{
  try{
@@ -25,6 +25,8 @@ const server=createServer(async(req,res)=>{
     const i=assignments.findIndex(a=>a.id===b.id);assignments[i]=makeContext({...assignments[i],...b,version:b.version+1});result={ok:true,data:assignments[i]};
    }else if(b.action==='eliminar'){
     const a=assignments.find(a=>a.id===b.id);a.vigente=false;a.version++;result={ok:true,data:a};
+   }else if(b.action==='vista_recordatorio'){
+    const a=assignments.find(a=>a.id===b.id);const {generarCorreoRecordatorio}=await import('../../lib/correo-recordatorio.js');result={ok:true,asignacion:a,correo:a.recordatorio.solicitud_enviada_en?generarCorreoRecordatorio(a):null};
    }else if(b.action==='vista_correo'){
     const a=assignments.find(a=>a.id===b.id);const {generarCorreoAsignacion}=await import('../../lib/correo-asignacion.js');result={ok:true,correo:generarCorreoAsignacion(a),asignacion:a};
    }else{mailCount++;throw Error('Ningún envío está permitido en QA visual');}
@@ -46,6 +48,8 @@ try{
  await page.goto(url);await page.waitForLoadState('domcontentloaded');
  await page.evaluate(()=>{usuarioActual={id:'admin-fixture',es_admin:true};document.getElementById('seccionLogin').classList.add('hidden');document.getElementById('seccionAdmin').classList.remove('hidden');cambiarSubseccionAdmin('asignaciones');});
  await page.getByText('Asignaciones actualizadas. Guardar o modificar nunca envía correos.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Nueva asignación',exact:true}).click();
+ assert.equal(await page.locator('#dialogOpcionesAsignacion').isVisible(),true);
  assert.equal(await page.locator('#asignacionTema option').count(),140);
  assert.match(await page.locator('#asignacionFecha').inputValue(),/^\d{4}-\d{2}-\d{2}$/);
  await page.getByLabel('Hermano',{exact:true}).selectOption(user.id);
@@ -54,29 +58,56 @@ try{
  await page.getByLabel('Fecha de asignación',{exact:true}).press('Tab');
  assert.equal(await page.locator('#asignacionEntrega').inputValue(),'2026-11-10');
  await page.getByRole('button',{name:'Asignar',exact:true}).click();
- await page.getByText('Asignación guardada. No se ha enviado ningún correo.',{exact:true}).waitFor();
+ await page.locator('#asignacionModalEstado').filter({hasText:'Asignación guardada. No se ha enviado ningún correo.'}).waitFor();
  assert.equal(assignments.length,1);assert.equal(mailCount,0);
  await page.getByRole('button',{name:'Limpiar selección / Nueva asignación'}).click();
  assert.equal(await page.locator('#asignacionTema option[value="INCI011A"]').isDisabled(),true);
  assert.match(await page.locator('#asignacionTema option[value="INCI011A"]').textContent(),/José Pérez/);
- await page.getByRole('button',{name:'Seleccionar INCI011A de José Pérez'}).click();
+ await page.getByRole('button',{name:'Cerrar',exact:true}).click();
+ await page.getByRole('button',{name:'Ver opciones de INCI011A de José Pérez'}).click();
  await page.getByLabel('Fecha de asignación',{exact:true}).fill('2026-10-21');await page.getByLabel('Fecha de asignación',{exact:true}).press('Tab');
  assert.equal(await page.locator('#asignacionEntrega').inputValue(),'2026-11-10');
  await page.getByRole('button',{name:'Correo',exact:true}).click();
- await page.getByText('Hay cambios sin guardar. Pulse Modificar antes de preparar el correo.',{exact:true}).waitFor();
- assert.equal(await page.getByRole('dialog').isVisible(),false);
- await page.getByRole('button',{name:'Modificar',exact:true}).click();await page.getByText('Asignación guardada. No se ha enviado ningún correo.',{exact:true}).waitFor();
+ await page.locator('#asignacionModalEstado').filter({hasText:'Hay cambios sin guardar. Pulse Modificar antes de preparar el correo.'}).waitFor();
+ assert.equal(await page.locator('#dialogCorreoAsignacion').isVisible(),false);
+ assert.equal(await page.locator('#dialogOpcionesAsignacion').isVisible(),true);
+ await page.getByRole('button',{name:'Modificar',exact:true}).click();await page.locator('#asignacionModalEstado').filter({hasText:'Asignación guardada. No se ha enviado ningún correo.'}).waitFor();
  assert.equal(assignments[0].fecha_asignacion,'2026-10-21');assert.equal(mailCount,0);
  await page.getByRole('button',{name:'Correo',exact:true}).click();
- await page.getByRole('dialog').waitFor();await page.frameLocator('#correoAsignacionVista').getByText('JOSÉ PÉREZ:',{exact:false}).waitFor();
+ await page.locator('#dialogCorreoAsignacion').waitFor();await page.frameLocator('#correoAsignacionVista').getByText('JOSÉ PÉREZ:',{exact:false}).waitFor();
  assert.equal(mailCount,0);assert.equal(rpcCalls.filter(c=>c.action==='enviar').length,0);
  await page.getByRole('button',{name:'Volver',exact:true}).click();
+ assert.match(await page.locator('#dialogCorreoAsignacion').textContent(),/CCO: jpintov@gmail.com/);
+ await page.getByLabel('Fecha de entrega comprometida · 23:30 h',{exact:true}).fill('2026-11-17');
+ await page.getByRole('button',{name:'Modificar',exact:true}).click();await page.locator('#asignacionModalEstado').filter({hasText:'Asignación guardada. No se ha enviado ningún correo.'}).waitFor();
+ assert.equal(assignments[0].fecha_entrega,'2026-11-17');
+ assert.match(await page.locator('#asignacionRecordatorioEstado').textContent(),/falta un correo de solicitud/);
+ // Simula un envío original confirmado; sigue sin utilizar SMTP.
+ assignments[0].recordatorio={estado:'programado',programado_para:'2026-11-25T02:30:00Z',solicitud_enviada_en:'2026-10-20T17:00:00Z',publicado:false,trabajos_publicados:[]};
+ await page.getByRole('button',{name:'Cerrar',exact:true}).click();
+ await page.evaluate(()=>cargarCronogramaAdmin());
+ await page.getByRole('button',{name:'Ver opciones de INCI011A de José Pérez'}).click();
+ await page.locator('#asignacionRecordatorioPreviewEstado').filter({hasText:'Texto que utilizará'}).waitFor();
+ await page.locator('#asignacionRecordatorioDetalle summary').click();
+ await page.frameLocator('#asignacionRecordatorioVista').getByText('Si ya envió su trabajo, agradeceré hacer caso omiso de esta comunicación.',{exact:true}).waitFor();
+ const recordatorioTexto=await page.frameLocator('#asignacionRecordatorioVista').locator('body').textContent();assert.ok(!recordatorioTexto.includes('Chile'));assert.ok(recordatorioTexto.includes('20 de octubre de 2026'));
+ for(const width of [1440,390]){
+  await page.setViewportSize({width,height:900});const layout=await page.locator('#dialogOpcionesAsignacion').evaluate(d=>({scroll:d.scrollWidth,client:d.clientWidth}));assert.ok(layout.scroll<=layout.client+1,'Modal sin recorte horizontal a '+width);
+ }
+ await page.getByRole('button',{name:'Cerrar',exact:true}).click();
+ await page.evaluate(()=>{document.getElementById('adminSeccionAsignaciones').classList.add('hidden');document.getElementById('adminSeccionResumen').classList.remove('hidden');renderizarCronogramaAdmin();});
+ assert.equal(await page.locator('#kpiTrabajosAsignados').textContent(),'1');assert.equal(await page.locator('#cronogramaLista li').count(),1);
+ await page.getByRole('button',{name:'Abrir opciones de INCI011A de José Pérez'}).click();assert.equal(await page.locator('#dialogOpcionesAsignacion').isVisible(),true);
+ await page.getByRole('button',{name:'Cerrar',exact:true}).click();
+ await page.evaluate(()=>{document.getElementById('adminSeccionResumen').classList.add('hidden');document.getElementById('adminSeccionAsignaciones').classList.remove('hidden');});
+ await page.getByRole('button',{name:'Ver opciones de INCI011A de José Pérez'}).click();
  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Eliminar',exact:true}).click();
- await page.getByText('Asignación anulada. Tema liberado; historial conservado.',{exact:true}).waitFor();
+ await page.locator('#asignacionesEstado').filter({hasText:'Asignación anulada. Tema liberado; historial conservado.'}).waitFor();
  assert.equal(assignments[0].vigente,false);assert.equal(mailCount,0);
- await page.getByRole('button',{name:'Limpiar selección / Nueva asignación'}).click();
+ await page.getByRole('button',{name:'Nueva asignación',exact:true}).click();
  assert.equal(await page.locator('#asignacionTema option[value="INCI011A"]').isDisabled(),false);
- console.log('PASS interfaz: 139 temas, fechas editables, plazo inicial, bloqueo/liberación, modificar y vista previa sin envío');
+ await page.getByRole('button',{name:'Cerrar',exact:true}).click();
+ console.log('PASS interfaz: modal escritorio/móvil, fecha comprometida editable, CCO, recordatorio sin botón, cronograma KPI y vistas previas sin envío');
  await page.evaluate(data=>{
   document.getElementById('seccionAdmin').classList.add('hidden');
   document.getElementById('seccionContenidoDocente').classList.remove('hidden');
