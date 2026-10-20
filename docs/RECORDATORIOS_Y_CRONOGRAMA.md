@@ -16,3 +16,9 @@
 - tests/recordatorios-db.sql: pruebas bajo service_role, revertidas al terminar. Sin envío real; editar fecha, preservar solicitud, impedir anticipación y duplicados, bloqueo de modificación en curso y publicación entre reserva y SMTP.
 - tests/asignaciones.test.mjs y tests/recordatorios.test.mjs: plantillas, BCC, autorización, idempotencia, fallos de SMTP y de persistencia.
 - tests/browser/asignaciones-smoke.mjs: formularios reales con API sintética, modales en escritorio y móvil, fecha comprometida editable, vista previa sin envío, cronograma y 139 temas accesibles.
+
+## Aviso al autor al publicar
+
+Tercer correo breve con el texto aprobado y BCC a jpintov@gmail.com. Se registra al activar un módulo o vincular su tema a una asignación vigente cuyo responsable coincide inequívocamente con el autor del trabajo. El nombre se compara sin tratamiento, diferencias de mayúsculas, acentos ni espacios repetidos; si hay ambigüedad no se encola a otro usuario. Un aviso por módulo y autor, sin avisos retroactivos sobre los ocho trabajos existentes.
+
+Al guardar desde Superadmin se procesa la cola; la revisión diaria actúa como respaldo. Publicación retirada, destinatario cambiado o autor que ya no corresponde cancelan el envío pendiente. Un resultado incierto no se reenvía. El modal y el cronograma muestran el resultado. El esquema privado contiene solamente el trigger que registra la cola; SMTP continúa exclusivamente en el servidor.

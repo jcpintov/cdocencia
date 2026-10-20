@@ -66,3 +66,17 @@ test('sin SMTP completo no se reserva ni se intenta el envío',async()=>{
  let calls=0;const ctx={Buffer,timingSafeEqual,process:{env:{CRON_SECRET:'qa',VERCEL_ENV:'production'}},createClient:()=>{calls++;}};runInNewContext(source,ctx);
  const r={setHeader(){},status(s){this.code=s;return this;},json(b){return b;}};await ctx.handler({method:'GET',headers:{authorization:'Bearer qa'}},r);assert.equal(r.code,503);assert.equal(calls,0);
 });
+
+test('aviso de publicación conserva texto aprobado, vínculo HTTPS y copia oculta',async()=>{
+ const {generarCorreoPublicacion}=await import('../lib/correo-publicacion.js');
+ const c=generarCorreoPublicacion(a);
+ assert.equal(c.text,'QH, José Pérez, tu trabajo de docencia LA ACACIA, INCI011A ha sido publicado. Puedes revisarlo aquí: cmaestros.ofl.cl\n\nFraternalmente,\nOFL.CL');
+ assert.equal(c.to,a.email);assert.equal(c.bcc,'jpintov@gmail.com');assert.match(c.html,/href="https:\/\/cmaestros.ofl.cl"/);
+});
+test('aviso al autor usa su cola y no repite una publicación',async()=>{
+ const {procesarPublicaciones}=await import('../lib/procesar-recordatorios.js');let reservado=false;const enviados=[],rpc=[];
+ const admin={rpc:async(fn,{p_accion,p_datos})=>{rpc.push(fn);if(p_accion==='candidatos')return {data:[a]};if(p_accion==='reservar'){const enviar=!reservado;reservado=true;return {data:{enviar}};}return {data:{enviar:true,ok:true}};}};
+ const transport={sendMail:async msg=>{enviados.push(msg);return {accepted:[a.email,'jpintov@gmail.com']};}};
+ for(let i=0;i<2;i++)await procesarPublicaciones({admin,transport,from:'qa@example.invalid',randomUUID:()=>String(i)});
+ assert.equal(enviados.length,1);assert.ok(rpc.every(fn=>fn==='docencia_publicaciones_servicio'));assert.match(enviados[0].text,/ha sido publicado/);
+});

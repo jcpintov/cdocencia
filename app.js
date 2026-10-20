@@ -2610,6 +2610,7 @@ async function guardarArchivoOriginalEnBD() {
     document.getElementById('archivoAdjuntoStatus').innerText = '';
     archivoBase64Pendiente = null;
     verificarEstadoArchivoModulo(moduloId);
+    void window.notificarPublicacionesAdmin?.();
   }
 }
 
@@ -3220,6 +3221,7 @@ async function guardarEdicionModuloAdmin() {
     moduloAuditando.numero_orden = nuevoOrden;
     moduloAuditando.contenido_trazado = nuevoTexto;
     if (Object.hasOwn(cambios,'unidad_codigo')) moduloAuditando.unidad_codigo=cambios.unidad_codigo;
+    void window.notificarPublicacionesAdmin?.();
     alert("Encabezado, texto y clasificación guardados exitosamente.");
     await cargarDatosAdmin();
     cargarGestionTrabajosAdmin();

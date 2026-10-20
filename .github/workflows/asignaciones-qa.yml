@@ -9,6 +9,7 @@ on:
       - 'api/admin-asignaciones.js'
       - 'lib/correo-asignacion.js'
       - 'lib/correo-recordatorio.js'
+      - 'lib/correo-publicacion.js'
       - 'lib/procesar-recordatorios.js'
       - 'api/cron-recordatorios.js'
       - 'vercel.json'

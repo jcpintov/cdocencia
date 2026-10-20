@@ -1,7 +1,7 @@
 import {createClient} from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
 import {randomUUID,timingSafeEqual} from 'node:crypto';
-import {procesarRecordatorios} from '../lib/procesar-recordatorios.js';
+import {procesarRecordatorios,procesarPublicaciones} from '../lib/procesar-recordatorios.js';
 export default async function handler(req,res){
  res.setHeader('Cache-Control','no-store');
  if(req.method!=='GET'){res.setHeader('Allow','GET');return res.status(405).json({error:'Método no permitido'});}
@@ -14,7 +14,8 @@ export default async function handler(req,res){
  try{
   const admin=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
   const transport=nodemailer.createTransport({host,port:Number(process.env.SMTP_PORT||465),secure:process.env.SMTP_SECURE!=='false',connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000,auth:{user,pass}});
-  const resultado=await procesarRecordatorios({admin,transport,from:process.env.SMTP_FROM||user,randomUUID});
-  return res.status(resultado.errores||resultado.inciertos?503:200).json({ok:!resultado.errores&&!resultado.inciertos,...resultado});
+  const opciones={admin,transport,from:process.env.SMTP_FROM||user,randomUUID};
+  const [resultado,publicaciones]=await Promise.all([procesarRecordatorios(opciones),procesarPublicaciones(opciones)]);
+  return res.status(resultado.errores||resultado.inciertos||publicaciones.errores||publicaciones.inciertos?503:200).json({ok:!resultado.errores&&!resultado.inciertos&&!publicaciones.errores&&!publicaciones.inciertos,...resultado,publicaciones});
  }catch{return res.status(503).json({error:'No se pudo completar la revisión. No se repetirá un envío registrado.'});}
 }

@@ -3,7 +3,7 @@ begin;
 set local role service_role;
 select set_config('request.jwt.claims','{"role":"service_role"}',true);
 do $$
-declare actor uuid;usuario uuid;v_codigo text;v_codigo2 text;correo_id uuid;recordatorio_id uuid;asig jsonb;otra jsonb;ctx jsonb;msg jsonb;v jsonb;modulo uuid;
+declare actor uuid;usuario uuid;v_codigo text;v_codigo2 text;correo_id uuid;recordatorio_id uuid;asig jsonb;otra jsonb;ctx jsonb;msg jsonb;v jsonb;modulo uuid;aviso_id uuid;aviso_intento uuid;
 begin
  select auth_user_id into actor from public.usuarios where es_admin and lower(email)='jpintov@gmail.com';
  select id into usuario from public.usuarios where not es_admin and lower(email)<>'dummy@ofl.cl' limit 1;
@@ -53,8 +53,23 @@ begin
  update public.docencia_asignaciones_recordatorios set estado='preparado',creado_en=now()-interval '3 minutes' where asignacion_id=(otra->>'id')::uuid;
  perform public.admin_asignaciones_docentes(actor,'cerrar_recordatorio',jsonb_build_object('id',otra->>'id','version',1,'intento',recordatorio_id));
  ctx:=public.docencia_asignacion_contexto((otra->>'id')::uuid);assert ctx->'recordatorio'->>'estado'='incierto';
+ -- Publicación: autor correcto, cola única y aceptación de la copia, sin SMTP.
+ update public.modulos set autor='AUTOR NO IDENTIFICADO QA' where id=modulo;
+ assert (select count(*) from public.docencia_publicaciones_correos)=0,'No inventa destinatarios';
+ update public.modulos set autor=(select nombre from public.usuarios where id=usuario) where id=modulo;
+ select id into aviso_id from public.docencia_publicaciones_correos where modulo_id=modulo and usuario_id=usuario and codigo=v_codigo2;
+ assert aviso_id is not null,'Publicación de tema asignado encola aviso al autor';
+ update public.modulos set autor=autor where id=modulo;
+ assert (select count(*) from public.docencia_publicaciones_correos where modulo_id=modulo)=1,'Editar no duplica aviso';
+ aviso_intento:=gen_random_uuid();
+ v:=public.docencia_publicaciones_servicio('reservar',jsonb_build_object('id',aviso_id,'intento',aviso_intento,'correo',msg));assert (v->>'enviar')::boolean=true;
+ v:=public.docencia_publicaciones_servicio('reservar',jsonb_build_object('id',aviso_id,'intento',gen_random_uuid(),'correo',msg));assert (v->>'enviar')::boolean=false;
+ v:=public.docencia_publicaciones_servicio('confirmar',jsonb_build_object('id',aviso_id,'intento',aviso_intento));assert (v->>'enviar')::boolean=true;
+ perform public.docencia_publicaciones_servicio('finalizar',jsonb_build_object('id',aviso_id,'intento',aviso_intento,'estado','enviado','copia_estado','aceptada'));
+ ctx:=public.docencia_asignacion_contexto((otra->>'id')::uuid);assert ctx->'avisos_publicacion'->0->>'estado'='enviado';
+ assert public.docencia_nombre_autor('Q.·.H.·. José  Pérez')=public.docencia_nombre_autor('JOSE PEREZ');
  assert not has_table_privilege('anon','public.docencia_asignaciones_recordatorios','SELECT');
  assert not has_function_privilege('authenticated','public.docencia_recordatorios_servicio(text,jsonb)','EXECUTE');
 end $$;
 rollback;
-select jsonb_build_object('asignaciones',(select count(*) from public.docencia_asignaciones),'recordatorios',(select count(*) from public.docencia_asignaciones_recordatorios),'correos',(select count(*) from public.docencia_asignaciones_correos)) as filas_finales;
+select jsonb_build_object('asignaciones',(select count(*) from public.docencia_asignaciones),'recordatorios',(select count(*) from public.docencia_asignaciones_recordatorios),'avisos_publicacion',(select count(*) from public.docencia_publicaciones_correos),'correos',(select count(*) from public.docencia_asignaciones_correos)) as filas_finales;

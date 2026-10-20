@@ -1,5 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
+import {randomUUID} from 'node:crypto';
+import {procesarPublicaciones} from '../lib/procesar-recordatorios.js';
 import { generarCorreoAsignacion } from '../lib/correo-asignacion.js';
 import { generarCorreoRecordatorio } from '../lib/correo-recordatorio.js';
 
@@ -24,8 +26,15 @@ export default async function handler(req,res){
   let b=req.body;
   if(typeof b==='string'){try{b=JSON.parse(b);}catch{return reply(res,400,{error:'Solicitud inválida'});}}
   b=b||{};
-  if(!['listar','crear','modificar','eliminar','vista_correo','vista_recordatorio','enviar','cerrar_intento','cerrar_recordatorio'].includes(b.action))return reply(res,422,{error:'Acción no admitida'});
+  if(!['listar','crear','modificar','eliminar','vista_correo','vista_recordatorio','enviar','cerrar_intento','cerrar_recordatorio','procesar_publicaciones'].includes(b.action))return reply(res,422,{error:'Acción no admitida'});
   const action=b.action;
+  if(action==='procesar_publicaciones'){
+   const {SMTP_HOST:host,SMTP_USER:user,SMTP_PASSWORD:pass}=process.env;
+   if(process.env.VERCEL_ENV!=='production'||!host||!user||!pass)return reply(res,503,{error:'Avisos automáticos disponibles solo en producción configurada.'});
+   const transport=nodemailer.createTransport({host,port:Number(process.env.SMTP_PORT||465),secure:process.env.SMTP_SECURE!=='false',connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000,auth:{user,pass}});
+   const resultado=await procesarPublicaciones({admin,transport,from:process.env.SMTP_FROM||user,randomUUID});
+   return reply(res,200,{ok:true,data:resultado});
+  }
   if(action!=='listar'&&action!=='crear'&&(!uuid(b.id)||!Number.isInteger(b.version)||b.version<1))return reply(res,422,{error:'Seleccione una asignación actualizada'});
   if(['crear','modificar'].includes(action)&&(!uuid(b.usuario_id)||!fecha(b.fecha_asignacion)||!fecha(b.fecha_entrega)||b.fecha_entrega<b.fecha_asignacion||typeof b.codigo!=='string'))return reply(res,422,{error:'Revise integrante, tema y fechas'});
   if(action==='enviar'&&(b.confirmado!==true||!uuid(b.intento)||typeof b.reenviar!=='boolean'))return reply(res,422,{error:'Confirme expresamente el envío desde Correo'});
