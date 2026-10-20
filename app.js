@@ -452,8 +452,19 @@ function renderizarPadronAdmin() {
       tr.appendChild(td);
       return td;
     };
-    const nombre = celda(u.nombre || 'Hermano');
-    nombre.style.fontWeight = '700';
+    const nombre=celda('');
+    if (!u.es_admin && String(u.email||'').trim().toLowerCase()!=='dummy@ofl.cl') {
+      const boton=document.createElement('button');
+      boton.type='button';
+      boton.className='admin-usuario-nombre-btn';
+      boton.textContent=u.nombre||'Hermano';
+      boton.setAttribute('aria-label','Modificar datos de '+(u.nombre||'integrante'));
+      boton.addEventListener('click',()=>abrirModalEditarUsuario(u.id));
+      nombre.appendChild(boton);
+    } else {
+      nombre.textContent=u.nombre||'Hermano';
+      nombre.style.fontWeight='700';
+    }
     const correo = celda(u.email || '');
     correo.style.fontFamily = 'monospace';
     correo.style.fontSize = '0.88rem';
@@ -505,9 +516,32 @@ async function cargarListadoUsuariosAdmin() {
 function abrirModalCrearUsuario() {
   if (!usuarioActual?.es_admin || document.getElementById('btnAgregarUsuarioAdmin')?.disabled) return;
   document.getElementById('modalAdminUsuarioTitulo').textContent = 'Agregar usuario al padrón';
+  document.getElementById('adminUsuarioModalAyuda').textContent = 'Incorpore un Hermano con nombre completo y correo electrónico real.';
   document.getElementById('adminUsuarioTargetId').value = '';
   document.getElementById('adminUsuarioNombre').value = '';
   document.getElementById('adminUsuarioEmail').value = '';
+  document.getElementById('adminUsuarioEmail').readOnly = false;
+  document.getElementById('adminUsuarioEmailInfo').hidden = true;
+  document.getElementById('adminUsuarioNotaAcceso').textContent = 'El usuario será incorporado sin contraseña ni invitación; activará su acceso mediante verificación individual.';
+  document.getElementById('btnGuardarUsuarioAdmin').textContent='Guardar usuario';
+  document.getElementById('errorAdminUsuario').textContent = '';
+  document.getElementById('modalAdminUsuario').classList.remove('hidden');
+  document.getElementById('adminUsuarioNombre').focus();
+}
+
+function abrirModalEditarUsuario(id) {
+  if (!usuarioActual?.es_admin) return;
+  const u=padronUsuariosAdmin.find(item=>item.id===id);
+  if(!u||u.es_admin||String(u.email||'').trim().toLowerCase()==='dummy@ofl.cl') return;
+  document.getElementById('modalAdminUsuarioTitulo').textContent = 'Modificar datos del Hermano';
+  document.getElementById('adminUsuarioModalAyuda').textContent = 'Modifique los datos del padrón. Este formulario no cambia permisos, contraseñas ni historial docente.';
+  document.getElementById('adminUsuarioTargetId').value = u.id;
+  document.getElementById('adminUsuarioNombre').value = u.nombre||'';
+  document.getElementById('adminUsuarioEmail').value = u.email||'';
+  document.getElementById('adminUsuarioEmail').readOnly = !!u.auth_user_id;
+  document.getElementById('adminUsuarioEmailInfo').hidden = !u.auth_user_id;
+  document.getElementById('adminUsuarioNotaAcceso').textContent = 'Los cambios se guardan en el padrón y no generan correos automáticos.';
+  document.getElementById('btnGuardarUsuarioAdmin').textContent='Guardar cambios';
   document.getElementById('errorAdminUsuario').textContent = '';
   document.getElementById('modalAdminUsuario').classList.remove('hidden');
   document.getElementById('adminUsuarioNombre').focus();
@@ -517,31 +551,35 @@ async function guardarAdminUsuario() {
   const err = document.getElementById('errorAdminUsuario');
   const nombre = document.getElementById('adminUsuarioNombre').value.trim();
   const email = document.getElementById('adminUsuarioEmail').value.trim().toLowerCase();
+  const id = document.getElementById('adminUsuarioTargetId').value.trim();
+  const editar=!!id;
   if (!usuarioActual?.es_admin) return;
-  if (nombre.length < 3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    err.textContent = 'Ingrese un nombre y un correo electrónico válido.';
+  const nombreReal=nombre.replace(/^(?:\s*Q\s*[.·:]*\s*H\s*[.·:]*\s*)+/iu,'').trim();
+  if (nombreReal.length < 3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    err.textContent = 'Ingrese un nombre completo y un correo electrónico válido.';
     return;
   }
   const { data: sessionData, error: sessionError } = await sbApp.auth.getSession();
   const token = sessionData?.session?.access_token;
   if (sessionError || !token) { err.textContent = 'Sesión vencida. Vuelva a iniciar sesión.'; return; }
-  const button = document.querySelector('#modalAdminUsuario button[onclick="guardarAdminUsuario()"]');
+  const button = document.getElementById('btnGuardarUsuarioAdmin');
   if (button) button.disabled = true;
-  err.textContent = 'Registrando usuario...';
+  err.textContent = editar?'Guardando cambios…':'Registrando usuario…';
   try {
     const response = await fetch('/api/admin-usuarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-      body: JSON.stringify({ action: 'crear', nombre, email })
+      body: JSON.stringify({ action: editar?'editar':'crear', id:editar?id:undefined, nombre, email })
     });
-    const result = await response.json();
+    const result = await response.json().catch(()=>({}));
     if (!response.ok || !result.ok) {
-      err.textContent = result.error || 'No se pudo registrar el usuario.';
+      err.textContent = result.error || 'No se pudo guardar el usuario.';
       return;
     }
     document.getElementById('modalAdminUsuario').classList.add('hidden');
     await cargarListadoUsuariosAdmin();
-    alert('Usuario incorporado al padrón. No se envió invitación ni se asignó contraseña.');
+    const estado=document.getElementById('padronUsuariosEstado');
+    if(estado)estado.textContent=editar?'Datos del Hermano actualizados.':'Integrante incorporado al padrón sin envío de invitación.';
   } catch {
     err.textContent = 'No fue posible conectar con el servicio de administración.';
   } finally {
