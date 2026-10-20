@@ -2244,3 +2244,32 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
  #seccionAdmin .gestion-trabajo-botones button{min-height:44px;flex:1}
 }
 
+
+/* Opciones por asignación y seguimiento del recordatorio automático. */
+.opciones-asignacion-dialog .asignacion-campos{border:1px solid #c8d5df;border-radius:10px;padding:20px;margin:18px 0;background:#f7fafc}
+.opciones-asignacion-dialog legend{padding:0 8px;color:#193c53;font-weight:700}
+.opciones-asignacion-dialog .asignacion-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.opciones-asignacion-dialog .form-group{min-width:0;margin:0}
+.opciones-asignacion-dialog select,.opciones-asignacion-dialog input[type=date]{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+.opciones-asignacion-dialog small{display:block;line-height:1.5;color:#53697b;margin-top:7px}
+.asignacion-recordatorio-panel{border-top:1px solid #c8d5df;margin-top:24px;padding-top:18px}
+.asignacion-recordatorio-panel h3{font-size:1.1rem;margin-top:0;color:#193c53}
+.asignacion-recordatorio-panel summary{cursor:pointer;min-height:44px;font-weight:600;padding:8px 0}
+#asignacionRecordatorioVista{width:100%;height:520px;border:1px solid #ccd6de;background:#fff;box-sizing:border-box}
+#asignacionModalEstado{line-height:1.5;overflow-wrap:anywhere}
+@media(max-width:700px){.opciones-asignacion-dialog .asignacion-form-grid{grid-template-columns:minmax(0,1fr)}.opciones-asignacion-dialog .asignacion-campos{padding:14px}.opciones-asignacion-dialog .correo-asignacion-cabecera{align-items:flex-start}.opciones-asignacion-dialog h2{overflow-wrap:anywhere;min-width:0}.opciones-asignacion-dialog .asignacion-contexto{grid-template-columns:minmax(0,1fr)}}
+
+/* Cronograma operativo del resumen de KPIs. */
+.cronograma-trabajos{margin-top:32px;padding-top:24px;border-top:1px solid #c8d5df}
+.cronograma-filtros{display:flex;align-items:center;gap:12px;margin:22px 0 12px;flex-wrap:wrap}
+.cronograma-filtros select{min-height:44px;max-width:100%}
+.cronograma-lista{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:14px}
+.cronograma-item{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:18px;align-items:start;padding:18px;background:#f7fafc;border:1px solid #c8d5df;border-left:4px solid #af8e50;border-radius:9px}
+.cronograma-item time{font-size:.9rem;font-weight:700;color:#193c53}
+.cronograma-item h3{font-size:1rem;line-height:1.5;margin:0 0 5px;overflow-wrap:anywhere}
+.cronograma-item p{margin:5px 0;line-height:1.5;overflow-wrap:anywhere}
+.cronograma-item .cronograma-meta{font-size:.82rem;color:#53697b}
+.cronograma-item progress{width:100%;height:8px;accent-color:#a58449;margin:7px 0}
+.cronograma-vencido{border-left-color:#9e4d3d}.cronograma-publicado{border-left-color:#397863}
+.cronograma-item button{min-height:44px}
+@media(max-width:700px){.cronograma-item{grid-template-columns:minmax(0,1fr);gap:7px;padding:14px}.cronograma-item button{justify-self:start}.cronograma-filtros select{width:100%}}

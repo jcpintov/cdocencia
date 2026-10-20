@@ -2610,6 +2610,7 @@ async function guardarArchivoOriginalEnBD() {
     document.getElementById('archivoAdjuntoStatus').innerText = '';
     archivoBase64Pendiente = null;
     verificarEstadoArchivoModulo(moduloId);
+    void window.notificarPublicacionesAdmin?.();
   }
 }
 
@@ -3220,6 +3221,7 @@ async function guardarEdicionModuloAdmin() {
     moduloAuditando.numero_orden = nuevoOrden;
     moduloAuditando.contenido_trazado = nuevoTexto;
     if (Object.hasOwn(cambios,'unidad_codigo')) moduloAuditando.unidad_codigo=cambios.unidad_codigo;
+    void window.notificarPublicacionesAdmin?.();
     alert("Encabezado, texto y clasificación guardados exitosamente.");
     await cargarDatosAdmin();
     cargarGestionTrabajosAdmin();
@@ -3567,6 +3569,7 @@ window.addEventListener('DOMContentLoaded', () => {
 async function cargarResumenAdmin() {
   const status = document.getElementById('resumenAdminEstado');
   if (!status) return;
+  void window.cargarCronogramaAdmin?.();
   status.textContent = 'Actualizando indicadores...';
   const campos = ['kpiUsuarios','kpiModulos','kpiCompletados','kpiComentarios'];
   campos.forEach(id => { document.getElementById(id).textContent = '—'; });

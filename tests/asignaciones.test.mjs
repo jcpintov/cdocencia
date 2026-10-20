@@ -9,7 +9,7 @@ test('plantilla conserva tratamiento, mayúsculas, espacios, firma y lineamiento
  const c=generarCorreoAsignacion(registro);
  assert.ok(c.text.startsWith('V.·.M.·. \nJOSÉ PÉREZ:\n\n\n\nJunto'));
  assert.ok(c.html.includes('<strong>EL CONCEPTO HIRÁMICO DEL TALLER</strong>'));
- assert.match(c.text,/10 de noviembre de 2026, hasta las 23:30 horas de Chile/);
+ assert.match(c.text,/10 de noviembre de 2026, hasta las 23:30 horas/);
  assert.ok(c.text.endsWith('Julio César Pinto,\n\nORADOR - RL OFL 146'));
  assert.match(c.text,/Unidad: Unidad 1: Basamentos doctrinarios/);
  assert.match(c.text,/Subunidad: 1\.1 Conceptos fundamentales del Grado/);
@@ -30,7 +30,7 @@ function setup({email='jpintov@gmail.com',admin=true,failSend=false,failFinish=f
  rpc:async(_fn,{p_accion,p_datos})=>{calls.push({action:p_accion,data:p_datos});
  if(failFinish&&p_accion==='finalizar_correo')return {error:{code:'network'}};
  return {data:p_accion==='vista_correo'?registro:p_accion==='reservar_correo'?{enviar:reserva}:{ok:true},error:null};}},
- nodemailer:{createTransport:()=>({sendMail:async msg=>{calls.push({action:'sendMail',msg});if(failSend)throw Error('timeout');return {accepted:[registro.email],messageId:'accepted'};}})}};
+ nodemailer:{createTransport:()=>({sendMail:async msg=>{calls.push({action:'sendMail',msg});if(failSend)throw Error('timeout');return {accepted:[registro.email,'jpintov@gmail.com'],messageId:'accepted'};}})}};
  runInNewContext(source,ctx);
  async function request(body,authorization='Bearer valid'){
  const res={setHeader(){},status(s){this.code=s;return this;},json(d){this.body=d;return this;}};
@@ -59,6 +59,8 @@ test('requiere acción manual confirmada y usa destinatario del padrón',async()
  const r=await s.request({...envio,to:'intruso@example.invalid'});assert.equal(r.code,200);
  assert.deepEqual(s.calls.map(c=>c.action),['vista_correo','reservar_correo','sendMail','finalizar_correo']);
  assert.equal(s.calls.find(c=>c.action==='sendMail').msg.to,registro.email);
+ assert.equal(s.calls.find(c=>c.action==='sendMail').msg.bcc,'jpintov@gmail.com');
+ assert.equal(s.calls.at(-1).data.copia_estado,'aceptada');
 });
 test('repetir identificador no vuelve a enviar',async()=>{
  const s=setup({reserva:false});const r=await s.request(envio);assert.equal(r.body.repetido,true);assert.ok(!s.calls.some(c=>c.action==='sendMail'));

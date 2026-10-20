@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/api/cron-recordatorios",
+      "schedule": "0 16 * * *"
+    }
+  ],
+  "functions": {
+    "api/cron-recordatorios.js": {
+      "maxDuration": 300
+    },
+    "api/admin-asignaciones.js": {
+      "maxDuration": 300
+    }
+  }
+}
