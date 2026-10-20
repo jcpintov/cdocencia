@@ -72,18 +72,19 @@ test('deniega identidades ajenas a la cuenta superadmin', async () => {
   assert.equal((await s.request({action:'crear',nombre:'Nombre Prueba',email:'test@example.invalid'})).statusCode,403);
   assert.deepEqual(s.calls,[]);
 });
-test('padrón lleno rechaza nuevos integrantes', async () => {
+test('permite ampliar el padrón incluso después de los 26 integrantes', async () => {
   const s=setup({count:26});
   const r=await s.request({action:'crear',nombre:'Nombre Prueba',email:'test@example.invalid'});
-  assert.equal(r.statusCode,409);
-  assert.deepEqual(s.calls,['lookup','count']);
+  assert.equal(r.statusCode,201);
+  assert.equal(r.body.ok,true);
+  assert.deepEqual(s.calls,['lookup','insert']);
 });
-test('permite registrar integrante cuando hay cupo, sin crear credenciales', async () => {
+test('permite registrar integrante sin enviar invitación ni crear credenciales', async () => {
   const s=setup({count:25});
   const r=await s.request({action:'crear',nombre:'Nombre Prueba',email:'test@example.invalid'});
   assert.equal(r.statusCode,201);
   assert.equal(r.body.ok,true);
-  assert.deepEqual(s.calls,['lookup','count','insert']);
+  assert.deepEqual(s.calls,['lookup','insert']);
 });
 test('no reintroduce acción antigua de activación', async () => {
   const s=setup();

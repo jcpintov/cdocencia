@@ -56,16 +56,8 @@ export default async function handler(req, res) {
       .select('id').ilike('email', email).limit(1);
     if (lookupError) return reply(res, 503, { error: 'No se pudo verificar el padrón' });
     if (existing?.length) return reply(res, 409, { error: 'El correo ya está registrado' });
-    // Padrón cerrado: 26 integrantes; Superadmin y Dummy no ocupan un cupo.
-    const { count: cuposOcupados, error: countError } = await admin.from('usuarios')
-      .select('id', { count: 'exact', head: true })
-      .eq('es_admin', false).neq('email', 'dummy@ofl.cl');
-    if (countError || cuposOcupados == null) {
-      return reply(res, 503, { error: 'No se pudo verificar el cupo del padrón' });
-    }
-    if (cuposOcupados >= 26) {
-      return reply(res, 409, { error: 'Padrón completo (26 integrantes). No se incorporaron cuentas.' });
-    }
+    // La ampliación del padrón está autorizada; se mantienen las validaciones
+    // de identidad Superadmin y la unicidad del correo en la base de datos.
     const { data: created, error: insertError } = await admin.from('usuarios')
       .insert({ nombre, email, es_admin: false, debe_cambiar_clave: true,
         auth_user_id: null, clave_hash: null, terminos_aceptados: false })
