@@ -1,0 +1,30 @@
+name: Interfaz de asignaciones y catálogo completo
+on:
+  pull_request:
+    paths:
+      - 'app.js'
+      - 'index.html'
+      - 'ui-v2.css'
+      - 'asignaciones-admin.js'
+      - 'api/admin-asignaciones.js'
+      - 'lib/correo-asignacion.js'
+      - 'tests/browser/**'
+      - '.github/workflows/asignaciones-qa.yml'
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Preparar navegador aislado sin secretos
+        run: |
+          npm install --prefix "$RUNNER_TEMP/qa" --ignore-scripts --no-package-lock playwright@1.62.1
+          "$RUNNER_TEMP/qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Probar formulario y catálogo escritorio y móvil
+        env:
+          QA_PLAYWRIGHT_ROOT: ${{ runner.temp }}/qa
+        run: node tests/browser/asignaciones-smoke.mjs

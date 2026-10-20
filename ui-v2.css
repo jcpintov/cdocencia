@@ -2149,6 +2149,34 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-codigo-enlace {color:#bb
 }
 
 /* Navegación Superadmin: gestión primero, herramientas al final. */
+/* Asignaciones: formularios legibles y acciones manuales. */
+/* Contenido docente: documento de altura natural, sin recorte ni scroll anidado. */
+body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-height:100dvh;overflow-x:hidden;overflow-y:auto}
+#seccionContenidoDocente.catalogo-portal{height:auto;min-height:calc(100dvh - 80px);overflow:visible;align-items:start}
+#seccionContenidoDocente .contenido-docente-main.catalogo-contenido.bienvenida-container{height:auto;min-height:0;overflow:visible;max-height:none}
+#seccionContenidoDocente .portal-nav{position:sticky;top:0;max-height:100dvh;min-height:calc(100dvh - 80px)}
+.contenido-docente-controles{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0}.contenido-docente-controles button{padding:9px 14px;border:1px solid #a9becd;border-radius:7px;background:#f2f6f9;color:#193c53;cursor:pointer}
+@media(max-width:640px){#seccionContenidoDocente.catalogo-portal{display:block}#seccionContenidoDocente .portal-nav{position:static;min-height:0;max-height:none}}
+#adminSeccionAsignaciones .asignacion-campos{border:1px solid #c8d5df;border-radius:10px;padding:20px;margin:18px 0;background:#f7fafc}
+#adminSeccionAsignaciones legend{padding:0 8px;color:#193c53;font-weight:700}
+#adminSeccionAsignaciones .asignacion-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+#adminSeccionAsignaciones .asignacion-form-grid select,#adminSeccionAsignaciones .asignacion-form-grid input{width:100%;max-width:100%;min-width:0}
+#adminSeccionAsignaciones .form-group{min-width:0;margin:0}
+#adminSeccionAsignaciones small{display:block;line-height:1.5;color:#53697b;margin-top:7px}
+.asignacion-contexto{display:grid;grid-template-columns:2fr 2fr 1fr;gap:16px;margin:20px 0}
+.asignacion-contexto dt{font-weight:700;color:#193c53;font-size:.85rem}.asignacion-contexto dd{margin:5px 0;overflow-wrap:anywhere}
+.asignacion-aviso{padding:12px;border-left:3px solid #a58449;background:#f3eee3;font-size:.9rem;line-height:1.5}
+.asignacion-botones{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}.asignacion-botones button{width:auto;min-width:110px;min-height:46px}
+.asignacion-lista-cabecera{display:flex;justify-content:space-between;gap:15px;align-items:center;flex-wrap:wrap;margin-top:24px}
+.asignacion-lista-cabecera label{display:flex;gap:8px;align-items:center;font-size:.85rem}
+.asignaciones-table{min-width:800px;font-size:.87rem}.asignaciones-table td{overflow-wrap:anywhere;max-width:320px}.asignacion-seleccionada{background:#eaf1f7}
+.asignacion-correo-estado{display:block;font-size:.77rem;line-height:1.5;margin-top:5px;color:#53697b}
+.correo-asignacion-dialog{width:min(950px,calc(100vw - 24px));max-height:92dvh;overflow:auto;margin:auto;padding:24px;border:1px solid #b7c9d6;border-radius:12px;background:#fff;color:#182d3c}
+.correo-asignacion-dialog::backdrop{background:rgba(6,24,39,.7)}
+.correo-asignacion-cabecera{display:flex;justify-content:space-between;gap:14px;align-items:center}.correo-asignacion-dialog h2{font-size:1.3rem}
+#correoAsignacionVista{width:100%;height:560px;border:1px solid #ccd6de;background:#fff;margin:14px 0}
+.correo-asignacion-dialog [hidden]{display:none!important}
+@media(max-width:700px){#adminSeccionAsignaciones .asignacion-form-grid,.asignacion-contexto{grid-template-columns:minmax(0,1fr)}#adminSeccionAsignaciones .asignacion-campos{padding:14px}.asignacion-botones button{flex:1}.correo-asignacion-dialog{padding:15px}}
 #seccionAdmin.admin-layout{grid-template-columns:264px minmax(0,1fr)}
 #seccionAdmin .sidebar-admin{padding:24px 16px;background:#112635;border-right:1px solid #284252;align-self:start;position:sticky;top:0;max-height:100dvh;overflow-y:auto;min-height:100vh}
 #seccionAdmin .admin-brand{align-items:flex-start;padding:0 8px 22px;margin-bottom:16px}
@@ -2215,3 +2243,4 @@ body.theme-nocturno #seccionCatalogoTrabajos .grid-card-codigo-enlace {color:#bb
  #seccionAdmin .gestion-trabajo-botones{width:100%}
  #seccionAdmin .gestion-trabajo-botones button{min-height:44px;flex:1}
 }
+

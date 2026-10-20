@@ -1,0 +1,897 @@
+{
+  "catalogo": [
+    {
+      "codigo": "INCI000",
+      "detalle": "CONTENIDO INICIÁTICO",
+      "orden": 1
+    },
+    {
+      "codigo": "INCI0100",
+      "detalle": "UNIDAD 1: BASAMENTOS DOCTRINARIOS",
+      "orden": 2
+    },
+    {
+      "codigo": "INCI0110",
+      "detalle": "1.1 CONCEPTOS FUNDAMENTALES DEL GRADO",
+      "orden": 3
+    },
+    {
+      "codigo": "INCI011A",
+      "detalle": "El concepto Hirámico del Taller",
+      "orden": 4
+    },
+    {
+      "codigo": "INCI011B",
+      "detalle": "El Jefe de Obra según el modelo de Hiram",
+      "orden": 5
+    },
+    {
+      "codigo": "INCI011C",
+      "detalle": "Los malos compañeros",
+      "orden": 6
+    },
+    {
+      "codigo": "INCI0120",
+      "detalle": "1.2 LA EXALTACIÓN",
+      "orden": 7
+    },
+    {
+      "codigo": "INCI012A",
+      "detalle": "La Ceremonia de Exaltación como etapa iniciática",
+      "orden": 8
+    },
+    {
+      "codigo": "INCI012B",
+      "detalle": "Significado de la Exaltación",
+      "orden": 9
+    },
+    {
+      "codigo": "INCI0130",
+      "detalle": "1.3 LAS VIRTUDES DEL GRADO DE MAESTRO",
+      "orden": 10
+    },
+    {
+      "codigo": "INCI013A",
+      "detalle": "Celo",
+      "orden": 11
+    },
+    {
+      "codigo": "INCI013B",
+      "detalle": "Fervor",
+      "orden": 12
+    },
+    {
+      "codigo": "INCI013C",
+      "detalle": "Constancia",
+      "orden": 13
+    },
+    {
+      "codigo": "INCI0140",
+      "detalle": "1.4 ASPECTOS SIMBÓLICOS FUNDAMENTALES",
+      "orden": 14
+    },
+    {
+      "codigo": "INCI014A",
+      "detalle": "La Acacia",
+      "orden": 15
+    },
+    {
+      "codigo": "INCI014B",
+      "detalle": "La Edad del Maestro",
+      "orden": 16
+    },
+    {
+      "codigo": "INCI014C",
+      "detalle": "El Signo de Socorro",
+      "orden": 17
+    },
+    {
+      "codigo": "INCI014D",
+      "detalle": "Los 5 Puntos Perfectos de la Maestría",
+      "orden": 18
+    },
+    {
+      "codigo": "INCI014E",
+      "detalle": "El Templo de Salomón",
+      "orden": 19
+    },
+    {
+      "codigo": "INCI014F",
+      "detalle": "Jubelás, Jubelós, Jubelum",
+      "orden": 20
+    },
+    {
+      "codigo": "INCI014G",
+      "detalle": "El Orden en el Caos",
+      "orden": 21
+    },
+    {
+      "codigo": "INCI014H",
+      "detalle": "El Maestro Hiram como símbolo",
+      "orden": 22
+    },
+    {
+      "codigo": "INCI014I",
+      "detalle": "La Cámara del Medio",
+      "orden": 23
+    },
+    {
+      "codigo": "INCI014J",
+      "detalle": "Lápiz, barro y carbón",
+      "orden": 24
+    },
+    {
+      "codigo": "INCI014K",
+      "detalle": "Ambición, Hipocresía e Ignorancia",
+      "orden": 25
+    },
+    {
+      "codigo": "INCI014L",
+      "detalle": "¡Es nuestro Maestro!",
+      "orden": 26
+    },
+    {
+      "codigo": "INCI0200",
+      "detalle": "UNIDAD 2: CONOCIMIENTO SIMBÓLICO-INICIÁTICO",
+      "orden": 27
+    },
+    {
+      "codigo": "INCI0210",
+      "detalle": "2.1 RETEJADOR EN EL GRADO DE MAESTRO",
+      "orden": 28
+    },
+    {
+      "codigo": "INCI021A",
+      "detalle": "La Batería",
+      "orden": 29
+    },
+    {
+      "codigo": "INCI021B",
+      "detalle": "Posición al Orden",
+      "orden": 30
+    },
+    {
+      "codigo": "INCI021C",
+      "detalle": "Signo",
+      "orden": 31
+    },
+    {
+      "codigo": "INCI021D",
+      "detalle": "Palabra de Paso",
+      "orden": 32
+    },
+    {
+      "codigo": "INCI021E",
+      "detalle": "Toque",
+      "orden": 33
+    },
+    {
+      "codigo": "INCI021F",
+      "detalle": "Palabra Sagrada",
+      "orden": 34
+    },
+    {
+      "codigo": "INCI021G",
+      "detalle": "Marcha del Maestro",
+      "orden": 35
+    },
+    {
+      "codigo": "INCI021H",
+      "detalle": "Aclamación del Grado",
+      "orden": 36
+    },
+    {
+      "codigo": "INCI0220",
+      "detalle": "2.2 RITUAL DE EXALTACIÓN — CÁMARA DE REFLEXIONES",
+      "orden": 37
+    },
+    {
+      "codigo": "INCI022A",
+      "detalle": "La caverna o gruta",
+      "orden": 38
+    },
+    {
+      "codigo": "INCI022B",
+      "detalle": "El cirio",
+      "orden": 39
+    },
+    {
+      "codigo": "INCI022C",
+      "detalle": "El reloj de arena",
+      "orden": 40
+    },
+    {
+      "codigo": "INCI022D",
+      "detalle": "La guadaña",
+      "orden": 41
+    },
+    {
+      "codigo": "INCI022E",
+      "detalle": "El pan",
+      "orden": 42
+    },
+    {
+      "codigo": "INCI022F",
+      "detalle": "El agua",
+      "orden": 43
+    },
+    {
+      "codigo": "INCI022G",
+      "detalle": "El esqueleto humano o la calavera",
+      "orden": 44
+    },
+    {
+      "codigo": "INCI022H",
+      "detalle": "Las 3 sentencias",
+      "orden": 45
+    },
+    {
+      "codigo": "INCI0230",
+      "detalle": "2.3 PREPARACIÓN DEL POSTULANTE",
+      "orden": 46
+    },
+    {
+      "codigo": "INCI023A",
+      "detalle": "Las Vestimentas",
+      "orden": 47
+    },
+    {
+      "codigo": "INCI023B",
+      "detalle": "La Escuadra atada al antebrazo derecho",
+      "orden": 48
+    },
+    {
+      "codigo": "INCI023C",
+      "detalle": "Las perneras arremangadas",
+      "orden": 49
+    },
+    {
+      "codigo": "INCI023D",
+      "detalle": "Las mangas arremangadas",
+      "orden": 50
+    },
+    {
+      "codigo": "INCI0240",
+      "detalle": "2.4 PREPARACIÓN DEL TEMPLO",
+      "orden": 51
+    },
+    {
+      "codigo": "INCI024A",
+      "detalle": "Las colgaduras negras",
+      "orden": 52
+    },
+    {
+      "codigo": "INCI024B",
+      "detalle": "La calavera con las tibias cruzadas",
+      "orden": 53
+    },
+    {
+      "codigo": "INCI024C",
+      "detalle": "Las siete lágrimas blancas",
+      "orden": 54
+    },
+    {
+      "codigo": "INCI024D",
+      "detalle": "El mazo sobre el sitial del Respetable Maestro",
+      "orden": 55
+    },
+    {
+      "codigo": "INCI024E",
+      "detalle": "La escuadra sobre el sitial del Primer Vigilante",
+      "orden": 56
+    },
+    {
+      "codigo": "INCI024F",
+      "detalle": "La regla sobre el sitial del Segundo Vigilante",
+      "orden": 57
+    },
+    {
+      "codigo": "INCI024G",
+      "detalle": "La calavera en el sitial del Respetable Maestro",
+      "orden": 58
+    },
+    {
+      "codigo": "INCI024H",
+      "detalle": "La urna fúnebre",
+      "orden": 59
+    },
+    {
+      "codigo": "INCI0250",
+      "detalle": "2.5 LAS PRUEBAS INICIÁTICAS",
+      "orden": 60
+    },
+    {
+      "codigo": "INCI025A",
+      "detalle": "El examen en el vestíbulo",
+      "orden": 61
+    },
+    {
+      "codigo": "INCI025B",
+      "detalle": "El primer Viaje Misterioso",
+      "orden": 62
+    },
+    {
+      "codigo": "INCI025C",
+      "detalle": "El segundo Viaje Misterioso",
+      "orden": 63
+    },
+    {
+      "codigo": "INCI025D",
+      "detalle": "El tercer Viaje Misterioso",
+      "orden": 64
+    },
+    {
+      "codigo": "INCI025E",
+      "detalle": "Los 5 juramentos",
+      "orden": 65
+    },
+    {
+      "codigo": "INCI0260",
+      "detalle": "2.6 LA ACUSACIÓN",
+      "orden": 66
+    },
+    {
+      "codigo": "INCI026A",
+      "detalle": "La imputación del Guardatemplo",
+      "orden": 67
+    },
+    {
+      "codigo": "INCI026B",
+      "detalle": "La expulsión del Templo",
+      "orden": 68
+    },
+    {
+      "codigo": "INCI026C",
+      "detalle": "El examen y la prueba de inocencia",
+      "orden": 69
+    },
+    {
+      "codigo": "INCI0270",
+      "detalle": "2.7 EL MITO HIRAMITA",
+      "orden": 70
+    },
+    {
+      "codigo": "INCI027A",
+      "detalle": "La Retrogradación",
+      "orden": 71
+    },
+    {
+      "codigo": "INCI027B",
+      "detalle": "El cadáver",
+      "orden": 72
+    },
+    {
+      "codigo": "INCI027C",
+      "detalle": "Salomón, el Rey de Tiro e Hiram Abí",
+      "orden": 73
+    },
+    {
+      "codigo": "INCI027D",
+      "detalle": "El crimen y los golpes mortales (Garganta, Corazón, Cabeza)",
+      "orden": 74
+    },
+    {
+      "codigo": "INCI027E",
+      "detalle": "El ocultamiento del cadáver",
+      "orden": 75
+    },
+    {
+      "codigo": "INCI027F",
+      "detalle": "La búsqueda del Maestro y los Nueve Maestros",
+      "orden": 76
+    },
+    {
+      "codigo": "INCI027G",
+      "detalle": "El hallazgo",
+      "orden": 77
+    },
+    {
+      "codigo": "INCI027H",
+      "detalle": "La Rama de Acacia",
+      "orden": 78
+    },
+    {
+      "codigo": "INCI027I",
+      "detalle": "La carne se desprende de los huesos",
+      "orden": 79
+    },
+    {
+      "codigo": "INCI027J",
+      "detalle": "La Palabra perdida y la Palabra sustituta",
+      "orden": 80
+    },
+    {
+      "codigo": "INCI0280",
+      "detalle": "2.8 EL JURAMENTO",
+      "orden": 81
+    },
+    {
+      "codigo": "INCI028A",
+      "detalle": "Postura y estado en que se presta",
+      "orden": 82
+    },
+    {
+      "codigo": "INCI028B",
+      "detalle": "La Escuadra sobre el Compas",
+      "orden": 83
+    },
+    {
+      "codigo": "INCI028C",
+      "detalle": "Obligaciones del Juramento",
+      "orden": 84
+    },
+    {
+      "codigo": "INCI0290",
+      "detalle": "2.9 CONSTITUCIÓN DEL MAESTRO",
+      "orden": 85
+    },
+    {
+      "codigo": "INCI029A",
+      "detalle": "La Bóveda de Acero",
+      "orden": 86
+    },
+    {
+      "codigo": "INCI029B",
+      "detalle": "Los Nueve Golpes Misteriosos",
+      "orden": 87
+    },
+    {
+      "codigo": "INCI029C",
+      "detalle": "El Mandil y la Banda de Maestro",
+      "orden": 88
+    },
+    {
+      "codigo": "INCI02A0",
+      "detalle": "2.10 RITUAL DE APERTURA Y CLAUSURA",
+      "orden": 89
+    },
+    {
+      "codigo": "INCI02AA",
+      "detalle": "La Acacia me es conocida",
+      "orden": 90
+    },
+    {
+      "codigo": "INCI02AB",
+      "detalle": "El primer deber en la Cámara del Medio",
+      "orden": 91
+    },
+    {
+      "codigo": "INCI02AC",
+      "detalle": "La búsqueda de la Palabra Perdida",
+      "orden": 92
+    },
+    {
+      "codigo": "INCI02AD",
+      "detalle": "El libro de Eclesiastés Cap. 12, Ver. 1 y 7",
+      "orden": 93
+    },
+    {
+      "codigo": "INCI02AE",
+      "detalle": "Posición de la Escuadra y el Compas",
+      "orden": 94
+    },
+    {
+      "codigo": "INCI02AF",
+      "detalle": "La distribución de la Palabra Sagrada",
+      "orden": 95
+    },
+    {
+      "codigo": "INCI02B0",
+      "detalle": "2.11 GNOSIS NUMERAL DEL GRADO",
+      "orden": 96
+    },
+    {
+      "codigo": "INCI02BA",
+      "detalle": "El Seis",
+      "orden": 97
+    },
+    {
+      "codigo": "INCI02BB",
+      "detalle": "El Siete",
+      "orden": 98
+    },
+    {
+      "codigo": "INCI02BC",
+      "detalle": "El Ocho",
+      "orden": 99
+    },
+    {
+      "codigo": "INCI02BD",
+      "detalle": "El Nueve",
+      "orden": 100
+    },
+    {
+      "codigo": "INCI02C0",
+      "detalle": "2.12 EL TEMPLO MASÓNICO DE TERCER GRADO — CONOCIMIENTO RITUALÍSTICO",
+      "orden": 101
+    },
+    {
+      "codigo": "INCI02CA",
+      "detalle": "Análisis Esotérico del Ritual Fúnebre",
+      "orden": 102
+    },
+    {
+      "codigo": "INCI02CB",
+      "detalle": "Análisis del Ritual de Instalación de Oficialidad",
+      "orden": 103
+    },
+    {
+      "codigo": "INCI02CC",
+      "detalle": "Análisis de los Rituales de Consagración y Desconsagración de Templo",
+      "orden": 104
+    },
+    {
+      "codigo": "INCI02D0",
+      "detalle": "2.13 CONOCIMIENTO TRADICIONAL",
+      "orden": 105
+    },
+    {
+      "codigo": "INCI02DA",
+      "detalle": "Los Usos y Costumbres",
+      "orden": 106
+    },
+    {
+      "codigo": "INCI02DB",
+      "detalle": "Año de la Luz y Era Vulgar",
+      "orden": 107
+    },
+    {
+      "codigo": "INCI02DC",
+      "detalle": "Los 3 puntos de abreviación",
+      "orden": 108
+    },
+    {
+      "codigo": "INCI02DD",
+      "detalle": "Los Landmarks",
+      "orden": 109
+    },
+    {
+      "codigo": "INCI02DE",
+      "detalle": "La regularidad con fuente de reconocimiento y territorialidad docente",
+      "orden": 110
+    },
+    {
+      "codigo": "INCI02DF",
+      "detalle": "El derecho masónico",
+      "orden": 111
+    },
+    {
+      "codigo": "INCI02DG",
+      "detalle": "El balotaje",
+      "orden": 112
+    },
+    {
+      "codigo": "INCI02DH",
+      "detalle": "La Cámara del Medio",
+      "orden": 113
+    },
+    {
+      "codigo": "INST000",
+      "detalle": "CONTENIDO INSTITUCIONAL",
+      "orden": 114
+    },
+    {
+      "codigo": "INST0100",
+      "detalle": "UNIDAD 1: HISTORIA DE LA MASONERÍA",
+      "orden": 115
+    },
+    {
+      "codigo": "INST0110",
+      "detalle": "1.1 HISTORIA DE LA MASONERÍA",
+      "orden": 116
+    },
+    {
+      "codigo": "INST011A",
+      "detalle": "Origen del Grado de Maestro",
+      "orden": 117
+    },
+    {
+      "codigo": "INST011B",
+      "detalle": "Análisis crítico de la historia de la Masonería Chilena",
+      "orden": 118
+    },
+    {
+      "codigo": "INST0200",
+      "detalle": "UNIDAD 2: REGLAMENTACIÓN MASÓNICA CHILENA",
+      "orden": 119
+    },
+    {
+      "codigo": "INST0210",
+      "detalle": "2.1 REGLAMENTACIÓN MASÓNICA CHILENA",
+      "orden": 120
+    },
+    {
+      "codigo": "INST021A",
+      "detalle": "Reglamento General de la Gran Logia:",
+      "orden": 121
+    },
+    {
+      "codigo": "INST021B",
+      "detalle": "Reglamentos Complementarios",
+      "orden": 122
+    },
+    {
+      "codigo": "INST021C",
+      "detalle": "Reglamento de Administración de Justicia Masónica",
+      "orden": 123
+    },
+    {
+      "codigo": "INST021D",
+      "detalle": "Reglamento Especial de Votaciones y Escrutinios",
+      "orden": 124
+    },
+    {
+      "codigo": "INST021E",
+      "detalle": "Reglamento Especial sobre uso de Paramentos y Distintivos Masónicos",
+      "orden": 125
+    },
+    {
+      "codigo": "INST021F",
+      "detalle": "Reglamento Especial sobre Templos y Casas Masónicas",
+      "orden": 126
+    },
+    {
+      "codigo": "FILO000",
+      "detalle": "CONTENIDO FILOSÓFICO",
+      "orden": 127
+    },
+    {
+      "codigo": "FILO0100",
+      "detalle": "UNIDAD 1: BASAMENTOS DOCTRINARIOS",
+      "orden": 128
+    },
+    {
+      "codigo": "FILO0110",
+      "detalle": "1.1 FILOSOFÍA GENERAL",
+      "orden": 129
+    },
+    {
+      "codigo": "FILO011A",
+      "detalle": "Axiología",
+      "orden": 130
+    },
+    {
+      "codigo": "FILO011B",
+      "detalle": "Humanismo",
+      "orden": 131
+    },
+    {
+      "codigo": "FILO011C",
+      "detalle": "Laicismo",
+      "orden": 132
+    },
+    {
+      "codigo": "FILO011D",
+      "detalle": "Grandes corrientes del pensamiento moderno",
+      "orden": 133
+    },
+    {
+      "codigo": "FILO011E",
+      "detalle": "Pensamiento filosófico contemporáneo",
+      "orden": 134
+    },
+    {
+      "codigo": "FILO011F",
+      "detalle": "Derechos de la condición humana",
+      "orden": 135
+    },
+    {
+      "codigo": "FILO0120",
+      "detalle": "1.2 FILOSOFÍA MASÓNICA",
+      "orden": 136
+    },
+    {
+      "codigo": "FILO012A",
+      "detalle": "¿Hacia dónde vamos?",
+      "orden": 137
+    },
+    {
+      "codigo": "FILO012B",
+      "detalle": "El sentido de la vida",
+      "orden": 138
+    },
+    {
+      "codigo": "FILO012C",
+      "detalle": "La defensa y propagación de la Verdad",
+      "orden": 139
+    },
+    {
+      "codigo": "FILO012D",
+      "detalle": "La inmortalidad del alma",
+      "orden": 140
+    },
+    {
+      "codigo": "FILO012E",
+      "detalle": "La búsqueda de la felicidad",
+      "orden": 141
+    },
+    {
+      "codigo": "FILO0200",
+      "detalle": "UNIDAD 2: LA DIMENSIÓN FILOSÓFICA DEL RITUAL DE EXALTACIÓN",
+      "orden": 142
+    },
+    {
+      "codigo": "FILO0210",
+      "detalle": "2.1 LA DIMENSIÓN FILOSÓFICA DEL RITUAL DE EXALTACIÓN",
+      "orden": 143
+    },
+    {
+      "codigo": "FILO021A",
+      "detalle": "La vida nace de la muerte",
+      "orden": 144
+    },
+    {
+      "codigo": "FILO021B",
+      "detalle": "El porqué, el cómo y el cuándo de todo lo que existe",
+      "orden": 145
+    },
+    {
+      "codigo": "FILO021C",
+      "detalle": "La verdad como concepto magisterial",
+      "orden": 146
+    },
+    {
+      "codigo": "FILO021D",
+      "detalle": "El Pueblo, la Libertad, la Igualdad y la Fraternidad",
+      "orden": 147
+    },
+    {
+      "codigo": "FILO021E",
+      "detalle": "La negación de la luz y la vida",
+      "orden": 148
+    },
+    {
+      "codigo": "FILO021F",
+      "detalle": "El talento previsor",
+      "orden": 149
+    },
+    {
+      "codigo": "FILO021G",
+      "detalle": "La vida es eterna",
+      "orden": 150
+    },
+    {
+      "codigo": "FILO021H",
+      "detalle": "La civilización y el progreso como fuerzas indestructibles",
+      "orden": 151
+    },
+    {
+      "codigo": "ETIC000",
+      "detalle": "CONTENIDO ÉTICO",
+      "orden": 152
+    },
+    {
+      "codigo": "ETIC0100",
+      "detalle": "UNIDAD 1: BASAMENTOS DOCTRINARIOS",
+      "orden": 153
+    },
+    {
+      "codigo": "ETIC0110",
+      "detalle": "1.1 ÉTICA MASÓNICA",
+      "orden": 154
+    },
+    {
+      "codigo": "ETIC011A",
+      "detalle": "El bien y el mal como categorías éticas",
+      "orden": 155
+    },
+    {
+      "codigo": "ETIC011B",
+      "detalle": "Discernimiento entre el error y la verdad",
+      "orden": 156
+    },
+    {
+      "codigo": "ETIC011C",
+      "detalle": "El secreto en la Maestría",
+      "orden": 157
+    },
+    {
+      "codigo": "ETIC011D",
+      "detalle": "El respeto a la ley civil",
+      "orden": 158
+    },
+    {
+      "codigo": "ETIC011E",
+      "detalle": "El respeto a la ley masónica",
+      "orden": 159
+    },
+    {
+      "codigo": "ETIC011F",
+      "detalle": "El respeto al secreto de nuestros Hermanos",
+      "orden": 160
+    },
+    {
+      "codigo": "ETIC011G",
+      "detalle": "La protección y defensa de nuestros Hermanos",
+      "orden": 161
+    },
+    {
+      "codigo": "ETIC011H",
+      "detalle": "El respeto a la mujer de nuestro Hermano",
+      "orden": 162
+    },
+    {
+      "codigo": "ETIC011I",
+      "detalle": "El respeto a la familia de nuestros Hermanos",
+      "orden": 163
+    },
+    {
+      "codigo": "ETIC011J",
+      "detalle": "El modelo constructivo de Hiram",
+      "orden": 164
+    },
+    {
+      "codigo": "ETIC011K",
+      "detalle": "La inteligencia equilibrada y el carácter justiciero",
+      "orden": 165
+    },
+    {
+      "codigo": "ETIC011L",
+      "detalle": "La perseverancia en la vida masónica",
+      "orden": 166
+    },
+    {
+      "codigo": "ETIC011M",
+      "detalle": "Deberes y derechos del Maestro",
+      "orden": 167
+    },
+    {
+      "codigo": "ETIC0200",
+      "detalle": "UNIDAD 2: LA DIMENSIÓN ÉTICA DEL RITUAL DE EXALTACIÓN",
+      "orden": 168
+    },
+    {
+      "codigo": "ETIC0210",
+      "detalle": "2.1 LA DIMENSIÓN ÉTICA DEL RITUAL DE EXALTACIÓN",
+      "orden": 169
+    },
+    {
+      "codigo": "ETIC021A",
+      "detalle": "El Templo de Diana. Su simbolismo ético",
+      "orden": 170
+    },
+    {
+      "codigo": "ETIC021B",
+      "detalle": "Los ideales fecundos",
+      "orden": 171
+    },
+    {
+      "codigo": "ETIC021C",
+      "detalle": "La ambición, la hipocresía y la ignorancia",
+      "orden": 172
+    },
+    {
+      "codigo": "ETIC021D",
+      "detalle": "La conciencia horrorizada",
+      "orden": 173
+    },
+    {
+      "codigo": "ETIC021E",
+      "detalle": "No nos entreguemos al reposo",
+      "orden": 174
+    },
+    {
+      "codigo": "ETIC021F",
+      "detalle": "El trabajo fecundo y honesto",
+      "orden": 175
+    }
+  ],
+  "objetivos": [
+    {
+      "codigo": "INCI000",
+      "objetivo_general": "Establecer en el conocimiento del Maestro, los contenidos fundamentales para compenetrarse del lenguaje esotérico iniciático del Tercer Grado e identificar en símbolos y rituales los elementos doctrinarios que pongan al Maestro Masón en contacto con los aspectos fundantes del proceso iniciático en su Grado."
+    },
+    {
+      "codigo": "INST000",
+      "objetivo_general": "Investigar los orígenes del Grado y ahondar en el conocimiento de los antecedentes constitutivos de la tradición del Grado de Maestro y la tradición del Rito. Adquirir una noción amplia acerca de la naturaleza, historia y alcances de la institución a la que se pertenece."
+    },
+    {
+      "codigo": "FILO000",
+      "objetivo_general": "Construir una concepción personal acerca del sentido de la existencia y de la vida. Relacionar al Maestro con el pensamiento filosófico que se desprende la doctrina del Grado, propendiendo hacia el fortalecimiento de su autonomía de juicio, ayudándolo a comprender el tiempo y el espacio en que vive y convive."
+    },
+    {
+      "codigo": "ETIC000",
+      "objetivo_general": "Identificar los aspectos que configuran la dimensión ética de la Francmasonería, a través del Ritual de Exaltación, adquiriendo los conocimientos para moldear la propia noción de ética individual, aprendiendo a mirarse a sí mismo como sujeto y objeto de su propia comprensión sobre la convivencia humana y sus responsabilidades en la sociedad de la que es parte."
+    }
+  ]
+}

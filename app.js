@@ -327,6 +327,7 @@ async function guardarNuevaClaveObligatoria() {
 }
 
 function cerrarSesion() {
+  window.limpiarAsignacionesAdmin?.();
   window.cerrarBitacoraSesion?.();
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
   if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
@@ -851,6 +852,10 @@ function construirDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[]) {
     '<div class="docencia-areas-desarrollo">'+allAreas.map(x=>x.detalle).join('')+'</div>';
 }
 
+function expandirContenidoDocente(abrir) {
+  document.getElementById('catalogoUnidadesContenido')?.querySelectorAll('details').forEach(d=>{d.open=!!abrir;});
+}
+
 function renderizarDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[]) {
   const seccion=document.getElementById('catalogoDirectorioUnidades');
   const contenedor=document.getElementById('catalogoUnidadesContenido');
@@ -861,6 +866,8 @@ function renderizarDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[]) {
     return;
   }
   contenedor.innerHTML=construirDirectorioUnidadesDocencia(unidades,trabajos,objetivos);
+  const conteo=document.getElementById('contenidoDocenteConteo');
+  if(conteo)conteo.textContent=unidades.filter(u=>tipoUnidadDocencia(u.codigo)==='tema').length+' temas en el programa';
   seccion.classList.remove('hidden');
   contenedor.onclick=event=>{
     const boton=event.target.closest('button');
@@ -2458,6 +2465,7 @@ function cambiarSubseccionAdmin(seccion) {
     cargar: ['tabNavCargar', 'Archivos originales'], gestion_trabajos: ['tabNavGestionTrabajos', 'Trabajos y cuestionarios'],
     presencial: ['tabNavPresencial', 'Cámara presencial'], muro_general: ['tabNavMuroGeneral', 'Muro docente'],
     metricas: ['tabNavMetricas', 'Avance de los maestros'], editor_doctrina: ['tabNavEditorDoctrina', 'Contenido institucional'],
+    asignaciones: ['tabNavAsignaciones', 'Asignación de trabajos'],
     doctrina: ['tabNavDoctrina', 'Doctrina y Reglamentos'],
     accesos: ['tabNavAccesos', 'Bitácora de accesos']
   };
@@ -2477,13 +2485,17 @@ function cambiarSubseccionAdmin(seccion) {
     if (focoEnMenu) tituloVista?.focus({ preventScroll: true });
   }
 
-  const btns = ['tabNavDoctrina', 'tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
-  const secs = ['adminSeccionDoctrina', 'adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
+  const btns = ['tabNavAsignaciones', 'tabNavDoctrina', 'tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
+  const secs = ['adminSeccionAsignaciones', 'adminSeccionDoctrina', 'adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
 
   btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
 
-  if (seccion === 'doctrina') {
+  if (seccion === 'asignaciones') {
+    document.getElementById('tabNavAsignaciones')?.classList.add('active');
+    document.getElementById('adminSeccionAsignaciones')?.classList.remove('hidden');
+    void window.cargarAsignacionesAdmin?.();
+  } else if (seccion === 'doctrina') {
     document.getElementById('tabNavDoctrina')?.classList.add('active');
     document.getElementById('adminSeccionDoctrina')?.classList.remove('hidden');
   } else if (seccion === 'resumen') {
@@ -3576,3 +3588,4 @@ async function cargarResumenAdmin() {
     status.textContent = 'No fue posible consultar los indicadores con los permisos actuales.';
   }
 }
+
