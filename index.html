@@ -912,7 +912,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Bitácora de Accesos a la Cámara</h2>
-            <p class="text-instruccion" style="margin: 0;">Registro cronológico de ingresos con marca de tiempo e IP.</p>
+            <p class="text-instruccion" style="margin: 0;">Ingresos, IP y actividad aproximada en primer plano. Sin señal no equivale a cierre confirmado.</p>
           </div>
           <div class="admin-header-actions">
             <label for="filtroUsuarioAcceso">Filtrar Hermano:</label>
@@ -931,11 +931,11 @@
                 <th>Fecha y Hora</th>
                 <th>Hermano</th>
                 <th>Correo Electrónico</th>
-                <th>IP de Origen</th>
+                <th>IP de Origen</th><th>Última actividad</th><th>Tiempo activo estimado</th><th>Estado</th>
               </tr>
             </thead>
             <tbody id="tablaAccesosBody">
-              <tr><td colspan="4" class="td-loading">Consultando bitácora...</td></tr>
+              <tr><td colspan="7" class="td-loading">Consultando bitácora...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1207,6 +1207,7 @@
   </div>
 
   <script src="app.js"></script>
+  <script src="bitacora-sesion.js"></script>
   <script src="ui-v2.js" defer></script>
 </body>
 </html>
