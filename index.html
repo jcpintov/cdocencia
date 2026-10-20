@@ -344,6 +344,7 @@
           <p>Explore el programa por unidades y subunidades. Cada tema tiene su propia tarjeta; los trabajos disponibles muestran un acceso directo a la lectura.</p>
         </div>
       </header>
+      <div class="contenido-docente-controles"><button type="button" onclick="expandirContenidoDocente(true)">Mostrar todos los temas</button><button type="button" onclick="expandirContenidoDocente(false)">Contraer programa</button><span id="contenidoDocenteConteo" aria-live="polite"></span></div>
       <div id="catalogoUnidadesContenido" class="catalogo-directorio-lista"></div>
     </section>
     </main>
@@ -612,6 +613,7 @@
         </button>
 </div>
 <div class="admin-menu-group"><p class="admin-menu-label">Gestión docente</p>
+<button id="tabNavAsignaciones" class="admin-side-btn" onclick="cambiarSubseccionAdmin('asignaciones')"><span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="admin-nav-text">Asignación de trabajos</span></button>
 <button id="tabNavGestionTrabajos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">
           <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span class="admin-nav-text">Trabajos y cuestionarios</span>
         </button>
@@ -712,6 +714,35 @@
       </section>
 
       <!-- SUBSECCIÓN 1: ASOCIACIÓN Y ADJUNCIÓN DE ARCHIVOS ORIGINALES -->
+      <section id="adminSeccionAsignaciones" class="card card-trazado hidden" aria-labelledby="asignacionesTitulo">
+        <div class="admin-card-header"><div><h2 id="asignacionesTitulo">Asignación de trabajos</h2><p class="text-instruccion">Asigne temas del programa y gestione sus plazos. Los correos se envían únicamente desde el botón Correo.</p></div><button id="btnActualizarAsignaciones" type="button" class="admin-link-btn" onclick="cargarAsignacionesAdmin()">Actualizar</button></div>
+        <p id="asignacionesEstado" role="status" aria-live="polite"></p>
+        <form id="asignacionForm" onsubmit="event.preventDefault(); guardarAsignacionDocente();">
+          <fieldset id="asignacionCampos" class="asignacion-campos"><legend id="asignacionModo">Nueva asignación</legend>
+            <div class="asignacion-form-grid">
+              <div class="form-group"><label for="asignacionUsuario">Hermano</label><select id="asignacionUsuario" name="asignacion_usuario" required><option value="">Seleccione un hermano</option></select></div>
+              <div class="form-group"><label for="asignacionTema">Trabajo por preparar</label><select id="asignacionTema" name="asignacion_tema" required onchange="cambioTemaAsignacion()"><option value="">Seleccione un tema del programa</option></select></div>
+              <div class="form-group"><label for="asignacionFecha">Fecha de asignación</label><input id="asignacionFecha" name="asignacion_fecha" type="date" required onchange="cambioFechaAsignacion()"><small>Editable. Al modificar una asignación, el plazo se conserva hasta que usted lo cambie.</small></div>
+              <div class="form-group"><label for="asignacionEntrega">Fecha de entrega · 23:30 h de Chile</label><input id="asignacionEntrega" name="asignacion_entrega" type="date" required><button type="button" class="admin-link-btn" onclick="recalcularEntregaAsignacion()">Recalcular 21 días desde la asignación</button></div>
+            </div>
+            <dl class="asignacion-contexto"><div><dt>Unidad</dt><dd id="asignacionUnidad">—</dd></div><div><dt>Subunidad</dt><dd id="asignacionSubunidad">—</dd></div><div><dt>Código</dt><dd id="asignacionCodigo">—</dd></div></dl>
+            <p id="asignacionDisponibilidad" class="asignacion-aviso">Los temas asignados se mostrarán deshabilitados e identificarán al hermano responsable.</p>
+          </fieldset>
+          <div class="asignacion-botones"><button type="submit" id="btnAsignarTrabajo" class="btn-primary">Asignar</button><button type="button" id="btnModificarAsignacion" class="btn-secondary" onclick="modificarAsignacionDocente()" disabled>Modificar</button><button type="button" id="btnEliminarAsignacion" class="btn-secondary" onclick="eliminarAsignacionDocente()" disabled>Eliminar</button><button type="button" id="btnCorreoAsignacion" class="btn-secondary" onclick="abrirCorreoAsignacion()" disabled>Correo</button></div>
+          <button type="button" id="btnNuevaAsignacion" class="admin-link-btn" onclick="nuevaAsignacionDocente()">Limpiar selección / Nueva asignación</button>
+        </form>
+        <div class="asignacion-lista-cabecera"><p id="asignacionesConteo"></p><label><input type="checkbox" id="asignacionesVerAnuladas" onchange="renderizarAsignacionesDocentes()"> Mostrar anuladas</label></div>
+        <div class="table-responsive"><table class="metricas-table asignaciones-table"><thead><tr><th>Hermano</th><th>Tema</th><th>Asignación</th><th>Entrega · Chile</th><th>Estado y correo</th><th>Acción</th></tr></thead><tbody id="asignacionesBody"><tr><td colspan="6">Abra esta sección para consultar las asignaciones.</td></tr></tbody></table></div>
+      </section>
+      <dialog id="dialogCorreoAsignacion" class="correo-asignacion-dialog" aria-labelledby="correoAsignacionTitulo">
+        <div class="correo-asignacion-cabecera"><h2 id="correoAsignacionTitulo">Correo de solicitud de trabajo</h2><button type="button" id="btnCerrarCorreoAsignacion" class="btn-secondary" onclick="cerrarCorreoAsignacion()">Volver</button></div>
+        <p><strong>Para:</strong> <span id="correoAsignacionDestino"></span></p><p><strong>Asunto:</strong> <span id="correoAsignacionAsunto"></span></p>
+        <iframe id="correoAsignacionVista" title="Vista previa del correo aprobado" sandbox="" referrerpolicy="no-referrer"></iframe>
+        <p id="correoAsignacionEstado" role="status" aria-live="polite"></p>
+        <label id="correoAsignacionReenvioLabel" hidden><input id="correoAsignacionReenvio" type="checkbox"> Revisé los intentos anteriores y solicito expresamente reenviar este correo.</label>
+        <div class="asignacion-botones"><button type="button" id="btnEnviarCorreoAsignacion" class="btn-primary" onclick="enviarCorreoAsignacion()">Enviar correo</button><button type="button" id="btnCerrarIntentoAsignacion" class="btn-secondary" onclick="cerrarIntentoCorreoAsignacion()" hidden>Revisé el intento pendiente: marcar sin confirmar</button></div>
+      </dialog>
+
       <section id="adminSeccionCarga" class="card card-trazado hidden">
         <div class="admin-card-header">
           <div>
@@ -1207,7 +1238,9 @@
   </div>
 
   <script src="app.js"></script>
+  <script src="asignaciones-admin.js"></script>
   <script src="bitacora-sesion.js"></script>
   <script src="ui-v2.js" defer></script>
 </body>
 </html>
+

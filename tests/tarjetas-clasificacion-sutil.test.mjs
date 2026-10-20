@@ -4,7 +4,9 @@ import {readFileSync} from 'node:fs';
 const css=readFileSync(new URL('../ui-v2.css',import.meta.url),'utf8');
 const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 test('el refinamiento se limita al bloque de clasificación temática en Trabajos',()=>{
- const block=css.slice(css.indexOf('/* Refinamiento de metadatos temáticos: nota discreta'));
+ const inicio=css.indexOf('/* Refinamiento de metadatos temáticos: nota discreta');
+ const siguiente=css.indexOf('\n/*',inicio+3);
+ const block=css.slice(inicio,siguiente<0?undefined:siguiente);
  assert.match(block,/#seccionCatalogoTrabajos \.grid-card-unidad\s*\{/);
  assert.match(block,/font-size:\.72rem/);
  assert.match(block,/font-size:\.71rem/);
