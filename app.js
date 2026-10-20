@@ -483,13 +483,13 @@ async function cargarListadoUsuariosAdmin() {
     padronUsuariosAdmin = usuarios;
     const cuposOcupados = usuarios.filter(u => !u.es_admin && String(u.email || '').trim().toLowerCase() !== 'dummy@ofl.cl').length;
     if (botonAgregar) {
-      botonAgregar.disabled = cuposOcupados >= 26;
-      botonAgregar.title = cuposOcupados >= 26 ? 'Padrón completo: 26 integrantes' : 'Agregar integrante';
+      botonAgregar.disabled = false;
+      botonAgregar.title = 'Agregar integrante al padrón';
     }
     const estadoCupos = document.getElementById('adminCupoUsuarios');
-    if (estadoCupos) estadoCupos.textContent = `${cuposOcupados}/26 integrantes`;
+    if (estadoCupos) estadoCupos.textContent = `${cuposOcupados} integrantes registrados`;
     renderizarPadronAdmin();
-    if (estado) estado.textContent = 'Padrón actualizado. Los filtros no modifican el cupo de integrantes.';
+    if (estado) estado.textContent = 'Padrón actualizado. Puede incorporar nuevos integrantes desde Agregar usuario.';
   } catch {
     if (consulta !== consultaPadronAdmin) return;
     if (estado) estado.textContent = 'No se pudo actualizar el padrón. Reintente; se conservan los datos anteriores.';
