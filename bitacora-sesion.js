@@ -39,6 +39,7 @@
    token=session.access_token;id=crypto.randomUUID();interaccion=Date.now();
    previoActivo=false;pendienteInicio=true;
    pendienteInicio=!(await enviar('iniciar'));
+   if(actual!==generacion||!id)return;
    timer=setInterval(()=>void pulso(),30000);
   }catch{console.warn('Bitácora: no se pudo iniciar el seguimiento.');}
  };
