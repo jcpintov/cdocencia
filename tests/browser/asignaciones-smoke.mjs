@@ -47,7 +47,7 @@ try{
  await page.route('https://**/*',r=>r.abort());
  await page.goto(url);await page.waitForLoadState('domcontentloaded');
  await page.evaluate(()=>{usuarioActual={id:'admin-fixture',es_admin:true};document.getElementById('seccionLogin').classList.add('hidden');document.getElementById('seccionAdmin').classList.remove('hidden');cambiarSubseccionAdmin('asignaciones');});
- await page.getByText('Asignaciones actualizadas. Guardar o modificar nunca envía correos.',{exact:true}).waitFor();
+ await page.locator('#asignacionesEstado').filter({hasText:'Asignaciones actualizadas. Guardar o modificar nunca envía correos.'}).waitFor();
  await page.getByRole('button',{name:'Nueva asignación',exact:true}).click();
  assert.equal(await page.locator('#dialogOpcionesAsignacion').isVisible(),true);
  assert.equal(await page.locator('#asignacionTema option').count(),140);

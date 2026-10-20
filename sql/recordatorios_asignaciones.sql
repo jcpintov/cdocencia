@@ -150,6 +150,13 @@ begin
  if not r.vigente then raise exception 'La asignación está anulada' using errcode='22023';end if;
  if (p_datos->>'version')::integer is distinct from r.version then raise exception 'La asignación cambió. Actualice antes de continuar' using errcode='40001';end if;
  if p_accion='vista_correo' then return public.docencia_asignacion_contexto(r.id);end if;
+ if p_accion='cerrar_recordatorio' then
+  update public.docencia_asignaciones_recordatorios set estado='incierto',finalizado_en=clock_timestamp(),copia_estado='sin_confirmar'
+   where asignacion_id=r.id and id=(p_datos->>'intento')::uuid and estado in ('preparado','enviando') and creado_en<now()-interval '2 minutes';
+  if not found then raise exception 'Espere dos minutos y revise el buzón antes de cerrar el intento' using errcode='55000';end if;
+  insert into public.docencia_asignaciones_historial(asignacion_id,actor,accion,posterior) values(r.id,p_actor,'recordatorio_sin_confirmar',jsonb_build_object('intento',p_datos->>'intento'));
+  return public.docencia_asignacion_contexto(r.id);
+ end if;
  if p_accion in ('modificar','eliminar','reservar_correo') and exists(select 1 from public.docencia_asignaciones_recordatorios where asignacion_id=r.id and estado in ('preparado','enviando')) then
   raise exception 'Hay un recordatorio en curso o sin confirmar. Actualice para revisar su estado' using errcode='55000';end if;
  if p_accion in ('modificar','eliminar') then

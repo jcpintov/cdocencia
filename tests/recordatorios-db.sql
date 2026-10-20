@@ -49,6 +49,10 @@ begin
  insert into public.modulos_temas(modulo_id,codigo) values(modulo,v_codigo2);
  v:=public.docencia_recordatorios_servicio('confirmar',jsonb_build_object('id',otra->>'id','intento',recordatorio_id));assert (v->>'enviar')::boolean=false,'Publicación debe impedir SMTP';
  ctx:=public.docencia_asignacion_contexto((otra->>'id')::uuid);assert (ctx->'recordatorio'->>'publicado')::boolean=true;assert ctx->'recordatorio'->>'estado'='cancelado';
+ -- Recuperación manual de un proceso interrumpido: no dispara un nuevo correo.
+ update public.docencia_asignaciones_recordatorios set estado='preparado',creado_en=now()-interval '3 minutes' where asignacion_id=(otra->>'id')::uuid;
+ perform public.admin_asignaciones_docentes(actor,'cerrar_recordatorio',jsonb_build_object('id',otra->>'id','version',1,'intento',recordatorio_id));
+ ctx:=public.docencia_asignacion_contexto((otra->>'id')::uuid);assert ctx->'recordatorio'->>'estado'='incierto';
  assert not has_table_privilege('anon','public.docencia_asignaciones_recordatorios','SELECT');
  assert not has_function_privilege('authenticated','public.docencia_recordatorios_servicio(text,jsonb)','EXECUTE');
 end $$;

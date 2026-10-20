@@ -24,12 +24,12 @@ export default async function handler(req,res){
   let b=req.body;
   if(typeof b==='string'){try{b=JSON.parse(b);}catch{return reply(res,400,{error:'Solicitud inválida'});}}
   b=b||{};
-  if(!['listar','crear','modificar','eliminar','vista_correo','vista_recordatorio','enviar','cerrar_intento'].includes(b.action))return reply(res,422,{error:'Acción no admitida'});
+  if(!['listar','crear','modificar','eliminar','vista_correo','vista_recordatorio','enviar','cerrar_intento','cerrar_recordatorio'].includes(b.action))return reply(res,422,{error:'Acción no admitida'});
   const action=b.action;
   if(action!=='listar'&&action!=='crear'&&(!uuid(b.id)||!Number.isInteger(b.version)||b.version<1))return reply(res,422,{error:'Seleccione una asignación actualizada'});
   if(['crear','modificar'].includes(action)&&(!uuid(b.usuario_id)||!fecha(b.fecha_asignacion)||!fecha(b.fecha_entrega)||b.fecha_entrega<b.fecha_asignacion||typeof b.codigo!=='string'))return reply(res,422,{error:'Revise integrante, tema y fechas'});
   if(action==='enviar'&&(b.confirmado!==true||!uuid(b.intento)||typeof b.reenviar!=='boolean'))return reply(res,422,{error:'Confirme expresamente el envío desde Correo'});
-  if(action==='cerrar_intento'&&(!uuid(b.intento)||b.confirmado!==true))return reply(res,422,{error:'Confirme la revisión del intento de correo'});
+  if(['cerrar_intento','cerrar_recordatorio'].includes(action)&&(!uuid(b.intento)||b.confirmado!==true))return reply(res,422,{error:'Confirme la revisión del intento de correo'});
   const rpc=async(accion,datos={})=>{
    const r=await admin.rpc('admin_asignaciones_docentes',{p_actor:identity.user.id,p_accion:accion,p_datos:datos});
    if(r.error)throw fallo(r.error);return r.data;
@@ -59,7 +59,7 @@ export default async function handler(req,res){
     return reply(res,503,{error:enviado?'El servidor aceptó el correo, pero no se pudo confirmar su registro. Revise antes de reenviar.':'No se pudo confirmar el envío. No se reintentará automáticamente; revise antes de reenviar.'});
    }
   }
-  const resultado=await rpc(action,action==='listar'?{}:action==='cerrar_intento'?{id:b.id,version:b.version,intento:b.intento}:datos);
+  const resultado=await rpc(action,action==='listar'?{}:['cerrar_intento','cerrar_recordatorio'].includes(action)?{id:b.id,version:b.version,intento:b.intento}:datos);
   return reply(res,200,{ok:true,data:resultado});
  }catch(e){
   if(e.code==='23505')return reply(res,409,{error:'El tema ya está asignado o tiene un envío en curso. Actualice para consultar a quién corresponde.'});

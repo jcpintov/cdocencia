@@ -12,6 +12,7 @@
  function seguimiento(){
   const a=actual(),r=a?.recordatorio;
   $('asignacionRecordatorioPanel').hidden=!a;
+  $('btnRevisarRecordatorioAsignacion').hidden=!a||!['preparado','enviando'].includes(r?.estado);
   $('opcionesAsignacionTitulo').textContent=a?'Opciones · '+a.codigo+' · '+a.nombre:'Nueva asignación';
   if(!a)return;
   $('asignacionRecordatorioEstado').textContent=estadosRecordatorio[r?.estado]||'Actualice para consultar el seguimiento.';
@@ -210,6 +211,12 @@
   try{await api({action:'cerrar_intento',id:vista.id,version:vista.version,intento:c.id,confirmado:true});$('dialogCorreoAsignacion').close();vista=null;await window.cargarAsignacionesAdmin();estado('Intento marcado sin confirmar. Un reenvío requiere abrir Correo y confirmarlo expresamente.');}
   catch(e){$('correoAsignacionEstado').textContent=e.message;}
   finally{ocupado=false;$('btnCerrarIntentoAsignacion').disabled=false;botones();}
+ };
+ window.cerrarIntentoRecordatorioAsignacion=async function(){
+  const a=actual(),r=a?.recordatorio;if(ocupado||!r?.id||!confirm('¿Revisó el buzón y la copia oculta? Se marcará el recordatorio SIN CONFIRMAR y no se enviará otro automáticamente.'))return;
+  ocupado=true;botones();$('btnRevisarRecordatorioAsignacion').disabled=true;
+  try{await api({action:'cerrar_recordatorio',id:a.id,version:a.version,intento:r.id,confirmado:true});await window.cargarAsignacionesAdmin();estado('Recordatorio marcado sin confirmar. No se enviará otro automáticamente.');}
+  catch(e){estado(e.message,true);}finally{ocupado=false;$('btnRevisarRecordatorioAsignacion').disabled=false;botones();}
  };
  window.cerrarCorreoAsignacion=function(){if(!ocupado){$('dialogCorreoAsignacion').close();$('correoAsignacionVista').srcdoc='';vista=null;}};
  window.limpiarAsignacionesAdmin=function(){
