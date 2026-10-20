@@ -59,6 +59,7 @@ declare r public.docencia_publicaciones_correos%rowtype;m public.modulos%rowtype
 begin
  if auth.role() is distinct from 'service_role' then raise exception 'Servicio exclusivo del servidor' using errcode='42501';end if;
  if p_accion='candidatos' then
+  update public.docencia_publicaciones_correos p set tema=mod_publicado.titulo from public.modulos mod_publicado where p.modulo_id=mod_publicado.id and p.estado='pendiente' and mod_publicado.activo and p.tema is distinct from mod_publicado.titulo;
   return coalesce((select jsonb_agg(jsonb_build_object('id',x.id,'nombre',u.nombre,'email',u.email,'tema',x.tema,'codigo',x.codigo)) from (
    select * from public.docencia_publicaciones_correos where estado='pendiente' order by creado_en limit 100) x join public.usuarios u on u.id=x.usuario_id),'[]'::jsonb);
  end if;

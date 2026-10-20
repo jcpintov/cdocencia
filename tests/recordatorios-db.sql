@@ -61,6 +61,9 @@ begin
  assert aviso_id is not null,'Publicación de tema asignado encola aviso al autor';
  update public.modulos set autor=autor where id=modulo;
  assert (select count(*) from public.docencia_publicaciones_correos where modulo_id=modulo)=1,'Editar no duplica aviso';
+ update public.modulos set titulo=titulo||' QA actualización' where id=modulo;
+ perform public.docencia_publicaciones_servicio('candidatos');
+ assert (select tema from public.docencia_publicaciones_correos where id=aviso_id)=(select titulo from public.modulos where id=modulo),'Usa título publicado actual';
  aviso_intento:=gen_random_uuid();
  v:=public.docencia_publicaciones_servicio('reservar',jsonb_build_object('id',aviso_id,'intento',aviso_intento,'correo',msg));assert (v->>'enviar')::boolean=true;
  v:=public.docencia_publicaciones_servicio('reservar',jsonb_build_object('id',aviso_id,'intento',gen_random_uuid(),'correo',msg));assert (v->>'enviar')::boolean=false;
