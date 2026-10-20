@@ -146,7 +146,7 @@
   <div id="modalAdminUsuario" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAdminUsuario')">
     <div class="modal-content" style="max-width: 520px; text-align: left;">
       <h3 id="modalAdminUsuarioTitulo" style="color: var(--accent-gold); margin-bottom: 8px;">👤 Nuevo Usuario</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Incorpore un integrante únicamente si existe un cupo disponible (máximo 26).</p>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Incorpore integrantes al padrón con su nombre completo y correo electrónico real. El registro no envía correos.</p>
 
       <input type="hidden" id="adminUsuarioTargetId">
 
@@ -685,11 +685,11 @@
         <div class="admin-card-header">
           <div>
             <h2>Padrón y Administración de Usuarios</h2>
-            <p class="text-instruccion" style="margin: 0;">Consulte el estado de las cuentas y gestione el padrón cerrado de 26 integrantes.</p>
+            <p class="text-instruccion" style="margin: 0;">Consulte y amplíe el padrón de integrantes. La incorporación permanece reservada al Superadmin.</p>
           </div>
           <div class="admin-header-actions">
             <button class="btn-primary" id="btnAgregarUsuarioAdmin" type="button" onclick="abrirModalCrearUsuario()">Agregar usuario</button>
-            <span id="adminCupoUsuarios" role="status" aria-live="polite" style="font-size:.85rem;opacity:.85">Comprobando cupos…</span>
+            <span id="adminCupoUsuarios" role="status" aria-live="polite" style="font-size:.85rem;opacity:.85">Consultando padrón…</span>
             <button id="btnActualizarPadronAdmin" type="button" class="admin-link-btn" onclick="cargarListadoUsuariosAdmin()">Actualizar padrón</button>
           </div>
         </div>
