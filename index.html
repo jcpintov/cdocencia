@@ -663,9 +663,11 @@
         <div class="admin-card-header"><div><h2>Resumen ejecutivo</h2>
           <p class="text-instruccion">Actividad de la Cámara de Docencia; progreso sin el administrador.</p></div>
           <button class="btn-secondary" onclick="cargarResumenAdmin()">Actualizar indicadores</button></div>
-        <div class="admin-kpi-grid">
+        <div class="admin-kpi-grid admin-kpi-grid-resumen" aria-label="Indicadores del Resumen Ejecutivo">
           <div class="admin-kpi"><span>Usuarios</span><strong id="kpiUsuarios">—</strong></div>
-          <div class="admin-kpi"><span>Trabajos</span><strong id="kpiModulos">—</strong></div>
+          <div class="admin-kpi"><span>Asignados</span><strong id="kpiResumenAsignados">—</strong></div>
+          <div class="admin-kpi"><span>Entregados</span><strong id="kpiResumenEntregados">—</strong></div>
+          <div class="admin-kpi"><span>Pendientes</span><strong id="kpiResumenPendientes">—</strong></div>
           <div class="admin-kpi"><span>Completados</span><strong id="kpiCompletados">—</strong></div>
           <div class="admin-kpi"><span>Comentarios</span><strong id="kpiComentarios">—</strong></div>
         </div>
@@ -673,7 +675,7 @@
         <button class="btn-primary" onclick="cambiarSubseccionAdmin('usuarios')">Administrar usuarios</button>
         <section id="cronogramaTrabajosAdmin" class="cronograma-trabajos" aria-labelledby="cronogramaTrabajosTitulo">
           <div class="admin-card-header"><div><h2 id="cronogramaTrabajosTitulo">Cronograma de trabajos</h2><p class="text-instruccion">Asignaciones vigentes, ordenadas por fecha de entrega. Cada trabajo abre sus opciones.</p></div><button type="button" class="admin-link-btn" onclick="cargarCronogramaAdmin()">Actualizar cronograma</button></div>
-          <div class="admin-kpi-grid" aria-label="Indicadores de trabajos asignados"><div class="admin-kpi"><span>Asignados</span><strong id="kpiTrabajosAsignados">—</strong></div><div class="admin-kpi"><span>Entregados</span><strong id="kpiTrabajosEntregados">—</strong></div></div>
+          <div class="admin-kpi-grid"><div class="admin-kpi"><span>Asignados</span><strong id="kpiTrabajosAsignados">—</strong></div><div class="admin-kpi"><span>Pendientes</span><strong id="kpiTrabajosPendientes">—</strong></div><div class="admin-kpi"><span>Vencidos</span><strong id="kpiTrabajosVencidos">—</strong></div><div class="admin-kpi"><span>Publicados</span><strong id="kpiTrabajosPublicados">—</strong></div></div>
           <div class="cronograma-filtros"><label for="cronogramaFiltro">Mostrar</label><select id="cronogramaFiltro" name="cronograma_filtro" onchange="renderizarCronogramaAdmin()"><option value="todos">Todas las asignaciones vigentes</option><option value="proximos">Entregas en los próximos 7 días</option><option value="vencidos">Pendientes vencidos</option><option value="publicados">Publicados</option></select></div>
           <p id="cronogramaEstado" role="status" aria-live="polite">Consultando cronograma…</p>
           <ol id="cronogramaLista" class="cronograma-lista"></ol>
