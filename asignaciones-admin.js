@@ -106,7 +106,12 @@
  window.cambioTemaAsignacion=contexto;
  window.renderizarAsignacionesDocentes=render;
  window.abrirCorreoAsignacion=async function(){
-  if(ocupado||!actual())return;ocupado=true;botones();estado('Preparando vista previa del correo…');
+  if(ocupado||!actual())return;
+  const guardada=actual();
+  if($('asignacionUsuario').value!==guardada.usuario_id||$('asignacionTema').value!==guardada.codigo||$('asignacionFecha').value!==guardada.fecha_asignacion||$('asignacionEntrega').value!==guardada.fecha_entrega){
+   estado('Hay cambios sin guardar. Pulse Modificar antes de preparar el correo.',true);return;
+  }
+  ocupado=true;botones();estado('Preparando vista previa del correo…');
   try{
    const a=actual(),r=await api({action:'vista_correo',id:a.id,version:a.version});
    if(!usuarioActual?.es_admin)return;

@@ -62,6 +62,9 @@ try{
  await page.getByRole('button',{name:'Seleccionar INCI011A de José Pérez'}).click();
  await page.getByLabel('Fecha de asignación',{exact:true}).fill('2026-10-21');await page.getByLabel('Fecha de asignación',{exact:true}).press('Tab');
  assert.equal(await page.locator('#asignacionEntrega').inputValue(),'2026-11-10');
+ await page.getByRole('button',{name:'Correo',exact:true}).click();
+ await page.getByText('Hay cambios sin guardar. Pulse Modificar antes de preparar el correo.',{exact:true}).waitFor();
+ assert.equal(await page.getByRole('dialog').isVisible(),false);
  await page.getByRole('button',{name:'Modificar',exact:true}).click();await page.getByText('Asignación guardada. No se ha enviado ningún correo.',{exact:true}).waitFor();
  assert.equal(assignments[0].fecha_asignacion,'2026-10-21');assert.equal(mailCount,0);
  await page.getByRole('button',{name:'Correo',exact:true}).click();
