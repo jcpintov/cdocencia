@@ -44,8 +44,11 @@
  }
  window.renderizarCronogramaAdmin=function(){
   const lista=$('cronogramaLista');if(!lista)return;lista.replaceChildren();
-  const todas=datos.asignaciones.filter(a=>a.vigente),pendientes=todas.filter(a=>estadoTrabajo(a)!=='Publicado');
-  for(const [id,n] of [['kpiTrabajosAsignados',todas.length],['kpiTrabajosPendientes',pendientes.length],['kpiTrabajosVencidos',todas.filter(a=>estadoTrabajo(a)==='Vencido').length],['kpiTrabajosPublicados',todas.length-pendientes.length]])$(id).textContent=datosCargados?String(n):'—';
+  const todas=datos.asignaciones.filter(a=>a.vigente);
+  // Acuerdo funcional: una entrega solo se contabiliza cuando su tema ya está publicado.
+  // recordatorio.publicado se deriva del trabajo activo relacionado, no de un checkbox manual.
+  const entregados=todas.filter(a=>a.recordatorio?.publicado===true).length;
+  for(const [id,n] of [['kpiTrabajosAsignados',todas.length],['kpiTrabajosEntregados',entregados]])$(id).textContent=datosCargados?String(n):'—';
   const filtro=$('cronogramaFiltro').value,fechaHoy=hoy(),limite=new Date(fechaHoy+'T12:00:00Z');limite.setUTCDate(limite.getUTCDate()+7);
   const fin=limite.toISOString().slice(0,10);
   const visibles=todas.filter(a=>filtro==='todos'||filtro==='publicados'&&estadoTrabajo(a)==='Publicado'||filtro==='vencidos'&&estadoTrabajo(a)==='Vencido'||filtro==='proximos'&&estadoTrabajo(a)!=='Publicado'&&a.fecha_entrega>=fechaHoy&&a.fecha_entrega<=fin).sort((a,b)=>a.fecha_entrega.localeCompare(b.fecha_entrega)||a.nombre.localeCompare(b.nombre,'es'));
