@@ -11,6 +11,8 @@ test('plantilla conserva tratamiento, mayúsculas, espacios, firma y lineamiento
  assert.ok(c.html.includes('<strong>EL CONCEPTO HIRÁMICO DEL TALLER</strong>'));
  assert.match(c.text,/10 de noviembre de 2026, hasta las 23:30 horas de Chile/);
  assert.ok(c.text.endsWith('Julio César Pinto,\n\nORADOR - RL OFL 146'));
+ assert.match(c.text,/Unidad: Unidad 1: Basamentos doctrinarios/);
+ assert.match(c.text,/Subunidad: 1\.1 Conceptos fundamentales del Grado/);
  assert.match(c.text,/Calibri, tamaño 12/);assert.match(c.text,/Interlineado: 1,5/);
  assert.match(c.text,/la plataforma empleada y el prompt o consulta utilizado/);
 });
