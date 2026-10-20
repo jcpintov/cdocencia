@@ -1451,29 +1451,14 @@ async function enviarComentarioForo(progresoId, moduloId) {
     return;
   }
 
-  let ipDetectada = "No determinada";
-  try {
-    const res = await fetch('https://api.ipify.org?format=json');
-    if (res.ok) {
-      const data = await res.json();
-      ipDetectada = data.ip || ipDetectada;
-    }
-  } catch (e) {
-    console.warn("No se pudo obtener IP:", e);
-  }
-
-  const { error } = await sbApp.from('comentarios_muro').insert({
-    progreso_id: progresoId,
-    modulo_id: moduloId,
-    usuario_id: usuarioActual.id,
-    contenido: texto,
-    contenido_original: texto,
-    ip_origen: ipDetectada,
-    activo: true
+  // La RPC confirma la persistencia y valida identidad, progreso y límites
+  // antes de anunciar el comentario como publicado. No recolectar IP externa.
+  const { data: comentarioId, error } = await sbApp.rpc('maestro_publicar_comentario', {
+    p_progreso_id: progresoId,
+    p_contenido: texto
   });
-
-  if (error) {
-    alert("Error al registrar comentario: " + error.message);
+  if (error || !comentarioId) {
+    alert("No se guardó el comentario: " + (error?.message || "No hubo confirmación del servidor.") + " El texto permanece disponible para reintentar.");
   } else {
     input.value = "";
     toggleFormularioComentario(progresoId);
