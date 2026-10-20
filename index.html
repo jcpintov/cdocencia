@@ -145,8 +145,8 @@
   <!-- MODAL SUPERADMIN: INCORPORACIÓN AL PADRÓN -->
   <div id="modalAdminUsuario" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAdminUsuario')">
     <div class="modal-content" style="max-width: 520px; text-align: left;">
-      <h3 id="modalAdminUsuarioTitulo" style="color: var(--accent-gold); margin-bottom: 8px;">👤 Nuevo Usuario</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Incorpore integrantes al padrón con su nombre completo y correo electrónico real. El registro no envía correos.</p>
+      <h3 id="modalAdminUsuarioTitulo" style="color: var(--accent-gold); margin-bottom: 8px;">Usuario del padrón</h3>
+      <p id="adminUsuarioModalAyuda" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Incorpore o modifique integrantes. El registro no envía correos.</p>
 
       <input type="hidden" id="adminUsuarioTargetId">
 
@@ -157,16 +157,17 @@
 
       <div class="form-group">
         <label for="adminUsuarioEmail">Correo Electrónico:</label>
-        <input type="email" id="adminUsuarioEmail" placeholder="hermano@correo.com">
+        <input type="email" id="adminUsuarioEmail" placeholder="hermano@correo.com" autocomplete="off">
+        <small id="adminUsuarioEmailInfo" class="admin-usuario-campo-info" hidden>Este correo está vinculado a Supabase Auth. Por seguridad, aquí solo puede modificar el nombre.</small>
       </div>
 
-      <p style="font-size:.9rem;line-height:1.5">El usuario se incorporará al padrón sin contraseña ni invitación. Su acceso se habilitará mediante verificación individual.</p>
+      <p id="adminUsuarioNotaAcceso" style="font-size:.9rem;line-height:1.5">Los usuarios nuevos se incorporan sin contraseña ni invitación; activarán su acceso mediante verificación individual.</p>
 
       <p id="errorAdminUsuario" class="error-msg" style="text-align: left; margin-bottom: 12px;"></p>
 
       <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;">
         <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalAdminUsuario')">Cancelar</button>
-        <button class="btn-primary" style="width: auto;" onclick="guardarAdminUsuario()">Guardar Usuario</button>
+        <button class="btn-primary" id="btnGuardarUsuarioAdmin" type="button" style="width: auto;" onclick="guardarAdminUsuario()">Guardar usuario</button>
       </div>
     </div>
   </div>
