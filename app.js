@@ -1219,12 +1219,8 @@ async function mostrarMuroReflexionesUsuarios() {
 
   await refrescarProgresosUsuario();
 
-  const { data: aportes, error } = await sbApp
-    .from('progreso_maestro')
-    .select('id, reflexion, completado_en, modulo_id, usuario_id, usuarios(nombre), modulos(numero_orden, titulo)')
-    .eq('completado', true)
-    .not('reflexion', 'is', null)
-    .order('completado_en', { ascending: false });
+  const {data: muro,error}=await sbApp.rpc('muro_docente_autorizado',{p_modulo:null});
+  const aportes=muro?.aportes;
 
   cont.innerHTML = "";
 
@@ -1234,11 +1230,7 @@ async function mostrarMuroReflexionesUsuarios() {
   }
 
   let comentariosMap = {};
-  const { data: comentariosData } = await sbApp
-    .from('comentarios_muro')
-    .select('id, progreso_id, usuario_id, contenido, contenido_original, editado, editado_en, creado_en, usuarios(nombre)')
-    .eq('activo', true)
-    .order('creado_en', { ascending: true });
+  const comentariosData=muro?.comentarios;
 
   if (comentariosData) {
     const idsProcesados = new Set();
@@ -1315,7 +1307,7 @@ async function mostrarMuroReflexionesUsuarios() {
 
           let botonesComentario = "";
           if (esAutorComentario) {
-            botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido)}')">✏️ Editar</button>`;
+            botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido).replace(/'/g,'%27')}')">✏️ Editar</button>`;
           }
           if (usuarioActual.es_admin) {
             const nombreEscapado = (c.usuarios?.nombre || '').replace(/'/g, "\\'");
@@ -1326,10 +1318,10 @@ async function mostrarMuroReflexionesUsuarios() {
           return `
             <div class="foro-comentario-item" id="comentario_item_${c.id}">
               <div class="foro-comentario-header">
-                <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
+                <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${escaparTextoHTMLDocencia(c.usuarios?.nombre || "Hermano")}</span>
                 <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
               </div>
-              <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
+              <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${escaparTextoHTMLDocencia(c.contenido)}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
             </div>
           `;
         }).join('');
@@ -1337,10 +1329,10 @@ async function mostrarMuroReflexionesUsuarios() {
         return `
           <div class="reflexion-item" style="margin-bottom: 20px; border-left: 3px solid var(--accent-gold); padding: 18px 20px; border-radius: 0 6px 6px 0;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span class="reflexion-autor">${it.usuarios?.nombre || "Hermano Maestro"}</span>
+              <span class="reflexion-autor">${escaparTextoHTMLDocencia(it.usuarios?.nombre || "Hermano Maestro")}</span>
               <span style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-ui);">${fechaTxt}</span>
             </div>
-            <div style="font-size: 1rem; line-height: 1.6; font-style: italic; margin-bottom: 8px;">"${it.reflexion}"</div>
+            <div style="font-size: 1rem; line-height: 1.6; font-style: italic; margin-bottom: 8px;">"${escaparTextoHTMLDocencia(it.reflexion)}"</div>
             
             <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${it.id}')">
               💬 Comentarios (${comentariosDeEstaReflexion.length})
@@ -2068,22 +2060,17 @@ async function cargarMuroReflexiones() {
   const contenedor = document.getElementById('contenedorMuro');
   contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Cargando aportes de la Cámara...</p>";
 
-  const { data, error } = await sbApp
-    .from('progreso_maestro')
-    .select('id, reflexion, completado_en, modulo_id, usuario_id, usuarios(nombre)')
-    .eq('modulo_id', moduloActual.id)
-    .eq('completado', true)
-    .not('reflexion', 'is', null);
+  const {data: muro,error}=await sbApp.rpc('muro_docente_autorizado',{p_modulo:moduloActual.id});
+  const data=muro?.aportes;
 
   contenedor.innerHTML = "";
-  if (!error && data && data.length > 0) {
+  if(error){
+    contenedor.innerHTML="<p>No se pudo cargar el muro. Vuelva a abrirlo para reintentar.</p>";
+    return;
+  }
+  if (data && data.length > 0) {
     let comentariosMap = {};
-    const { data: comentariosData } = await sbApp
-      .from('comentarios_muro')
-      .select('id, progreso_id, usuario_id, contenido, contenido_original, editado, editado_en, creado_en, usuarios(nombre)')
-      .eq('modulo_id', moduloActual.id)
-      .eq('activo', true)
-      .order('creado_en', { ascending: true });
+    const comentariosData=muro?.comentarios;
 
     if (comentariosData) {
       const idsProcesados = new Set();
@@ -2113,7 +2100,7 @@ async function cargarMuroReflexiones() {
 
         let botonesComentario = "";
         if (esAutor) {
-          botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido)}')">✏️ Editar</button>`;
+          botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido).replace(/'/g,'%27')}')">✏️ Editar</button>`;
         }
         if (usuarioActual.es_admin) {
           const nombreEscapado = (c.usuarios?.nombre || '').replace(/'/g, "\\'");
@@ -2124,18 +2111,18 @@ async function cargarMuroReflexiones() {
         return `
           <div class="foro-comentario-item" id="comentario_item_${c.id}">
             <div class="foro-comentario-header">
-              <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${c.usuarios?.nombre || "Hermano"}</span>
+              <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${escaparTextoHTMLDocencia(c.usuarios?.nombre || "Hermano")}</span>
               <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
             </div>
-            <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${c.contenido}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
+            <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${escaparTextoHTMLDocencia(c.contenido)}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
           </div>
         `;
       }).join('');
 
       contenedor.innerHTML += `
         <div class="reflexion-item" style="margin-bottom: 20px;">
-          <div class="reflexion-autor">${item.usuarios?.nombre || "Hermano Maestro"}</div>
-          <div style="font-style: italic; margin-bottom: 8px;">"${item.reflexion}"</div>
+          <div class="reflexion-autor">${escaparTextoHTMLDocencia(item.usuarios?.nombre || "Hermano Maestro")}</div>
+          <div style="font-style: italic; margin-bottom: 8px;">"${escaparTextoHTMLDocencia(item.reflexion)}"</div>
           
           <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${item.id}')">
             💬 Comentarios (${coms.length})
