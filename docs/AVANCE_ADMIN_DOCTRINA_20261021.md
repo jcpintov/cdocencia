@@ -29,3 +29,7 @@ Las pruebas de correo, interfaz y base aislada usan cuentas, eventos y datos sin
 5. Publicar el commit probado y comprobar API/cron, correo institucional e identidad sin modificar la cuenta principal como prueba automática.
 
 Se conserva el cron docente existente. Las nuevas migraciones agregan estructura y no aprueban textos, eliminan Dummy ni cambian el perfil por sí solas. La activación queda pendiente por instrucción del usuario.
+
+## Reanudación: cobertura de búsquedas
+
+La búsqueda informa cuántos originales vigentes tienen texto aprobado y cuántos siguen pendientes. Una extracción con huella distinta queda excluida y contabilizada como pendiente. Los documentos retirados quedan fuera de ambos recuentos. La ausencia de coincidencias no se presenta como ausencia del tema en originales todavía no revisados. Verificado en PostgreSQL aislado y DOM; las 198 pruebas automatizadas siguen aprobadas. Sin despliegue ni cambios productivos.

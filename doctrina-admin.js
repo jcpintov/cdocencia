@@ -201,8 +201,9 @@ async function buscarTextoDoctrina(){
  try{
   const r=await peticionDoctrina('texto_buscar',{consulta:document.getElementById('doctrinaConsultaTexto').value.trim()});
   if(!usuarioActual?.es_admin||usuarioActual.id!==actor||consultaBibliotecaDoctrina!==solicitud||consultaBusquedaTextoDoctrina!==busqueda)return;
+  if(r.cobertura){const aviso=document.createElement('p');aviso.className='admin-empty-state';aviso.textContent=`Cobertura: ${r.cobertura.consultables} de ${r.cobertura.vigentes} originales vigentes consultables. ${r.cobertura.pendientes} pendientes de extracción o aprobación del texto. Las coincidencias no constituyen una conclusión doctrinaria.`;resultados.appendChild(aviso);}
   for(const item of r.resultados){const articulo=document.createElement('article');articulo.className='doctrina-documento';const titulo=document.createElement('h4');titulo.textContent=item.titulo+' · página '+item.pagina+' · versión '+item.version;const texto=document.createElement('p');texto.textContent=item.fragmento;articulo.append(titulo,texto);const boton=document.createElement('button');boton.type='button';boton.className='btn-secondary';boton.textContent='Consultar original';boton.onclick=async()=>{await abrirVisorDoctrina({version_id:item.version_id,titulo:item.titulo,estado:'vigente'},boton);document.getElementById('doctrinaVisorPagina').value=item.pagina;irPaginaVisorDoctrina();};articulo.appendChild(boton);resultados.appendChild(articulo);}
-  if(!r.resultados.length)resultados.textContent='Sin coincidencias en textos revisados y aprobados. Los documentos sin extracción aprobada no participan en esta búsqueda.';
+  if(!r.resultados.length){const vacio=document.createElement('p');vacio.textContent='Sin coincidencias en textos revisados y aprobados. Esto no demuestra que el tema esté ausente de los originales pendientes.';resultados.appendChild(vacio);}
  }catch(e){if(usuarioActual?.id===actor&&consultaBibliotecaDoctrina===solicitud&&consultaBusquedaTextoDoctrina===busqueda)resultados.textContent=e.message;}
 }
 document.getElementById('doctrinaTextoDialogo')?.addEventListener('cancel',e=>{e.preventDefault();cerrarTextoDoctrina();});

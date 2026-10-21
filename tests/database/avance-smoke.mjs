@@ -47,6 +47,7 @@ try{
  const expirado='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';await rpc('superadmin_perfil_codigo','solicitar',{id:expirado,nombre:'Otro nombre',email:'segundo@example.invalid',hash:'f'.repeat(64)});await rpc('superadmin_perfil_codigo','habilitar',{id:expirado});await db.query("update doctrina.cambios_perfil set expira_en=now()-interval '1 minute' where id=$1",[expirado]);assert.ok((await rpc('superadmin_perfil_codigo','validar',{id:expirado,hash:'f'.repeat(64)})).error);
  const doc='66666666-6666-4666-8666-666666666666';await db.query("insert into doctrina.documentos(id,titulo,estado) values($1,'Fuente de prueba','vigente')",[doc]);
  await db.query("insert into doctrina.versiones(id,documento_id,numero,sha256,bytes,estado) values($1,$2,1,$3,100,'listo')",[version,doc,'c'.repeat(64)]);
+ r=await rpc('doctrina_texto_superadmin','texto_buscar',{consulta:'acacia'});assert.deepEqual(r.cobertura,{vigentes:1,consultables:0,pendientes:1});
  const paginas=[{numero:1,texto:'La acacia representa la inmortalidad.',texto_original:'La acacia representa la inmortalidad.',revisada:false},{numero:2,texto:'',texto_original:'',revisada:false,requiere_ocr:true}];
  r=await rpc('doctrina_texto_superadmin','texto_guardar',{id:version,sha256:'c'.repeat(64),motor:'fixture',paginas});assert.equal(r.pendientes,2);
  await assert.rejects(()=>rpc('doctrina_texto_superadmin','texto_aprobar',{id:version,pagina:1}),/pendientes/);
@@ -54,9 +55,13 @@ try{
  await assert.rejects(()=>rpc('doctrina_texto_superadmin','texto_revisar_pagina',{id:version,pagina:2,texto:''}),/Página no válida/);
  await rpc('doctrina_texto_superadmin','texto_revisar_pagina',{id:version,pagina:2,texto:'',pagina_sin_texto:true});
  r=await rpc('doctrina_texto_superadmin','texto_aprobar',{id:version,pagina:1});assert.equal(r.estado,'aprobado');
- r=await rpc('doctrina_texto_superadmin','texto_buscar',{consulta:'acacia'});assert.equal(r.resultados.length,1);assert.equal(r.resultados[0].pagina,1);assert.equal(r.resultados[0].sha256,'c'.repeat(64));
+ r=await rpc('doctrina_texto_superadmin','texto_buscar',{consulta:'acacia'});assert.deepEqual(r.cobertura,{vigentes:1,consultables:1,pendientes:0});assert.equal(r.resultados.length,1);assert.equal(r.resultados[0].pagina,1);assert.equal(r.resultados[0].sha256,'c'.repeat(64));
  assert.equal((await db.query('select count(*)::int as n from doctrina.textos_revision_historial')).rows[0].n,3);
  await db.query("update doctrina.documentos set estado='retirado' where id=$1",[doc]);assert.equal((await rpc('doctrina_texto_superadmin','texto_buscar',{consulta:'acacia'})).resultados.length,0);
+ r=await rpc('doctrina_texto_superadmin','texto_buscar',{consulta:'acacia'});assert.deepEqual(r.cobertura,{vigentes:0,consultables:0,pendientes:0});
+ await db.query("update doctrina.documentos set estado='vigente' where id=$1",[doc]);
+ await db.query("update doctrina.textos_extraidos set sha256='huella-distinta' where version_id=$1",[version]);
+ r=await rpc('doctrina_texto_superadmin','texto_buscar',{consulta:'acacia'});assert.equal(r.resultados.length,0);assert.deepEqual(r.cobertura,{vigentes:1,consultables:0,pendientes:1});
  const evento='77777777-7777-4777-8777-777777777777',intento='88888888-8888-4888-8888-888888888888';
  await db.query("insert into public.calendario_tenidas(id,fecha,grado,tema,autor) values($1,'2026-11-10',3,'Tema','Autor')",[evento]);assert.equal((await cal('candidatos')).length,1);
  assert.equal((await cal('reservar',{id:evento,version:1,intento})).enviar,true);assert.equal((await cal('reservar',{id:evento,version:1,intento})).enviar,false);

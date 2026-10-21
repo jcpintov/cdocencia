@@ -15,7 +15,7 @@ alter table doctrina.textos_revision_historial enable row level security;
 revoke all on doctrina.textos_revision_historial from public,anon,authenticated;
 create or replace function public.doctrina_texto_superadmin(p_actor uuid,p_accion text,p_datos jsonb default '{}') returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare v doctrina.versiones; x doctrina.textos_extraidos; n integer; pagina jsonb; filas jsonb;
+declare v doctrina.versiones; x doctrina.textos_extraidos; n integer; pagina jsonb; filas jsonb; cobertura jsonb;
 begin
  if auth.role() is distinct from 'service_role' or not exists(select 1 from public.usuarios u join auth.users a on a.id=u.auth_user_id where a.id=p_actor and u.es_admin and lower(u.email)=lower(a.email) and (lower(a.email)='jpintov@gmail.com' or a.raw_app_meta_data->>'superadmin_principal'='true')) then raise exception 'Acceso denegado' using errcode='42501'; end if;
  if p_accion='texto_buscar' then
@@ -27,7 +27,13 @@ begin
    where t.estado='aprobado' and d.estado='vigente' and fuente.sha256=t.sha256 and fuente.numero=(select max(v2.numero) from doctrina.versiones v2 where v2.documento_id=d.id)
    and to_tsvector('spanish',p->>'texto') @@ websearch_to_tsquery('spanish',p_datos->>'consulta')
    order by d.titulo,(p->>'numero')::integer limit 50
-  ) z;return jsonb_build_object('resultados',filas);
+  ) z;
+  select jsonb_build_object('vigentes',count(*),'consultables',count(*) filter(where t.estado='aprobado' and t.sha256=fuente.sha256),'pendientes',count(*) filter(where t.estado is distinct from 'aprobado' or t.sha256 is distinct from fuente.sha256)) into cobertura
+  from doctrina.documentos d
+  left join lateral (select v2.* from doctrina.versiones v2 where v2.documento_id=d.id order by v2.numero desc limit 1) fuente on true
+  left join doctrina.textos_extraidos t on t.version_id=fuente.id
+  where d.estado='vigente';
+  return jsonb_build_object('resultados',filas,'cobertura',cobertura);
  end if;
  select v1.* into v from doctrina.versiones v1 join doctrina.documentos d on d.id=v1.documento_id where v1.id=(p_datos->>'id')::uuid and d.estado='vigente' for share of d;
  if not found then raise exception 'Original no vigente'; end if;
