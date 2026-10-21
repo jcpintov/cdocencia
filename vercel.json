@@ -32,5 +32,6 @@
       "maxDuration": 300
     }
   },
-  "buildCommand": "node scripts/verificar-groq.mjs"
+  "buildCommand": "node scripts/verificar-groq.mjs",
+  "outputDirectory": "."
 }
