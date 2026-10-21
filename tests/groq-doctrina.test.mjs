@@ -46,7 +46,7 @@ test('rechaza referencias inventadas, campos ausentes o sin citas en el análisi
  }
 });
 test('no envía expediente superior al límite',async()=>{
- const larga={...entrada,pregunta:'漢'.repeat(1800),antecedentes:'漢'.repeat(2500)};
+ const larga={...entrada,pregunta:'漢'.repeat(2000),antecedentes:'漢'.repeat(3000)};
  const rpc=async(action)=>action==='texto_buscar'?{resultados:[fuente]}:action==='texto_llm_listar'?{autorizaciones:[{version_id:'v',sha256:'abc',modelo:MODELO_GROQ,autorizado:true}]}:{ok:true,id:'reserva'};
  let enviado=false;
  const r=await consultarGroqDoctrina(larga,{rpc,env:{GROQ_API_KEY:'x',GROQ_ZDR_CONFIRMADO:'true'},fetchImpl:async()=>{enviado=true}});
