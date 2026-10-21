@@ -10,7 +10,7 @@ test('herramientas externas quedan después de gestión y salida, con pestaña s
  assert.ok(sidebar.indexOf('admin-links-bottom')>sidebar.indexOf('cerrarSesion()'));
  assert.ok(sidebar.indexOf('cerrarSesion()')>sidebar.indexOf('tabNavAccesos'));
  assert.equal((sidebar.match(/rel="noopener noreferrer"/g)||[]).length,3);
- assert.match(sidebar,/Esta conversación de desarrollo/);
+ assert.match(sidebar,/<span>ChatGPT<\/span>/);
  assert.match(sidebar,/aria-label="Administración de la plataforma"/);
 });
 test('navegación sincroniza vista, título y accesibilidad; en móvil devuelve el foco al contenido',()=>{
