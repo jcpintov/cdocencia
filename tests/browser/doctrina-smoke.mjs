@@ -11,6 +11,7 @@ const server=createServer(async(req,res)=>{try{
  const path=new URL(req.url,'http://localhost').pathname;
  if(path==='/api/admin-doctrina'){
   let raw='';for await(const x of req)raw+=x;const b=JSON.parse(raw);res.setHeader('Content-Type','application/json');
+  if(b.action==='visualizar'){res.end(JSON.stringify({ok:true,url:'https://pwnnpjygnviyzyyvfxnq.supabase.co/storage/v1/object/sign/doctrina-originales-privados/fixture.pdf?token=fixture'}));return;}
   if(fail){res.writeHead(503).end(JSON.stringify({error:'Error de prueba'}));return;}
   if(b.action==='revisar')Object.assign(doc,{estado:b.decision==='aprobar'?'vigente':'borrador',revision:b.decision==='aprobar'?'listo':'revision',nota_revision:b.nota});
   if(b.action==='retirar')doc.estado='retirado';
@@ -42,5 +43,10 @@ try{
   assert.ok(await page.locator('#doctrinaRevisionDialogo').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
   await page.getByRole('button',{name:'Cerrar',exact:true}).click();
  }
+ await page.getByRole('button',{name:'Consultar original',exact:true}).click();
+ await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();
+ await page.locator('#doctrinaVisorPagina').fill('3');await page.getByRole('button',{name:'Ir a página',exact:true}).click();
+ assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=3'));
+ await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();assert.equal(await page.locator('#doctrinaVisorMarco').getAttribute('src'),null);
  assert.deepEqual(errors,[]);console.log('DOCTRINA: revisión, error con datos conservados, eliminación/restauración y contraste escritorio/móvil PASS');
 }finally{await browser.close();await new Promise(r=>server.close(r));}

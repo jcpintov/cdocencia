@@ -21,7 +21,7 @@ export default async function handler(req,res){
   const {data:perfil,error:profileError}=await admin.from('usuarios').select('id,email,es_admin').eq('auth_user_id',user.id).maybeSingle();
   if(profileError||!perfil?.es_admin||String(user.email||'').toLowerCase()!=='jpintov@gmail.com'||String(perfil.email||'').toLowerCase()!=='jpintov@gmail.com')return reply(res,403,{error:'Acceso exclusivo de Superadmin'});
   const {action,...datos}=req.body||{};
-  if(!['listar','preparar','registrar','descargar','revisar','retirar','restaurar'].includes(action))return reply(res,422,{error:'Acción inválida'});
+  if(!['listar','preparar','registrar','descargar','visualizar','revisar','retirar','restaurar'].includes(action))return reply(res,422,{error:'Acción inválida'});
   const rpc=async(accion,payload={})=>{
    const {data,error}=await admin.rpc('doctrina_gestion_superadmin',{p_actor:user.id,p_accion:accion,p_datos:payload});
    if(error)throw new Error('database');return data;
@@ -59,7 +59,7 @@ export default async function handler(req,res){
   if(blob.size!==Number(version.bytes)||blob.size>MAX)return reply(res,409,{error:'Integridad del original pendiente de revisión'});
   if(createHash('sha256').update(Buffer.from(await blob.arrayBuffer())).digest('hex')!==version.sha256)return reply(res,409,{error:'La integridad del original no coincide'});
   if(action==='revisar')return reply(res,200,{ok:true,...await rpc('revisar',{id:datos.id,decision:datos.decision,nota:datos.nota})});
-  const {data,error}=await storage.createSignedUrl(version.path,60,{download:true});
+  const {data,error}=await storage.createSignedUrl(version.path,60,{download:action==='descargar'});
   if(error||!data?.signedUrl)return reply(res,503,{error:'No se pudo habilitar la descarga'});
   return reply(res,200,{ok:true,url:data.signedUrl,expira_segundos:60});
  }catch{return reply(res,503,{error:'No fue posible completar la operación documental. Reintente.'});}

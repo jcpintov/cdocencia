@@ -4,6 +4,7 @@ let consultaBibliotecaDoctrina = 0;
 let cargaDoctrinaPendiente = null;
 function limpiarBibliotecaDoctrina(){
  consultaBibliotecaDoctrina++;
+ cerrarVisorDoctrina();
  bibliotecaDoctrina={documentos:[],inventario:[]};cargaDoctrinaPendiente=null;
  document.getElementById('doctrinaRevisionDialogo')?.close();
  document.getElementById('doctrinaFormulario')?.reset();
@@ -52,6 +53,7 @@ function renderizarBibliotecaDoctrina(){
     if(d.estado==='retirado'){
      card.querySelector('button')?.remove();agregar('Restaurar',b=>cambiarRetiroDoctrina(d,'restaurar',b));
     }else{
+     agregar('Consultar original',b=>abrirVisorDoctrina(d,b));
      agregar('Revisión',()=>abrirRevisionDoctrina(d));
      agregar('Eliminar',b=>cambiarRetiroDoctrina(d,'retirar',b));
     }
@@ -131,3 +133,36 @@ async function cambiarRetiroDoctrina(d,action,boton){
  catch(e){document.getElementById('doctrinaEstado').textContent=e.message;}
  finally{boton.disabled=false;}
 }
+
+let solicitudVisorDoctrina=0;
+let urlVisorDoctrina=null;
+function cerrarVisorDoctrina(){
+ solicitudVisorDoctrina++;urlVisorDoctrina=null;
+ document.getElementById('doctrinaVisorMarco')?.removeAttribute('src');
+ document.getElementById('doctrinaVisorDialogo')?.close();
+}
+async function abrirVisorDoctrina(d,boton){
+ const solicitud=++solicitudVisorDoctrina,actor=usuarioActual?.id;
+ const modal=document.getElementById('doctrinaVisorDialogo');
+ document.getElementById('doctrinaVisorTitulo').textContent=d.titulo;
+ document.getElementById('doctrinaVisorEstado').textContent='Verificando integridad y abriendo el PDF…';
+ document.getElementById('doctrinaVisorPagina').value='1';
+ document.getElementById('doctrinaVisorMarco').removeAttribute('src');urlVisorDoctrina=null;
+ if(!modal.open)modal.showModal();boton.disabled=true;
+ try{
+  const result=await peticionDoctrina('visualizar',{id:d.version_id});
+  if(solicitud!==solicitudVisorDoctrina||!usuarioActual?.es_admin||usuarioActual.id!==actor)return;
+  const url=new URL(result.url),origen=new URL(SUPABASE_URL).origin;
+  if(url.protocol!=='https:'||url.origin!==origen||!url.pathname.startsWith('/storage/v1/object/sign/'))throw new Error('Referencia de consulta no válida');
+  urlVisorDoctrina=url.href;
+  document.getElementById('doctrinaVisorMarco').src=urlVisorDoctrina+'#page=1';
+  document.getElementById('doctrinaVisorEstado').textContent='Original verificado · '+d.estado+'. Si el visor no se muestra, use Descargar original. Para volver a cargarlo después de un minuto, cierre y abra la consulta.';
+ }catch(e){if(solicitud===solicitudVisorDoctrina)document.getElementById('doctrinaVisorEstado').textContent=e.message;}
+ finally{boton.disabled=false;}
+}
+function irPaginaVisorDoctrina(){
+ const pagina=Number(document.getElementById('doctrinaVisorPagina').value);
+ if(!urlVisorDoctrina||!Number.isSafeInteger(pagina)||pagina<1||pagina>10000)return;
+ document.getElementById('doctrinaVisorMarco').src=urlVisorDoctrina+'#page='+pagina;
+}
+document.getElementById('doctrinaVisorDialogo')?.addEventListener('cancel',e=>{e.preventDefault();cerrarVisorDoctrina();});
