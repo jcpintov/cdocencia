@@ -39,8 +39,16 @@
 
  function estadoTrabajo(a){
   if(a.recordatorio?.publicado)return 'Publicado';
-  const hora=new Intl.DateTimeFormat('en-GB',{timeZone:'America/Santiago',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date());
-  return a.fecha_entrega+'T23:30'<hoy()+'T'+hora?'Vencido':'Pendiente';
+  return a.fecha_entrega<=hoy()?'Vencido':'Pendiente';
+ }
+ function fechaSubida(a){
+  return Math.max(0,...(a.recordatorio?.trabajos_publicados||[]).map(m=>Date.parse(m.fecha_subida)||0));
+ }
+ function ordenarAsignaciones(a,b){
+  if(a.vigente!==b.vigente)return a.vigente?-1:1;
+  const publicadoA=!!a.recordatorio?.publicado,publicadoB=!!b.recordatorio?.publicado;
+  if(publicadoA!==publicadoB)return publicadoA?1:-1;
+  return (publicadoA?fechaSubida(b)-fechaSubida(a):a.fecha_entrega.localeCompare(b.fecha_entrega))||a.nombre.localeCompare(b.nombre,'es')||a.codigo.localeCompare(b.codigo);
  }
  window.renderizarCronogramaAdmin=function(){
   const lista=$('cronogramaLista');if(!lista)return;lista.replaceChildren();
@@ -53,13 +61,14 @@
   }
   const filtro=$('cronogramaFiltro').value,fechaHoy=hoy(),limite=new Date(fechaHoy+'T12:00:00Z');limite.setUTCDate(limite.getUTCDate()+7);
   const fin=limite.toISOString().slice(0,10);
-  const visibles=todas.filter(a=>filtro==='todos'||filtro==='publicados'&&estadoTrabajo(a)==='Publicado'||filtro==='vencidos'&&estadoTrabajo(a)==='Vencido'||filtro==='proximos'&&estadoTrabajo(a)!=='Publicado'&&a.fecha_entrega>=fechaHoy&&a.fecha_entrega<=fin).sort((a,b)=>a.fecha_entrega.localeCompare(b.fecha_entrega)||a.nombre.localeCompare(b.nombre,'es'));
+  const visibles=todas.filter(a=>filtro==='todos'||filtro==='publicados'&&estadoTrabajo(a)==='Publicado'||filtro==='vencidos'&&estadoTrabajo(a)==='Vencido'||filtro==='proximos'&&estadoTrabajo(a)!=='Publicado'&&a.fecha_entrega>=fechaHoy&&a.fecha_entrega<=fin).sort(ordenarAsignaciones);
   visibles.forEach(a=>{
    const li=document.createElement('li'),estadoActual=estadoTrabajo(a);li.className='cronograma-item cronograma-'+estadoActual.toLowerCase();
    const fechaEl=document.createElement('time');fechaEl.dateTime=a.fecha_entrega;fechaEl.textContent=fecha(a.fecha_entrega)+' · 23:30 h';li.appendChild(fechaEl);
    const bloque=document.createElement('div'),titulo=document.createElement('h3');titulo.textContent=a.codigo+' · '+a.tema;bloque.appendChild(titulo);
    const persona=document.createElement('p');persona.textContent=a.nombre;bloque.appendChild(persona);
    const fechas=document.createElement('p');fechas.className='cronograma-meta';fechas.textContent='Asignación: '+fecha(a.fecha_asignacion)+' · Entrega: '+fecha(a.fecha_entrega);bloque.appendChild(fechas);
+   if(fechaSubida(a)){const subida=document.createElement('p');subida.className='cronograma-meta';subida.textContent='Subido: '+instante(new Date(fechaSubida(a)).toISOString());bloque.appendChild(subida);}
    const avance=document.createElement('progress'),inicio=Date.parse(a.fecha_asignacion+'T00:00:00Z'),duracion=Math.max(86400000,Date.parse(a.fecha_entrega+'T00:00:00Z')-inicio);
    avance.max=100;avance.value=Math.max(0,Math.min(100,Math.round((Date.parse(fechaHoy+'T00:00:00Z')-inicio)/duracion*100)));avance.setAttribute('aria-label','Plazo transcurrido para '+a.codigo);bloque.appendChild(avance);
    const estadoEl=document.createElement('p');estadoEl.className='cronograma-meta';estadoEl.textContent=estadoActual+' · '+(estadosRecordatorio[a.recordatorio?.estado]||'Seguimiento automático')+(a.avisos_publicacion?.[0]?' · Aviso de publicación: '+a.avisos_publicacion[0].estado:'');bloque.appendChild(estadoEl);li.appendChild(bloque);
@@ -119,12 +128,12 @@
  }
  function render(){
   opciones();const cuerpo=$('asignacionesBody');cuerpo.replaceChildren();
-  const lista=datos.asignaciones.filter(a=>$('asignacionesVerAnuladas').checked||a.vigente);
+  const lista=datos.asignaciones.filter(a=>$('asignacionesVerAnuladas').checked||a.vigente).sort(ordenarAsignaciones);
   $('asignacionesConteo').textContent=datos.asignaciones.filter(a=>a.vigente).length+' asignaciones vigentes · '+datos.catalogo.filter(x=>tipoUnidadDocencia(x.codigo)==='tema').length+' temas en el catálogo';
   if(!lista.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;td.textContent='No hay asignaciones para mostrar.';tr.appendChild(td);cuerpo.appendChild(tr);}
   lista.forEach(a=>{
-   const tr=document.createElement('tr');if(a.id===seleccion)tr.className='asignacion-seleccionada';
-   const textos=[a.nombre,a.codigo+' · '+a.tema,fecha(a.fecha_asignacion),fecha(a.fecha_entrega)+' · 23:30',a.vigente?'Vigente':'Anulada'];
+   const tr=document.createElement('tr');tr.className='asignacion-fila asignacion-'+(a.vigente?estadoTrabajo(a).toLowerCase():'anulada');if(a.id===seleccion)tr.classList.add('asignacion-seleccionada');
+   const textos=[a.nombre,a.codigo+' · '+a.tema,fecha(a.fecha_asignacion),fecha(a.fecha_entrega)+' · 23:30',a.vigente?estadoTrabajo(a):'Anulada'];
    textos.forEach((x,i)=>{const td=document.createElement('td');td.textContent=x;if(i===4){const s=document.createElement('small');s.className='asignacion-correo-estado';const c=a.correos?.[0];s.textContent=!c?'Sin correo enviado':c.estado==='enviado'?'Correo aceptado por SMTP · CCO '+(c.copia_estado==='aceptada'?'aceptada':'sin confirmar'):c.estado==='preparado'?'Envío en curso / por confirmar':'Correo sin confirmación';td.appendChild(s);const rs=document.createElement('small');rs.className='asignacion-correo-estado';rs.textContent=a.recordatorio?.estado==='enviado'?'Recordatorio enviado':a.recordatorio?.publicado?'Publicado · sin recordatorio':a.recordatorio?.estado==='incierto'?'Recordatorio sin confirmar':a.recordatorio?.estado==='sin_solicitud'?'Recordatorio: falta solicitud':'Recordatorio automático';td.appendChild(rs);}tr.appendChild(td);});
    const td=document.createElement('td'),b=document.createElement('button');b.type='button';b.className='admin-link-btn';b.textContent='Ver opciones';b.dataset.vigente=String(a.vigente);b.disabled=ocupado||!a.vigente;b.setAttribute('aria-label','Ver opciones de '+a.codigo+' de '+a.nombre);b.onclick=()=>seleccionar(a.id);td.appendChild(b);tr.appendChild(td);cuerpo.appendChild(tr);
   });contexto();botones();seguimiento();window.renderizarCronogramaAdmin();
@@ -246,3 +255,4 @@
   $('dialogCorreoAsignacion')?.addEventListener('cancel',e=>{if(ocupado)e.preventDefault();else window.cerrarCorreoAsignacion();});
  });
 })();
+
