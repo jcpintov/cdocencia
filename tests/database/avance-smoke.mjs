@@ -57,6 +57,30 @@ try{
  r=await rpc('doctrina_texto_superadmin','texto_aprobar',{id:version,pagina:1});assert.equal(r.estado,'aprobado');
  r=await rpc('doctrina_texto_superadmin','texto_buscar',{consulta:'acacia'});assert.deepEqual(r.cobertura,{vigentes:1,consultables:1,pendientes:0});assert.equal(r.resultados.length,1);assert.equal(r.resultados[0].pagina,1);assert.equal(r.resultados[0].sha256,'c'.repeat(64));
  assert.equal((await db.query('select count(*)::int as n from doctrina.textos_revision_historial')).rows[0].n,3);
+ // Permisos Groq por versión/huella: sin autorización no se reserva ningún envío.
+ const expediente={fuentes:[{version_id:version,sha256:'c'.repeat(64),pagina:1}],hash:'d'.repeat(64)};
+ assert.equal((await rpc('doctrina_texto_superadmin','texto_llm_reservar',expediente)).ok,false);
+ await rpc('doctrina_texto_superadmin','texto_llm_autorizar',{id:version});
+ assert.equal((await rpc('doctrina_texto_superadmin','texto_llm_listar')).autorizaciones[0].autorizado,true);
+ let reserva=await rpc('doctrina_texto_superadmin','texto_llm_reservar',expediente);assert.equal(reserva.ok,true);
+ assert.equal((await rpc('doctrina_texto_superadmin','texto_llm_validar',{id:reserva.id})).ok,true);
+ assert.equal((await rpc('doctrina_texto_superadmin','texto_llm_reservar',expediente)).ok,false,'Bloquea reserva concurrente/repetida');
+ await rpc('doctrina_texto_superadmin','texto_llm_revocar',{id:version});
+ assert.equal((await rpc('doctrina_texto_superadmin','texto_llm_validar',{id:reserva.id})).ok,false);
+ await rpc('doctrina_texto_superadmin','texto_llm_autorizar',{id:version});
+ assert.equal((await rpc('doctrina_texto_superadmin','texto_llm_validar',{id:reserva.id})).ok,false,'Reautorizar no revive expedientes anteriores');
+ await rpc('doctrina_texto_superadmin','texto_llm_finalizar',{id:reserva.id,estado:'fallido'});
+ await db.exec("update doctrina.llm_consultas set creado_en=now()-interval '2 minutes'");
+ reserva=await rpc('doctrina_texto_superadmin','texto_llm_reservar',expediente);assert.equal(reserva.ok,true);
+ await db.query("update doctrina.textos_extraidos set revisado_en=now()+interval '1 second' where version_id=$1",[version]);
+ assert.equal((await rpc('doctrina_texto_superadmin','texto_llm_validar',{id:reserva.id})).ok,false,'Cambios del texto revisado invalidan el análisis pendiente');
+ assert.equal((await db.query('select count(*)::int as n from doctrina.llm_autorizaciones_historial')).rows[0].n,3);
+ await db.exec("update doctrina.llm_consultas set creado_en=now()-interval '2 minutes'");
+ await db.query("insert into doctrina.llm_consultas(actor,hash,fuentes,creado_en) select $1,$2,'[]'::jsonb,now()-interval '2 minutes' from generate_series(1,18)",[actor,'d'.repeat(64)]);
+ assert.equal((await rpc('doctrina_texto_superadmin','texto_llm_reservar',expediente)).ok,false,'Límite diario durable de 20 solicitudes');
+ for(const tabla of ['llm_autorizaciones','llm_autorizaciones_historial','llm_consultas'])for(const role of ['anon','authenticated'])assert.equal((await db.query('select has_table_privilege($1,$2,$3) as r',[role,'doctrina.'+tabla,'SELECT'])).rows[0].r,false);
+
+ await assert.rejects(()=>rpc('doctrina_texto_superadmin','texto_llm_listar',{},'55555555-5555-4555-8555-555555555555'),/Acceso denegado/);
  await db.query("update doctrina.documentos set estado='retirado' where id=$1",[doc]);assert.equal((await rpc('doctrina_texto_superadmin','texto_buscar',{consulta:'acacia'})).resultados.length,0);
  r=await rpc('doctrina_texto_superadmin','texto_buscar',{consulta:'acacia'});assert.deepEqual(r.cobertura,{vigentes:0,consultables:0,pendientes:0});
  await db.query("update doctrina.documentos set estado='vigente' where id=$1",[doc]);

@@ -1,3 +1,4 @@
+import {consultarGroqDoctrina as consultarGroqReal} from '../lib/groq-doctrina.js';
 import {prepararConsultaAgente,informeConsultaDoctrina} from '../lib/agente-doctrina.js';
 import {readFileSync} from 'node:fs';
 import {createContext,Script} from 'node:vm';
@@ -5,14 +6,14 @@ import {createHash} from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const raw=readFileSync(new URL('../api/admin-doctrina.js',import.meta.url),'utf8');
-const source=raw.replace("const {prepararConsultaAgente,informeConsultaDoctrina}=await import('../lib/agente-doctrina.js');",'').replace(/^import .*;$/gm,'').replace('export default async function handler','async function handler');
+const source=raw.replace("const {consultarGroqDoctrina}=await import('../lib/groq-doctrina.js');",'').replace("const {prepararConsultaAgente,informeConsultaDoctrina}=await import('../lib/agente-doctrina.js');",'').replace(/^import .*;$/gm,'').replace('export default async function handler','async function handler');
 const actor='11111111-1111-4111-8111-111111111111';
 function setup(o={}){
  const calls=[];const pdf=Buffer.from('%PDF-1.4\nExample synthetic fixture\n%%EOF');
  const storage={createSignedUploadUrl:async path=>{calls.push(['upload',path]);return {data:{token:'signed-test'}};},download:async()=>({data:new Blob([o.badPDF?'invalid':pdf])}),createSignedUrl:async()=>{calls.push(['sign']);return {data:{signedUrl:'https://example.supabase.co/storage/v1/object/sign/a'}};}};
  const admin={from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{id:'profile',es_admin:!o.notAdmin,email:'jpintov@gmail.com'}})})})}),rpc:async(name,args)=>{calls.push(['rpc',args.p_accion]);return {data:args.p_accion==='listar'?{documentos:[],inventario:[]}:args.p_accion==='obtener'?(o.missing?null:{path:'path',bytes:pdf.length,sha256:o.badHash?'0'.repeat(64):createHash('sha256').update(pdf).digest('hex')}):{version_id:'v'}};},storage:{getBucket:async()=>({data:{public:!!o.publicBucket}}),from:()=>storage}};
  const client={auth:{getUser:async()=>({data:{user:{id:actor,email:o.foreign?'other@example.invalid':'jpintov@gmail.com'}},error:o.invalidAuth?{}:null})}};
- const ctx=createContext({createClient:(_u,k)=>k==='service'?admin:client,process:{env:{SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}},randomUUID:()=>actor,createHash,Buffer,prepararConsultaAgente,informeConsultaDoctrina});
+ const ctx=createContext({createClient:(_u,k)=>k==='service'?admin:client,process:{env:{SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}},randomUUID:()=>actor,createHash,Buffer,prepararConsultaAgente,informeConsultaDoctrina,consultarGroqDoctrina:(entrada,options)=>consultarGroqReal(entrada,{...options,env:{}})});
  const handler=new Script(source+'\nhandler').runInContext(ctx);
  const request=async(body={},auth='Bearer valid',method='POST')=>{const res={headers:{},setHeader(k,v){this.headers[k]=v;},status(n){this.code=n;return this;},json(v){this.body=v;return this;}};await handler({method,body,headers:{authorization:auth}},res);return res;};
  return {request,calls,pdf};
@@ -46,4 +47,10 @@ test('agente mantiene la autorización previa y solo consulta fuentes mediante R
  const ajeno=setup({foreign:true});assert.equal((await ajeno.request({action:'agente_consultar',pregunta:'Consulta suficientemente larga',consulta:'acacia'})).code,403);assert.equal(ajeno.calls.length,0);
  const s=setup();assert.equal((await s.request({action:'agente_consultar',pregunta:'corta',consulta:'acacia'})).code,422);assert.equal(s.calls.length,0);
  const r=await s.request({action:'agente_consultar',pregunta:'¿Qué representa la acacia?',consulta:'acacia',antecedentes:'Caso aportado'});assert.equal(r.code,200);assert.equal(r.body.informe.generativo,false);assert.deepEqual(s.calls,[['rpc','texto_buscar']]);
+});
+
+test('permisos Groq requieren confirmación explícita e identidad Superadmin',async()=>{
+ const s=setup();assert.equal((await s.request({action:'llm_autorizar',id:actor})).code,422);assert.equal(s.calls.length,0);
+ assert.equal((await s.request({action:'llm_autorizar',id:actor,confirmacion:true})).code,200);assert.deepEqual(s.calls,[['rpc','texto_llm_autorizar']]);
+ assert.equal((await setup({foreign:true}).request({action:'llm_listar'})).code,403);
 });

@@ -5,7 +5,7 @@ import {extname,resolve} from 'node:path';
 import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
 const {chromium}=createRequire(process.env.QA_PLAYWRIGHT_ROOT+'/package.json')('playwright');
-const root=resolve('.');let fail=false,extraido=false,textoAprobado=false;
+const root=resolve('.');let fail=false,extraido=false,textoAprobado=false,groqAutorizado=false;
 const paginas=[{numero:1,texto:'La Acacia representa la inmortalidad.',revisada:false,requiere_ocr:false},{numero:2,texto:'',revisada:false,requiere_ocr:true}];
 const doc={id:'documento',version_id:'11111111-1111-4111-8111-111111111111',titulo:'Principios de la Masonería',clase:'normativa',estado:'borrador',revision:'revision',bytes:400,nota_revision:''};
 const stub='<script>window.supabase={createClient:()=>({auth:{getUser:async()=>({data:{user:null}}),getSession:async()=>({data:{session:{access_token:"fixture"}}}),onAuthStateChange:()=>{},signOut:async()=>({})}})};</script>';
@@ -18,6 +18,8 @@ const server=createServer(async(req,res)=>{try{
   let raw='';for await(const x of req)raw+=x;const b=JSON.parse(raw);res.setHeader('Content-Type','application/json');
   if(b.action==='visualizar'){res.end(JSON.stringify({ok:true,url:'https://pwnnpjygnviyzyyvfxnq.supabase.co/storage/v1/object/sign/doctrina-originales-privados/fixture.pdf?token=fixture'}));return;}
   if(fail){res.writeHead(503).end(JSON.stringify({error:'Error de prueba'}));return;}
+  if(b.action==='llm_listar'){res.end(JSON.stringify({ok:true,autorizaciones:[{version_id:doc.version_id,titulo:doc.titulo,version:1,autorizado:groqAutorizado,texto_aprobado:textoAprobado}]}));return;}
+  if(b.action==='llm_autorizar'||b.action==='llm_revocar'){groqAutorizado=b.action==='llm_autorizar';res.end(JSON.stringify({ok:true}));return;}
   if(b.action==='agente_consultar'){res.end(JSON.stringify({ok:true,informe:informeConsultaDoctrina(prepararConsultaAgente(b),{cobertura:{vigentes:1,consultables:textoAprobado?1:0,pendientes:textoAprobado?0:1},resultados:textoAprobado?[{titulo:doc.titulo,clase:doc.clase,version_id:doc.version_id,version:1,pagina:1,sha256:'c'.repeat(64),fragmento:paginas[0].texto}]:[]})}));return;}
   if(b.action.startsWith('texto_')){
    if(b.action==='texto_buscar'){res.end(JSON.stringify({ok:true,resultados:textoAprobado?[{titulo:doc.titulo,version_id:doc.version_id,version:1,pagina:1,fragmento:paginas[0].texto}]:[]}));return;}
@@ -76,6 +78,7 @@ try{
   assert.match(await page.locator('#doctrinaAgenteResultado').innerText(),/Alegaciones del consultante/);assert.match(await page.locator('#doctrinaAgenteResultado').innerText(),/F1/);assert.ok(await page.locator('#doctrinaAgenteFormulario').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
   await page.getByRole('button',{name:'Contrastar original',exact:true}).click();await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=1'));await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();
  }
+ await page.getByText('Autorizaciones documentales para Groq',{exact:true}).click();await page.getByRole('button',{name:'Revisar autorizaciones',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).click();await page.getByRole('button',{name:'Revocar permiso',exact:true}).waitFor();assert.match(await page.locator('#doctrinaGroqPermisos').innerText(),/Autorizado para Groq/);await page.getByRole('button',{name:'Revocar permiso',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).waitFor();
  await page.setViewportSize({width:1440,height:950});await page.getByRole('button',{name:'Mi perfil',exact:true}).click();await page.locator('#perfilSuperadminSolicitar').waitFor({state:'visible'});
  await page.locator('#perfilSuperadminNombre').fill('Nombre Actualizado');await page.locator('#perfilSuperadminEmail').fill('nuevo@example.invalid');await page.locator('#perfilSuperadminSolicitar').click();await page.locator('#perfilSuperadminEstado').filter({hasText:'Código enviado'}).waitFor();assert.equal(await page.locator('#perfilSuperadminEmail').isDisabled(),true);
  await page.locator('#perfilSuperadminCodigo').fill('12345678');await page.locator('#perfilSuperadminConfirmar').click();await page.locator('#perfilSuperadminEstado').filter({hasText:'Perfil actualizado'}).waitFor();

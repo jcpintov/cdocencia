@@ -1,6 +1,6 @@
 # Agente de consultas de DOCTRINA
 
-Estado: circuito documental local implementado y probado, sin despliegue. No hay proveedor generativo conectado ni documentos autorizados para un servicio externo por esta implementación.
+Estado actualizado: integración Groq implementada y probada con respuestas sintéticas, sin desplegar. Modelo inicial GPT-OSS 120B. Faltan clave, comprobación de retención cero y prueba real de la cuenta. Ningún documento fue autorizado automáticamente. Consulte CONFIGURAR_GROQ.md.
 
 ## Funcionamiento
 
@@ -10,11 +10,11 @@ El informe local organiza alcance, alegaciones, fuentes, tradición y límites, 
 
 La interfaz muestra cobertura y referencias contrastables con el PDF original. Trata documentos, preguntas y respuestas como texto, nunca como HTML o instrucciones ejecutables. Una consulta tiene espera máxima de 45 segundos; conserva la pregunta ante error. Recargar la biblioteca invalida resultados previos. Cerrar sesión cancela la consulta y borra formulario y resultados; respuestas tardías no se muestran en otra sesión.
 
-## Conexión generativa pendiente
+## Requisitos de activación generativa
 
-El contrato requiere autorización explícita por documento y servicio externo. No existe un proveedor/modelo autorizado identificado. La aprobación de vigencia o extracción de un documento no es permiso para transmitirlo a un LLM.
+El contrato requiere autorización explícita por documento y servicio externo. El usuario eligió Groq; se implementó el modelo inicial GPT-OSS 120B con permisos por versión documental. La aprobación de vigencia o extracción de un documento no es permiso para transmitirlo a un LLM.
 
-Antes de habilitar generación: registrar proveedor/modelo y autorización revocable por versión/documento y servicio; guardar credenciales exclusivamente en servidor; filtrar el contexto nuevamente al enviar; limitar fragmentos y costes; validar referencias devueltas contra el conjunto recuperado; registrar procedencia/modelo/autorización sin divulgar originales; declarar insuficiencia y separar hechos, alegaciones e inferencias. El modelo no podrá decidir sanciones ni emitir interpretaciones institucionalmente vinculantes. No publicar respuestas automáticamente.
+Controles implementados para la generación (activación pendiente): registrar proveedor/modelo y autorización revocable por versión/documento y servicio; guardar credenciales exclusivamente en servidor; filtrar el contexto nuevamente al enviar; limitar fragmentos y costes; validar referencias devueltas contra el conjunto recuperado; registrar procedencia/modelo/autorización sin divulgar originales; declarar insuficiencia y separar hechos, alegaciones e inferencias. El modelo no podrá decidir sanciones ni emitir interpretaciones institucionalmente vinculantes. No publicar respuestas automáticamente.
 
 ## Comprobaciones
 

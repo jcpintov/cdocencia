@@ -11,6 +11,8 @@ on:
       - 'lib/correo-calendario.js'
       - 'lib/hora-calendario.js'
       - 'lib/extraer-doctrina.js'
+      - 'lib/agente-doctrina.js'
+      - 'lib/groq-doctrina.js'
       - 'sql/**'
       - 'package*.json'
       - 'tests/database/**'

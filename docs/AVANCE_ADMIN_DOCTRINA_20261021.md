@@ -37,3 +37,7 @@ La búsqueda informa cuántos originales vigentes tienen texto aprobado y cuánt
 ## Agente de consultas: circuito documental local
 
 Se incorpora `agente_consultar`, formulario privado, informe estructurado y referencias contrastables. Ver `docs/AGENTE_CONSULTAS_DOCTRINA.md`. 203 pruebas aprobadas, PostgreSQL aislado, DOM y navegador escritorio/móvil. El motor generativo no está conectado: requiere identificar proveedor/modelo y autorizaciones por documento y servicio. No confundir este informe local con un agente de interpretación mediante LLM. Sin despliegue ni migraciones productivas.
+
+## Integración Groq preparada
+
+Usuario seleccionó Groq. Integración GPT-OSS 120B, permisos por versión/huella/modelo con panel y auditoría, límites durables y salida validada. 220 pruebas aprobadas, PostgreSQL aislado y navegador escritorio/móvil. Falta clave de servidor y comprobar ZDR en cuenta del proveedor; no hubo envío real ni autorización automática de originales. Ver CONFIGURAR_GROQ.md. La migración preparada doctrina_extraccion_paginas.sql incorpora las tablas y acciones nuevas; sigue sin aplicar. Sin despliegue.
