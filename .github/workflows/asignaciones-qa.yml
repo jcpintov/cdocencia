@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'app.js'
+      - 'comentarios-hilos.js'
       - 'recuperar.html'
       - 'ui-v2.js'
       - 'index.html'

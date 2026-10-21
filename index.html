@@ -1263,7 +1263,18 @@
     </div>
   </div>
 
+  <dialog id="modalEditarComentarioForo" class="hilo-editor-dialog hidden" aria-labelledby="tituloEditarComentario">
+    <form onsubmit="event.preventDefault(); guardarEdicionComentarioModal();">
+      <h2 id="tituloEditarComentario">Editar mi comentario</h2>
+      <input type="hidden" id="editComentarioId" name="comentario_id">
+      <label for="textareaEditarComentario">Texto del comentario</label>
+      <textarea id="textareaEditarComentario" name="comentario" rows="5" minlength="5" maxlength="1500" required aria-describedby="estadoEditarComentario"></textarea>
+      <p id="estadoEditarComentario" class="hilo-estado" role="status" aria-live="polite"></p>
+      <div class="hilo-form-acciones"><button type="button" class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalEditarComentarioForo')">Cancelar</button><button type="submit" id="btnGuardarEdicionComentario" class="btn-primary">Guardar comentario</button></div>
+    </form>
+  </dialog>
   <script src="app.js"></script>
+  <script src="comentarios-hilos.js"></script>
   <script src="asignaciones-admin.js"></script>
   <script src="bitacora-sesion.js"></script>
   <script src="ui-v2.js" defer></script>
