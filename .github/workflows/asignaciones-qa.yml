@@ -36,6 +36,7 @@ jobs:
       - name: Probar formulario y catálogo escritorio y móvil
         env:
           QA_PLAYWRIGHT_ROOT: ${{ runner.temp }}/qa
+          QA_HILOS_CAPTURE: "1"
         run: |
           node tests/browser/asignaciones-smoke.mjs
           node tests/browser/usuarios-smoke.mjs

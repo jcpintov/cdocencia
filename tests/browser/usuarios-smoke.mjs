@@ -152,7 +152,9 @@ try{
  await page.locator('#comentario_cuerpo_r1').filter({hasText:'Respuesta propia editada'}).waitFor();
  assert.match(await page.locator('#hilo_texto_c0').inputValue(),/Otro borrador/);
  assert.equal(await page.locator('#hilo_form_c0').isVisible(),true);
+ if(process.env.QA_HILOS_CAPTURE)console.log('HILOS_ESCRITORIO:'+(await page.screenshot({type:'jpeg',quality:60})).toString('base64'));
  await page.setViewportSize({width:390,height:844});
+ if(process.env.QA_HILOS_CAPTURE)console.log('HILOS_MOVIL:'+(await page.screenshot({type:'jpeg',quality:60})).toString('base64'));
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Hilos legibles en móvil sin desborde');
  await page.setViewportSize({width:1440,height:900});
  await page.evaluate(()=>volverAInicioPortal());await visible('seccionBienvenida');
@@ -169,6 +171,7 @@ try{
  await page.locator('#general_hilo_form_r2 [type="submit"]').click();
  await page.locator('#contenedorMuroUsuariosDirecto #general_comentario_item_r3').waitFor();
  assert.equal(await page.locator('#general_comentario_item_r3').getAttribute('data-padre-id'),'r2');
+ assert.equal(await page.evaluate(()=>{const ids=[...document.querySelectorAll('.hilo-formulario')].map(f=>f.id);return ids.length===new Set(ids).size;}),true,'Cada formulario tiene un id propio en las dos vistas');
  await page.setViewportSize({width:390,height:844});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Muro general sin desborde en móvil');
  await page.setViewportSize({width:1440,height:900});

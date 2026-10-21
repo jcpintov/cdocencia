@@ -9,6 +9,13 @@
   if(!estado){estado=document.createElement('p');estado.dataset.estadoHilos='';estado.className='hilo-estado';estado.setAttribute('role','status');estado.setAttribute('aria-live','polite');contenedor.prepend(estado);}
   estado.textContent=mensaje;
  };
+ function esperarConfirmacion(operacion, plazo = 20000) {
+  let timer;
+  const limite = new Promise((_resolve,reject) => {
+   timer = setTimeout(() => reject(new Error('La conexión tardó demasiado. Reintente para confirmar el guardado sin duplicar la respuesta.')), plazo);
+  });
+  return Promise.race([operacion, limite]).finally(() => clearTimeout(timer));
+ }
  const fecha = value => {
   const d = new Date(value || '');
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('es-CL', {dateStyle:'short',timeStyle:'short'});
@@ -121,9 +128,9 @@
   try {
    if(!form.dataset.solicitud){form.dataset.solicitud=crypto.randomUUID();form.dataset.contenidoSolicitud=texto;}
    if(form.dataset.contenidoSolicitud!==texto)throw Error('El intento anterior no se pudo confirmar. Reintente con el texto anterior o actualice el muro para comprobar si fue publicado.');
-   const {data,error}=await sbApp.rpc('maestro_responder_comentario',{
+   const {data,error}=await esperarConfirmacion(sbApp.rpc('maestro_responder_comentario',{
     p_comentario_padre_id:padre,p_contenido:texto,p_solicitud_id:form.dataset.solicitud
-   });
+   }));
    if(error || !data) {
     // Una denegación confirmada no pudo insertar; permite corregir el texto.
     if(error && ['22023','42501','23514'].includes(error.code)){delete form.dataset.solicitud;delete form.dataset.contenidoSolicitud;}
@@ -142,7 +149,13 @@
    if(destino.getClientRects().length)window.mostrarEstadoHilos(destino,publicado?'Respuesta publicada.':'Respuesta guardada. Vuelva a abrir el muro para ver la actualización.');
    if(publicado && publicado.getClientRects().length) {publicado.focus({preventScroll:true});publicado.scrollIntoView({block:'nearest',behavior:'smooth'});}
   } catch(error) {
-   if(usuarioActual===actor)estado.textContent=guardada?'Respuesta guardada. No se pudo actualizar el muro; vuelva a abrirlo.':(error.message || 'No se pudo publicar.')+' Su texto se conserva.';
+   if(usuarioActual===actor) {
+    estado.textContent=guardada?'Respuesta guardada. No se pudo actualizar el muro; vuelva a abrirlo.':(error.message || 'No se pudo publicar.')+' Su texto se conserva.';
+    if(guardada) {
+     const contenedor=form.closest('#contenedorMuro, #contenedorMuroUsuariosDirecto');
+     if(contenedor?.getClientRects().length)window.mostrarEstadoHilos(contenedor,estado.textContent);
+    }
+   }
   } finally {
    pendientes.delete(padre);boton.disabled=false;input.readOnly=false;
   }

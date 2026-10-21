@@ -42,3 +42,12 @@ test('KPI usa cada id de comentario sin excluir respuestas ni duplicar ids',()=>
  assert.match(kpi,/new Set\(/);assert.match(kpi,/muro\.data\.comentarios\.filter\(c=>c\?\.id\)/);
  assert.doesNotMatch(kpi,/comentario_padre_id/);
 });
+
+test('plazo de confirmación libera UI y absorbe una respuesta tardía',async()=>{
+ const a=source.indexOf(' function esperarConfirmacion('),b=source.indexOf(' const fecha =',a);
+ const ctx={setTimeout,clearTimeout};runInNewContext(source.slice(a,b),ctx);
+ let resolve;const pending=new Promise(r=>resolve=r);
+ await assert.rejects(ctx.esperarConfirmacion(pending,1),/tardó demasiado/);
+ resolve('guardado después del plazo');
+ assert.equal(await ctx.esperarConfirmacion(Promise.resolve('confirmado'),100),'confirmado');
+});
