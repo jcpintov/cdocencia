@@ -52,7 +52,7 @@ const url='http://127.0.0.1:'+server.address().port;
 const browser=await chromium.launch({headless:true});
 try{
  const page=await browser.newPage({viewport:{width:1440,height:900}});
- const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>{console.log('DIALOG QA: '+d.message());return d.accept();});
  await page.route('https://**/*',r=>r.abort());
  const visible=async id=>assert.equal(await page.locator('#'+id).isVisible(),true,id);
  const nav=async(section,name)=>{const menu=page.locator('#'+section+' .portal-menu');if(await menu.count())await menu.evaluate(el=>el.open=true);await page.locator('#'+section).getByRole('button',{name,exact:true}).click();};

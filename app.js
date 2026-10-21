@@ -1872,6 +1872,7 @@ function cambiarVistaDocencia(tipo) {
 
 async function evaluarEstadoFasesModulo() {
   const prog = misProgresos[moduloActual.id];
+  document.getElementById('bloqueMuro').classList.add('hidden');
   const contConfLectura = document.getElementById('contenedorConfirmarLectura');
   const btnConfLectura = document.getElementById('btnConfirmarLectura');
   const bloqueFaseDos = document.getElementById('bloqueFaseDos');
@@ -1893,6 +1894,7 @@ async function evaluarEstadoFasesModulo() {
     btnEditar.classList.remove('hidden');
     document.getElementById('tituloFaseTres').innerText = "Mi Reflexión Consagrada";
 
+    document.getElementById('bloqueMuro').classList.remove('hidden');
     await cargarMuroReflexiones();
     return;
   }
