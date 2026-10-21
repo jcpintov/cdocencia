@@ -2365,3 +2365,9 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
   font-weight:500;
   line-height:1.4;
 }
+
+
+/* Estado visible y recuperable ante una conexión interrumpida. */
+.estado-carga-catalogo{position:relative;z-index:2;padding:16px;margin:16px;border:1px solid #bda679;border-radius:8px;background:#f8f3e8;color:#243348;line-height:1.5}
+.estado-carga-catalogo[hidden]{display:none}
+.estado-carga-catalogo button{margin-left:8px;padding:8px 14px;background:#243348;color:#fff;border:0;border-radius:5px;cursor:pointer}

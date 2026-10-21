@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'app.js'
+      - 'recuperar.html'
+      - 'ui-v2.js'
       - 'index.html'
       - 'ui-v2.css'
       - 'styles.css'
@@ -33,4 +35,7 @@ jobs:
       - name: Probar formulario y catálogo escritorio y móvil
         env:
           QA_PLAYWRIGHT_ROOT: ${{ runner.temp }}/qa
-        run: node tests/browser/asignaciones-smoke.mjs
+        run: |
+          node tests/browser/asignaciones-smoke.mjs
+          node tests/browser/usuarios-smoke.mjs
+
