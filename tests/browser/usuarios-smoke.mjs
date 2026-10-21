@@ -45,7 +45,7 @@ const server=createServer(async(req,res)=>{try{
  if(path.startsWith('/api/')){res.setHeader('Content-Type','application/json');res.end('{"ok":true}');return;}
  let content=await readFile(root+(path==='/'?'/index.html':path));
  if(path==='/'||path.endsWith('.html'))content=Buffer.from(content.toString().replace(/<body[^>]*>/,m=>m+stub));
- res.setHeader('Content-Type',({'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json'})[extname(path==='/'?'.html':path)]||'application/octet-stream');res.end(content);
+ res.setHeader('Content-Type',({'.html':'text/html','.js':'application/javascript','.css':'text/css','.json':'application/json'})[extname(path==='/'?'/index.html':path)]||'application/octet-stream');res.end(content);
  }catch{res.writeHead(404).end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url='http://127.0.0.1:'+server.address().port;
