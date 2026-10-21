@@ -43,4 +43,5 @@ jobs:
           node tests/browser/asignaciones-smoke.mjs
           node tests/browser/usuarios-smoke.mjs
           node tests/browser/tenidas-smoke.mjs
+          node tests/browser/doctrina-smoke.mjs
 
