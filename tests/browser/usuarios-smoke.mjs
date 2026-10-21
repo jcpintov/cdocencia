@@ -154,6 +154,7 @@ try{
  assert.equal(await page.locator('#hilo_form_c0').isVisible(),true);
  if(process.env.QA_HILOS_CAPTURE)console.log('HILOS_ESCRITORIO:'+(await page.screenshot({type:'jpeg',quality:60})).toString('base64'));
  await page.setViewportSize({width:390,height:844});
+ await page.locator('#hilo_form_c0').scrollIntoViewIfNeeded();
  if(process.env.QA_HILOS_CAPTURE)console.log('HILOS_MOVIL:'+(await page.screenshot({type:'jpeg',quality:60})).toString('base64'));
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Hilos legibles en móvil sin desborde');
  await page.setViewportSize({width:1440,height:900});
