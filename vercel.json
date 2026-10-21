@@ -31,5 +31,6 @@
     "api/cron-calendario-invierno.js": {
       "maxDuration": 300
     }
-  }
+  },
+  "buildCommand": "node scripts/verificar-groq.mjs"
 }
