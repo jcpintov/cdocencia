@@ -364,6 +364,7 @@ function cerrarSesion() {
   const botonIngreso = document.querySelector('#formAccesoCamara button[type="submit"]');
   if (botonIngreso) botonIngreso.disabled = false;
   window.limpiarAsignacionesAdmin?.();
+  limpiarBibliotecaDoctrina();
   window.limpiarCalendarioTenidas?.();
   window.cerrarBitacoraSesion?.();
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
@@ -2576,6 +2577,7 @@ function cambiarSubseccionAdmin(seccion) {
   } else if (seccion === 'doctrina') {
     document.getElementById('tabNavDoctrina')?.classList.add('active');
     document.getElementById('adminSeccionDoctrina')?.classList.remove('hidden');
+    void cargarBibliotecaDoctrina();
   } else if (seccion === 'resumen') {
     document.getElementById('tabNavResumen')?.classList.add('active');
     document.getElementById('adminSeccionResumen')?.classList.remove('hidden');

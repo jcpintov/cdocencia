@@ -954,8 +954,19 @@
 </section>
       <section id="adminSeccionDoctrina" class="card card-trazado hidden">
         <h2>Doctrina y Reglamentos</h2>
-        <p class="text-instruccion">Sección exclusiva de Superadmin en preparación. La incorporación y descarga de originales permanecen en pruebas.</p>
-        <p>El inventario documental no equivale a originales incorporados. La biblioteca se habilitará al completar la validación documental y la prueba de carga y descarga.</p>
+        <p class="text-instruccion">Biblioteca privada, exclusiva de Superadmin. Los originales no se publican a los usuarios.</p>
+        <button type="button" id="doctrinaActualizar" class="btn-secondary" onclick="cargarBibliotecaDoctrina()">Actualizar biblioteca</button>
+        <p id="doctrinaEstado" role="status" aria-live="polite"></p>
+        <form id="doctrinaFormulario" onsubmit="event.preventDefault(); incorporarOriginalDoctrina();">
+          <label for="doctrinaTitulo">Título del documento</label><input id="doctrinaTitulo" type="text" minlength="3" maxlength="250" required>
+          <label for="doctrinaClase">Categoría</label><select id="doctrinaClase" required><option value="normativa">Normativa</option><option value="doctrina">Doctrina</option><option value="ritual">Ritual</option><option value="tradicion">Tradición</option><option value="bibliografia">Bibliografía</option><option value="docencia">Docencia</option></select>
+          <label for="doctrinaArchivo">Original PDF (hasta 50 MB)</label><input id="doctrinaArchivo" type="file" accept="application/pdf,.pdf" required>
+          <button type="submit" id="doctrinaIncorporar" class="btn-primary">Incorporar original privado</button>
+          <p id="doctrinaCargaEstado" role="status" aria-live="polite"></p>
+        </form>
+        <label for="doctrinaBuscar">Buscar documento</label><input id="doctrinaBuscar" type="search" oninput="renderizarBibliotecaDoctrina()">
+        <h3>Originales incorporados</h3><div id="doctrinaDocumentos"></div>
+        <details><summary>Inventario documental</summary><div id="doctrinaInventario"></div></details>
         <button class="admin-link-btn" onclick="cambiarSubseccionAdmin('resumen')">Volver al resumen</button>
       </section>
       <section id="adminSeccionEditorDoctrina" class="card card-trazado hidden">
@@ -1286,6 +1297,7 @@
   <script src="comentarios-hilos.js"></script>
   <script src="asignaciones-admin.js"></script>
   <script src="calendario-tenidas.js"></script>
+  <script src="doctrina-admin.js"></script>
   <script src="bitacora-sesion.js"></script>
   <script src="ui-v2.js" defer></script>
 </body>
