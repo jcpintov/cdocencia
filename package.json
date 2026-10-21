@@ -3,6 +3,7 @@
   "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
-    "nodemailer": "^7.0.6"
+    "nodemailer": "^7.0.6",
+    "unpdf": "1.9.1"
   }
 }

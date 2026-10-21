@@ -19,10 +19,10 @@ export default async function handler(req,res){
   const auth=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
   const {data:identity,error:authError}=await auth.auth.getUser(token);
   if(authError||!identity?.user)return reply(res,401,{error:'Sesión no válida'});
-  if(String(identity.user.email||'').toLowerCase()!=='jpintov@gmail.com')return reply(res,403,{error:'Operación exclusiva de Superadmin'});
+  if(String(identity.user.email||'').toLowerCase()!=='jpintov@gmail.com'&&identity.user.app_metadata?.superadmin_principal!==true)return reply(res,403,{error:'Operación exclusiva de Superadmin'});
   const admin=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}});
   const {data:perfil,error:perfilError}=await admin.from('usuarios').select('id,email,es_admin').eq('auth_user_id',identity.user.id).maybeSingle();
-  if(perfilError||!perfil?.es_admin||String(perfil.email||'').toLowerCase()!=='jpintov@gmail.com')return reply(res,403,{error:'Operación exclusiva de Superadmin'});
+  if(perfilError||!perfil?.es_admin||String(perfil.email||'').toLowerCase()!==String(identity.user.email||'').toLowerCase())return reply(res,403,{error:'Operación exclusiva de Superadmin'});
   let b=req.body;
   if(typeof b==='string'){try{b=JSON.parse(b);}catch{return reply(res,400,{error:'Solicitud inválida'});}}
   b=b||{};
@@ -76,3 +76,4 @@ export default async function handler(req,res){
   return reply(res,status,{error:status===503?'Servicio temporalmente no disponible. Los datos anteriores se conservan.':e.message});
  }
 }
+

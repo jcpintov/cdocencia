@@ -41,7 +41,7 @@ const server=createServer(async(req,res)=>{
 });
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const url='http://127.0.0.1:'+server.address().port;
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch({headless:true,...(process.env.QA_CHROMIUM_PATH?{executablePath:process.env.QA_CHROMIUM_PATH,args:['--no-sandbox','--disable-dev-shm-usage']}:{})});
 try{
  const page=await browser.newPage({viewport:{width:1440,height:900}});
  const comprobarContraste=async selector=>{
@@ -152,3 +152,4 @@ try{
   console.log('PASS catálogo '+width+'px: 139 temas y último tema íntegramente accesible');
  }
 }finally{await browser.close();await new Promise(r=>server.close(r));}
+

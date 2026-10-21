@@ -43,13 +43,25 @@ export default async function handler(req, res) {
     .eq('auth_user_id', identity.user.id)
     .maybeSingle();
   if (profileError || !profile?.es_admin ||
-      String(identity.user.email || '').toLowerCase() !== 'jpintov@gmail.com' ||
-      String(profile.email || '').toLowerCase() !== 'jpintov@gmail.com') {
+      (String(identity.user.email || '').toLowerCase() !== 'jpintov@gmail.com' && identity.user.app_metadata?.superadmin_principal!==true) ||
+      String(profile.email || '').toLowerCase() !== String(identity.user.email||'').toLowerCase()) {
     return reply(res, 403, { error: 'Sin autorización' });
   }
 
   const { action } = req.body || {};
-  if (!['crear','editar'].includes(action)) return reply(res, 400, { error: 'Acción no admitida' });
+  if (!['crear','editar','eliminar_dummy'].includes(action)) return reply(res, 400, { error: 'Acción no admitida' });
+  if(action==='eliminar_dummy'){
+    const id=req.body?.id;
+    if(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id))return reply(res,422,{error:'Cuenta no válida'});
+    const {data:destino,error}=await admin.from('usuarios').select('id,email,es_admin,auth_user_id,cuenta_eliminada').eq('id',id).maybeSingle();
+    if(error)return reply(res,503,{error:'No se pudo verificar la cuenta'});
+    if(!destino||destino.es_admin||String(destino.email).toLowerCase()!=='dummy@ofl.cl')return reply(res,403,{error:'Esta acción se limita a la cuenta Dummy'});
+    if(destino.cuenta_eliminada)return reply(res,200,{ok:true});
+    if(destino.auth_user_id){const r=await admin.auth.admin.deleteUser(destino.auth_user_id,true);if(r.error&&r.error.status!==404&&r.error.code!=='user_not_found')return reply(res,503,{error:'No se pudo revocar el acceso de Dummy; no se archivó la cuenta'});}
+    const r=await admin.from('usuarios').update({cuenta_eliminada:true,auth_user_id:null,clave_hash:null}).eq('id',id).eq('es_admin',false).select('id').maybeSingle();
+    if(r.error||!r.data)return reply(res,503,{error:'El acceso fue revocado. Reintente para completar el archivo de Dummy.'});
+    return reply(res,200,{ok:true});
+  }
   if (action === 'crear' || action === 'editar') {
     const nombre = normalizarNombreHermano(req.body?.nombre);
     const email = String(req.body?.email || '').trim().toLowerCase();
@@ -67,8 +79,9 @@ export default async function handler(req, res) {
         .select('id,email,es_admin,auth_user_id').eq('id',id).maybeSingle();
       if(error)return reply(res,503,{error:'No se pudo verificar el integrante'});
       if(!data)return reply(res,404,{error:'Integrante no encontrado'});
-      if(data.es_admin||String(data.email||'').toLowerCase()==='dummy@ofl.cl')
+      if(data.es_admin)
         return reply(res,403,{error:'Las cuentas administrativas y de prueba están protegidas'});
+      if(String(data.email).toLowerCase()==='dummy@ofl.cl'&&email!=='dummy@ofl.cl')return reply(res,422,{error:'La cuenta Dummy conserva su correo de prueba; puede editar el nombre o eliminar la cuenta'});
       if(data.auth_user_id&&email!==String(data.email).toLowerCase())
         return reply(res,422,{error:'Correo vinculado a Auth: no se modifica desde el padrón. Puede actualizar el nombre.'});
       destino=data;
@@ -97,3 +110,4 @@ export default async function handler(req, res) {
   }
   return reply(res, 400, { error: 'Acción no admitida' });
 }
+

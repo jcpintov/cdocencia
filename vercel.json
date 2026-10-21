@@ -4,16 +4,32 @@
     {
       "path": "/api/cron-recordatorios",
       "schedule": "0 16 * * *"
+    },
+    {
+      "path": "/api/cron-calendario",
+      "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron-calendario-invierno",
+      "schedule": "0 12 * * *"
     }
   ],
   "functions": {
-    "api/admin-doctrina.js": { "maxDuration": 300 },
+    "api/admin-doctrina.js": {
+      "maxDuration": 300,
+      "includeFiles": "node_modules/unpdf/dist/**"
+    },
     "api/cron-recordatorios.js": {
       "maxDuration": 300
     },
     "api/admin-asignaciones.js": {
       "maxDuration": 300
+    },
+    "api/cron-calendario.js": {
+      "maxDuration": 300
+    },
+    "api/cron-calendario-invierno.js": {
+      "maxDuration": 300
     }
   }
 }
-

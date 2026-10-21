@@ -21,8 +21,8 @@ export default async function handler(req,res) {
   const {data:perfil,error:perfilError}=await admin.from('usuarios').select('id,email,es_admin')
     .eq('auth_user_id',identity.user.id).maybeSingle();
   if(perfilError||!perfil?.es_admin||
-    String(identity.user.email||'').toLowerCase()!=='jpintov@gmail.com'||
-    String(perfil.email||'').toLowerCase()!=='jpintov@gmail.com')
+    (String(identity.user.email||'').toLowerCase()!=='jpintov@gmail.com'&&identity.user.app_metadata?.superadmin_principal!==true)||
+    String(perfil.email||'').toLowerCase()!==String(identity.user.email||'').toLowerCase())
     return respond(res,403,{error:'Operación exclusiva de Superadmin'});
   const {action,id}=req.body||{};
   if(!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id||'')))
@@ -85,3 +85,4 @@ export default async function handler(req,res) {
   }
   return respond(res,200,{ok:true,unidad_codigo:principal});
 }
+

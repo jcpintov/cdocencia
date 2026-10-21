@@ -19,13 +19,19 @@ export default async function handler(req,res){
   if(authError||!user?.id)return reply(res,401,{error:'Sesión no válida'});
   const admin=createClient(url,secret,options);
   const {data:perfil,error:profileError}=await admin.from('usuarios').select('id,email,es_admin').eq('auth_user_id',user.id).maybeSingle();
-  if(profileError||!perfil?.es_admin||String(user.email||'').toLowerCase()!=='jpintov@gmail.com'||String(perfil.email||'').toLowerCase()!=='jpintov@gmail.com')return reply(res,403,{error:'Acceso exclusivo de Superadmin'});
+  if(profileError||!perfil?.es_admin||(String(user.email||'').toLowerCase()!=='jpintov@gmail.com'&&user.app_metadata?.superadmin_principal!==true)||String(perfil.email||'').toLowerCase()!==String(user.email||'').toLowerCase())return reply(res,403,{error:'Acceso exclusivo de Superadmin'});
   const {action,...datos}=req.body||{};
-  if(!['listar','preparar','registrar','descargar','visualizar','revisar','retirar','restaurar'].includes(action))return reply(res,422,{error:'Acción inválida'});
+  if(!['listar','preparar','registrar','descargar','visualizar','revisar','retirar','restaurar','texto_extraer','texto_pagina','texto_revisar_pagina','texto_aprobar','texto_buscar'].includes(action))return reply(res,422,{error:'Acción inválida'});
   const rpc=async(accion,payload={})=>{
-   const {data,error}=await admin.rpc('doctrina_gestion_superadmin',{p_actor:user.id,p_accion:accion,p_datos:payload});
+   const {data,error}=await admin.rpc(accion.startsWith('texto_')?'doctrina_texto_superadmin':'doctrina_gestion_superadmin',{p_actor:user.id,p_accion:accion,p_datos:payload});
    if(error)throw new Error('database');return data;
   };
+  if(action==='texto_buscar'){if(typeof datos.consulta!=='string'||datos.consulta.trim().length<3||datos.consulta.length>250)return reply(res,422,{error:'Escriba una consulta de 3 a 250 caracteres'});return reply(res,200,{ok:true,...await rpc(action,{consulta:datos.consulta})});}
+  if(['texto_pagina','texto_revisar_pagina','texto_aprobar'].includes(action)){
+   if(!uuid(datos.id)||!Number.isInteger(datos.pagina)||datos.pagina<1||datos.pagina>600)return reply(res,422,{error:'Página no válida'});
+   if(action==='texto_revisar_pagina'&&(typeof datos.texto!=='string'||(!datos.texto.trim()&&datos.pagina_sin_texto!==true)||datos.texto.length>40000||(datos.pagina_sin_texto===true&&datos.texto.trim().length>0)))return reply(res,422,{error:'Texto de página no válido'});
+   return reply(res,200,{ok:true,...await rpc(action,{id:datos.id,pagina:datos.pagina,texto:datos.texto,pagina_sin_texto:datos.pagina_sin_texto===true})});
+  }
   if(action==='listar')return reply(res,200,{ok:true,...await rpc('listar')});
   const {data:bucket,error:bucketError}=await admin.storage.getBucket(BUCKET);
   if(bucketError||!bucket||bucket.public!==false)return reply(res,503,{error:'El almacenamiento privado no está disponible'});
@@ -58,6 +64,7 @@ export default async function handler(req,res){
   if(downloadError||!blob)return reply(res,409,{error:'No se encontró el original'});
   if(blob.size!==Number(version.bytes)||blob.size>MAX)return reply(res,409,{error:'Integridad del original pendiente de revisión'});
   if(createHash('sha256').update(Buffer.from(await blob.arrayBuffer())).digest('hex')!==version.sha256)return reply(res,409,{error:'La integridad del original no coincide'});
+  if(action==='texto_extraer'){const {extraerDoctrina}=await import('../lib/extraer-doctrina.js');const extraido=await extraerDoctrina(Buffer.from(await blob.arrayBuffer()));return reply(res,200,{ok:true,...await rpc('texto_guardar',{id:datos.id,sha256:version.sha256,motor:extraido.motor,paginas:extraido.paginas})});}
   if(action==='revisar')return reply(res,200,{ok:true,...await rpc('revisar',{id:datos.id,decision:datos.decision,nota:datos.nota})});
   const {data,error}=await storage.createSignedUrl(version.path,60,{download:action==='descargar'});
   if(error||!data?.signedUrl)return reply(res,503,{error:'No se pudo habilitar la descarga'});

@@ -1,14 +1,16 @@
 /* Biblioteca reservada a Superadmin. No contiene documentos ni claves. */
 let bibliotecaDoctrina = {documentos:[],inventario:[]};
 let consultaBibliotecaDoctrina = 0;
+let consultaBusquedaTextoDoctrina = 0;
 let cargaDoctrinaPendiente = null;
 function limpiarBibliotecaDoctrina(){
- consultaBibliotecaDoctrina++;
+ consultaBibliotecaDoctrina++;consultaBusquedaTextoDoctrina++;
  cerrarVisorDoctrina();
+ cerrarTextoDoctrina(true);
  bibliotecaDoctrina={documentos:[],inventario:[]};cargaDoctrinaPendiente=null;
  document.getElementById('doctrinaRevisionDialogo')?.close();
  document.getElementById('doctrinaFormulario')?.reset();
- for(const id of ['doctrinaDocumentos','doctrinaInventario'])document.getElementById(id)?.replaceChildren();
+ for(const id of ['doctrinaDocumentos','doctrinaInventario','doctrinaBusquedaResultados'])document.getElementById(id)?.replaceChildren();
 }
 async function peticionDoctrina(action,datos={}){
  if(!usuarioActual?.es_admin)throw new Error('Acceso exclusivo de Superadmin');
@@ -53,6 +55,7 @@ function renderizarBibliotecaDoctrina(){
     if(d.estado==='retirado'){
      card.querySelector('button')?.remove();agregar('Restaurar',b=>cambiarRetiroDoctrina(d,'restaurar',b));
     }else{
+     if(d.estado==='vigente')agregar('Texto por páginas',()=>abrirTextoDoctrina(d));
      agregar('Consultar original',b=>abrirVisorDoctrina(d,b));
      agregar('Revisión',()=>abrirRevisionDoctrina(d));
      agregar('Eliminar',b=>cambiarRetiroDoctrina(d,'retirar',b));
@@ -166,3 +169,46 @@ function irPaginaVisorDoctrina(){
  document.getElementById('doctrinaVisorMarco').src=urlVisorDoctrina+'#page='+pagina;
 }
 document.getElementById('doctrinaVisorDialogo')?.addEventListener('cancel',e=>{e.preventDefault();cerrarVisorDoctrina();});
+
+let versionTextoDoctrina=null,consultaTextoDoctrina=0,paginaTextoCargada=null,textoPaginaBase='';
+function cerrarTextoDoctrina(forzar=false){if(!forzar&&document.getElementById('doctrinaTextoContenido').value!==textoPaginaBase&&!confirm('Hay cambios sin guardar. ¿Cerrar y descartarlos?'))return;consultaTextoDoctrina++;versionTextoDoctrina=null;document.getElementById('doctrinaTextoContenido').value='';document.getElementById('doctrinaTextoDialogo').close();}
+async function abrirTextoDoctrina(d){
+ paginaTextoCargada=null;textoPaginaBase='';document.getElementById('doctrinaTextoContenido').value='';versionTextoDoctrina=d.version_id;document.getElementById('doctrinaTextoTitulo').textContent=d.titulo;
+ document.getElementById('doctrinaTextoPagina').value=1;document.getElementById('doctrinaTextoDialogo').showModal();await accionTextoDoctrina('texto_pagina');
+}
+async function accionTextoDoctrina(action){
+ if(!versionTextoDoctrina||!usuarioActual?.es_admin)return;
+ if(action==='texto_pagina'&&document.getElementById('doctrinaTextoContenido').value!==textoPaginaBase&&!confirm('Hay cambios sin guardar. ¿Cargar otra página y descartarlos?'))return;
+ if(action==='texto_revisar_pagina'&&Number(document.getElementById('doctrinaTextoPagina').value)!==paginaTextoCargada){document.getElementById('doctrinaTextoEstado').textContent='Cargue la página seleccionada antes de revisarla.';return;}
+ const id=versionTextoDoctrina,consulta=++consultaTextoDoctrina,actor=usuarioActual.id;
+ const botones=[...document.querySelectorAll('#doctrinaTextoDialogo button')];botones.forEach(b=>b.disabled=true);
+ const estado=document.getElementById('doctrinaTextoEstado');estado.textContent='Procesando…';
+ try{
+  const r=await peticionDoctrina(action,{id,pagina:Number(document.getElementById('doctrinaTextoPagina').value),texto:document.getElementById('doctrinaTextoContenido').value,pagina_sin_texto:document.getElementById('doctrinaTextoSinTexto').checked});
+  if(consulta!==consultaTextoDoctrina||versionTextoDoctrina!==id||usuarioActual?.id!==actor)return;
+  document.getElementById('doctrinaTextoExtraer').hidden=!!r.extraido;
+  if(!r.extraido){document.getElementById('doctrinaTextoContenido').value='';estado.textContent='Aún no hay texto extraído. Extraer texto no aprueba su contenido ni modifica el original.';return;}
+  document.getElementById('doctrinaTextoSinTexto').checked=r.pagina.pagina_sin_texto===true;
+  paginaTextoCargada=r.pagina.numero;document.getElementById('doctrinaTextoPagina').value=r.pagina.numero;
+  textoPaginaBase=r.pagina.texto;document.getElementById('doctrinaTextoContenido').value=r.pagina.texto;document.getElementById('doctrinaTextoPagina').max=r.total_paginas;
+  estado.textContent=r.estado+' · '+r.total_paginas+' páginas · '+r.pendientes+' pendientes de revisión.'+(r.pagina.requiere_ocr?' Esta página tiene poco o ningún texto detectable: contraste con el PDF antes de transcribirla o marcarla sin texto.':'');
+ }catch(e){if(consulta===consultaTextoDoctrina)estado.textContent=e.message+' El texto escrito se conserva.';}
+ finally{botones.forEach(b=>b.disabled=false);}
+}
+async function buscarTextoDoctrina(){
+ const solicitud=consultaBibliotecaDoctrina,busqueda=++consultaBusquedaTextoDoctrina,actor=usuarioActual?.id;
+ const resultados=document.getElementById('doctrinaBusquedaResultados');resultados.replaceChildren();
+ try{
+  const r=await peticionDoctrina('texto_buscar',{consulta:document.getElementById('doctrinaConsultaTexto').value.trim()});
+  if(!usuarioActual?.es_admin||usuarioActual.id!==actor||consultaBibliotecaDoctrina!==solicitud||consultaBusquedaTextoDoctrina!==busqueda)return;
+  for(const item of r.resultados){const articulo=document.createElement('article');articulo.className='doctrina-documento';const titulo=document.createElement('h4');titulo.textContent=item.titulo+' · página '+item.pagina+' · versión '+item.version;const texto=document.createElement('p');texto.textContent=item.fragmento;articulo.append(titulo,texto);const boton=document.createElement('button');boton.type='button';boton.className='btn-secondary';boton.textContent='Consultar original';boton.onclick=async()=>{await abrirVisorDoctrina({version_id:item.version_id,titulo:item.titulo,estado:'vigente'},boton);document.getElementById('doctrinaVisorPagina').value=item.pagina;irPaginaVisorDoctrina();};articulo.appendChild(boton);resultados.appendChild(articulo);}
+  if(!r.resultados.length)resultados.textContent='Sin coincidencias en textos revisados y aprobados. Los documentos sin extracción aprobada no participan en esta búsqueda.';
+ }catch(e){if(usuarioActual?.id===actor&&consultaBibliotecaDoctrina===solicitud&&consultaBusquedaTextoDoctrina===busqueda)resultados.textContent=e.message;}
+}
+document.getElementById('doctrinaTextoDialogo')?.addEventListener('cancel',e=>{e.preventDefault();cerrarTextoDoctrina();});
+
+async function contrastarPaginaTextoDoctrina(boton){
+ if(!versionTextoDoctrina)return;
+ await abrirVisorDoctrina({version_id:versionTextoDoctrina,titulo:document.getElementById('doctrinaTextoTitulo').textContent,estado:'vigente'},boton);
+ document.getElementById('doctrinaVisorPagina').value=paginaTextoCargada||1;irPaginaVisorDoctrina();
+}

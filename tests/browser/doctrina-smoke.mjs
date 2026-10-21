@@ -4,15 +4,26 @@ import {extname,resolve} from 'node:path';
 import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
 const {chromium}=createRequire(process.env.QA_PLAYWRIGHT_ROOT+'/package.json')('playwright');
-const root=resolve('.');let fail=false;
+const root=resolve('.');let fail=false,extraido=false,textoAprobado=false;
+const paginas=[{numero:1,texto:'La Acacia representa la inmortalidad.',revisada:false,requiere_ocr:false},{numero:2,texto:'',revisada:false,requiere_ocr:true}];
 const doc={id:'documento',version_id:'11111111-1111-4111-8111-111111111111',titulo:'Principios de la Masonería',clase:'normativa',estado:'borrador',revision:'revision',bytes:400,nota_revision:''};
 const stub='<script>window.supabase={createClient:()=>({auth:{getUser:async()=>({data:{user:null}}),getSession:async()=>({data:{session:{access_token:"fixture"}}}),onAuthStateChange:()=>{},signOut:async()=>({})}})};</script>';
 const server=createServer(async(req,res)=>{try{
  const path=new URL(req.url,'http://localhost').pathname;
+ if(path==='/api/admin-perfil'){
+  let raw='';for await(const x of req)raw+=x;const b=JSON.parse(raw);res.setHeader('Content-Type','application/json');res.end(JSON.stringify(b.action==='pendiente'?{ok:true,pendiente:false}:b.action==='solicitar'?{ok:true,id:'fixture-cambio',mensaje:'Código enviado al correo actual'}:{ok:true,nombre:'Nombre Actualizado',email:'nuevo@example.invalid'}));return;
+ }
  if(path==='/api/admin-doctrina'){
   let raw='';for await(const x of req)raw+=x;const b=JSON.parse(raw);res.setHeader('Content-Type','application/json');
   if(b.action==='visualizar'){res.end(JSON.stringify({ok:true,url:'https://pwnnpjygnviyzyyvfxnq.supabase.co/storage/v1/object/sign/doctrina-originales-privados/fixture.pdf?token=fixture'}));return;}
   if(fail){res.writeHead(503).end(JSON.stringify({error:'Error de prueba'}));return;}
+  if(b.action.startsWith('texto_')){
+   if(b.action==='texto_buscar'){res.end(JSON.stringify({ok:true,resultados:textoAprobado?[{titulo:doc.titulo,version_id:doc.version_id,version:1,pagina:1,fragmento:paginas[0].texto}]:[]}));return;}
+   if(b.action==='texto_extraer')extraido=true;
+   if(b.action==='texto_revisar_pagina')Object.assign(paginas[b.pagina-1],{texto:b.texto,revisada:true,requiere_ocr:false,pagina_sin_texto:b.pagina_sin_texto});
+   if(b.action==='texto_aprobar'){if(paginas.some(p=>!p.revisada)){res.writeHead(409).end(JSON.stringify({error:'Hay páginas pendientes de revisión'}));return;}textoAprobado=true;}
+   res.end(JSON.stringify({ok:true,extraido,estado:textoAprobado?'aprobado':'revision',total_paginas:2,pendientes:paginas.filter(p=>!p.revisada).length,pagina:paginas[(b.pagina||1)-1]}));return;
+  }
   if(b.action==='revisar')Object.assign(doc,{estado:b.decision==='aprobar'?'vigente':'borrador',revision:b.decision==='aprobar'?'listo':'revision',nota_revision:b.nota});
   if(b.action==='retirar')doc.estado='retirado';
   if(b.action==='restaurar'){doc.estado='borrador';doc.revision='revision';}
@@ -22,7 +33,7 @@ const server=createServer(async(req,res)=>{try{
  if(file==='/index.html')content=Buffer.from(content.toString().replace(/<body[^>]*>/,m=>m+stub));
  res.setHeader('Content-Type',({'.html':'text/html','.js':'application/javascript','.css':'text/css'})[extname(file)]||'application/octet-stream');res.end(content);
  }catch{res.writeHead(404).end();}});
-await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,...(process.env.QA_CHROMIUM_PATH?{executablePath:process.env.QA_CHROMIUM_PATH,args:['--no-sandbox','--disable-dev-shm-usage']}:{})});
 try{
  const page=await browser.newPage({viewport:{width:1440,height:950}}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());await page.route('https://**/*',r=>r.abort());await page.goto('http://127.0.0.1:'+server.address().port);
@@ -48,5 +59,20 @@ try{
  await page.locator('#doctrinaVisorPagina').fill('3');await page.getByRole('button',{name:'Ir a página',exact:true}).click();
  assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=3'));
  await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();assert.equal(await page.locator('#doctrinaVisorMarco').getAttribute('src'),null);
- assert.deepEqual(errors,[]);console.log('DOCTRINA: revisión, error con datos conservados, eliminación/restauración y contraste escritorio/móvil PASS');
+ await page.getByRole('button',{name:'Revisión',exact:true}).click();await page.getByRole('button',{name:'Aprobar como vigente',exact:true}).click();await page.locator('#doctrinaRevisionDialogo').waitFor({state:'hidden'});
+ await page.getByRole('button',{name:'Texto por páginas',exact:true}).click();await page.locator('#doctrinaTextoEstado').filter({hasText:'Aún no hay texto'}).waitFor();
+ await page.getByRole('button',{name:'Extraer texto',exact:true}).click();await page.locator('#doctrinaTextoEstado').filter({hasText:'2 pendientes'}).waitFor();
+ await page.getByRole('button',{name:'Aprobar extracción revisada',exact:true}).click();await page.locator('#doctrinaTextoEstado').filter({hasText:'Hay páginas pendientes'}).waitFor();
+ await page.getByRole('button',{name:'Guardar página revisada',exact:true}).click();await page.locator('#doctrinaTextoEstado').filter({hasText:'1 pendientes'}).waitFor();
+ await page.getByRole('button',{name:'Contrastar página con PDF',exact:true}).click();await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=1'));await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();
+ await page.locator('#doctrinaTextoPagina').fill('2');await page.getByRole('button',{name:'Cargar página',exact:true}).click();await page.locator('#doctrinaTextoEstado').filter({hasText:'poco o ningún texto'}).waitFor();
+ await page.locator('#doctrinaTextoSinTexto').check();await page.getByRole('button',{name:'Guardar página revisada',exact:true}).click();await page.locator('#doctrinaTextoEstado').filter({hasText:'0 pendientes'}).waitFor();
+ await page.getByRole('button',{name:'Aprobar extracción revisada',exact:true}).click();await page.locator('#doctrinaTextoEstado').filter({hasText:'aprobado'}).waitFor();assert.ok(await page.locator('#doctrinaTextoDialogo').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
+ await page.getByRole('button',{name:'Cerrar texto',exact:true}).click();await page.locator('#doctrinaConsultaTexto').fill('acacia');await page.getByRole('button',{name:'Buscar con referencias',exact:true}).click();await page.locator('#doctrinaBusquedaResultados').filter({hasText:'página 1'}).waitFor();
+ await page.setViewportSize({width:1440,height:950});await page.getByRole('button',{name:'Mi perfil',exact:true}).click();await page.locator('#perfilSuperadminSolicitar').waitFor({state:'visible'});
+ await page.locator('#perfilSuperadminNombre').fill('Nombre Actualizado');await page.locator('#perfilSuperadminEmail').fill('nuevo@example.invalid');await page.locator('#perfilSuperadminSolicitar').click();await page.locator('#perfilSuperadminEstado').filter({hasText:'Código enviado'}).waitFor();assert.equal(await page.locator('#perfilSuperadminEmail').isDisabled(),true);
+ await page.locator('#perfilSuperadminCodigo').fill('12345678');await page.locator('#perfilSuperadminConfirmar').click();await page.locator('#perfilSuperadminEstado').filter({hasText:'Perfil actualizado'}).waitFor();
+ await page.setViewportSize({width:390,height:844});assert.ok(await page.locator('#perfilSuperadminDialogo').evaluate(e=>e.scrollWidth<=e.clientWidth+1));await page.locator('#perfilSuperadminCerrar').click();assert.equal(await page.locator('#perfilSuperadminCodigo').inputValue(),'');
+ await page.evaluate(()=>abrirModalCrearUsuario());assert.equal(await page.locator('#adminUsuarioEmail').inputValue(),'');await page.locator('#modalAdminUsuario').getByRole('button',{name:'Cancelar',exact:true}).click();
+ assert.deepEqual(errors,[]);console.log('PASS DOCTRINA y perfil: extracción por página, contraste PDF, páginas vacías verificadas, aprobación, búsqueda citada, OTP, limpieza, alta de usuario vacía y escritorio/móvil');
 }finally{await browser.close();await new Promise(r=>server.close(r));}

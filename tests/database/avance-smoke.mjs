@@ -1,0 +1,68 @@
+// PostgreSQL local en WASM. Nunca conecta con Supabase ni ejecuta cambios productivos.
+import {createRequire} from 'node:module';
+import {readFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+const {PGlite}=createRequire(process.env.QA_SQL_ROOT+'/package.json')('@electric-sql/pglite');
+const db=new PGlite();
+const actor='11111111-1111-4111-8111-111111111111',usuario='22222222-2222-4222-8222-222222222222',version='33333333-3333-4333-8333-333333333333';
+const rpc=async(fn,accion,datos={},quien=actor)=>(await db.query(`select public.${fn}($1::uuid,$2::text,$3::jsonb) as r`,[quien,accion,JSON.stringify(datos)])).rows[0].r;
+const cal=async(accion,datos={})=>(await db.query('select public.calendario_recordatorios_servicio($1,$2::jsonb) as r',[accion,JSON.stringify(datos)])).rows[0].r;
+try{
+ await db.exec(`create role anon;create role authenticated;create role service_role;
+ create schema auth;create schema doctrina;create schema storage;
+ create function auth.role() returns text language sql as $$select current_setting('request.jwt.claim.role',true)$$;
+ create table auth.users(id uuid primary key,email text unique,raw_app_meta_data jsonb default '{}');
+ create table public.usuarios(id uuid primary key default gen_random_uuid(),email text unique,nombre text,es_admin boolean default false,auth_user_id uuid references auth.users(id),clave_hash text,debe_cambiar_clave boolean default false,terminos_aceptados boolean default false);
+ create table public.primer_acceso_codigos(usuario_id uuid primary key,codigo_hash text,expira_en timestamptz,enviado_en timestamptz,intentos integer,solicitudes integer,ventana_inicio timestamptz);
+ create table public.docencia_asignaciones(id uuid primary key,usuario_id uuid,codigo text,fecha_asignacion date,fecha_entrega date,hora_entrega time,vigente boolean,version integer,creado_en timestamptz);
+ create table doctrina.documentos(id uuid primary key default gen_random_uuid(),titulo text,clase text,grado_minimo text,estado text,creado_por uuid,clasificacion_acceso text,creado_en timestamptz default now());
+ create table doctrina.versiones(id uuid primary key,documento_id uuid references doctrina.documentos(id),numero integer,sha256 text,objeto_storage text,mime text,bytes bigint,estado text,nota_revision text default '',revisado_en timestamptz,revisado_por uuid,creado_en timestamptz default now(),verificacion_integridad_en timestamptz);
+ create table storage.objects(id uuid primary key default gen_random_uuid(),bucket_id text,name text,metadata jsonb);
+ select set_config('request.jwt.claim.role','service_role',false);`);
+ await db.query('insert into auth.users(id,email) values($1,$2)',[actor,'jpintov@gmail.com']);
+ await db.query('insert into public.usuarios(id,email,nombre,es_admin,auth_user_id) values($1,$2,$3,true,$4)',[usuario,'jpintov@gmail.com','Julio César',actor]);
+ for(const nombre of ['calendario_tenidas.sql','calendario_horarios_recordatorios.sql','dummy_archivo_cuenta.sql','superadmin_identidad_estable.sql','superadmin_perfil_codigo.sql','doctrina_extraccion_paginas.sql']){
+  let sql=await readFile('sql/'+nombre,'utf8');
+  if(nombre==='calendario_horarios_recordatorios.sql')sql=sql.replace("now() at time zone 'America/Santiago'","timestamp '2026-11-05 08:00:00'");
+  await db.exec(sql);console.log('Migración aislada OK:',nombre);
+ }
+ const challenge='44444444-4444-4444-8444-444444444444';
+ let r=await rpc('superadmin_perfil_codigo','solicitar',{id:challenge,nombre:'Nombre nuevo',email:'nuevo@example.invalid',hash:'a'.repeat(64)});assert.equal(r.email_anterior,'jpintov@gmail.com');
+ await rpc('superadmin_perfil_codigo','habilitar',{id:challenge});
+ assert.equal((await rpc('superadmin_perfil_codigo','pendiente')).estado,'enviado');assert.ok((await rpc('superadmin_perfil_codigo','recuperar',{id:challenge})).error);
+ r=await rpc('superadmin_perfil_codigo','validar',{id:challenge,hash:'b'.repeat(64)});assert.match(r.error,/Código/);
+ r=await rpc('superadmin_perfil_codigo','validar',{id:challenge,hash:'a'.repeat(64)});assert.equal(r.email_nuevo,'nuevo@example.invalid');
+ await db.query("update auth.users set email=$2,raw_app_meta_data='{"+'"superadmin_principal":true'+"}' where id=$1",[actor,'nuevo@example.invalid']);
+ assert.equal((await rpc('superadmin_perfil_codigo','pendiente')).estado,'autorizado');await rpc('superadmin_perfil_codigo','recuperar',{id:challenge});
+ await rpc('superadmin_perfil_codigo','finalizar',{id:challenge});await rpc('superadmin_perfil_codigo','finalizar',{id:challenge});
+ const perfil=(await db.query('select * from public.usuarios where id=$1',[usuario])).rows[0];assert.equal(perfil.email,'nuevo@example.invalid');assert.equal(perfil.auth_user_id,actor);assert.equal(perfil.es_admin,true);
+ await db.query('insert into auth.users(id,email) values($1,$2)',['55555555-5555-4555-8555-555555555555','ajeno@example.invalid']);
+ await db.query("insert into public.usuarios(email,nombre,es_admin,auth_user_id) values('ajeno@example.invalid','Ajeno',true,'55555555-5555-4555-8555-555555555555')");
+ await assert.rejects(()=>rpc('superadmin_perfil_codigo','solicitar',{id:challenge,nombre:'Ajeno',email:'otro@example.invalid',hash:'a'.repeat(64)},'55555555-5555-4555-8555-555555555555'),/Acceso denegado/);
+ await db.exec("update doctrina.cambios_perfil set creado_en=now()-interval '2 minutes'");
+ const bloqueado='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';await rpc('superadmin_perfil_codigo','solicitar',{id:bloqueado,nombre:'Otro nombre',email:'segundo@example.invalid',hash:'e'.repeat(64)});await rpc('superadmin_perfil_codigo','habilitar',{id:bloqueado});
+ for(let n=0;n<5;n++)assert.ok((await rpc('superadmin_perfil_codigo','validar',{id:bloqueado,hash:'0'.repeat(64)})).error);
+ assert.ok((await rpc('superadmin_perfil_codigo','validar',{id:bloqueado,hash:'e'.repeat(64)})).error);assert.equal((await rpc('superadmin_perfil_codigo','pendiente')).pendiente,false);
+ await db.exec("update doctrina.cambios_perfil set creado_en=now()-interval '2 minutes'");
+ const expirado='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';await rpc('superadmin_perfil_codigo','solicitar',{id:expirado,nombre:'Otro nombre',email:'segundo@example.invalid',hash:'f'.repeat(64)});await rpc('superadmin_perfil_codigo','habilitar',{id:expirado});await db.query("update doctrina.cambios_perfil set expira_en=now()-interval '1 minute' where id=$1",[expirado]);assert.ok((await rpc('superadmin_perfil_codigo','validar',{id:expirado,hash:'f'.repeat(64)})).error);
+ const doc='66666666-6666-4666-8666-666666666666';await db.query("insert into doctrina.documentos(id,titulo,estado) values($1,'Fuente de prueba','vigente')",[doc]);
+ await db.query("insert into doctrina.versiones(id,documento_id,numero,sha256,bytes,estado) values($1,$2,1,$3,100,'listo')",[version,doc,'c'.repeat(64)]);
+ const paginas=[{numero:1,texto:'La acacia representa la inmortalidad.',texto_original:'La acacia representa la inmortalidad.',revisada:false},{numero:2,texto:'',texto_original:'',revisada:false,requiere_ocr:true}];
+ r=await rpc('doctrina_texto_superadmin','texto_guardar',{id:version,sha256:'c'.repeat(64),motor:'fixture',paginas});assert.equal(r.pendientes,2);
+ await assert.rejects(()=>rpc('doctrina_texto_superadmin','texto_aprobar',{id:version,pagina:1}),/pendientes/);
+ r=await rpc('doctrina_texto_superadmin','texto_revisar_pagina',{id:version,pagina:1,texto:'La acacia simboliza la inmortalidad.'});assert.equal(r.pendientes,1);assert.equal(r.pagina.texto_original,paginas[0].texto_original);
+ await assert.rejects(()=>rpc('doctrina_texto_superadmin','texto_revisar_pagina',{id:version,pagina:2,texto:''}),/Página no válida/);
+ await rpc('doctrina_texto_superadmin','texto_revisar_pagina',{id:version,pagina:2,texto:'',pagina_sin_texto:true});
+ r=await rpc('doctrina_texto_superadmin','texto_aprobar',{id:version,pagina:1});assert.equal(r.estado,'aprobado');
+ r=await rpc('doctrina_texto_superadmin','texto_buscar',{consulta:'acacia'});assert.equal(r.resultados.length,1);assert.equal(r.resultados[0].pagina,1);assert.equal(r.resultados[0].sha256,'c'.repeat(64));
+ assert.equal((await db.query('select count(*)::int as n from doctrina.textos_revision_historial')).rows[0].n,3);
+ await db.query("update doctrina.documentos set estado='retirado' where id=$1",[doc]);assert.equal((await rpc('doctrina_texto_superadmin','texto_buscar',{consulta:'acacia'})).resultados.length,0);
+ const evento='77777777-7777-4777-8777-777777777777',intento='88888888-8888-4888-8888-888888888888';
+ await db.query("insert into public.calendario_tenidas(id,fecha,grado,tema,autor) values($1,'2026-11-10',3,'Tema','Autor')",[evento]);assert.equal((await cal('candidatos')).length,1);
+ assert.equal((await cal('reservar',{id:evento,version:1,intento})).enviar,true);assert.equal((await cal('reservar',{id:evento,version:1,intento})).enviar,false);
+ assert.equal((await cal('confirmar',{id:evento,intento})).enviar,true);assert.equal((await cal('confirmar',{id:evento,intento})).enviar,false);
+ assert.equal((await cal('finalizar',{id:evento,intento,estado:'enviado'})).ok,true);assert.equal((await cal('candidatos')).length,0);
+ const dummy='99999999-9999-4999-8999-999999999999';await db.query("insert into public.usuarios(id,email,nombre,cuenta_eliminada) values($1,'dummy@ofl.cl','Dummy',true)",[dummy]);assert.equal((await db.query("select public.primer_acceso_emitir('dummy@ofl.cl','12345678') as r")).rows[0].r,false);assert.equal((await db.query("select public.primer_acceso_verificar('dummy@ofl.cl','12345678') as r")).rows[0].r,null);
+ for(const role of ['anon','authenticated'])for(const fn of ['superadmin_perfil_codigo(uuid,text,jsonb)','doctrina_texto_superadmin(uuid,text,jsonb)','calendario_recordatorios_servicio(text,jsonb)','primer_acceso_emitir(text,text)'])assert.equal((await db.query('select has_function_privilege($1,$2,$3) as r',[role,'public.'+fn,'EXECUTE'])).rows[0].r,false);
+ console.log('PASS PostgreSQL aislado: migraciones, OTP previo/código erróneo/repetición/identidad estable, revisión obligatoria por página, búsqueda citada, retiro, reserva durable sin repetición, bloqueo Dummy y ACL.');
+}catch(e){console.error('FAIL PostgreSQL:',e.message,e.detail||'');process.exitCode=1;}finally{await db.close();}

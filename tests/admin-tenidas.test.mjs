@@ -53,3 +53,8 @@ test('listado incluye autores y falla explícitamente ante error de base',async(
  assert.equal((await call(setup({error:true}),{action:'listar',mes:'2026-11'})).code,503);
  assert.equal((await call(setup(),{action:'listar',mes:'2026-13'})).code,422);
 });
+test('horario predeterminado 20:00, editable y validado',async()=>{
+ const predeterminado=setup();assert.equal((await call(predeterminado,payload)).code,201);assert.equal(predeterminado.rows[0].hora,'20:00');
+ const editable=setup();assert.equal((await call(editable,{...payload,hora:'19:30'})).code,201);assert.equal(editable.rows[0].hora,'19:30');
+ for(const hora of ['24:00','20:60','x',''])assert.equal((await call(setup(),{...payload,hora})).code,422);
+});

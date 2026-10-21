@@ -25,7 +25,7 @@ const server=createServer(async(req,res)=>{try{
  if(file==='/index.html')content=Buffer.from(content.toString().replace(/<body[^>]*>/,m=>m+stub));
  res.setHeader('Content-Type',({'.html':'text/html','.js':'application/javascript','.css':'text/css'})[extname(file)]||'application/octet-stream');res.end(content);
  }catch{res.writeHead(404).end();}});
-await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,...(process.env.QA_CHROMIUM_PATH?{executablePath:process.env.QA_CHROMIUM_PATH,args:['--no-sandbox','--disable-dev-shm-usage']}:{})});
 try{
  const page=await browser.newPage({viewport:{width:1440,height:950}}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());
@@ -36,6 +36,7 @@ try{
  await page.locator('#tenidasTituloMes').filter({hasText:'noviembre'}).waitFor();
  assert.equal(await page.locator('.tenidas-numero').count(),30);
  await page.locator('#tenidasNuevo').click();
+ assert.equal(await page.locator('#tenidasHora').inputValue(),'20:00');await page.locator('#tenidasHora').fill('19:30');
  await page.locator('#tenidasFecha').fill('2026-11-10');await page.locator('#tenidasGrado').selectOption('3');
  await page.locator('#tenidasTema').fill('La Acacia');await page.locator('#tenidasAutor').fill('Sergio Vera Norambuena');
  incierto=true;await page.locator('#tenidasGuardar').click();
@@ -49,7 +50,7 @@ try{
  await page.locator('#tenidasFormularioEstado').filter({hasText:'otra ventana'}).waitFor();assert.equal(await page.locator('#tenidasTema').inputValue(),'Simbolismo del Compañero');
  conflicto=false;await page.locator('#tenidasGuardar').click();await page.locator('#tenidasDialogo').waitFor({state:'hidden'});
  await page.locator('#tenidasLista').getByText('Simbolismo del Compañero',{exact:true}).waitFor();
- assert.equal(rows[0].grado,2);
+ assert.equal(rows[0].grado,2);assert.equal(rows[0].hora,'19:30');
  await page.locator('#tenidasGradoFiltro').selectOption('1');await page.locator('#tenidasLista').getByText('No hay trabajos registrados para esta selección.').waitFor();
  await page.locator('[data-dia="2026-11-10"]').click();
  assert.equal(await page.locator('#tenidasDialogo').isVisible(),true,'Día sin trabajos del grado filtrado permite agregar');

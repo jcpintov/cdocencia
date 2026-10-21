@@ -365,6 +365,7 @@ function cerrarSesion() {
   if (botonIngreso) botonIngreso.disabled = false;
   window.limpiarAsignacionesAdmin?.();
   limpiarBibliotecaDoctrina();
+  window.cerrarPerfilSuperadmin?.();
   window.limpiarCalendarioTenidas?.();
   window.cerrarBitacoraSesion?.();
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
@@ -496,7 +497,7 @@ function renderizarPadronAdmin() {
       return td;
     };
     const nombre=celda('');
-    if (!u.es_admin && String(u.email||'').trim().toLowerCase()!=='dummy@ofl.cl') {
+    if (!u.es_admin) {
       const boton=document.createElement('button');
       boton.type='button';
       boton.className='admin-usuario-nombre-btn';
@@ -514,7 +515,10 @@ function renderizarPadronAdmin() {
     celda(u.es_admin ? 'Superadmin' : 'Hermano');
     celda(u.debe_cambiar_clave ? 'Requiere cambio' : 'Al día');
     celda(u.auth_user_id ? 'Vinculado' : 'Pendiente de activación');
-    celda('Administración protegida', 'admin-accion-pendiente');
+    const acciones=celda(u.es_admin?'Administración protegida':'', 'admin-accion-pendiente');
+    if(!u.es_admin&&String(u.email||'').toLowerCase()==='dummy@ofl.cl'){
+      const eliminar=document.createElement('button');eliminar.type='button';eliminar.className='admin-link-btn';eliminar.textContent='Eliminar Dummy';eliminar.onclick=()=>eliminarCuentaDummy(u.id,eliminar);acciones.appendChild(eliminar);
+    }
     tbody.appendChild(tr);
   });
 }
@@ -531,7 +535,7 @@ async function cargarListadoUsuariosAdmin() {
   if (botonAgregar) botonAgregar.disabled = true;
   try {
     const {data: usuarios, error} = await sbApp.from('usuarios')
-      .select('id, nombre, email, es_admin, debe_cambiar_clave, auth_user_id').order('nombre', {ascending:true});
+      .select('id, nombre, email, es_admin, debe_cambiar_clave, auth_user_id').eq('cuenta_eliminada',false).order('nombre', {ascending:true});
     if (consulta !== consultaPadronAdmin) return;
     if (error || !Array.isArray(usuarios)) throw new Error('consulta_padron');
     padronUsuariosAdmin = usuarios;
@@ -570,18 +574,20 @@ function abrirModalCrearUsuario() {
   document.getElementById('errorAdminUsuario').textContent = '';
   document.getElementById('modalAdminUsuario').classList.remove('hidden');
   document.getElementById('adminUsuarioNombre').focus();
+  requestAnimationFrame(()=>{if(!document.getElementById('adminUsuarioTargetId').value)document.getElementById('adminUsuarioEmail').value='';});
 }
 
 function abrirModalEditarUsuario(id) {
   if (!usuarioActual?.es_admin) return;
   const u=padronUsuariosAdmin.find(item=>item.id===id);
-  if(!u||u.es_admin||String(u.email||'').trim().toLowerCase()==='dummy@ofl.cl') return;
+  if(!u||u.es_admin) return;
   document.getElementById('modalAdminUsuarioTitulo').textContent = 'Modificar datos del Hermano';
   document.getElementById('adminUsuarioModalAyuda').textContent = 'Modifique los datos del padrón. Este formulario no cambia permisos, contraseñas ni historial docente.';
   document.getElementById('adminUsuarioTargetId').value = u.id;
   document.getElementById('adminUsuarioNombre').value = u.nombre||'';
   document.getElementById('adminUsuarioEmail').value = u.email||'';
   document.getElementById('adminUsuarioEmail').readOnly = !!u.auth_user_id;
+  if(String(u.email||'').toLowerCase()==='dummy@ofl.cl')document.getElementById('adminUsuarioEmail').readOnly=true;
   document.getElementById('adminUsuarioEmailInfo').hidden = !u.auth_user_id;
   document.getElementById('adminUsuarioNotaAcceso').textContent = 'Los cambios se guardan en el padrón y no generan correos automáticos.';
   document.getElementById('btnGuardarUsuarioAdmin').textContent='Guardar cambios';
@@ -3679,3 +3685,10 @@ async function cargarResumenAdmin() {
 }
 
 
+
+async function eliminarCuentaDummy(id,boton){
+ if(!usuarioActual?.es_admin||!confirm('¿Eliminar la cuenta Dummy y revocar su acceso? Se conservará su historial docente.'))return;
+ boton.disabled=true;
+ try{const {data:{session}}=await sbApp.auth.getSession();if(!session?.access_token)throw Error('Sesión vencida');const r=await fetch('/api/admin-usuarios',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},body:JSON.stringify({action:'eliminar_dummy',id})});const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||'No se pudo completar la eliminación');await cargarListadoUsuariosAdmin();}
+ catch(e){document.getElementById('padronUsuariosEstado').textContent=e.message;}finally{boton.disabled=false;}
+}

@@ -1,4 +1,4 @@
-/* Agenda exclusiva de Superadmin, sin publicaciones ni correos automáticos. */
+/* Agenda exclusiva de Superadmin, con recordatorios privados de calendario. */
 (function(){
  'use strict';
  const $=id=>document.getElementById(id),e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -24,7 +24,7 @@
   try{
    const data=await solicitar({action:'listar',mes:consulta});
    if(version!==generacion||actor!==usuarioActual)return;
-   trabajos=data.trabajos;autores=data.autores;cargado=consulta;
+   trabajos=data.trabajos.sort((a,b)=>a.fecha.localeCompare(b.fecha)||String(a.hora||'20:00').localeCompare(String(b.hora||'20:00')));autores=data.autores;cargado=consulta;
    $('tenidasAutores').innerHTML=autores.map(a=>`<option value="${e(a)}"></option>`).join('');
    renderizar();$('tenidasEstado').textContent='Calendario actualizado.';return true;
   }catch(error){if(version===generacion&&actor===usuarioActual){if(cargado!==mes){trabajos=[];renderizar();}$('tenidasEstado').textContent=error.message;}return false;}
@@ -36,20 +36,21 @@
   let html=Array.from({length:inicio},()=>'<div class="tenidas-dia-vacio" aria-hidden="true"></div>').join('');
   for(let n=1;n<=total;n++){
    const fecha=mes+'-'+String(n).padStart(2,'0'),items=visibles.filter(t=>t.fecha===fecha);
-   html+=`<div class="tenidas-dia${fecha===hoy()?' tenidas-hoy':''}${fecha===dia?' tenidas-seleccionado':''}"><button type="button" class="tenidas-numero" data-dia="${fecha}" aria-label="${e(fecha)}: ${items.length} trabajos${items.length?'':'. Agregar trabajo'}">${n}<span class="tenidas-cantidad">${items.length||''}</span></button>${items.map(t=>`<button type="button" class="tenida-mini" data-trabajo="${e(t.id)}" title="${e(grados[t.grado]+': '+t.tema+' — '+t.autor)}"><span>${t.grado}°</span> ${e(t.tema)}</button>`).join('')}</div>`;
+   html+=`<div class="tenidas-dia${fecha===hoy()?' tenidas-hoy':''}${fecha===dia?' tenidas-seleccionado':''}"><button type="button" class="tenidas-numero" data-dia="${fecha}" aria-label="${e(fecha)}: ${items.length} trabajos${items.length?'':'. Agregar trabajo'}">${n}<span class="tenidas-cantidad">${items.length||''}</span></button>${items.map(t=>`<button type="button" class="tenida-mini" data-trabajo="${e(t.id)}" title="${e(grados[t.grado]+': '+t.tema+' — '+t.autor)}"><span>${e((t.hora||'20:00').slice(0,5))} · ${t.grado}°</span> ${e(t.tema)}</button>`).join('')}</div>`;
   }
   $('tenidasCuadricula').innerHTML=html;
   const agenda=visibles.filter(t=>!dia||t.fecha===dia);
   $('tenidasAgendaTitulo').textContent=dia?'Trabajos del '+dia.split('-').reverse().join('-'):'Trabajos del mes';
   $('tenidasVerMes').hidden=!dia;
   $('tenidasConteo').textContent=visibles.length+' trabajo'+(visibles.length===1?'':'s')+' programado'+(visibles.length===1?'':'s');
-  $('tenidasLista').innerHTML=agenda.length?agenda.map(t=>`<li><div><time datetime="${t.fecha}">${t.fecha.split('-').reverse().join('-')}</time><span class="tenidas-grado">${t.grado}° · ${grados[t.grado]}</span><h3>${e(t.tema)}</h3><p>Autor: ${e(t.autor)}</p></div><button type="button" class="btn-secondary" data-trabajo="${e(t.id)}" aria-label="Modificar ${e(t.tema)}">Modificar</button></li>`).join(''):'<li class="tenidas-sin-registros">No hay trabajos registrados para esta selección.</li>';
+  $('tenidasLista').innerHTML=agenda.length?agenda.map(t=>`<li><div><time datetime="${t.fecha}">${t.fecha.split('-').reverse().join('-')} · ${e((t.hora||'20:00').slice(0,5))} h</time><span class="tenidas-grado">${t.grado}° · ${grados[t.grado]}</span><h3>${e(t.tema)}</h3><p>Autor: ${e(t.autor)}</p></div><button type="button" class="btn-secondary" data-trabajo="${e(t.id)}" aria-label="Modificar ${e(t.tema)}">Modificar</button></li>`).join(''):'<li class="tenidas-sin-registros">No hay trabajos registrados para esta selección.</li>';
  }
  function abrir(trabajo=null,fecha=null){
   if(!activo()||ocupado)return;
   const f=$('tenidasFormulario');f.reset();
   f.dataset.id=trabajo?.id||crypto.randomUUID();f.dataset.version=String(trabajo?.version||0);
   $('tenidasFecha').value=trabajo?.fecha||fecha||(mes===hoy().slice(0,7)?hoy():mes+'-01');
+  $('tenidasHora').value=(trabajo?.hora||'20:00').slice(0,5);
   $('tenidasGrado').value=trabajo?String(trabajo.grado):($('tenidasGradoFiltro').value==='todos'?'':$('tenidasGradoFiltro').value);$('tenidasTema').value=trabajo?.tema||'';$('tenidasAutor').value=trabajo?.autor||'';
   $('tenidasDialogoTitulo').textContent=trabajo?'Modificar trabajo de tenida':'Agregar trabajo de tenida';
   $('tenidasEliminar').hidden=!trabajo;$('tenidasFormularioEstado').textContent='';
@@ -61,7 +62,7 @@
   const f=$('tenidasFormulario');if(!eliminar&&!f.reportValidity())return;
   if(eliminar&&!confirm('¿Eliminar este trabajo del calendario de tenidas?'))return;
   const actor=usuarioActual,body={action:eliminar?'eliminar':'guardar',id:f.dataset.id,version:Number(f.dataset.version)};
-  if(!eliminar)Object.assign(body,{fecha:$('tenidasFecha').value,grado:Number($('tenidasGrado').value),tema:$('tenidasTema').value.trim(),autor:$('tenidasAutor').value.trim()});
+  if(!eliminar)Object.assign(body,{fecha:$('tenidasFecha').value,hora:$('tenidasHora').value,grado:Number($('tenidasGrado').value),tema:$('tenidasTema').value.trim(),autor:$('tenidasAutor').value.trim()});
   ocupado=true;f.querySelectorAll('button,input,select').forEach(c=>c.disabled=true);$('tenidasFormularioEstado').textContent=eliminar?'Eliminando registro…':'Guardando trabajo…';
   try{
    const data=await solicitar(body);if(usuarioActual!==actor)return;
