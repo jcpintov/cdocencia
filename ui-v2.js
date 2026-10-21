@@ -82,7 +82,8 @@
     btn.append(img,titulo,flecha);
     btn.addEventListener('click',async function(){
       if(typeof window.irACatalogoDocencia!=='function')return;
-      await window.irACatalogoDocencia();
+      const cargado = await window.irACatalogoDocencia();
+      if(!cargado)return;
       if(typeof window.entrarADocenciaConModulo==='function')window.entrarADocenciaConModulo(modulo.id);
     });
     return btn;
@@ -198,3 +199,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', prepararMenuAdmin, { once: true });
   else prepararMenuAdmin();
 })();
+

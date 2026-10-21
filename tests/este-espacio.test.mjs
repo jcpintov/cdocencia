@@ -50,6 +50,7 @@ function buildScreen(response) {
   assert.ok(start > 0 && end > start, 'la función sigue existiendo');
   const source = app.slice(start, end);
   const ctx = {
+    versionNavegacion: 0,
     document,
     window: {matchMedia:()=>({matches:false})},
     obtenerDoctrinaBD: async () => response,
@@ -111,3 +112,4 @@ test('el texto institucional se trata como texto, no como HTML ejecutable', asyn
   assert.equal(section.children[2].children[0].textContent, '<script>alert(1)</script>');
   assert.equal(nodes.espacioIndice.children[0].textContent, '1. <img src=x onerror=alert(1)>');
 });
+

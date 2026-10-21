@@ -8,6 +8,9 @@ const SUPABASE_KEY = "sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF";
 const sbApp = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let usuarioActual = null;
+let versionSesion = 0;
+let ingresoPendiente = false;
+let versionNavegacion = 0;
 let listaModulos = [];
 let moduloActual = null;
 let misProgresos = {};
@@ -148,6 +151,7 @@ function mensajeErrorServicio(error, contexto = 'operación') {
 }
 
 async function iniciarSesion() {
+  if (ingresoPendiente) return;
   const email = document.getElementById('inputEmail').value.trim().toLowerCase();
   const clave = document.getElementById('inputClave').value;
   const err = document.getElementById('errorLogin');
@@ -157,11 +161,16 @@ async function iniciarSesion() {
     return;
   }
 
+  const solicitud = ++versionSesion;
+  ingresoPendiente = true;
+  const boton = document.querySelector('#formAccesoCamara button[type="submit"]');
+  if (boton) boton.disabled = true;
   err.innerText = "Verificando credenciales...";
 
   try {
     const { data, error } = await sbApp.auth.signInWithPassword({ email, password: clave });
 
+    if (solicitud !== versionSesion) return;
     if (error) {
       err.innerText = mensajeErrorServicio(error, 'autenticación');
       console.error('Error de autenticación:', error.code || 'sin código');
@@ -175,6 +184,7 @@ async function iniciarSesion() {
     const { data: perfil, error: errorPerfil } = await sbApp.from('usuarios')
       .select('id,nombre,email,es_admin,debe_cambiar_clave')
       .eq('auth_user_id', data.user.id).maybeSingle();
+    if (solicitud !== versionSesion) return;
     if (errorPerfil || !perfil) {
       await sbApp.auth.signOut();
       err.innerText = 'Perfil no disponible. Contacte al administrador.';
@@ -184,9 +194,15 @@ async function iniciarSesion() {
     sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(usuarioActual));
 
     err.innerText = "";
+    document.getElementById("inputClave").value = "";
     configurarEntornoUsuario();
   } catch (ex) {
-    err.innerText = mensajeErrorServicio(ex, 'autenticación');
+    if (solicitud === versionSesion) err.innerText = mensajeErrorServicio(ex, 'autenticación');
+  } finally {
+    if (solicitud === versionSesion) {
+      ingresoPendiente = false;
+      if (boton) boton.disabled = false;
+    }
   }
 }
 
@@ -195,21 +211,30 @@ async function registrarIngresoAuditoria() {
 }
 
 async function recuperarSesionGuardada() {
-  const { data, error } = await sbApp.auth.getUser();
-  if (error || !data?.user) {
+  const solicitud = versionSesion;
+  try {
+    const { data, error } = await sbApp.auth.getUser();
+    if (solicitud !== versionSesion) return;
+    if (error || !data?.user) {
+      sessionStorage.removeItem('camara_usuario_sesion');
+      return;
+    }
+    const { data: perfil, error: perfilError } = await sbApp.from('usuarios')
+      .select('id,nombre,email,es_admin,debe_cambiar_clave')
+      .eq('auth_user_id', data.user.id).maybeSingle();
+    if (solicitud !== versionSesion) return;
+    if (perfilError || !perfil) {
+      sessionStorage.removeItem('camara_usuario_sesion');
+      return;
+    }
+    usuarioActual = perfil;
+    sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(perfil));
+    configurarEntornoUsuario();
+  } catch (error) {
+    if (solicitud !== versionSesion) return;
     sessionStorage.removeItem('camara_usuario_sesion');
-    return;
+    document.getElementById('errorLogin').innerText = mensajeErrorServicio(error, 'recuperación de sesión');
   }
-  const { data: perfil, error: perfilError } = await sbApp.from('usuarios')
-    .select('id,nombre,email,es_admin,debe_cambiar_clave')
-    .eq('auth_user_id', data.user.id).maybeSingle();
-  if (perfilError || !perfil) {
-    sessionStorage.removeItem('camara_usuario_sesion');
-    return;
-  }
-  usuarioActual = perfil;
-  sessionStorage.setItem('camara_usuario_sesion', JSON.stringify(perfil));
-  configurarEntornoUsuario();
 }
 
 // Encabezado compartido por todas las pantallas: se identifica al Maestro,
@@ -333,6 +358,11 @@ async function guardarNuevaClaveObligatoria() {
 }
 
 function cerrarSesion() {
+  versionSesion++;
+  versionNavegacion++;
+  ingresoPendiente = false;
+  const botonIngreso = document.querySelector('#formAccesoCamara button[type="submit"]');
+  if (botonIngreso) botonIngreso.disabled = false;
   window.limpiarAsignacionesAdmin?.();
   window.cerrarBitacoraSesion?.();
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
@@ -344,14 +374,18 @@ function cerrarSesion() {
   respuestasMarcadas = {};
   archivoBase64Pendiente = null;
   sessionStorage.removeItem('camara_usuario_sesion');
-  void sbApp.auth.signOut();
+  void sbApp.auth.signOut().catch(() => {});
 
   document.getElementById('errorLogin').innerText = '';
   document.getElementById('inputEmail').value = '';
   document.getElementById('inputClave').value = '';
   document.getElementById('inputClave').type = 'password';
   const btnEye = document.getElementById('btnToggleVerClave');
-  if (btnEye) btnEye.innerText = '👁️';
+  if (btnEye) {
+    btnEye.innerText = '👁️';
+    btnEye.setAttribute('aria-pressed', 'false');
+    btnEye.setAttribute('aria-label', 'Mostrar contraseña');
+  }
 
   document.getElementById('seccionDocencia').classList.add('hidden');
   document.getElementById('seccionBienvenida').classList.add('hidden');
@@ -701,6 +735,7 @@ async function guardarResetConToken() {
    CATÁLOGO DE TRABAJOS Y ENTORNO
    ========================================================================== */
 function ocultarPantallasUsuario() {
+  versionNavegacion++;
   ['seccionBienvenida','seccionCatalogoTrabajos','seccionContenidoDocente',
    'seccionDocencia','seccionDocenciaInstitucional','seccionMuroUsuarios']
     .forEach(id => document.getElementById(id)?.classList.add('hidden'));
@@ -713,13 +748,13 @@ function volverAInicioPortal() {
 
 async function irACatalogoDocencia() {
   ocultarPantallasUsuario();
-  await renderizarCatalogoTrabajos('trabajos');
+  return await renderizarCatalogoTrabajos('trabajos');
 }
 
 async function irAContenidoDocente(codigo = null) {
   ocultarPantallasUsuario();
-  await renderizarCatalogoTrabajos('contenido');
-  if (codigo) abrirProgramaDocencia(codigo);
+  const cargado = await renderizarCatalogoTrabajos('contenido');
+  if (cargado && codigo) abrirProgramaDocencia(codigo);
 }
 
 function obtenerIconoTrabajo(titulo) {
@@ -984,20 +1019,43 @@ function abrirProgramaDocencia(codigoSolicitado) {
 }
 
 async function renderizarCatalogoTrabajos(vista = 'trabajos') {
+  const solicitud = ++versionNavegacion;
+  const usuarioId = usuarioActual?.id;
+  const vigente = () => solicitud === versionNavegacion && usuarioActual?.id === usuarioId;
+  const destino = vista === 'contenido' ? 'seccionContenidoDocente' : 'seccionCatalogoTrabajos';
+  const seccion = document.getElementById(destino);
+  let estado = seccion.querySelector('[data-estado-catalogo]');
+  if (!estado) {
+    estado = document.createElement('div');
+    estado.dataset.estadoCatalogo = '';
+    estado.className = 'estado-carga-catalogo';
+    estado.setAttribute('role', 'status');
+    estado.setAttribute('aria-live', 'polite');
+    (seccion.querySelector('main') || seccion).prepend(estado);
+  }
+  estado.replaceChildren();
+  estado.textContent = 'Cargando contenidos…';
+  estado.hidden = false;
+  seccion.classList.remove('hidden');
+  seccion.setAttribute('aria-busy', 'true');
+  try {
   const { data: dataModulos, error } = await sbApp
     .from('modulos')
     .select('*')
     .eq('activo', true)
     .order('numero_orden', { ascending: false });
 
-  if (error || !dataModulos) return;
+  if (!vigente()) return false;
+  if (error || !dataModulos) throw error || new Error('Catálogo no disponible');
 
   await refrescarProgresosUsuario();
   const unidades = await consultarUnidadesDocencia();
+  if (!unidades) throw new Error('No se pudo cargar el programa docente.');
   const unidadesPorCodigo = new Map((unidades || []).map(u => [u.codigo, u]));
   const [objetivos,relaciones]=await Promise.all([
     consultarObjetivosDocencia(),consultarVinculosDocencia()
   ]);
+  if (!vigente()) return false;
   const codigosPorModulo=new Map();
   for(const r of relaciones){
     if(!codigosPorModulo.has(r.modulo_id))codigosPorModulo.set(r.modulo_id,[]);
@@ -1083,11 +1141,24 @@ async function renderizarCatalogoTrabajos(vista = 'trabajos') {
   });
 
   renderizarDirectorioUnidadesDocencia(unidades, listaModulos, objetivos);
-  const destino = vista === 'contenido' ? 'seccionContenidoDocente' : 'seccionCatalogoTrabajos';
-  document.getElementById(destino)?.classList.remove('hidden');
+  estado.hidden = true;
+  return true;
+  } catch (error) {
+    if (!vigente()) return false;
+    estado.textContent = mensajeErrorServicio(error, 'carga del catálogo') + ' ';
+    const reintentar = document.createElement('button');
+    reintentar.type = 'button';
+    reintentar.textContent = 'Reintentar';
+    reintentar.addEventListener('click', () => { void renderizarCatalogoTrabajos(vista); });
+    estado.append(reintentar);
+    return false;
+  } finally {
+    if (vigente()) seccion.setAttribute('aria-busy', 'false');
+  }
 }
 
 function entrarADocenciaConModulo(idModulo) {
+  versionNavegacion++;
   document.getElementById('seccionContenidoDocente')?.classList.add('hidden');
   document.getElementById('seccionCatalogoTrabajos').classList.add('hidden');
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
@@ -1167,6 +1238,7 @@ async function obtenerDoctrinaBD() {
 }
 
 async function mostrarDocenciaParaMaestros() {
+  versionNavegacion++;
   ['seccionBienvenida', 'seccionCatalogoTrabajos', 'seccionContenidoDocente', 'seccionDocencia', 'seccionMuroUsuarios']
     .forEach(id => document.getElementById(id)?.classList.add('hidden'));
 
@@ -1253,7 +1325,9 @@ async function mostrarDocenciaParaMaestros() {
    MURO Y FORO DE REFLEXIONES
    ========================================================================== */
 async function mostrarMuroReflexionesUsuarios() {
+  const solicitud = ++versionNavegacion;
   await refrescarProgresosUsuario();
+  if (solicitud !== versionNavegacion) return;
   const accesoMuro = Object.values(misProgresos).some(p => p?.completado === true);
   if (!usuarioActual || usuarioActual.es_admin || !accesoMuro) {
     alert('El Muro y Foro se habilita al completar al menos un trabajo de la Cámara.');
@@ -1798,6 +1872,7 @@ function cambiarVistaDocencia(tipo) {
 
 async function evaluarEstadoFasesModulo() {
   const prog = misProgresos[moduloActual.id];
+  document.getElementById('bloqueMuro').classList.add('hidden');
   const contConfLectura = document.getElementById('contenedorConfirmarLectura');
   const btnConfLectura = document.getElementById('btnConfirmarLectura');
   const bloqueFaseDos = document.getElementById('bloqueFaseDos');
@@ -1819,6 +1894,7 @@ async function evaluarEstadoFasesModulo() {
     btnEditar.classList.remove('hidden');
     document.getElementById('tituloFaseTres').innerText = "Mi Reflexión Consagrada";
 
+    document.getElementById('bloqueMuro').classList.remove('hidden');
     await cargarMuroReflexiones();
     return;
   }
@@ -1874,9 +1950,9 @@ async function guardarProgresoDocente(cambios) {
     : sbApp.from('progreso_maestro').insert({usuario_id:usuarioId,modulo_id:moduloId,reflexion:'',completado:false,...cambios});
   const {data:guardado,error}=await consulta.select('*').single();
   if(error||!guardado)throw new Error('No se pudo guardar el avance. Revise la conexión y vuelva a intentar.');
-  misProgresos[moduloId]=guardado;
   if(usuarioActual?.id!==usuarioId||moduloActual?.id!==moduloId)
     throw new Error('El avance se guardó en el trabajo anterior. Vuelva a abrirlo para continuar.');
+  misProgresos[moduloId]=guardado;
   return guardado;
 }
 function cuestionarioRespondido(respuestas,preguntas) {
@@ -3626,4 +3702,5 @@ async function cargarResumenAdmin() {
     status.textContent = 'No fue posible consultar los indicadores con los permisos actuales.';
   }
 }
+
 
