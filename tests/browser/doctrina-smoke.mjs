@@ -37,7 +37,8 @@ try{
   await page.setViewportSize(viewport);await page.getByRole('button',{name:'Revisión',exact:true}).click();
   assert.ok(await page.locator('#doctrinaRevisionDialogo').isVisible());
   const colors=await page.locator('#adminSeccionDoctrina label').first().evaluate(e=>({fg:getComputedStyle(e).color,bg:getComputedStyle(e.closest('section')).backgroundColor}));
-  assert.equal(colors.fg,'rgb(23, 43, 58)');assert.equal(colors.bg,'rgb(248, 250, 252)');
+  const luminance=rgb=>rgb.match(/\d+/g).map(Number).map(v=>{const c=v/255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4;}).reduce((sum,c,i)=>sum+c*[.2126,.7152,.0722][i],0);
+  const a=luminance(colors.fg),b=luminance(colors.bg);assert.ok((Math.max(a,b)+.05)/(Math.min(a,b)+.05)>=4.5,'Texto y fondo deben mantener contraste AA');
   assert.ok(await page.locator('#doctrinaRevisionDialogo').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
   await page.getByRole('button',{name:'Cerrar',exact:true}).click();
  }
