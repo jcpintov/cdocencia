@@ -51,6 +51,10 @@ try{
  await page.locator('#tenidasLista').getByText('Simbolismo del Compañero',{exact:true}).waitFor();
  assert.equal(rows[0].grado,2);
  await page.locator('#tenidasGradoFiltro').selectOption('1');await page.locator('#tenidasLista').getByText('No hay trabajos registrados para esta selección.').waitFor();
+ await page.locator('[data-dia="2026-11-10"]').click();
+ assert.equal(await page.locator('#tenidasDialogo').isVisible(),true,'Día sin trabajos del grado filtrado permite agregar');
+ assert.equal(await page.locator('#tenidasGrado').inputValue(),'1');
+ await page.locator('#tenidasCancelar').click();
  await page.locator('#tenidasGradoFiltro').selectOption('todos');
  await page.locator('#tenidasAnterior').click();await page.locator('#tenidasTituloMes').filter({hasText:'octubre'}).waitFor();
  await page.locator('#tenidasSiguiente').click();await page.locator('#tenidasLista').getByText('Simbolismo del Compañero',{exact:true}).waitFor();
