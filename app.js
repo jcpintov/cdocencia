@@ -3595,6 +3595,45 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 
+// URL privada de esta conversación: solo el Superadmin puede configurarla.
+// Nunca suponer el identificador del chat ni publicar enlaces compartidos.
+const CONVERSACION_ADMIN_STORAGE='cdocencia_superadmin_conversacion_url_v1';
+function validarUrlConversacionDesarrollo(valor) {
+  try {
+    const url=new URL(String(valor||'').trim());
+    if(url.protocol!=='https:' || url.hostname!=='chatgpt.com')return null;
+    // Abrir la conversación activa (/c/ID), incluso desde rutas con prefijos de proyecto.
+    if(!/(?:^|\\/)c\\/[a-z0-9-]{12,}(?:\\/|$)/i.test(url.pathname))return null;
+    url.hash='';
+    return url.href;
+  } catch { return null; }
+}
+function leerUrlConversacionDesarrollo() {
+  try{return validarUrlConversacionDesarrollo(localStorage.getItem(CONVERSACION_ADMIN_STORAGE));}
+  catch{return null;}
+}
+function configurarConversacionDesarrollo() {
+  if(!usuarioActual?.es_admin)return null;
+  const anterior=leerUrlConversacionDesarrollo()||'';
+  const entrada=window.prompt('Pegue aquí la URL de esta conversación, copiada de la barra del navegador de ChatGPT (https://chatgpt.com/c/...). El enlace quedará guardado únicamente en este navegador.',anterior);
+  if(entrada===null)return null;
+  const url=validarUrlConversacionDesarrollo(entrada);
+  if(!url){window.alert('URL no válida. Copie el enlace privado de la conversación desde la barra de direcciones de ChatGPT.');return null;}
+  try{localStorage.setItem(CONVERSACION_ADMIN_STORAGE,url);}
+  catch{window.alert('No se pudo conservar el enlace en este navegador.');return null;}
+  const boton=document.getElementById('adminConfigurarConversacion');
+  if(boton)boton.textContent='Cambiar enlace de conversación';
+  const enlace=document.getElementById('adminEnlaceConversacion');
+  if(enlace)enlace.href=url;
+  return url;
+}
+function abrirConversacionDesarrollo(event) {
+  event?.preventDefault();
+  if(!usuarioActual?.es_admin)return;
+  const url=leerUrlConversacionDesarrollo()||configurarConversacionDesarrollo();
+  if(url)window.open(url,'_blank','noopener,noreferrer');
+}
+
 async function cargarResumenAdmin() {
   const status = document.getElementById('resumenAdminEstado');
   if (!status) return;
@@ -3604,17 +3643,24 @@ async function cargarResumenAdmin() {
   // La misma consulta autenticada del cronograma alimenta los tres KPI de trabajos.
   void window.cargarCronogramaAdmin?.();
   try {
-    const [users, progress, comments] = await Promise.all([
+    const [users, progress, muro] = await Promise.all([
       sbApp.from('usuarios').select('id,email,es_admin'),
       sbApp.from('progreso_maestro').select('usuario_id,completado').eq('completado',true),
-      sbApp.from('comentarios_muro').select('id', { count: 'exact', head: true }).eq('activo',true)
+      sbApp.rpc('muro_docente_autorizado', { p_modulo: null })
     ]);
-    if ([users,progress,comments].some(result => result.error)) throw new Error('Sin permisos de lectura para indicadores');
+    if ([users,progress,muro].some(result => result.error)) throw new Error('Sin permisos de lectura para indicadores');
+    if (!Array.isArray(muro.data?.aportes) || !Array.isArray(muro.data?.comentarios))
+      throw new Error('El Muro no entregó una respuesta verificable');
     const estudiantes = new Set(users.data.filter(u => !u.es_admin && String(u.email||'').trim().toLowerCase()!=='dummy@ofl.cl').map(u => u.id));
+    const aportesUnicos = new Set([
+      ...muro.data.aportes.filter(a=>a?.id).map(a=>'reflexion:'+a.id),
+      ...muro.data.comentarios.filter(c=>c?.id).map(c=>'comentario:'+c.id)
+    ]);
     document.getElementById('kpiUsuarios').textContent = estudiantes.size.toLocaleString('es-CL');
     document.getElementById('kpiCompletados').textContent = progress.data.filter(p => estudiantes.has(p.usuario_id)).length.toLocaleString('es-CL');
-    document.getElementById('kpiComentarios').textContent = (comments.count ?? 0).toLocaleString('es-CL');
-    status.textContent = 'Indicadores actualizados. Las cifras de trabajos se obtienen del cronograma.';
+    // Una reflexión y cada comentario/respuesta visible aportan una unidad.
+    document.getElementById('kpiComentarios').textContent = aportesUnicos.size.toLocaleString('es-CL');
+    status.textContent = 'Indicadores actualizados. Comentarios incluye reflexiones y respuestas publicadas; los trabajos provienen del cronograma.';
   } catch {
     status.textContent = 'No fue posible consultar los indicadores con los permisos actuales.';
   }
