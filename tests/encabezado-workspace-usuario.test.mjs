@@ -23,7 +23,8 @@ function entorno() {
   const start=app.indexOf('function limpiarNombreWorkspaceUsuario(nombre)');
   const end=app.indexOf('function configurarEntornoUsuario()',start);
   assert.ok(start>0&&end>start);
-  const methods=runInNewContext('let usuarioActual=null;\n'+app.slice(start,end)+
+  const prefijos=app.slice(app.indexOf('function limpiarTratamientoHermano(nombre)'),app.indexOf('function validarSeguridadClave('));
+  const methods=runInNewContext('let usuarioActual=null;\n'+prefijos+'\n'+app.slice(start,end)+
     '\n({normalizar:limpiarNombreWorkspaceUsuario, actualizar:sincronizarEncabezadoWorkspaceUsuario,setUsuario:p=>{usuarioActual=p}})',
     {document:{getElementById:id=>nodes.get(id)}});
   return {methods,nodes};
