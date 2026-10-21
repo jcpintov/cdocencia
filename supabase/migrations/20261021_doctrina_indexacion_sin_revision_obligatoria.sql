@@ -73,6 +73,8 @@ if p_accion='texto_llm_autorizar_biblioteca' then
    where d.estado='vigente' and a.autorizado and a.sha256=v2.sha256));
 elsif p_accion='texto_llm_listar' then
 $body$);
+ f:=replace(f,'select d.titulo,d.clase,fuente.id as version_id',
+   'select d.titulo,d.clase,t.estado as estado_texto,fuente.id as version_id');
  EXECUTE f;
 END $mig$;
 COMMIT;
