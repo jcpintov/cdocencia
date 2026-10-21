@@ -22,46 +22,14 @@ test('Usuarios y padrón encabeza Gestión docente, después de Vista general',(
  assert.ok(!sidebar.slice(vista,docente).includes('id="tabNavUsuarios"'));
 });
 
-test('Herramientas externas comienza con vínculo configurable a esta conversación',()=>{
+test('Herramientas externas comienza con acceso directo a ChatGPT',()=>{
  const footer=html.slice(html.indexOf('<div class="admin-links-bottom"'),html.indexOf('</details>',html.indexOf('<div class="admin-links-bottom"')));
- assert.ok(footer.indexOf('id="adminEnlaceConversacion"')>0);
- assert.ok(footer.indexOf('id="adminEnlaceConversacion"')<footer.indexOf('https://github.com/jcpintov/cdocencia'));
- assert.match(footer,/onclick="abrirConversacionDesarrollo\(event\)"/);
- assert.match(footer,/id="adminConfigurarConversacion"/);
- assert.match(footer,/rel="noopener noreferrer"/);
-});
-
-test('el enlace acepta solo URL privada real de ChatGPT y nunca fabrica identificadores',()=>{
- const a=app.indexOf('const CONVERSACION_ADMIN_STORAGE=');
- const b=app.indexOf('async function cargarResumenAdmin()',a);
- assert.ok(a>0&&b>a);
- const storage=new Map();
- const calls=[];
- const ctx={
-  URL,localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)},
-  usuarioActual:{es_admin:true},
-  document:{getElementById:id=>({textContent:'',href:''})},
-  window:{
-   prompt:()=> 'https://chatgpt.com/c/12345678-1234-1234-1234-123456789abc',
-   alert:x=>calls.push({alert:x}),open:(...args)=>calls.push({open:args})
-  }
- };
- const x=runInNewContext(app.slice(a,b)+'\n({validarUrlConversacionDesarrollo,configurarConversacionDesarrollo,abrirConversacionDesarrollo})',ctx);
- const valid='https://chatgpt.com/c/12345678-1234-1234-1234-123456789abc';
- assert.equal(x.validarUrlConversacionDesarrollo(valid),valid);
- assert.equal(x.validarUrlConversacionDesarrollo('https://evil.example/c/12345678-1234-1234-1234-123456789abc'),null);
- assert.equal(x.validarUrlConversacionDesarrollo('https://chatgpt.com/'),null);
- assert.equal(x.validarUrlConversacionDesarrollo('javascript:alert(1)'),null);
- let stopped=false;
- x.abrirConversacionDesarrollo({preventDefault(){stopped=true}});
- assert.equal(stopped,true);
- assert.equal(calls.length,1);
- assert.equal(calls[0].open[0],valid);
- assert.equal(calls[0].open[2],'noopener,noreferrer');
- assert.equal([...storage.values()][0],valid);
- ctx.usuarioActual.es_admin=false;
- x.abrirConversacionDesarrollo({preventDefault(){}});
- assert.equal(calls.length,1,'usuarios comunes no abren el enlace administrativo');
+ const enlace='<a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="admin-nav-link-ext">';
+ assert.match(footer,/\bChatGPT<\/span>/);
+ assert.ok(footer.includes(enlace),'enlace directo al portal ChatGPT');
+ assert.ok(footer.indexOf(enlace)<footer.indexOf('https://github.com/jcpintov/cdocencia'));
+ assert.doesNotMatch(footer,/adminEnlaceConversacion|adminConfigurarConversacion|configurarConversacionDesarrollo|abrirConversacionDesarrollo/);
+ assert.doesNotMatch(app,/CONVERSACION_ADMIN_STORAGE|configurarConversacionDesarrollo|abrirConversacionDesarrollo/);
 });
 
 test('KPI Comentarios contabiliza cada reflexión y comentario/respuesta visible una sola vez',async()=>{
