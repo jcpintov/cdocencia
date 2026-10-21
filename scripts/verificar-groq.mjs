@@ -10,7 +10,15 @@ if(process.env.GROQ_PRUEBA_SINTETICA!=='true'){
   return {ok:true,id:'prueba-sintetica-sin-registro'};
  };
  try{
-  const r=await consultarGroqDoctrina({pregunta:'Según el ejercicio ficticio, ¿a qué hora empieza y cuánto dura la actividad?',consulta:'círculo estudio',antecedentes:''},{rpc});
+  const r=await consultarGroqDoctrina({pregunta:'Según el ejercicio ficticio, ¿a qué hora empieza y cuánto dura la actividad?',consulta:'círculo estudio',antecedentes:''},{rpc,fetchImpl:async(url,options)=>{
+   const response=await fetch(url,options),raw=await response.text();
+   let diagnostico={status:response.status};
+   try{const j=JSON.parse(raw),choice=j.choices?.[0];diagnostico.finish=choice?.finish_reason;
+    try{const payload=JSON.parse(choice?.message?.content||'');diagnostico.secciones=payload.secciones?.map(s=>({titulo:s.titulo,caracteres:s.texto?.length,referencias:s.referencias,referencia_en_texto:/\bF\d+\b/.test(s.texto||'')}));}catch{diagnostico.formato='json_invalido';}
+   }catch{diagnostico.formato='respuesta_invalida';}
+   console.log('GROQ_SYNTHETIC_DIAGNOSTIC '+JSON.stringify(diagnostico));
+   return {ok:response.ok,status:response.status,text:async()=>raw};
+  }});
   if(!r.generativo){console.error('GROQ_SYNTHETIC_CHECK_FAIL: '+r.aviso);process.exitCode=1;}
   else if(!r.secciones.some(s=>s.texto.includes('20:00'))||!r.secciones.some(s=>/sesenta|60/.test(s.texto))){console.error('GROQ_SYNTHETIC_CHECK_FAIL: contenido sintético esperado ausente');process.exitCode=1;}
   else console.log('GROQ_SYNTHETIC_CHECK_OK model='+r.modelo+' sections='+r.secciones.length+' references='+r.fuentes.length);
