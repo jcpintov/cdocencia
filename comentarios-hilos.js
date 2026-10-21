@@ -14,7 +14,8 @@
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('es-CL', {dateStyle:'short',timeStyle:'short'});
  };
 
- window.renderizarHilosComentarios = function (comentarios, progresoId, moduloId) {
+ window.renderizarHilosComentarios = function (comentarios, progresoId, moduloId, ambito = 'trabajo') {
+  const prefijo = ambito === 'general' ? 'general_' : '';
   const nodes = new Map();
   for (const c of comentarios || []) {
    if (!c?.id || nodes.has(c.id) || c.activo === false || c.progreso_id !== progresoId) continue;
@@ -46,20 +47,20 @@
      const autor = nombre(c.usuarios?.nombre), propio = c.usuario_id === usuarioActual?.id;
      const puedeResponder = !!usuarioActual && !usuarioActual.es_admin;
      const contexto = padre && !padre.ausente ? 'En respuesta a '+nombre(padre.usuarios?.nombre) : c.comentario_padre_id ? 'Respuesta al comentario anterior' : '';
-     html.push(`<article class="foro-comentario-item hilo-comentario${nivel?' hilo-respuesta':''}" id="comentario_item_${e(c.id)}" data-comentario-id="${e(c.id)}" data-padre-id="${e(c.comentario_padre_id || '')}" style="--hilo-nivel:${Math.min(nivel,3)}" tabindex="-1" aria-label="Comentario de ${e(autor)}">
+     html.push(`<article class="foro-comentario-item hilo-comentario${nivel?' hilo-respuesta':''}" id="${prefijo}comentario_item_${e(c.id)}" data-comentario-id="${e(c.id)}" data-padre-id="${e(c.comentario_padre_id || '')}" style="--hilo-nivel:${Math.min(nivel,3)}" tabindex="-1" aria-label="Comentario de ${e(autor)}">
       <div class="foro-comentario-header"><span class="foro-comentario-autor">${e(autor)}</span><time class="foro-comentario-fecha">${e(fecha(c.creado_en))}${c.editado?' · editado':''}</time></div>
       ${contexto?'<p class="hilo-contexto">'+e(contexto)+'</p>':''}
-      <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${e(c.id)}">${e(c.contenido)}</div>
+      <div class="foro-comentario-cuerpo" id="${prefijo}comentario_cuerpo_${e(c.id)}">${e(c.contenido)}</div>
       <div class="foro-comentario-acciones">
-       ${puedeResponder?`<button type="button" class="foro-comentario-btn" data-hilo-accion="responder" data-hilo-id="${e(c.id)}" aria-expanded="false" aria-controls="hilo_form_${e(c.id)}">Responder</button>`:''}
+       ${puedeResponder?`<button type="button" class="foro-comentario-btn" data-hilo-accion="responder" data-hilo-id="${e(c.id)}" aria-expanded="false" aria-controls="${prefijo}hilo_form_${e(c.id)}" data-hilo-form="${prefijo}hilo_form_${e(c.id)}">Responder</button>`:''}
        ${propio?`<button type="button" class="foro-comentario-btn" data-hilo-accion="editar" data-hilo-id="${e(c.id)}" data-hilo-texto="${e(c.contenido)}">Editar mi comentario</button>`:''}
       </div>
-      ${puedeResponder?`<form class="hilo-formulario hidden" id="hilo_form_${e(c.id)}" data-padre="${e(c.id)}" data-progreso="${e(progresoId)}" data-modulo="${e(moduloId)}">
-       <label for="hilo_texto_${e(c.id)}">Responder a ${e(autor)}</label>
-       <textarea id="hilo_texto_${e(c.id)}" name="respuesta" rows="3" minlength="5" maxlength="1500" required aria-describedby="hilo_ayuda_${e(c.id)} hilo_estado_${e(c.id)}"></textarea>
-       <p class="hilo-ayuda" id="hilo_ayuda_${e(c.id)}">Entre 5 y 1500 caracteres.</p>
-       <p class="hilo-estado" id="hilo_estado_${e(c.id)}" role="status" aria-live="polite"></p>
-       <div class="hilo-form-acciones"><button type="button" class="btn-secondary" data-hilo-accion="cancelar" data-hilo-id="${e(c.id)}">Cancelar</button><button type="submit" class="btn-primary">Publicar respuesta</button></div>
+      ${puedeResponder?`<form class="hilo-formulario hidden" id="${prefijo}hilo_form_${e(c.id)}" data-padre="${e(c.id)}" data-progreso="${e(progresoId)}" data-modulo="${e(moduloId)}">
+       <label for="${prefijo}hilo_texto_${e(c.id)}">Responder a ${e(autor)}</label>
+       <textarea id="${prefijo}hilo_texto_${e(c.id)}" name="respuesta" rows="3" minlength="5" maxlength="1500" required aria-describedby="${prefijo}hilo_ayuda_${e(c.id)} ${prefijo}hilo_estado_${e(c.id)}"></textarea>
+       <p class="hilo-ayuda" id="${prefijo}hilo_ayuda_${e(c.id)}">Entre 5 y 1500 caracteres.</p>
+       <p class="hilo-estado" id="${prefijo}hilo_estado_${e(c.id)}" role="status" aria-live="polite"></p>
+       <div class="hilo-form-acciones"><button type="button" class="btn-secondary" data-hilo-accion="cancelar" data-hilo-id="${e(c.id)}" data-hilo-form="${prefijo}hilo_form_${e(c.id)}">Cancelar</button><button type="submit" class="btn-primary">Publicar respuesta</button></div>
       </form>`:''}
      </article>`);
     }
@@ -90,8 +91,8 @@
   }
  };
 
- function mostrarFormulario(id, abierto) {
-  const form=document.getElementById('hilo_form_'+id);
+ function mostrarFormulario(formId, abierto) {
+  const form=document.getElementById(formId);
   if(!form)return;
   const toggle=document.querySelector('[data-hilo-accion="responder"][aria-controls="'+form.id+'"]');
   form.classList.toggle('hidden',!abierto);
@@ -102,7 +103,7 @@
   const btn=event.target.closest('button[data-hilo-accion]');if(!btn)return;
   const id=btn.dataset.hiloId;
   if(btn.dataset.hiloAccion==='editar')abrirModalEditarComentario(id,encodeURIComponent(btn.dataset.hiloTexto));
-  else mostrarFormulario(id,btn.dataset.hiloAccion==='responder');
+  else mostrarFormulario(btn.dataset.hiloForm,btn.dataset.hiloAccion==='responder');
  });
  document.addEventListener('submit',event=>{
   const form=event.target.closest('form.hilo-formulario');if(!form)return;
@@ -136,8 +137,8 @@
    const muroGeneral=document.getElementById('seccionMuroUsuarios');
    if(!muroGeneral.classList.contains('hidden'))await mostrarMuroReflexionesUsuarios();
    else if(moduloActual?.id===form.dataset.modulo && !document.getElementById('seccionDocencia').classList.contains('hidden'))await cargarMuroReflexiones();
-   const publicado=document.getElementById('comentario_item_'+data);
    const destino=!muroGeneral.classList.contains('hidden')?document.getElementById('contenedorMuroUsuariosDirecto'):document.getElementById('contenedorMuro');
+   const publicado=destino.querySelector('[data-comentario-id="'+data+'"]');
    if(destino.getClientRects().length)window.mostrarEstadoHilos(destino,publicado?'Respuesta publicada.':'Respuesta guardada. Vuelva a abrir el muro para ver la actualización.');
    if(publicado && publicado.getClientRects().length) {publicado.focus({preventScroll:true});publicado.scrollIntoView({block:'nearest',behavior:'smooth'});}
   } catch(error) {

@@ -163,12 +163,12 @@ try{
  await page.waitForFunction(()=>document.getElementById('seccionCatalogoTrabajos').getAttribute('aria-busy')==='false');
  assert.equal(await page.locator('[data-estado-catalogo]:visible').count(),0);
  await nav('seccionCatalogoTrabajos','Muro Docente');
- await page.locator('#contenedorMuroUsuariosDirecto #comentario_item_r2').waitFor();
- await page.locator('#comentario_item_r2 [data-hilo-accion="responder"]').click();
- await page.locator('#hilo_texto_r2').fill('Respuesta escrita desde el muro docente general.');
- await page.locator('#hilo_form_r2 [type="submit"]').click();
- await page.locator('#contenedorMuroUsuariosDirecto #comentario_item_r3').waitFor();
- assert.equal(await page.locator('#comentario_item_r3').getAttribute('data-padre-id'),'r2');
+ await page.locator('#contenedorMuroUsuariosDirecto #general_comentario_item_r2').waitFor();
+ await page.locator('#general_comentario_item_r2 [data-hilo-accion="responder"]').click();
+ await page.locator('#general_hilo_texto_r2').fill('Respuesta escrita desde el muro docente general.');
+ await page.locator('#general_hilo_form_r2 [type="submit"]').click();
+ await page.locator('#contenedorMuroUsuariosDirecto #general_comentario_item_r3').waitFor();
+ assert.equal(await page.locator('#general_comentario_item_r3').getAttribute('data-padre-id'),'r2');
  await page.setViewportSize({width:390,height:844});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Muro general sin desborde en móvil');
  await page.setViewportSize({width:1440,height:900});

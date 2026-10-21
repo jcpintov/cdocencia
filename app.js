@@ -1428,7 +1428,7 @@ async function mostrarMuroReflexionesUsuarios() {
           : "";
         
         const comentariosDeEstaReflexion = comentariosMap[it.id] || [];
-        const comentariosHtml = window.renderizarHilosComentarios?.(comentariosDeEstaReflexion, it.id, m.id) || '';
+        const comentariosHtml = window.renderizarHilosComentarios?.(comentariosDeEstaReflexion, it.id, m.id, 'general') || '';
 
         return `
           <div class="reflexion-item" style="margin-bottom: 20px; border-left: 3px solid var(--accent-gold); padding: 18px 20px; border-radius: 0 6px 6px 0;">
@@ -1438,19 +1438,19 @@ async function mostrarMuroReflexionesUsuarios() {
             </div>
             <div style="font-size: 1rem; line-height: 1.6; font-style: italic; margin-bottom: 8px;">"${escaparTextoHTMLDocencia(it.reflexion)}"</div>
             
-            <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${it.id}')">
+            <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${it.id}', 'general_')">
               💬 Comentarios (${comentariosDeEstaReflexion.length})
             </button>
 
-            <div id="caja_comentario_${it.id}" class="foro-comentar-caja hidden">
-              <textarea id="input_comentario_${it.id}" name="input_comentario_${it.id}" rows="3" class="foro-comentar-input" placeholder="Escriba su comentario aquí..."></textarea>
+            <div id="general_caja_comentario_${it.id}" class="foro-comentar-caja hidden">
+              <textarea id="general_input_comentario_${it.id}" name="general_input_comentario_${it.id}" rows="3" class="foro-comentar-input" placeholder="Escriba su comentario aquí..."></textarea>
               <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleFormularioComentario('${it.id}')">Cancelar</button>
-                <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem; width: auto;" onclick="enviarComentarioForo('${it.id}', '${m.id}')">Publicar</button>
+                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleFormularioComentario('${it.id}', 'general_')">Cancelar</button>
+                <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem; width: auto;" onclick="enviarComentarioForo('${it.id}', '${m.id}', 'general_')">Publicar</button>
               </div>
             </div>
 
-            <div class="foro-comentarios-wrapper" id="lista_comentarios_${it.id}">
+            <div class="foro-comentarios-wrapper" id="general_lista_comentarios_${it.id}">
               ${comentariosHtml}
             </div>
           </div>
@@ -1490,19 +1490,19 @@ async function mostrarMuroReflexionesUsuarios() {
 /* ==========================================================================
    GESTIÓN DE COMENTARIOS DEL FORO
    ========================================================================== */
-function toggleFormularioComentario(progresoId) {
-  const caja = document.getElementById(`caja_comentario_${progresoId}`);
+function toggleFormularioComentario(progresoId, ambito = '') {
+  const caja = document.getElementById(`${ambito}caja_comentario_${progresoId}`);
   if (caja) {
     caja.classList.toggle('hidden');
     if (!caja.classList.contains('hidden')) {
-      const txt = document.getElementById(`input_comentario_${progresoId}`);
+      const txt = document.getElementById(`${ambito}input_comentario_${progresoId}`);
       if (txt) txt.focus();
     }
   }
 }
 
-async function enviarComentarioForo(progresoId, moduloId) {
-  const input = document.getElementById(`input_comentario_${progresoId}`);
+async function enviarComentarioForo(progresoId, moduloId, ambito = '') {
+  const input = document.getElementById(`${ambito}input_comentario_${progresoId}`);
   if (!input) return;
 
   const texto = input.value.trim();
@@ -1521,7 +1521,7 @@ async function enviarComentarioForo(progresoId, moduloId) {
     alert("No se guardó el comentario: " + (error?.message || "No hubo confirmación del servidor.") + " El texto permanece disponible para reintentar.");
   } else {
     input.value = "";
-    toggleFormularioComentario(progresoId);
+    toggleFormularioComentario(progresoId, ambito);
     
     const seccionMuroUsuarios = document.getElementById('seccionMuroUsuarios');
     if (seccionMuroUsuarios && !seccionMuroUsuarios.classList.contains('hidden')) {
