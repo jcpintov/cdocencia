@@ -25,9 +25,12 @@ test('no cambia los KPI del cronograma de trabajos por equivocación',()=>{
  assert.deepEqual(ids,['kpiTrabajosAsignados','kpiTrabajosPendientes','kpiTrabajosVencidos','kpiTrabajosPublicados']);
 });
 
-test('consulta exclusivamente comentarios activos y no contabiliza Dummy como participante',()=>{
+test('Resumen cuenta reflexiones, comentarios y respuestas del Muro autorizado, sin Dummy',()=>{
  const fn=app.slice(app.indexOf('async function cargarResumenAdmin()'));
- assert.match(fn,/from\('comentarios_muro'\)\.select\('id',\s*\{\s*count:\s*'exact',\s*head:\s*true\s*\}\)\.eq\('activo',true\)/);
+ assert.match(fn,/sbApp\.rpc\('muro_docente_autorizado',\s*\{\s*p_modulo:\s*null\s*\}\)/);
+ assert.match(fn,/muro\.data\.aportes/);
+ assert.match(fn,/muro\.data\.comentarios/);
+ assert.match(fn,/aportesUnicos\.size/);
  assert.match(fn,/dummy@ofl\.cl/);
  assert.match(fn,/kpiResumenAsignados/);
 });
