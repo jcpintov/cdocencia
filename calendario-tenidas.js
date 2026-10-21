@@ -50,7 +50,7 @@
   const f=$('tenidasFormulario');f.reset();
   f.dataset.id=trabajo?.id||crypto.randomUUID();f.dataset.version=String(trabajo?.version||0);
   $('tenidasFecha').value=trabajo?.fecha||fecha||(mes===hoy().slice(0,7)?hoy():mes+'-01');
-  $('tenidasGrado').value=trabajo?String(trabajo.grado):'';$('tenidasTema').value=trabajo?.tema||'';$('tenidasAutor').value=trabajo?.autor||'';
+  $('tenidasGrado').value=trabajo?String(trabajo.grado):($('tenidasGradoFiltro').value==='todos'?'':$('tenidasGradoFiltro').value);$('tenidasTema').value=trabajo?.tema||'';$('tenidasAutor').value=trabajo?.autor||'';
   $('tenidasDialogoTitulo').textContent=trabajo?'Modificar trabajo de tenida':'Agregar trabajo de tenida';
   $('tenidasEliminar').hidden=!trabajo;$('tenidasFormularioEstado').textContent='';
   $('tenidasDialogo').showModal();$('tenidasFecha').focus();
@@ -81,7 +81,7 @@
  $('adminSeccionTenidas').addEventListener('click',event=>{
   const btn=event.target.closest('button');if(!btn)return;
   if(btn.dataset.trabajo)abrir(trabajos.find(t=>t.id===btn.dataset.trabajo));
-  if(btn.dataset.dia){if(trabajos.some(t=>t.fecha===btn.dataset.dia)){dia=btn.dataset.dia;renderizar();$('tenidasAgendaTitulo').scrollIntoView({block:'nearest',behavior:'smooth'});}else abrir(null,btn.dataset.dia);}
+  if(btn.dataset.dia){if(trabajos.some(t=>t.fecha===btn.dataset.dia&&($('tenidasGradoFiltro').value==='todos'||String(t.grado)===$('tenidasGradoFiltro').value))){dia=btn.dataset.dia;renderizar();$('tenidasAgendaTitulo').scrollIntoView({block:'nearest',behavior:'smooth'});}else abrir(null,btn.dataset.dia);}
  });
  $('tenidasFormulario').addEventListener('submit',event=>{event.preventDefault();void guardar();});
  $('tenidasEliminar').addEventListener('click',()=>guardar(true));$('tenidasCancelar').addEventListener('click',()=>{if(!ocupado)$('tenidasDialogo').close();});
