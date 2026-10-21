@@ -7,11 +7,12 @@ const start=app.indexOf('async function cargarMuroReflexiones()');
 const src=app.slice(start,app.indexOf('/* ==========================================================================',start+20));
 const escapeStart=app.indexOf('function escaparTextoHTMLDocencia');
 const escapeSource=app.slice(escapeStart,app.indexOf('\n}',escapeStart)+2);
+const formatSource=app.slice(app.indexOf('function limpiarTratamientoHermano(nombre)'),app.indexOf('function validarSeguridadClave('));
 test('muro muestra aportes ajenos por RPC sin consultar respuestas privadas',async()=>{
  const cont={innerHTML:''};const calls=[];
  const ctx={document:{getElementById:()=>cont},moduloActual:{id:'m'},usuarioActual:{id:'u',es_admin:false},
  sbApp:{rpc:async(name,args)=>{calls.push({name,args});return {data:{aportes:[{id:'p',modulo_id:'m',usuario_id:'otro',reflexion:'<img src=x onerror=alert(1)>',usuarios:{nombre:'<b>Otro</b>'}}],comentarios:[]},error:null};}}};
- runInNewContext(escapeSource+'\n'+src,ctx);await ctx.cargarMuroReflexiones();
+ runInNewContext(escapeSource+'\n'+formatSource+'\n'+src,ctx);await ctx.cargarMuroReflexiones();
  assert.equal(calls[0].name,'muro_docente_autorizado');assert.equal(calls[0].args.p_modulo,'m');
  assert.ok(cont.innerHTML.includes('&lt;img'));assert.ok(!cont.innerHTML.includes('<img'));
  assert.ok(cont.innerHTML.includes('&lt;b&gt;Otro'));
