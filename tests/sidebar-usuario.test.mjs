@@ -48,10 +48,10 @@ test('menús móviles ajustables sin depender de desplazamiento horizontal',()=>
 });
 
 
-test('los cuatro sidebars de users usan Docencia para Maestros sin líneas institucionales',()=>{
+test('los cuatro sidebars de users evitan el lema redundante y mantienen cierre de sesión',()=>{
   assert.equal(portalMenus.length,4);
   for (const menu of portalMenus) {
-    assert.match(menu,/<span>DOCENCIA PARA MAESTROS<\/span>/);
+    assert.doesNotMatch(menu,/<span>DOCENCIA PARA MAESTROS<\/span>/);
     assert.doesNotMatch(menu,/<span>CÁMARA DE DOCENCIA<\/span>/);
     assert.doesNotMatch(menu,/Valle de Talagante/);
     assert.doesNotMatch(menu,/R\.·\.L\.·\. Orestes Frödden Lorenzen Nº 146/);
