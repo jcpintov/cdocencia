@@ -364,6 +364,7 @@ function cerrarSesion() {
   const botonIngreso = document.querySelector('#formAccesoCamara button[type="submit"]');
   if (botonIngreso) botonIngreso.disabled = false;
   window.limpiarAsignacionesAdmin?.();
+  window.limpiarCalendarioTenidas?.();
   window.cerrarBitacoraSesion?.();
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
   if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
@@ -2537,6 +2538,7 @@ function cambiarSubseccionAdmin(seccion) {
     cargar: ['tabNavCargar', 'Archivos originales'], gestion_trabajos: ['tabNavGestionTrabajos', 'Trabajos y cuestionarios'],
     presencial: ['tabNavPresencial', 'Cámara presencial'], muro_general: ['tabNavMuroGeneral', 'Muro docente'],
     metricas: ['tabNavMetricas', 'Avance de los maestros'], editor_doctrina: ['tabNavEditorDoctrina', 'Contenido institucional'],
+    tenidas: ['tabNavTenidas', 'Calendario de tenidas'],
     asignaciones: ['tabNavAsignaciones', 'Asignación de trabajos'],
     doctrina: ['tabNavDoctrina', 'Doctrina y Reglamentos'],
     accesos: ['tabNavAccesos', 'Bitácora de accesos']
@@ -2557,13 +2559,17 @@ function cambiarSubseccionAdmin(seccion) {
     if (focoEnMenu) tituloVista?.focus({ preventScroll: true });
   }
 
-  const btns = ['tabNavAsignaciones', 'tabNavDoctrina', 'tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
-  const secs = ['adminSeccionAsignaciones', 'adminSeccionDoctrina', 'adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
+  const btns = ['tabNavTenidas', 'tabNavAsignaciones', 'tabNavDoctrina', 'tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
+  const secs = ['adminSeccionTenidas', 'adminSeccionAsignaciones', 'adminSeccionDoctrina', 'adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
 
   btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
 
-  if (seccion === 'asignaciones') {
+  if (seccion === 'tenidas') {
+    document.getElementById('tabNavTenidas')?.classList.add('active');
+    document.getElementById('adminSeccionTenidas')?.classList.remove('hidden');
+    void window.cargarCalendarioTenidas?.();
+  } else if (seccion === 'asignaciones') {
     document.getElementById('tabNavAsignaciones')?.classList.add('active');
     document.getElementById('adminSeccionAsignaciones')?.classList.remove('hidden');
     void window.cargarAsignacionesAdmin?.();
