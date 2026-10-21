@@ -39,7 +39,7 @@ for(const op of [{status:429},{status:500},{error:true},{raw:'no json'},{truncad
  test('no publica resultados fallidos ni reintenta a espaldas del Superadmin: '+JSON.stringify(op),async()=>{const s=entorno(op),r=await s.run();assert.equal(r.generativo,false);assert.equal(s.envios,1);assert.ok(r.fuentes.length);assert.equal(JSON.stringify(r).includes('clave-sintetica'),false)});
 test('rechaza referencias inventadas, campos ausentes o sin citas en el análisis',()=>{
  assert.throws(()=>validarRespuestaGroq({},[{referencia:'F1'}]));
- for(const cambia of [{referencias:['F99']},{referencias:[]},{respuesta:'La fuente F99 exige algo.'},{fundamentos:'Esta fuente no tiene referencia',respuesta:'No consta ningún deber',consideraciones:'No se sabe',conclusion:'Sin evidencia'}]){
+ for(const cambia of [{referencias:['F99']},{referencias:[]},{respuesta:'La fuente F99 exige algo.'},{fundamentos:'Esta fuente no tiene referencia',respuesta:'No consta ningún deber',consideraciones:'No se sabe',conclusion:'Sin evidencia',referencias:['F1']}]){
   const x={...resultado(),...cambia};
   if(cambia.fundamentos){x.referencias=['F1']}
   assert.throws(()=>validarRespuestaGroq(x,[{referencia:'F1'}]));
