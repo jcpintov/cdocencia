@@ -53,10 +53,17 @@ function reiniciarTemporizadorInactividad() {
 /* ==========================================================================
    AUXILIARES
    ========================================================================== */
+// Un único tratamiento institucional, incluso si el nombre trae QH duplicado.
+function limpiarTratamientoHermano(nombre) {
+  return String(nombre || '').replace(/\s+/g, ' ').trim()
+    .replace(/^(?:Q\s*[.·:]*\s*H\s*[.·:]*\s*)+/iu, '').trim();
+}
+function formatearNombreHermano(nombre, reemplazo = 'Hermano') {
+  const limpio = limpiarTratamientoHermano(nombre) || reemplazo;
+  return `Q.·.H.·. ${limpio}`;
+}
 function formatearAutorMasonico(autor) {
-  if (!autor) return "Cámara de Docencia";
-  if (autor.includes("Q.·.H.·.") || autor.includes("Q.H.")) return autor;
-  return `Q.·.H.·. ${autor}`;
+  return autor ? formatearNombreHermano(autor) : 'Cámara de Docencia';
 }
 
 /* ==========================================================================
@@ -208,8 +215,7 @@ async function recuperarSesionGuardada() {
 // Encabezado compartido por todas las pantallas: se identifica al Maestro,
 // pero nunca se muestra su nombre durante login o en la cuenta Superadmin.
 function limpiarNombreWorkspaceUsuario(nombre) {
-  return String(nombre || '').replace(/^\s*(?:Q[.·:\s]+H[.·:\s]+)+/iu, '')
-    .replace(/\s+/g, ' ').trim();
+  return limpiarTratamientoHermano(nombre);
 }
 
 function sincronizarEncabezadoWorkspaceUsuario() {
@@ -224,7 +230,7 @@ function sincronizarEncabezadoWorkspaceUsuario() {
   const nombre = limpiarNombreWorkspaceUsuario(usuarioActual.nombre);
   if (!nombre) return;
 
-  campoNombre.textContent = 'Q.·.H.·. ' + nombre;
+  campoNombre.textContent = formatearNombreHermano(nombre);
   bloque.classList.remove('hidden');
 }
 
@@ -264,8 +270,8 @@ function aceptarSigilo() {
     return;
   }
 
-  const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-  document.getElementById('bienvenidaNombreQH').innerText = `Q.·.H.·. ${nombreLimpio}`;
+  const nombreLimpio = limpiarTratamientoHermano(usuarioActual.nombre);
+  document.getElementById('bienvenidaNombreQH').innerText = formatearNombreHermano(nombreLimpio);
   document.getElementById('seccionBienvenida').classList.remove('hidden');
 }
 
@@ -317,8 +323,8 @@ async function guardarNuevaClaveObligatoria() {
     if (usuarioActual.es_admin) {
       configurarEntornoUsuario();
     } else {
-      const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-      document.getElementById('bienvenidaNombreQH').innerText = `Q.·.H.·. ${nombreLimpio}`;
+      const nombreLimpio = limpiarTratamientoHermano(usuarioActual.nombre);
+      document.getElementById('bienvenidaNombreQH').innerText = formatearNombreHermano(nombreLimpio);
       document.getElementById('seccionBienvenida').classList.remove('hidden');
     }
   } catch (ex) {
@@ -452,8 +458,19 @@ function renderizarPadronAdmin() {
       tr.appendChild(td);
       return td;
     };
-    const nombre = celda(u.nombre || 'Hermano');
-    nombre.style.fontWeight = '700';
+    const nombre=celda('');
+    if (!u.es_admin && String(u.email||'').trim().toLowerCase()!=='dummy@ofl.cl') {
+      const boton=document.createElement('button');
+      boton.type='button';
+      boton.className='admin-usuario-nombre-btn';
+      boton.textContent=u.nombre||'Hermano';
+      boton.setAttribute('aria-label','Modificar datos de '+(u.nombre||'integrante'));
+      boton.addEventListener('click',()=>abrirModalEditarUsuario(u.id));
+      nombre.appendChild(boton);
+    } else {
+      nombre.textContent=u.nombre||'Hermano';
+      nombre.style.fontWeight='700';
+    }
     const correo = celda(u.email || '');
     correo.style.fontFamily = 'monospace';
     correo.style.fontSize = '0.88rem';
@@ -505,9 +522,32 @@ async function cargarListadoUsuariosAdmin() {
 function abrirModalCrearUsuario() {
   if (!usuarioActual?.es_admin || document.getElementById('btnAgregarUsuarioAdmin')?.disabled) return;
   document.getElementById('modalAdminUsuarioTitulo').textContent = 'Agregar usuario al padrón';
+  document.getElementById('adminUsuarioModalAyuda').textContent = 'Incorpore un Hermano con nombre completo y correo electrónico real.';
   document.getElementById('adminUsuarioTargetId').value = '';
   document.getElementById('adminUsuarioNombre').value = '';
   document.getElementById('adminUsuarioEmail').value = '';
+  document.getElementById('adminUsuarioEmail').readOnly = false;
+  document.getElementById('adminUsuarioEmailInfo').hidden = true;
+  document.getElementById('adminUsuarioNotaAcceso').textContent = 'El usuario será incorporado sin contraseña ni invitación; activará su acceso mediante verificación individual.';
+  document.getElementById('btnGuardarUsuarioAdmin').textContent='Guardar usuario';
+  document.getElementById('errorAdminUsuario').textContent = '';
+  document.getElementById('modalAdminUsuario').classList.remove('hidden');
+  document.getElementById('adminUsuarioNombre').focus();
+}
+
+function abrirModalEditarUsuario(id) {
+  if (!usuarioActual?.es_admin) return;
+  const u=padronUsuariosAdmin.find(item=>item.id===id);
+  if(!u||u.es_admin||String(u.email||'').trim().toLowerCase()==='dummy@ofl.cl') return;
+  document.getElementById('modalAdminUsuarioTitulo').textContent = 'Modificar datos del Hermano';
+  document.getElementById('adminUsuarioModalAyuda').textContent = 'Modifique los datos del padrón. Este formulario no cambia permisos, contraseñas ni historial docente.';
+  document.getElementById('adminUsuarioTargetId').value = u.id;
+  document.getElementById('adminUsuarioNombre').value = u.nombre||'';
+  document.getElementById('adminUsuarioEmail').value = u.email||'';
+  document.getElementById('adminUsuarioEmail').readOnly = !!u.auth_user_id;
+  document.getElementById('adminUsuarioEmailInfo').hidden = !u.auth_user_id;
+  document.getElementById('adminUsuarioNotaAcceso').textContent = 'Los cambios se guardan en el padrón y no generan correos automáticos.';
+  document.getElementById('btnGuardarUsuarioAdmin').textContent='Guardar cambios';
   document.getElementById('errorAdminUsuario').textContent = '';
   document.getElementById('modalAdminUsuario').classList.remove('hidden');
   document.getElementById('adminUsuarioNombre').focus();
@@ -517,31 +557,35 @@ async function guardarAdminUsuario() {
   const err = document.getElementById('errorAdminUsuario');
   const nombre = document.getElementById('adminUsuarioNombre').value.trim();
   const email = document.getElementById('adminUsuarioEmail').value.trim().toLowerCase();
+  const id = document.getElementById('adminUsuarioTargetId').value.trim();
+  const editar=!!id;
   if (!usuarioActual?.es_admin) return;
-  if (nombre.length < 3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    err.textContent = 'Ingrese un nombre y un correo electrónico válido.';
+  const nombreReal=nombre.replace(/^(?:\s*Q\s*[.·:]*\s*H\s*[.·:]*\s*)+/iu,'').trim();
+  if (nombreReal.length < 3 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    err.textContent = 'Ingrese un nombre completo y un correo electrónico válido.';
     return;
   }
   const { data: sessionData, error: sessionError } = await sbApp.auth.getSession();
   const token = sessionData?.session?.access_token;
   if (sessionError || !token) { err.textContent = 'Sesión vencida. Vuelva a iniciar sesión.'; return; }
-  const button = document.querySelector('#modalAdminUsuario button[onclick="guardarAdminUsuario()"]');
+  const button = document.getElementById('btnGuardarUsuarioAdmin');
   if (button) button.disabled = true;
-  err.textContent = 'Registrando usuario...';
+  err.textContent = editar?'Guardando cambios…':'Registrando usuario…';
   try {
     const response = await fetch('/api/admin-usuarios', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
-      body: JSON.stringify({ action: 'crear', nombre, email })
+      body: JSON.stringify({ action: editar?'editar':'crear', id:editar?id:undefined, nombre, email })
     });
-    const result = await response.json();
+    const result = await response.json().catch(()=>({}));
     if (!response.ok || !result.ok) {
-      err.textContent = result.error || 'No se pudo registrar el usuario.';
+      err.textContent = result.error || 'No se pudo guardar el usuario.';
       return;
     }
     document.getElementById('modalAdminUsuario').classList.add('hidden');
     await cargarListadoUsuariosAdmin();
-    alert('Usuario incorporado al padrón. No se envió invitación ni se asignó contraseña.');
+    const estado=document.getElementById('padronUsuariosEstado');
+    if(estado)estado.textContent=editar?'Datos del Hermano actualizados.':'Integrante incorporado al padrón sin envío de invitación.';
   } catch {
     err.textContent = 'No fue posible conectar con el servicio de administración.';
   } finally {
@@ -1325,7 +1369,7 @@ async function mostrarMuroReflexionesUsuarios() {
           return `
             <div class="foro-comentario-item" id="comentario_item_${c.id}">
               <div class="foro-comentario-header">
-                <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${escaparTextoHTMLDocencia(c.usuarios?.nombre || "Hermano")}</span>
+                <span class="foro-comentario-autor">Aporte del ${escaparTextoHTMLDocencia(formatearNombreHermano(c.usuarios?.nombre))}</span>
                 <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
               </div>
               <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${escaparTextoHTMLDocencia(c.contenido)}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
@@ -1336,7 +1380,7 @@ async function mostrarMuroReflexionesUsuarios() {
         return `
           <div class="reflexion-item" style="margin-bottom: 20px; border-left: 3px solid var(--accent-gold); padding: 18px 20px; border-radius: 0 6px 6px 0;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span class="reflexion-autor">${escaparTextoHTMLDocencia(it.usuarios?.nombre || "Hermano Maestro")}</span>
+              <span class="reflexion-autor">${escaparTextoHTMLDocencia(formatearNombreHermano(it.usuarios?.nombre, 'Hermano Maestro'))}</span>
               <span style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-ui);">${fechaTxt}</span>
             </div>
             <div style="font-size: 1rem; line-height: 1.6; font-style: italic; margin-bottom: 8px;">"${escaparTextoHTMLDocencia(it.reflexion)}"</div>
@@ -1413,29 +1457,14 @@ async function enviarComentarioForo(progresoId, moduloId) {
     return;
   }
 
-  let ipDetectada = "No determinada";
-  try {
-    const res = await fetch('https://api.ipify.org?format=json');
-    if (res.ok) {
-      const data = await res.json();
-      ipDetectada = data.ip || ipDetectada;
-    }
-  } catch (e) {
-    console.warn("No se pudo obtener IP:", e);
-  }
-
-  const { error } = await sbApp.from('comentarios_muro').insert({
-    progreso_id: progresoId,
-    modulo_id: moduloId,
-    usuario_id: usuarioActual.id,
-    contenido: texto,
-    contenido_original: texto,
-    ip_origen: ipDetectada,
-    activo: true
+  // La RPC confirma la persistencia y valida identidad, progreso y límites
+  // antes de anunciar el comentario como publicado. No recolectar IP externa.
+  const { data: comentarioId, error } = await sbApp.rpc('maestro_publicar_comentario', {
+    p_progreso_id: progresoId,
+    p_contenido: texto
   });
-
-  if (error) {
-    alert("Error al registrar comentario: " + error.message);
+  if (error || !comentarioId) {
+    alert("No se guardó el comentario: " + (error?.message || "No hubo confirmación del servidor.") + " El texto permanece disponible para reintentar.");
   } else {
     input.value = "";
     toggleFormularioComentario(progresoId);
@@ -2118,7 +2147,7 @@ async function cargarMuroReflexiones() {
         return `
           <div class="foro-comentario-item" id="comentario_item_${c.id}">
             <div class="foro-comentario-header">
-              <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${escaparTextoHTMLDocencia(c.usuarios?.nombre || "Hermano")}</span>
+              <span class="foro-comentario-autor">Aporte del ${escaparTextoHTMLDocencia(formatearNombreHermano(c.usuarios?.nombre))}</span>
               <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
             </div>
             <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${escaparTextoHTMLDocencia(c.contenido)}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
@@ -2128,7 +2157,7 @@ async function cargarMuroReflexiones() {
 
       contenedor.innerHTML += `
         <div class="reflexion-item" style="margin-bottom: 20px;">
-          <div class="reflexion-autor">${escaparTextoHTMLDocencia(item.usuarios?.nombre || "Hermano Maestro")}</div>
+          <div class="reflexion-autor">${escaparTextoHTMLDocencia(formatearNombreHermano(item.usuarios?.nombre, 'Hermano Maestro'))}</div>
           <div style="font-style: italic; margin-bottom: 8px;">"${escaparTextoHTMLDocencia(item.reflexion)}"</div>
           
           <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${item.id}')">
@@ -2328,9 +2357,9 @@ async function abrirModalCertificado(moduloId = null, usuarioId = null) {
     .maybeSingle();
 
   const reflexionExacta = prog?.reflexion || "";
-  const nombreLimpio = userTarget.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
+  const nombreLimpio = limpiarTratamientoHermano(userTarget.nombre);
 
-  document.getElementById('certNombreHermano').innerText = nombreLimpio;
+  document.getElementById('certNombreHermano').innerText = formatearNombreHermano(nombreLimpio);
   document.getElementById('certTituloPlancha').innerText = `"${modTarget.titulo}"`;
   document.getElementById('certAutorPlancha').innerText = modTarget.autor ? "Autor: " + formatearAutorMasonico(modTarget.autor) : "";
   document.getElementById('certTextoReflexion').innerText = `"${reflexionExacta}"`;
@@ -3431,11 +3460,11 @@ async function cargarMuroGeneralAdmin() {
     cont.innerHTML += `
       <div class="reflexion-item" style="margin-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-          <strong>Trabajo ${r.modulos?.numero_orden || '—'}: ${r.modulos?.titulo || 'Trazado'}</strong>
+          <strong>Trabajo ${r.modulos?.numero_orden || '—'}: ${escaparTextoHTMLDocencia(r.modulos?.titulo || 'Trazado')}</strong>
           <span style="font-size: 0.8rem; color: var(--text-muted);">${fecha}</span>
         </div>
-        <p style="margin: 0 0 6px 0; font-style: italic;">"${r.reflexion}"</p>
-        <span class="reflexion-autor">Q.·.H.·. ${r.usuarios?.nombre || 'Hermano'}</span>
+        <p style="margin: 0 0 6px 0; font-style: italic;">"${escaparTextoHTMLDocencia(r.reflexion)}"</p>
+        <span class="reflexion-autor">${escaparTextoHTMLDocencia(formatearNombreHermano(r.usuarios?.nombre))}</span>
       </div>
     `;
   });
@@ -3569,24 +3598,30 @@ window.addEventListener('DOMContentLoaded', () => {
 async function cargarResumenAdmin() {
   const status = document.getElementById('resumenAdminEstado');
   if (!status) return;
-  void window.cargarCronogramaAdmin?.();
   status.textContent = 'Actualizando indicadores...';
-  const campos = ['kpiUsuarios','kpiModulos','kpiCompletados','kpiComentarios'];
-  campos.forEach(id => { document.getElementById(id).textContent = '—'; });
+  const campos = ['kpiUsuarios','kpiResumenAsignados','kpiResumenEntregados','kpiResumenPendientes','kpiCompletados','kpiComentarios'];
+  campos.forEach(id => { const campo=document.getElementById(id);if(campo)campo.textContent = '—'; });
+  // La misma consulta autenticada del cronograma alimenta los tres KPI de trabajos.
+  void window.cargarCronogramaAdmin?.();
   try {
-    const [users, modules, progress, comments] = await Promise.all([
-      sbApp.from('usuarios').select('id,es_admin'),
-      sbApp.from('modulos').select('id', { count: 'exact', head: true }),
+    const [users, progress, muro] = await Promise.all([
+      sbApp.from('usuarios').select('id,email,es_admin'),
       sbApp.from('progreso_maestro').select('usuario_id,completado').eq('completado',true),
-      sbApp.from('comentarios_muro').select('id', { count: 'exact', head: true })
+      sbApp.rpc('muro_docente_autorizado', { p_modulo: null })
     ]);
-    if ([users,modules,progress,comments].some(result => result.error)) throw new Error('Sin permisos de lectura para indicadores');
-    const estudiantes = new Set(users.data.filter(u => !u.es_admin).map(u => u.id));
+    if ([users,progress,muro].some(result => result.error)) throw new Error('Sin permisos de lectura para indicadores');
+    if (!Array.isArray(muro.data?.aportes) || !Array.isArray(muro.data?.comentarios))
+      throw new Error('El Muro no entregó una respuesta verificable');
+    const estudiantes = new Set(users.data.filter(u => !u.es_admin && String(u.email||'').trim().toLowerCase()!=='dummy@ofl.cl').map(u => u.id));
+    const aportesUnicos = new Set([
+      ...muro.data.aportes.filter(a=>a?.id).map(a=>'reflexion:'+a.id),
+      ...muro.data.comentarios.filter(c=>c?.id).map(c=>'comentario:'+c.id)
+    ]);
     document.getElementById('kpiUsuarios').textContent = estudiantes.size.toLocaleString('es-CL');
-    document.getElementById('kpiModulos').textContent = (modules.count ?? 0).toLocaleString('es-CL');
     document.getElementById('kpiCompletados').textContent = progress.data.filter(p => estudiantes.has(p.usuario_id)).length.toLocaleString('es-CL');
-    document.getElementById('kpiComentarios').textContent = (comments.count ?? 0).toLocaleString('es-CL');
-    status.textContent = 'Indicadores actualizados.';
+    // Una reflexión y cada comentario/respuesta visible aportan una unidad.
+    document.getElementById('kpiComentarios').textContent = aportesUnicos.size.toLocaleString('es-CL');
+    status.textContent = 'Indicadores actualizados. Comentarios incluye reflexiones y respuestas publicadas; los trabajos provienen del cronograma.';
   } catch {
     status.textContent = 'No fue posible consultar los indicadores con los permisos actuales.';
   }

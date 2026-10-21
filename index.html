@@ -145,8 +145,8 @@
   <!-- MODAL SUPERADMIN: INCORPORACIÓN AL PADRÓN -->
   <div id="modalAdminUsuario" class="modal-overlay hidden" onclick="cerrarModalUniversal(event, 'modalAdminUsuario')">
     <div class="modal-content" style="max-width: 520px; text-align: left;">
-      <h3 id="modalAdminUsuarioTitulo" style="color: var(--accent-gold); margin-bottom: 8px;">👤 Nuevo Usuario</h3>
-      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Incorpore integrantes al padrón con su nombre completo y correo electrónico real. El registro no envía correos.</p>
+      <h3 id="modalAdminUsuarioTitulo" style="color: var(--accent-gold); margin-bottom: 8px;">Usuario del padrón</h3>
+      <p id="adminUsuarioModalAyuda" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">Incorpore o modifique integrantes. El registro no envía correos.</p>
 
       <input type="hidden" id="adminUsuarioTargetId">
 
@@ -157,16 +157,17 @@
 
       <div class="form-group">
         <label for="adminUsuarioEmail">Correo Electrónico:</label>
-        <input type="email" id="adminUsuarioEmail" placeholder="hermano@correo.com">
+        <input type="email" id="adminUsuarioEmail" placeholder="hermano@correo.com" autocomplete="off">
+        <small id="adminUsuarioEmailInfo" class="admin-usuario-campo-info" hidden>Este correo está vinculado a Supabase Auth. Por seguridad, aquí solo puede modificar el nombre.</small>
       </div>
 
-      <p style="font-size:.9rem;line-height:1.5">El usuario se incorporará al padrón sin contraseña ni invitación. Su acceso se habilitará mediante verificación individual.</p>
+      <p id="adminUsuarioNotaAcceso" style="font-size:.9rem;line-height:1.5">Los usuarios nuevos se incorporan sin contraseña ni invitación; activarán su acceso mediante verificación individual.</p>
 
       <p id="errorAdminUsuario" class="error-msg" style="text-align: left; margin-bottom: 12px;"></p>
 
       <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;">
         <button class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalAdminUsuario')">Cancelar</button>
-        <button class="btn-primary" style="width: auto;" onclick="guardarAdminUsuario()">Guardar Usuario</button>
+        <button class="btn-primary" id="btnGuardarUsuarioAdmin" type="button" style="width: auto;" onclick="guardarAdminUsuario()">Guardar usuario</button>
       </div>
     </div>
   </div>
@@ -268,7 +269,7 @@
           <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
-      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
     </aside>
     <main class="portal-main">
       <section class="portal-hero" aria-labelledby="portal-saludo">
@@ -305,7 +306,7 @@
           <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
-      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
     </aside><main class="bienvenida-container catalogo-contenido">
     <div class="seccion-trabajos-header">
       <div>
@@ -334,7 +335,7 @@
           <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
-      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
     </aside>
     <main class="bienvenida-container catalogo-contenido contenido-docente-main" aria-labelledby="catalogoUnidadesTitulo">
       <section id="catalogoDirectorioUnidades" class="catalogo-directorio-unidades hidden" aria-labelledby="catalogoUnidadesTitulo">
@@ -365,7 +366,7 @@
           <button class="portal-nav-link active" type="button" aria-current="page" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
-      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
     </aside>
     <main class="espacio-main" aria-labelledby="espacioTitulo">
       <div class="espacio-content-wrap">
@@ -599,7 +600,7 @@
     <aside class="sidebar-admin">
       <div class="admin-brand">
         <span class="portal-nav-glyph admin-brand-glyph" aria-hidden="true">◇</span>
-        <div><span class="admin-brand-eyebrow">DOCENCIA PARA MAESTROS</span><h3>Consola Superadmin</h3></div>
+        <div><h3>Consola Superadmin</h3></div>
       </div>
       <details id="adminNavegacion" class="admin-navigation" open>
         <summary class="admin-menu-toggle">Menú de administración<span aria-hidden="true">⌄</span></summary>
@@ -608,11 +609,11 @@
 <button id="tabNavResumen" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('resumen')">
           <span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="admin-nav-text">Resumen ejecutivo</span>
         </button>
+</div>
+<div class="admin-menu-group"><p class="admin-menu-label">Gestión docente</p>
 <button id="tabNavUsuarios" class="admin-side-btn" onclick="cambiarSubseccionAdmin('usuarios')">
           <span class="portal-nav-glyph" aria-hidden="true">♙</span><span class="admin-nav-text">Usuarios y padrón</span>
         </button>
-</div>
-<div class="admin-menu-group"><p class="admin-menu-label">Gestión docente</p>
 <button id="tabNavAsignaciones" class="admin-side-btn" onclick="cambiarSubseccionAdmin('asignaciones')"><span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="admin-nav-text">Asignación de trabajos</span></button>
 <button id="tabNavGestionTrabajos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">
           <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span class="admin-nav-text">Trabajos y cuestionarios</span>
@@ -645,6 +646,9 @@
         </div>
         <div class="admin-links-bottom" aria-label="Herramientas externas">
           <p class="admin-menu-label">Herramientas externas</p>
+          <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="admin-nav-link-ext">
+            <span class="portal-nav-glyph" aria-hidden="true">◉</span><span>ChatGPT</span><span class="admin-external-mark" aria-hidden="true">↗</span><span class="admin-sr-only"> (abre en otra pestaña)</span>
+          </a>
           <a href="https://github.com/jcpintov/cdocencia" target="_blank" rel="noopener noreferrer" class="admin-nav-link-ext">
             <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span>Repositorio GitHub</span><span class="admin-external-mark" aria-hidden="true">↗</span><span class="admin-sr-only"> (abre en otra pestaña)</span>
           </a>
@@ -663,11 +667,13 @@
         <div class="admin-card-header"><div><h2>Resumen ejecutivo</h2>
           <p class="text-instruccion">Actividad de la Cámara de Docencia; progreso sin el administrador.</p></div>
           <button class="btn-secondary" onclick="cargarResumenAdmin()">Actualizar indicadores</button></div>
-        <div class="admin-kpi-grid">
+        <div class="admin-kpi-grid admin-kpi-grid-resumen" aria-label="Indicadores del Resumen Ejecutivo">
           <div class="admin-kpi"><span>Usuarios</span><strong id="kpiUsuarios">—</strong></div>
-          <div class="admin-kpi"><span>Trabajos</span><strong id="kpiModulos">—</strong></div>
+          <div class="admin-kpi"><span>Asignados</span><strong id="kpiResumenAsignados">—</strong></div>
+          <div class="admin-kpi"><span>Entregados</span><strong id="kpiResumenEntregados">—</strong></div>
+          <div class="admin-kpi"><span>Pendientes</span><strong id="kpiResumenPendientes">—</strong></div>
           <div class="admin-kpi"><span>Completados</span><strong id="kpiCompletados">—</strong></div>
-          <div class="admin-kpi"><span>Comentarios</span><strong id="kpiComentarios">—</strong></div>
+          <div class="admin-kpi"><span>Comentarios</span><strong id="kpiComentarios">—</strong><small class="admin-kpi-descripcion">Reflexiones · Comentarios · Respuestas</small></div>
         </div>
         <p id="resumenAdminEstado" class="text-instruccion" role="status"></p>
         <button class="btn-primary" onclick="cambiarSubseccionAdmin('usuarios')">Administrar usuarios</button>
