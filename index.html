@@ -269,7 +269,7 @@
           <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
-      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
     </aside>
     <main class="portal-main">
       <section class="portal-hero" aria-labelledby="portal-saludo">
@@ -306,7 +306,7 @@
           <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
-      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
     </aside><main class="bienvenida-container catalogo-contenido">
     <div class="seccion-trabajos-header">
       <div>
@@ -335,7 +335,7 @@
           <button class="portal-nav-link" type="button" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
-      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
     </aside>
     <main class="bienvenida-container catalogo-contenido contenido-docente-main" aria-labelledby="catalogoUnidadesTitulo">
       <section id="catalogoDirectorioUnidades" class="catalogo-directorio-unidades hidden" aria-labelledby="catalogoUnidadesTitulo">
@@ -366,7 +366,7 @@
           <button class="portal-nav-link active" type="button" aria-current="page" onclick="irACatalogoDocencia().then(()=>mostrarDocenciaParaMaestros())"><span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="portal-nav-text">Este Espacio</span></button>
         </nav>
       </details>
-      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><span>DOCENCIA PARA MAESTROS</span><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
+      <div class="portal-nav-footer"><img class="portal-logia-logo" src="imgs/logo_ofl.png" alt="Emblema de la Logia Orestes Frödden Lorenzen" loading="lazy"><button type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
     </aside>
     <main class="espacio-main" aria-labelledby="espacioTitulo">
       <div class="espacio-content-wrap">
@@ -600,7 +600,7 @@
     <aside class="sidebar-admin">
       <div class="admin-brand">
         <span class="portal-nav-glyph admin-brand-glyph" aria-hidden="true">◇</span>
-        <div><span class="admin-brand-eyebrow">DOCENCIA PARA MAESTROS</span><h3>Consola Superadmin</h3></div>
+        <div><h3>Consola Superadmin</h3></div>
       </div>
       <details id="adminNavegacion" class="admin-navigation" open>
         <summary class="admin-menu-toggle">Menú de administración<span aria-hidden="true">⌄</span></summary>
@@ -609,11 +609,11 @@
 <button id="tabNavResumen" class="admin-side-btn active" onclick="cambiarSubseccionAdmin('resumen')">
           <span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="admin-nav-text">Resumen ejecutivo</span>
         </button>
+</div>
+<div class="admin-menu-group"><p class="admin-menu-label">Gestión docente</p>
 <button id="tabNavUsuarios" class="admin-side-btn" onclick="cambiarSubseccionAdmin('usuarios')">
           <span class="portal-nav-glyph" aria-hidden="true">♙</span><span class="admin-nav-text">Usuarios y padrón</span>
         </button>
-</div>
-<div class="admin-menu-group"><p class="admin-menu-label">Gestión docente</p>
 <button id="tabNavAsignaciones" class="admin-side-btn" onclick="cambiarSubseccionAdmin('asignaciones')"><span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="admin-nav-text">Asignación de trabajos</span></button>
 <button id="tabNavGestionTrabajos" class="admin-side-btn" onclick="cambiarSubseccionAdmin('gestion_trabajos')">
           <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span class="admin-nav-text">Trabajos y cuestionarios</span>
@@ -646,6 +646,10 @@
         </div>
         <div class="admin-links-bottom" aria-label="Herramientas externas">
           <p class="admin-menu-label">Herramientas externas</p>
+          <a id="adminEnlaceConversacion" href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="admin-nav-link-ext" onclick="abrirConversacionDesarrollo(event)">
+            <span class="portal-nav-glyph" aria-hidden="true">◉</span><span>Esta conversación de desarrollo</span><span class="admin-external-mark" aria-hidden="true">↗</span><span class="admin-sr-only"> (enlace privado configurable; abre en otra pestaña)</span>
+          </a>
+          <button id="adminConfigurarConversacion" class="admin-enlace-configurar" type="button" onclick="configurarConversacionDesarrollo()" aria-label="Configurar URL de esta conversación">Configurar enlace de conversación</button>
           <a href="https://github.com/jcpintov/cdocencia" target="_blank" rel="noopener noreferrer" class="admin-nav-link-ext">
             <span class="portal-nav-glyph" aria-hidden="true">⌘</span><span>Repositorio GitHub</span><span class="admin-external-mark" aria-hidden="true">↗</span><span class="admin-sr-only"> (abre en otra pestaña)</span>
           </a>
@@ -670,7 +674,7 @@
           <div class="admin-kpi"><span>Entregados</span><strong id="kpiResumenEntregados">—</strong></div>
           <div class="admin-kpi"><span>Pendientes</span><strong id="kpiResumenPendientes">—</strong></div>
           <div class="admin-kpi"><span>Completados</span><strong id="kpiCompletados">—</strong></div>
-          <div class="admin-kpi"><span>Comentarios</span><strong id="kpiComentarios">—</strong></div>
+          <div class="admin-kpi"><span>Comentarios</span><strong id="kpiComentarios">—</strong><small class="admin-kpi-descripcion">Reflexiones · Comentarios · Respuestas</small></div>
         </div>
         <p id="resumenAdminEstado" class="text-instruccion" role="status"></p>
         <button class="btn-primary" onclick="cambiarSubseccionAdmin('usuarios')">Administrar usuarios</button>
