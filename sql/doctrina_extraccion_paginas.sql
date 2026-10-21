@@ -21,7 +21,7 @@ begin
  if p_accion='texto_buscar' then
   if length(btrim(coalesce(p_datos->>'consulta',''))) not between 3 and 250 then raise exception 'Consulta no válida'; end if;
   select coalesce(jsonb_agg(z),'[]') into filas from (
-   select d.titulo,fuente.id as version_id,fuente.numero as version,fuente.sha256,(p->>'numero')::integer as pagina,left(ts_headline('spanish',p->>'texto',websearch_to_tsquery('spanish',p_datos->>'consulta'),'StartSel=, StopSel=, MaxFragments=2, MaxWords=65, MinWords=15'),1200) as fragmento
+   select d.titulo,d.clase,fuente.id as version_id,fuente.numero as version,fuente.sha256,(p->>'numero')::integer as pagina,left(ts_headline('spanish',p->>'texto',websearch_to_tsquery('spanish',p_datos->>'consulta'),'StartSel=, StopSel=, MaxFragments=2, MaxWords=65, MinWords=15'),1200) as fragmento
    from doctrina.textos_extraidos t join doctrina.versiones fuente on fuente.id=t.version_id join doctrina.documentos d on d.id=fuente.documento_id
    cross join lateral jsonb_array_elements(t.paginas) p
    where t.estado='aprobado' and d.estado='vigente' and fuente.sha256=t.sha256 and fuente.numero=(select max(v2.numero) from doctrina.versiones v2 where v2.documento_id=d.id)

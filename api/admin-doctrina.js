@@ -21,11 +21,17 @@ export default async function handler(req,res){
   const {data:perfil,error:profileError}=await admin.from('usuarios').select('id,email,es_admin').eq('auth_user_id',user.id).maybeSingle();
   if(profileError||!perfil?.es_admin||(String(user.email||'').toLowerCase()!=='jpintov@gmail.com'&&user.app_metadata?.superadmin_principal!==true)||String(perfil.email||'').toLowerCase()!==String(user.email||'').toLowerCase())return reply(res,403,{error:'Acceso exclusivo de Superadmin'});
   const {action,...datos}=req.body||{};
-  if(!['listar','preparar','registrar','descargar','visualizar','revisar','retirar','restaurar','texto_extraer','texto_pagina','texto_revisar_pagina','texto_aprobar','texto_buscar'].includes(action))return reply(res,422,{error:'Acción inválida'});
+  if(!['listar','preparar','registrar','descargar','visualizar','revisar','retirar','restaurar','texto_extraer','texto_pagina','texto_revisar_pagina','texto_aprobar','texto_buscar','agente_consultar'].includes(action))return reply(res,422,{error:'Acción inválida'});
   const rpc=async(accion,payload={})=>{
    const {data,error}=await admin.rpc(accion.startsWith('texto_')?'doctrina_texto_superadmin':'doctrina_gestion_superadmin',{p_actor:user.id,p_accion:accion,p_datos:payload});
    if(error)throw new Error('database');return data;
   };
+  if(action==='agente_consultar'){
+   const {prepararConsultaAgente,informeConsultaDoctrina}=await import('../lib/agente-doctrina.js');
+   let entrada;try{entrada=prepararConsultaAgente(datos);}catch(e){return reply(res,422,{error:e.message});}
+   const recuperacion=await rpc('texto_buscar',{consulta:entrada.consulta});
+   return reply(res,200,{ok:true,informe:informeConsultaDoctrina(entrada,recuperacion)});
+  }
   if(action==='texto_buscar'){if(typeof datos.consulta!=='string'||datos.consulta.trim().length<3||datos.consulta.length>250)return reply(res,422,{error:'Escriba una consulta de 3 a 250 caracteres'});return reply(res,200,{ok:true,...await rpc(action,{consulta:datos.consulta})});}
   if(['texto_pagina','texto_revisar_pagina','texto_aprobar'].includes(action)){
    if(!uuid(datos.id)||!Number.isInteger(datos.pagina)||datos.pagina<1||datos.pagina>600)return reply(res,422,{error:'Página no válida'});

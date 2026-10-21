@@ -1,17 +1,18 @@
+import {prepararConsultaAgente,informeConsultaDoctrina} from '../lib/agente-doctrina.js';
 import {readFileSync} from 'node:fs';
 import {createContext,Script} from 'node:vm';
 import {createHash} from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const raw=readFileSync(new URL('../api/admin-doctrina.js',import.meta.url),'utf8');
-const source=raw.replace(/^import .*;$/gm,'').replace('export default async function handler','async function handler');
+const source=raw.replace("const {prepararConsultaAgente,informeConsultaDoctrina}=await import('../lib/agente-doctrina.js');",'').replace(/^import .*;$/gm,'').replace('export default async function handler','async function handler');
 const actor='11111111-1111-4111-8111-111111111111';
 function setup(o={}){
  const calls=[];const pdf=Buffer.from('%PDF-1.4\nExample synthetic fixture\n%%EOF');
  const storage={createSignedUploadUrl:async path=>{calls.push(['upload',path]);return {data:{token:'signed-test'}};},download:async()=>({data:new Blob([o.badPDF?'invalid':pdf])}),createSignedUrl:async()=>{calls.push(['sign']);return {data:{signedUrl:'https://example.supabase.co/storage/v1/object/sign/a'}};}};
  const admin={from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{id:'profile',es_admin:!o.notAdmin,email:'jpintov@gmail.com'}})})})}),rpc:async(name,args)=>{calls.push(['rpc',args.p_accion]);return {data:args.p_accion==='listar'?{documentos:[],inventario:[]}:args.p_accion==='obtener'?(o.missing?null:{path:'path',bytes:pdf.length,sha256:o.badHash?'0'.repeat(64):createHash('sha256').update(pdf).digest('hex')}):{version_id:'v'}};},storage:{getBucket:async()=>({data:{public:!!o.publicBucket}}),from:()=>storage}};
  const client={auth:{getUser:async()=>({data:{user:{id:actor,email:o.foreign?'other@example.invalid':'jpintov@gmail.com'}},error:o.invalidAuth?{}:null})}};
- const ctx=createContext({createClient:(_u,k)=>k==='service'?admin:client,process:{env:{SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}},randomUUID:()=>actor,createHash,Buffer});
+ const ctx=createContext({createClient:(_u,k)=>k==='service'?admin:client,process:{env:{SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}},randomUUID:()=>actor,createHash,Buffer,prepararConsultaAgente,informeConsultaDoctrina});
  const handler=new Script(source+'\nhandler').runInContext(ctx);
  const request=async(body={},auth='Bearer valid',method='POST')=>{const res={headers:{},setHeader(k,v){this.headers[k]=v;},status(n){this.code=n;return this;},json(v){this.body=v;return this;}};await handler({method,body,headers:{authorization:auth}},res);return res;};
  return {request,calls,pdf};
@@ -40,3 +41,9 @@ test('visor rechaza PDF alterado e identidad ajena',async()=>{const a=setup({bad
 test('búsqueda de textos valida consulta y usa exclusivamente la función protegida',async()=>{const s=setup();assert.equal((await s.request({action:'texto_buscar',consulta:'x'})).code,422);assert.equal((await s.request({action:'texto_buscar',consulta:'acacia'})).code,200);assert.deepEqual(s.calls,[['rpc','texto_buscar']]);});
 test('no permite inyectar extracciones ni guardar texto en una página inválida',async()=>{const s=setup();assert.equal((await s.request({action:'texto_guardar',id:actor,paginas:[]})).code,422);assert.equal((await s.request({action:'texto_revisar_pagina',id:actor,pagina:0,texto:'Texto'})).code,422);assert.equal((await s.request({action:'texto_revisar_pagina',id:actor,pagina:1,texto:'No está vacía',pagina_sin_texto:true})).code,422);assert.equal(s.calls.length,0);});
 test('una extracción no comienza si falla la integridad del original',async()=>{const s=setup({badHash:true});assert.equal((await s.request({action:'texto_extraer',id:actor})).code,409);assert.deepEqual(s.calls,[['rpc','obtener']]);});
+
+test('agente mantiene la autorización previa y solo consulta fuentes mediante RPC protegida',async()=>{
+ const ajeno=setup({foreign:true});assert.equal((await ajeno.request({action:'agente_consultar',pregunta:'Consulta suficientemente larga',consulta:'acacia'})).code,403);assert.equal(ajeno.calls.length,0);
+ const s=setup();assert.equal((await s.request({action:'agente_consultar',pregunta:'corta',consulta:'acacia'})).code,422);assert.equal(s.calls.length,0);
+ const r=await s.request({action:'agente_consultar',pregunta:'¿Qué representa la acacia?',consulta:'acacia',antecedentes:'Caso aportado'});assert.equal(r.code,200);assert.equal(r.body.informe.generativo,false);assert.deepEqual(s.calls,[['rpc','texto_buscar']]);
+});

@@ -33,3 +33,7 @@ Se conserva el cron docente existente. Las nuevas migraciones agregan estructura
 ## Reanudación: cobertura de búsquedas
 
 La búsqueda informa cuántos originales vigentes tienen texto aprobado y cuántos siguen pendientes. Una extracción con huella distinta queda excluida y contabilizada como pendiente. Los documentos retirados quedan fuera de ambos recuentos. La ausencia de coincidencias no se presenta como ausencia del tema en originales todavía no revisados. Verificado en PostgreSQL aislado y DOM; las 198 pruebas automatizadas siguen aprobadas. Sin despliegue ni cambios productivos.
+
+## Agente de consultas: circuito documental local
+
+Se incorpora `agente_consultar`, formulario privado, informe estructurado y referencias contrastables. Ver `docs/AGENTE_CONSULTAS_DOCTRINA.md`. 203 pruebas aprobadas, PostgreSQL aislado, DOM y navegador escritorio/móvil. El motor generativo no está conectado: requiere identificar proveedor/modelo y autorizaciones por documento y servicio. No confundir este informe local con un agente de interpretación mediante LLM. Sin despliegue ni migraciones productivas.

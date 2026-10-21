@@ -23,4 +23,14 @@ function entorno(){const dom=new JSDOM(html,{url:'https://fixture.example.invali
  w.document.getElementById('doctrinaConsultaTexto').value='prueba';await w.buscarTextoDoctrina();assert.equal(w.document.querySelectorAll('#doctrinaBusquedaResultados script,#doctrinaBusquedaResultados img').length,0);assert.ok(w.document.getElementById('doctrinaBusquedaResultados').textContent.includes('página 1'));assert.match(w.document.getElementById('doctrinaBusquedaResultados').textContent,/1 de 3 originales vigentes consultables/);assert.match(w.document.getElementById('doctrinaBusquedaResultados').textContent,/2 pendientes/);
  w.limpiarBibliotecaDoctrina();assert.equal(w.document.getElementById('doctrinaTextoContenido').value,'');assert.equal(w.document.getElementById('doctrinaBusquedaResultados').textContent,'');dom.window.close();
 }
+{
+ const {dom,w}=entorno();let resolver;
+ w.eval(await readFile('doctrina-admin.js','utf8'));
+ const informe={cobertura:{vigentes:3,consultables:1,pendientes:2},secciones:[{titulo:'Conclusión condicionada',texto:'<img src=x onerror=alert(1)>'}],fuentes:[{referencia:'F1',titulo:'<script>privado</script>',clase:'doctrina',pagina:2,version:1,sha256:'abc'}]};
+ w.fetch=async()=>({ok:true,json:async()=>({ok:true,informe})});
+ w.document.getElementById('doctrinaAgentePregunta').value='¿Qué representa la acacia?';w.document.getElementById('doctrinaAgenteTerminos').value='acacia';await w.consultarAgenteDoctrina();
+ const salida=w.document.getElementById('doctrinaAgenteResultado');assert.match(salida.textContent,/F1/);assert.match(salida.textContent,/página PDF 2/);assert.equal(salida.querySelectorAll('script,img').length,0);assert.equal(salida.getAttribute('aria-busy'),'false');
+ w.fetch=()=>new Promise(r=>{resolver=r;});const pendiente=w.consultarAgenteDoctrina();await new Promise(r=>setTimeout(r,0));w.limpiarBibliotecaDoctrina();w.usuarioActual=null;resolver({ok:true,json:async()=>({ok:true,informe})});await pendiente;
+ assert.equal(salida.textContent,'');assert.equal(w.document.getElementById('doctrinaAgentePregunta').value,'');assert.equal(w.document.getElementById('doctrinaAgenteConsultar').disabled,false);dom.window.close();
+}
 console.log('PASS DOM: perfil con código previo, datos bloqueados hasta confirmar, revisión por página correcta, resultados seguros y limpieza de sesión.');
