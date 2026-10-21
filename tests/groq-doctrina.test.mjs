@@ -26,3 +26,9 @@ test('rechaza referencias inventadas, campos incompletos y citas manuales',()=>{
  for(const cambio of [{referencias:['F99']},{referencias:[]},{texto:'Inventado [F99]'}]){const r=resultado();Object.assign(r.secciones[7],cambio);assert.throws(()=>validarRespuestaGroq(r,f));}
 });
 test('expediente excesivo no sale del servidor',async()=>{const s=entorno();const original=fuente.fragmento;fuente.fragmento='漢'.repeat(1000);const larga={...entrada,pregunta:'漢'.repeat(2000),antecedentes:'漢'.repeat(3000)};let enviado=false;const r=await consultarGroqDoctrina(larga,{env:{GROQ_API_KEY:'x',GROQ_ZDR_CONFIRMADO:'true'},rpc:async(a)=>a==='texto_buscar'?{resultados:[fuente]}:{autorizaciones:[{...fuente,autorizado:true,modelo:MODELO_GROQ}]},fetchImpl:async()=>{enviado=true;}});fuente.fragmento=original;assert.equal(enviado,false);assert.equal(r.generativo,false);});
+
+test('acepta referencia explícita solo si es recuperada y declarada en la sección',()=>{
+ const r=resultado();r.secciones[7].texto='El pasaje F1 aporta un antecedente condicionado.';
+ assert.equal(validarRespuestaGroq(r,[{referencia:'F1'}]).length,10);
+ r.secciones[7].referencias=['F2'];assert.throws(()=>validarRespuestaGroq(r,[{referencia:'F1'},{referencia:'F2'}]));
+});
