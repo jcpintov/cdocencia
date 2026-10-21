@@ -3603,7 +3603,8 @@ function validarUrlConversacionDesarrollo(valor) {
     const url=new URL(String(valor||'').trim());
     if(url.protocol!=='https:' || url.hostname!=='chatgpt.com')return null;
     // Abrir la conversación activa (/c/ID), incluso desde rutas con prefijos de proyecto.
-    if(!/(?:^|\\/)c\\/[a-z0-9-]{12,}(?:\\/|$)/i.test(url.pathname))return null;
+    const partes=url.pathname.split('/').filter(Boolean);
+    if(!partes.some((parte,i)=>parte==='c' && /^[a-z0-9-]{12,}$/i.test(partes[i+1]||'')))return null;
     url.hash='';
     return url.href;
   } catch { return null; }
