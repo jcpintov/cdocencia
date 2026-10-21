@@ -3595,46 +3595,6 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 
-// URL privada de esta conversación: solo el Superadmin puede configurarla.
-// Nunca suponer el identificador del chat ni publicar enlaces compartidos.
-const CONVERSACION_ADMIN_STORAGE='cdocencia_superadmin_conversacion_url_v1';
-function validarUrlConversacionDesarrollo(valor) {
-  try {
-    const url=new URL(String(valor||'').trim());
-    if(url.protocol!=='https:' || url.hostname!=='chatgpt.com')return null;
-    // Abrir la conversación activa (/c/ID), incluso desde rutas con prefijos de proyecto.
-    const partes=url.pathname.split('/').filter(Boolean);
-    if(!partes.some((parte,i)=>parte==='c' && /^[a-z0-9-]{12,}$/i.test(partes[i+1]||'')))return null;
-    url.hash='';
-    return url.href;
-  } catch { return null; }
-}
-function leerUrlConversacionDesarrollo() {
-  try{return validarUrlConversacionDesarrollo(localStorage.getItem(CONVERSACION_ADMIN_STORAGE));}
-  catch{return null;}
-}
-function configurarConversacionDesarrollo() {
-  if(!usuarioActual?.es_admin)return null;
-  const anterior=leerUrlConversacionDesarrollo()||'';
-  const entrada=window.prompt('Pegue aquí la URL de esta conversación, copiada de la barra del navegador de ChatGPT (https://chatgpt.com/c/...). El enlace quedará guardado únicamente en este navegador.',anterior);
-  if(entrada===null)return null;
-  const url=validarUrlConversacionDesarrollo(entrada);
-  if(!url){window.alert('URL no válida. Copie el enlace privado de la conversación desde la barra de direcciones de ChatGPT.');return null;}
-  try{localStorage.setItem(CONVERSACION_ADMIN_STORAGE,url);}
-  catch{window.alert('No se pudo conservar el enlace en este navegador.');return null;}
-  const boton=document.getElementById('adminConfigurarConversacion');
-  if(boton)boton.textContent='Cambiar enlace de conversación';
-  const enlace=document.getElementById('adminEnlaceConversacion');
-  if(enlace)enlace.href=url;
-  return url;
-}
-function abrirConversacionDesarrollo(event) {
-  event?.preventDefault();
-  if(!usuarioActual?.es_admin)return;
-  const url=leerUrlConversacionDesarrollo()||configurarConversacionDesarrollo();
-  if(url)window.open(url,'_blank','noopener,noreferrer');
-}
-
 async function cargarResumenAdmin() {
   const status = document.getElementById('resumenAdminEstado');
   if (!status) return;
