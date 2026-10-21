@@ -2423,3 +2423,15 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 #doctrinaVisorPagina{width:90px;padding:8px;background:#fff;color:#172b3a;border:1px solid #64748b}
 #doctrinaVisorDialogo .btn-secondary{background:#edf3f8;color:#17354b;border:1px solid #64748b;width:auto;margin:0}
 #doctrinaVisorMarco{width:100%;height:65vh;border:1px solid #94a3b8;background:#fff;box-sizing:border-box}
+
+/* Estado y prioridad comunes a Asignación de trabajos y su cronograma. */
+.cronograma-pendiente{border-color:#2563eb;border-left-color:#2563eb}
+.cronograma-vencido{border-color:#dc2626;border-left-color:#dc2626}
+.cronograma-publicado{border-color:#15803d;border-left-color:#15803d}
+#asignacionesBody .asignacion-fila{--estado-asignacion:#2563eb}
+#asignacionesBody .asignacion-vencido{--estado-asignacion:#dc2626}
+#asignacionesBody .asignacion-publicado{--estado-asignacion:#15803d}
+#asignacionesBody .asignacion-anulada{--estado-asignacion:#64748b}
+#asignacionesBody .asignacion-fila td{border-top:1px solid var(--estado-asignacion);border-bottom:1px solid var(--estado-asignacion)}
+#asignacionesBody .asignacion-fila td:first-child{border-left:4px solid var(--estado-asignacion)}
+#asignacionesBody .asignacion-fila td:last-child{border-right:1px solid var(--estado-asignacion)}
