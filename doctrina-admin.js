@@ -246,6 +246,41 @@ async function consultarAgenteDoctrina(){
  finally{clearTimeout(espera);if(controladorAgenteDoctrina===controlador)controladorAgenteDoctrina=null;if(vigente()){boton.disabled=false;salida.setAttribute('aria-busy','false');}}
 }
 
+let doctrinaPreparacionActiva=false;
+async function prepararBibliotecaGroq(){
+ if(!usuarioActual?.es_admin||doctrinaPreparacionActiva)return;
+ if(!confirm('Se extraerá e indexará automáticamente el texto de los originales vigentes. Después se autorizarán sus pasajes legibles para consultas con Groq. Los PDF permanecerán privados. ¿Continuar?'))return;
+ doctrinaPreparacionActiva=true;
+ const actor=usuarioActual.id;
+ const boton=document.getElementById('doctrinaPrepararGroq');
+ const estado=document.getElementById('doctrinaPrepararEstado');
+ if(boton)boton.disabled=true;
+ const informar=mensaje=>{if(estado&&usuarioActual?.id===actor)estado.textContent=mensaje;};
+ const errores=[];
+ try{
+  const lista=await peticionDoctrina('llm_listar');
+  const vigentes=lista.autorizaciones||[];
+  let extraidos=0,omitidos=0;
+  const pendientes=vigentes.filter(x=>!x.texto_indexado&&!x.texto_aprobado);
+  informar('Biblioteca: '+vigentes.length+' originales vigentes. '+pendientes.length+' pendientes de extracción.');
+  for(let i=0;i<pendientes.length;i++){
+   if(!usuarioActual?.es_admin||usuarioActual.id!==actor){informar('Preparación interrumpida por cambio de sesión.');return;}
+   const item=pendientes[i];
+   informar('Extrayendo '+(i+1)+' de '+pendientes.length+': '+item.titulo);
+   try{
+    const resultado=await peticionDoctrina('texto_extraer',{id:item.version_id});
+    if(resultado.extraido)extraidos++;else{omitidos++;errores.push(item.titulo+': extracción sin contenido consultable');}
+   }catch(e){omitidos++;errores.push(item.titulo+': '+String(e.message||'no se pudo extraer').slice(0,100));}
+  }
+  informar('Indexación terminada. Habilitando pasajes legibles de los originales vigentes para Groq…');
+  const autorizacion=await peticionDoctrina('llm_autorizar_biblioteca',{confirmacion:true});
+  const activos=Number(autorizacion.autorizados||0);
+  informar('Biblioteca: '+activos+' versiones autorizadas para Groq; '+extraidos+' extracciones nuevas; '+omitidos+' originales requieren atención.'+(errores.length?' Pendientes: '+errores.slice(0,5).join(' | '):''));
+  await cargarAutorizacionesGroq();
+ }catch(e){informar('No se completó la preparación: '+e.message+'. El progreso extraído permanece y puede reanudarse.');}
+ finally{doctrinaPreparacionActiva=false;if(boton)boton.disabled=false;}
+}
+
 async function cargarAutorizacionesGroq(){
  const turno=++consultaPermisosGroq,actor=usuarioActual?.id,salida=document.getElementById('doctrinaGroqPermisos');salida.textContent='Consultando permisos…';
  try{const r=await peticionDoctrina('llm_listar');if(turno!==consultaPermisosGroq||!usuarioActual?.es_admin||usuarioActual.id!==actor)return;salida.replaceChildren();

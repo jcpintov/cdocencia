@@ -46,11 +46,20 @@ test('una extracción no comienza si falla la integridad del original',async()=>
 test('agente mantiene la autorización previa y solo consulta fuentes mediante RPC protegida',async()=>{
  const ajeno=setup({foreign:true});assert.equal((await ajeno.request({action:'agente_consultar',pregunta:'Consulta suficientemente larga',consulta:'acacia'})).code,403);assert.equal(ajeno.calls.length,0);
  const s=setup();assert.equal((await s.request({action:'agente_consultar',pregunta:'corta',consulta:'acacia'})).code,422);assert.equal(s.calls.length,0);
- const r=await s.request({action:'agente_consultar',pregunta:'¿Qué representa la acacia?',consulta:'acacia',antecedentes:'Caso aportado'});assert.equal(r.code,200);assert.equal(r.body.informe.generativo,false);assert.deepEqual(s.calls,[['rpc','texto_buscar']]);
+ const r=await s.request({action:'agente_consultar',pregunta:'¿Qué representa la acacia?',consulta:'acacia',antecedentes:'Caso aportado'});assert.equal(r.code,200);assert.equal(r.body.informe.generativo,false);assert.deepEqual(s.calls,[['rpc','texto_buscar'],['rpc','texto_buscar']]);
 });
 
 test('permisos Groq requieren confirmación explícita e identidad Superadmin',async()=>{
  const s=setup();assert.equal((await s.request({action:'llm_autorizar',id:actor})).code,422);assert.equal(s.calls.length,0);
  assert.equal((await s.request({action:'llm_autorizar',id:actor,confirmacion:true})).code,200);assert.deepEqual(s.calls,[['rpc','texto_llm_autorizar']]);
  assert.equal((await setup({foreign:true}).request({action:'llm_listar'})).code,403);
+});
+
+
+test('autorización global exige confirmación y sesión privilegiada',async()=>{
+ const s=setup();assert.equal((await s.request({action:'llm_autorizar_biblioteca'})).code,422);
+ assert.equal(s.calls.length,0);
+ const r=await s.request({action:'llm_autorizar_biblioteca',confirmacion:true});
+ assert.equal(r.code,200);assert.deepEqual(s.calls,[['rpc','texto_llm_autorizar_biblioteca']]);
+ const no=setup({foreign:true});assert.equal((await no.request({action:'llm_autorizar_biblioteca',confirmacion:true})).code,403);
 });
