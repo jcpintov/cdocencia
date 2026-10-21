@@ -627,6 +627,7 @@
 <button id="tabNavDoctrina" class="admin-side-btn" onclick="cambiarSubseccionAdmin('doctrina')"><span class="portal-nav-glyph" aria-hidden="true">▥</span><span class="admin-nav-text">Doctrina y Reglamentos</span></button>
 </div>
 <div class="admin-menu-group"><p class="admin-menu-label">Participación y seguimiento</p>
+<button id="tabNavTenidas" class="admin-side-btn" onclick="cambiarSubseccionAdmin('tenidas')"><span class="portal-nav-glyph" aria-hidden="true">▦</span><span class="admin-nav-text">Calendario de tenidas</span></button>
 <button id="tabNavPresencial" class="admin-side-btn" onclick="cambiarSubseccionAdmin('presencial')">
           <span class="portal-nav-glyph" aria-hidden="true">◇</span><span class="admin-nav-text">Cámara presencial</span>
         </button>
@@ -944,6 +945,13 @@
       </section>
 
       <!-- SUBSECCIÓN 6: EDITOR DE SECCIÓN "DOCENCIA PARA MAESTROS" -->
+<section id="adminSeccionTenidas" class="card card-trazado hidden" aria-labelledby="tenidasTitulo">
+ <div class="admin-card-header"><div><h2 id="tenidasTitulo">Calendario de tenidas</h2><p class="text-instruccion">Programe los trabajos por fecha, grado, tema y autor.</p></div><button type="button" class="btn-primary" id="tenidasNuevo">Agregar trabajo</button></div>
+ <div class="tenidas-controles"><div class="tenidas-navegacion"><button type="button" id="tenidasAnterior" aria-label="Mes anterior">‹</button><button type="button" id="tenidasHoy">Hoy</button><button type="button" id="tenidasSiguiente" aria-label="Mes siguiente">›</button></div><label>Mes <input type="month" id="tenidasMes" name="tenidas_mes"></label><label>Grado <select id="tenidasGradoFiltro" name="tenidas_grado_filtro"><option value="todos">Todos los grados</option><option value="1">1° · Aprendiz</option><option value="2">2° · Compañero</option><option value="3">3° · Maestro</option></select></label><button type="button" id="tenidasActualizar" class="btn-secondary">Actualizar</button></div>
+ <p id="tenidasEstado" role="status" aria-live="polite"></p><div class="tenidas-mes-cabecera"><h3 id="tenidasTituloMes"></h3><span id="tenidasConteo"></span></div>
+ <div class="tenidas-semana" aria-hidden="true"><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span></div><div id="tenidasCuadricula" class="tenidas-cuadricula" aria-label="Días del mes"></div>
+ <div class="tenidas-agenda-cabecera"><h3 id="tenidasAgendaTitulo">Trabajos del mes</h3><button type="button" id="tenidasVerMes" class="btn-secondary" hidden>Ver todo el mes</button></div><ul id="tenidasLista" class="tenidas-lista"></ul>
+</section>
       <section id="adminSeccionDoctrina" class="card card-trazado hidden">
         <h2>Doctrina y Reglamentos</h2>
         <p class="text-instruccion">Sección exclusiva de Superadmin en preparación. La incorporación y descarga de originales permanecen en pruebas.</p>
@@ -1273,9 +1281,11 @@
       <div class="hilo-form-acciones"><button type="button" class="btn-secondary" onclick="cerrarModalUniversalDirecto('modalEditarComentarioForo')">Cancelar</button><button type="submit" id="btnGuardarEdicionComentario" class="btn-primary">Guardar comentario</button></div>
     </form>
   </dialog>
+<dialog id="tenidasDialogo" class="tenidas-dialogo" aria-labelledby="tenidasDialogoTitulo"><form id="tenidasFormulario"><h2 id="tenidasDialogoTitulo">Agregar trabajo de tenida</h2><div class="tenidas-campos"><label for="tenidasFecha">Fecha de la tenida</label><input type="date" id="tenidasFecha" name="fecha" required><label for="tenidasGrado">Grado</label><select id="tenidasGrado" name="grado" required><option value="">Seleccione un grado</option><option value="1">1° · Aprendiz</option><option value="2">2° · Compañero</option><option value="3">3° · Maestro</option></select><label for="tenidasTema">Tema del trabajo</label><input type="text" id="tenidasTema" name="tema" maxlength="250" required><label for="tenidasAutor">Autor</label><input type="text" id="tenidasAutor" name="autor" list="tenidasAutores" maxlength="180" required aria-describedby="tenidasAutorAyuda"><datalist id="tenidasAutores"></datalist><p id="tenidasAutorAyuda">Seleccione una sugerencia del padrón o escriba el nombre del autor.</p></div><p id="tenidasFormularioEstado" role="status" aria-live="polite"></p><div class="tenidas-acciones"><button type="button" id="tenidasEliminar" class="btn-secondary" hidden>Eliminar trabajo</button><button type="button" id="tenidasCancelar" class="btn-secondary">Cancelar</button><button type="submit" id="tenidasGuardar" class="btn-primary">Guardar trabajo</button></div></form></dialog>
   <script src="app.js"></script>
   <script src="comentarios-hilos.js"></script>
   <script src="asignaciones-admin.js"></script>
+  <script src="calendario-tenidas.js"></script>
   <script src="bitacora-sesion.js"></script>
   <script src="ui-v2.js" defer></script>
 </body>

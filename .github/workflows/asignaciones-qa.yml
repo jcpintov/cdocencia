@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'app.js'
+      - 'calendario-tenidas.js'
+      - 'api/admin-tenidas.js'
       - 'comentarios-hilos.js'
       - 'recuperar.html'
       - 'ui-v2.js'
@@ -40,4 +42,5 @@ jobs:
         run: |
           node tests/browser/asignaciones-smoke.mjs
           node tests/browser/usuarios-smoke.mjs
+          node tests/browser/tenidas-smoke.mjs
 
