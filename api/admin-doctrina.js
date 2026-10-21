@@ -21,7 +21,7 @@ export default async function handler(req,res){
   const {data:perfil,error:profileError}=await admin.from('usuarios').select('id,email,es_admin').eq('auth_user_id',user.id).maybeSingle();
   if(profileError||!perfil?.es_admin||String(user.email||'').toLowerCase()!=='jpintov@gmail.com'||String(perfil.email||'').toLowerCase()!=='jpintov@gmail.com')return reply(res,403,{error:'Acceso exclusivo de Superadmin'});
   const {action,...datos}=req.body||{};
-  if(!['listar','preparar','registrar','descargar'].includes(action))return reply(res,422,{error:'Acción inválida'});
+  if(!['listar','preparar','registrar','descargar','revisar','retirar','restaurar'].includes(action))return reply(res,422,{error:'Acción inválida'});
   const rpc=async(accion,payload={})=>{
    const {data,error}=await admin.rpc('doctrina_gestion_superadmin',{p_actor:user.id,p_accion:accion,p_datos:payload});
    if(error)throw new Error('database');return data;
@@ -50,12 +50,15 @@ export default async function handler(req,res){
    return reply(res,200,{ok:true,...result});
   }
   if(!uuid(datos.id))return reply(res,422,{error:'Documento inválido'});
+  if(action==='retirar'||action==='restaurar')return reply(res,200,{ok:true,...await rpc(action,{id:datos.id})});
+  if(action==='revisar'&&(!['aprobar','devolver'].includes(datos.decision)||typeof datos.nota!=='string'||datos.nota.length>2000))return reply(res,422,{error:'Revisión inválida'});
   const version=await rpc('obtener',{id:datos.id});
   if(!version)return reply(res,404,{error:'Documento no encontrado'});
   const {data:blob,error:downloadError}=await storage.download(version.path);
   if(downloadError||!blob)return reply(res,409,{error:'No se encontró el original'});
   if(blob.size!==Number(version.bytes)||blob.size>MAX)return reply(res,409,{error:'Integridad del original pendiente de revisión'});
   if(createHash('sha256').update(Buffer.from(await blob.arrayBuffer())).digest('hex')!==version.sha256)return reply(res,409,{error:'La integridad del original no coincide'});
+  if(action==='revisar')return reply(res,200,{ok:true,...await rpc('revisar',{id:datos.id,decision:datos.decision,nota:datos.nota})});
   const {data,error}=await storage.createSignedUrl(version.path,60,{download:true});
   if(error||!data?.signedUrl)return reply(res,503,{error:'No se pudo habilitar la descarga'});
   return reply(res,200,{ok:true,url:data.signedUrl,expira_segundos:60});

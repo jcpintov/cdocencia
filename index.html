@@ -965,7 +965,7 @@
           <p id="doctrinaCargaEstado" role="status" aria-live="polite"></p>
         </form>
         <label for="doctrinaBuscar">Buscar documento</label><input id="doctrinaBuscar" type="search" oninput="renderizarBibliotecaDoctrina()">
-        <h3>Originales incorporados</h3><div id="doctrinaDocumentos"></div>
+        <p>Los originales ingresan como borradores. Abra Revisión para aprobarlos como vigentes o dejarlos pendientes con observaciones. Aprobar no los hace públicos.</p><label class="doctrina-check"><input id="doctrinaMostrarRetirados" type="checkbox" onchange="renderizarBibliotecaDoctrina()"> Mostrar eliminados</label><h3>Originales incorporados</h3><div id="doctrinaDocumentos"></div>
         <details><summary>Inventario documental</summary><div id="doctrinaInventario"></div></details>
         <button class="admin-link-btn" onclick="cambiarSubseccionAdmin('resumen')">Volver al resumen</button>
       </section>
@@ -1297,6 +1297,7 @@
   <script src="comentarios-hilos.js"></script>
   <script src="asignaciones-admin.js"></script>
   <script src="calendario-tenidas.js"></script>
+<dialog id="doctrinaRevisionDialogo" aria-labelledby="doctrinaRevisionTitulo"><h2>Revisión del original</h2><h3 id="doctrinaRevisionTitulo"></h3><input type="hidden" id="doctrinaRevisionId"><label for="doctrinaRevisionNota">Observaciones de revisión</label><textarea id="doctrinaRevisionNota" maxlength="2000" rows="5"></textarea><p id="doctrinaRevisionEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" class="btn-secondary" onclick="document.getElementById('doctrinaRevisionDialogo').close()">Cerrar</button><button type="button" class="btn-secondary" onclick="guardarRevisionDoctrina('devolver')">Dejar en revisión</button><button type="button" class="btn-primary" onclick="guardarRevisionDoctrina('aprobar')">Aprobar como vigente</button></div></dialog>
   <script src="doctrina-admin.js"></script>
   <script src="bitacora-sesion.js"></script>
   <script src="ui-v2.js" defer></script>
