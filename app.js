@@ -53,10 +53,17 @@ function reiniciarTemporizadorInactividad() {
 /* ==========================================================================
    AUXILIARES
    ========================================================================== */
+// Un único tratamiento institucional, incluso si el nombre trae QH duplicado.
+function limpiarTratamientoHermano(nombre) {
+  return String(nombre || '').replace(/\s+/g, ' ').trim()
+    .replace(/^(?:Q\s*[.·:]*\s*H\s*[.·:]*\s*)+/iu, '').trim();
+}
+function formatearNombreHermano(nombre, reemplazo = 'Hermano') {
+  const limpio = limpiarTratamientoHermano(nombre) || reemplazo;
+  return `Q.·.H.·. ${limpio}`;
+}
 function formatearAutorMasonico(autor) {
-  if (!autor) return "Cámara de Docencia";
-  if (autor.includes("Q.·.H.·.") || autor.includes("Q.H.")) return autor;
-  return `Q.·.H.·. ${autor}`;
+  return autor ? formatearNombreHermano(autor) : 'Cámara de Docencia';
 }
 
 /* ==========================================================================
@@ -208,8 +215,7 @@ async function recuperarSesionGuardada() {
 // Encabezado compartido por todas las pantallas: se identifica al Maestro,
 // pero nunca se muestra su nombre durante login o en la cuenta Superadmin.
 function limpiarNombreWorkspaceUsuario(nombre) {
-  return String(nombre || '').replace(/^\s*(?:Q[.·:\s]+H[.·:\s]+)+/iu, '')
-    .replace(/\s+/g, ' ').trim();
+  return limpiarTratamientoHermano(nombre);
 }
 
 function sincronizarEncabezadoWorkspaceUsuario() {
@@ -224,7 +230,7 @@ function sincronizarEncabezadoWorkspaceUsuario() {
   const nombre = limpiarNombreWorkspaceUsuario(usuarioActual.nombre);
   if (!nombre) return;
 
-  campoNombre.textContent = 'Q.·.H.·. ' + nombre;
+  campoNombre.textContent = formatearNombreHermano(nombre);
   bloque.classList.remove('hidden');
 }
 
@@ -264,8 +270,8 @@ function aceptarSigilo() {
     return;
   }
 
-  const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-  document.getElementById('bienvenidaNombreQH').innerText = `Q.·.H.·. ${nombreLimpio}`;
+  const nombreLimpio = limpiarTratamientoHermano(usuarioActual.nombre);
+  document.getElementById('bienvenidaNombreQH').innerText = formatearNombreHermano(nombreLimpio);
   document.getElementById('seccionBienvenida').classList.remove('hidden');
 }
 
@@ -317,8 +323,8 @@ async function guardarNuevaClaveObligatoria() {
     if (usuarioActual.es_admin) {
       configurarEntornoUsuario();
     } else {
-      const nombreLimpio = usuarioActual.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
-      document.getElementById('bienvenidaNombreQH').innerText = `Q.·.H.·. ${nombreLimpio}`;
+      const nombreLimpio = limpiarTratamientoHermano(usuarioActual.nombre);
+      document.getElementById('bienvenidaNombreQH').innerText = formatearNombreHermano(nombreLimpio);
       document.getElementById('seccionBienvenida').classList.remove('hidden');
     }
   } catch (ex) {
@@ -1363,7 +1369,7 @@ async function mostrarMuroReflexionesUsuarios() {
           return `
             <div class="foro-comentario-item" id="comentario_item_${c.id}">
               <div class="foro-comentario-header">
-                <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${escaparTextoHTMLDocencia(c.usuarios?.nombre || "Hermano")}</span>
+                <span class="foro-comentario-autor">Aporte del ${escaparTextoHTMLDocencia(formatearNombreHermano(c.usuarios?.nombre))}</span>
                 <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
               </div>
               <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${escaparTextoHTMLDocencia(c.contenido)}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
@@ -1374,7 +1380,7 @@ async function mostrarMuroReflexionesUsuarios() {
         return `
           <div class="reflexion-item" style="margin-bottom: 20px; border-left: 3px solid var(--accent-gold); padding: 18px 20px; border-radius: 0 6px 6px 0;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <span class="reflexion-autor">${escaparTextoHTMLDocencia(it.usuarios?.nombre || "Hermano Maestro")}</span>
+              <span class="reflexion-autor">${escaparTextoHTMLDocencia(formatearNombreHermano(it.usuarios?.nombre, 'Hermano Maestro'))}</span>
               <span style="font-size: 0.78rem; color: var(--text-muted); font-family: var(--font-ui);">${fechaTxt}</span>
             </div>
             <div style="font-size: 1rem; line-height: 1.6; font-style: italic; margin-bottom: 8px;">"${escaparTextoHTMLDocencia(it.reflexion)}"</div>
@@ -2141,7 +2147,7 @@ async function cargarMuroReflexiones() {
         return `
           <div class="foro-comentario-item" id="comentario_item_${c.id}">
             <div class="foro-comentario-header">
-              <span class="foro-comentario-autor">Aporte del Q.·.H.·. ${escaparTextoHTMLDocencia(c.usuarios?.nombre || "Hermano")}</span>
+              <span class="foro-comentario-autor">Aporte del ${escaparTextoHTMLDocencia(formatearNombreHermano(c.usuarios?.nombre))}</span>
               <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
             </div>
             <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${escaparTextoHTMLDocencia(c.contenido)}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
@@ -2151,7 +2157,7 @@ async function cargarMuroReflexiones() {
 
       contenedor.innerHTML += `
         <div class="reflexion-item" style="margin-bottom: 20px;">
-          <div class="reflexion-autor">${escaparTextoHTMLDocencia(item.usuarios?.nombre || "Hermano Maestro")}</div>
+          <div class="reflexion-autor">${escaparTextoHTMLDocencia(formatearNombreHermano(item.usuarios?.nombre, 'Hermano Maestro'))}</div>
           <div style="font-style: italic; margin-bottom: 8px;">"${escaparTextoHTMLDocencia(item.reflexion)}"</div>
           
           <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${item.id}')">
@@ -2351,9 +2357,9 @@ async function abrirModalCertificado(moduloId = null, usuarioId = null) {
     .maybeSingle();
 
   const reflexionExacta = prog?.reflexion || "";
-  const nombreLimpio = userTarget.nombre.replace(/(Q[\.·\s]*H[\.·\s]*)+/gi, '').trim();
+  const nombreLimpio = limpiarTratamientoHermano(userTarget.nombre);
 
-  document.getElementById('certNombreHermano').innerText = nombreLimpio;
+  document.getElementById('certNombreHermano').innerText = formatearNombreHermano(nombreLimpio);
   document.getElementById('certTituloPlancha').innerText = `"${modTarget.titulo}"`;
   document.getElementById('certAutorPlancha').innerText = modTarget.autor ? "Autor: " + formatearAutorMasonico(modTarget.autor) : "";
   document.getElementById('certTextoReflexion').innerText = `"${reflexionExacta}"`;
@@ -3454,11 +3460,11 @@ async function cargarMuroGeneralAdmin() {
     cont.innerHTML += `
       <div class="reflexion-item" style="margin-bottom: 16px;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-          <strong>Trabajo ${r.modulos?.numero_orden || '—'}: ${r.modulos?.titulo || 'Trazado'}</strong>
+          <strong>Trabajo ${r.modulos?.numero_orden || '—'}: ${escaparTextoHTMLDocencia(r.modulos?.titulo || 'Trazado')}</strong>
           <span style="font-size: 0.8rem; color: var(--text-muted);">${fecha}</span>
         </div>
-        <p style="margin: 0 0 6px 0; font-style: italic;">"${r.reflexion}"</p>
-        <span class="reflexion-autor">Q.·.H.·. ${r.usuarios?.nombre || 'Hermano'}</span>
+        <p style="margin: 0 0 6px 0; font-style: italic;">"${escaparTextoHTMLDocencia(r.reflexion)}"</p>
+        <span class="reflexion-autor">${escaparTextoHTMLDocencia(formatearNombreHermano(r.usuarios?.nombre))}</span>
       </div>
     `;
   });
