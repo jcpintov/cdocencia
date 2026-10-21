@@ -28,10 +28,10 @@ test('formatea con limpieza de espacios y tolera nombres de usuarios sin prefijo
   assert.equal(formatters.formatearNombreHermano('  Q.·.H.·.   Julio   Pinto V. '),'Q.·.H.·. Julio Pinto V.');
   assert.equal(formatters.formatearAutorMasonico(null),'Cámara de Docencia');
 });
-test('dos vistas del Muro usan el mismo formateador de comentarios',()=>{
-  const uses=app.match(/Aporte del \$\{escaparTextoHTMLDocencia\(formatearNombreHermano\(c\.usuarios\?\.nombre\)\)\}/g)||[];
-  assert.equal(uses.length,2,'foro de trabajo y Muro de todos los usuarios');
-  assert.doesNotMatch(app,/Aporte del Q\.·\.H\.·\. \$\{escaparTextoHTMLDocencia\(c\.usuarios/);
+test('dos vistas del Muro comparten hilos y tratamiento institucional',()=>{
+ assert.equal((app.match(/window\.renderizarHilosComentarios\?\./g)||[]).length,2);
+ const hilos=readFileSync(new URL('../comentarios-hilos.js',import.meta.url),'utf8');
+ assert.match(hilos,/formatearNombreHermano/);
 });
 test('Muro General no reitera tratamiento en pantalla ni PDF',()=>{
  const sec=app.slice(app.indexOf('async function cargarMuroGeneralAdmin()'),app.indexOf('function imprimirMuroGeneralPDF()'));
@@ -43,3 +43,4 @@ test('certificado ofrece un solo tratamiento y el informe conserva su tratamient
  assert.match(app,/certNombreHermano'\)\.innerText = formatearNombreHermano\(nombreLimpio\)/);
  assert.match(app,/informeNombreHermano'\)\.innerText = nombreLimpio/);
 });
+

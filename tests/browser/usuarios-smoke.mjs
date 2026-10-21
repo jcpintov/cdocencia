@@ -8,7 +8,7 @@ const {chromium}=createRequire(process.env.QA_PLAYWRIGHT_ROOT+'/package.json')('
 const root=resolve('.');
 const catalogo=JSON.parse(await readFile('tests/browser/catalogo-fixture.json','utf8')).catalogo;
 const bootstrap=()=>{
- window.qa={fail:false,delay:0,writeFail:false,progress:null,restoreFail:false,authCalls:0,updateFail:false,recovery:false};
+ window.qa={fail:false,delay:0,writeFail:false,progress:null,restoreFail:false,authCalls:0,updateFail:false,recovery:false,comments:[],replyFail:false,replyUncertain:false,editFail:false,replyCalls:0};
  const user={id:'u1',nombre:'Hermano de Prueba',email:'prueba@example.invalid',es_admin:false,debe_cambiar_clave:false};
  const module={id:'m1',numero_orden:1,titulo:'La Acacia',autor:'Autor de Prueba',unidad_codigo:'INCI011A',contenido_trazado:'Texto de prueba para la lectura docente.',resumen_formativo:'Resumen.',conclusion_enlace:'Conclusión.',preguntas_json:{preguntas:Array.from({length:8},(_,i)=>({enunciado:'Interrogante '+(i+1),opciones:['A','B','C','D'].map(letra=>({letra,texto:'Opción '+letra})),respuesta_correcta:'A',retroalimentacion:'Fundamento de la respuesta.'}))}};
  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -28,7 +28,30 @@ const bootstrap=()=>{
    return {data:[]};
   })().then(ok,bad);return q;
  }
- window.supabase={createClient:()=>({from,rpc:async()=>({data:{aportes:[],comentarios:[]}}),auth:{
+ async function rpc(name,args){
+  if(name==='muro_docente_autorizado')return {data:{
+   aportes:qa.progress?.completado?[{...qa.progress,usuarios:{nombre:user.nombre}}]:[],
+   comentarios:qa.progress?.completado?[{id:'c0',progreso_id:'p1',modulo_id:'m1',usuario_id:'u2',contenido:'Comentario inicial de otro hermano.',usuarios:{nombre:'Otro Hermano'},creado_en:'2026-10-21T12:00:00Z'},...qa.comments]:[]
+  }};
+  if(name==='maestro_responder_comentario'){
+   qa.replyCalls++;await sleep(30);
+   if(qa.replyFail)return {data:null,error:{message:'Conexión interrumpida'}};
+   const existing=qa.comments.find(c=>c.solicitud_id===args.p_solicitud_id);
+   if(existing)return {data:existing.id};
+   const comment={id:'r'+(qa.comments.length+1),progreso_id:'p1',modulo_id:'m1',usuario_id:'u1',comentario_padre_id:args.p_comentario_padre_id,contenido:args.p_contenido,solicitud_id:args.p_solicitud_id,usuarios:{nombre:user.nombre},creado_en:new Date().toISOString()};
+   qa.comments.push(comment);
+   if(qa.replyUncertain){qa.replyUncertain=false;return {data:null,error:{message:'Respuesta del servidor interrumpida'}};}
+   return {data:comment.id};
+  }
+  if(name==='maestro_editar_comentario_propio'){
+   if(qa.editFail)return {data:null,error:{message:'No se pudo guardar la edición'}};
+   const c=qa.comments.find(c=>c.id===args.p_comentario_id&&c.usuario_id==='u1');
+   if(!c)return {data:null,error:{message:'Comentario ajeno'}};
+   c.contenido=args.p_contenido;c.editado=true;return {data:true};
+  }
+  return {data:[]};
+ }
+ window.supabase={createClient:()=>({from,rpc,auth:{
   getUser:async()=>{if(window.qa.restoreFail)throw Error('Network error');return {data:{user:null}};},
   getSession:async()=>({data:{session:window.qa.recovery?{access_token:'fixture'}:null}}),
   onAuthStateChange:()=>{},signOut:async()=>({}),
@@ -86,6 +109,55 @@ try{
  await page.evaluate(()=>qa.writeFail=false);await page.locator('#btnConsagrarReflexion').click();
  await page.locator('#bloqueMuro').waitFor({state:'visible'});
  assert.equal(await page.evaluate(()=>qa.progress.completado),true);
+ // Hilos: respuesta, respuesta a respuesta, edición y preservación de borradores.
+ await page.locator('#comentario_item_c0 [data-hilo-accion="responder"]').click();
+ await page.locator('#hilo_texto_c0').fill('Respuesta de prueba que debe conservarse ante una caída de conexión.');
+ await page.locator('#hilo_form_c0 [data-hilo-accion="cancelar"]').click();
+ assert.equal(await page.locator('#hilo_form_c0').isVisible(),false);
+ await page.locator('#comentario_item_c0 [data-hilo-accion="responder"]').click();
+ assert.match(await page.locator('#hilo_texto_c0').inputValue(),/conservarse/);
+ await page.evaluate(()=>qa.replyFail=true);
+ await page.locator('#hilo_form_c0 [type="submit"]').click();
+ await page.locator('#hilo_estado_c0').filter({hasText:'Su texto se conserva'}).waitFor();
+ assert.equal(await page.locator('#hilo_form_c0 [type="submit"]').isEnabled(),true);
+ assert.equal(await page.evaluate(()=>qa.comments.length),0);
+ await page.evaluate(()=>qa.replyFail=false);
+ await page.locator('#hilo_form_c0 [type="submit"]').click();
+ await page.locator('#comentario_item_r1').waitFor();
+ assert.equal(await page.locator('#comentario_item_r1').getAttribute('data-padre-id'),'c0');
+ assert.equal(await page.locator('#comentario_item_c0 [data-hilo-accion="editar"]').count(),0);
+ // Se perdió la confirmación, pero el reintento conserva el mismo identificador.
+ await page.locator('#comentario_item_r1 [data-hilo-accion="responder"]').click();
+ await page.locator('#hilo_texto_r1').fill('Respuesta anidada con confirmación interrumpida.');
+ await page.evaluate(()=>qa.replyUncertain=true);
+ await page.locator('#hilo_form_r1 [type="submit"]').click();
+ await page.locator('#hilo_estado_r1').filter({hasText:'Su texto se conserva'}).waitFor();
+ assert.equal(await page.evaluate(()=>qa.comments.length),2);
+ await page.locator('#hilo_form_r1 [type="submit"]').click();
+ await page.locator('#comentario_item_r2').waitFor();
+ assert.equal(await page.evaluate(()=>qa.comments.length),2);
+ assert.equal(await page.locator('#comentario_item_r2').count(),1);
+ assert.equal(await page.locator('#comentario_item_r2').getAttribute('data-padre-id'),'r1');
+ // Abrir otro borrador y editar un comentario no debe borrarlo.
+ await page.locator('#comentario_item_c0 [data-hilo-accion="responder"]').click();
+ await page.locator('#hilo_texto_c0').fill('Otro borrador que no debe desaparecer durante una edición.');
+ await page.locator('#comentario_item_r1 [data-hilo-accion="editar"]').click();
+ await page.locator('#textareaEditarComentario').fill('Respuesta propia editada desde el formulario.');
+ await page.evaluate(()=>qa.editFail=true);
+ await page.locator('#btnGuardarEdicionComentario').click();
+ await page.locator('#estadoEditarComentario').filter({hasText:'Su texto se conserva'}).waitFor();
+ assert.equal(await page.locator('#btnGuardarEdicionComentario').isEnabled(),true);
+ await page.evaluate(()=>qa.editFail=false);await page.locator('#btnGuardarEdicionComentario').click();
+ await page.locator('#modalEditarComentarioForo').waitFor({state:'hidden'});
+ await page.locator('#comentario_cuerpo_r1').filter({hasText:'Respuesta propia editada'}).waitFor();
+ assert.match(await page.locator('#hilo_texto_c0').inputValue(),/Otro borrador/);
+ assert.equal(await page.locator('#hilo_form_c0').isVisible(),true);
+ if(process.env.QA_HILOS_CAPTURE)console.log('HILOS_ESCRITORIO:'+(await page.screenshot({type:'jpeg',quality:60})).toString('base64'));
+ await page.setViewportSize({width:390,height:844});
+ await page.locator('#hilo_form_c0').scrollIntoViewIfNeeded();
+ if(process.env.QA_HILOS_CAPTURE)console.log('HILOS_MOVIL:'+(await page.screenshot({type:'jpeg',quality:60})).toString('base64'));
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Hilos legibles en móvil sin desborde');
+ await page.setViewportSize({width:1440,height:900});
  await page.evaluate(()=>volverAInicioPortal());await visible('seccionBienvenida');
  // Un catálogo caído conserva navegación y reintento visibles.
  await page.evaluate(()=>qa.fail=true);await nav('seccionBienvenida','Trabajos de la Cámara');
@@ -93,6 +165,17 @@ try{
  await page.evaluate(()=>qa.fail=false);await page.getByRole('button',{name:'Reintentar',exact:true}).click();
  await page.waitForFunction(()=>document.getElementById('seccionCatalogoTrabajos').getAttribute('aria-busy')==='false');
  assert.equal(await page.locator('[data-estado-catalogo]:visible').count(),0);
+ await nav('seccionCatalogoTrabajos','Muro Docente');
+ await page.locator('#contenedorMuroUsuariosDirecto #general_comentario_item_r2').waitFor();
+ await page.locator('#general_comentario_item_r2 [data-hilo-accion="responder"]').click();
+ await page.locator('#general_hilo_texto_r2').fill('Respuesta escrita desde el muro docente general.');
+ await page.locator('#general_hilo_form_r2 [type="submit"]').click();
+ await page.locator('#contenedorMuroUsuariosDirecto #general_comentario_item_r3').waitFor();
+ assert.equal(await page.locator('#general_comentario_item_r3').getAttribute('data-padre-id'),'r2');
+ assert.equal(await page.evaluate(()=>{const ids=[...document.querySelectorAll('.hilo-formulario')].map(f=>f.id);return ids.length===new Set(ids).size;}),true,'Cada formulario tiene un id propio en las dos vistas');
+ await page.setViewportSize({width:390,height:844});
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Muro general sin desborde en móvil');
+ await page.setViewportSize({width:1440,height:900});
  // La respuesta tardía no revierte el destino elegido.
  await page.evaluate(()=>{qa.delay=300;void irAContenidoDocente();volverAInicioPortal();});
  await page.waitForTimeout(500);await visible('seccionBienvenida');
@@ -121,5 +204,5 @@ try{
  await page.locator('#status').filter({hasText:'Contraseña actualizada'}).waitFor();
  assert.equal(await page.locator('#form').isVisible(),false);
  assert.deepEqual(errors,[]);
- console.log('PASS: ingreso, sigilo, navegación, 139 temas, lectura, ocho preguntas, reflexión, muro, móvil, fallos de conexión, respuestas tardías y recuperación.');
+ console.log('PASS: ingreso, programa, lectura, cuestionario, reflexión, hilos en ambos muros, respuesta anidada, reintento sin duplicado, edición propia, borradores, móvil, navegación y recuperación.');
 }finally{await browser.close();await new Promise(r=>server.close(r));}

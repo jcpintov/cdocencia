@@ -400,6 +400,7 @@ function cerrarSesion() {
   document.getElementById('modalAdminClaveHermano').classList.add('hidden');
   document.getElementById('modalAdminUsuario').classList.add('hidden');
   document.getElementById('modalRecuperarClave').classList.add('hidden');
+  cerrarModalUniversalDirecto('modalEditarComentarioForo');
   document.getElementById('modalResetearConToken').classList.add('hidden');
   document.getElementById('modalMisAvances').classList.add('hidden');
   document.getElementById('modalCertificado').classList.add('hidden');
@@ -1339,20 +1340,24 @@ async function mostrarMuroReflexionesUsuarios() {
   document.getElementById('seccionDocenciaInstitucional').classList.add('hidden');
   
   const cont = document.getElementById('contenedorMuroUsuariosDirecto');
-  cont.innerHTML = "<p class='td-loading'>Recuperando aportes de la Cámara...</p>";
+  let borradores;
+  const actorMuro = usuarioActual;
+  if (!cont.innerHTML) cont.innerHTML = "<p class='td-loading'>Recuperando aportes de la Cámara...</p>";
   document.getElementById('seccionMuroUsuarios').classList.remove('hidden');
 
   await refrescarProgresosUsuario();
 
   const {data: muro,error}=await sbApp.rpc('muro_docente_autorizado',{p_modulo:null});
+  if (solicitud !== versionNavegacion || usuarioActual !== actorMuro) return;
   const aportes=muro?.aportes;
 
-  cont.innerHTML = "";
-
   if (error || !aportes) {
-    cont.innerHTML = "<p style='color: var(--error);'>Error al cargar las reflexiones de la Cámara.</p>";
+    if (window.mostrarEstadoHilos) window.mostrarEstadoHilos(cont, 'No se pudo actualizar el muro. Sus borradores se conservan; vuelva a abrirlo para reintentar.');
+    else cont.innerHTML = '<p>No se pudo cargar el muro.</p>';
     return;
   }
+  borradores = window.capturarBorradoresComentarios?.(cont);
+  cont.innerHTML = '';
 
   let comentariosMap = {};
   const comentariosData=muro?.comentarios;
@@ -1423,33 +1428,7 @@ async function mostrarMuroReflexionesUsuarios() {
           : "";
         
         const comentariosDeEstaReflexion = comentariosMap[it.id] || [];
-        let comentariosHtml = comentariosDeEstaReflexion.map(c => {
-          const cFecha = c.creado_en 
-            ? new Date(c.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-            : "";
-          const esAutorComentario = (c.usuario_id === usuarioActual.id);
-          const editadoTag = c.editado ? ` <span style="font-size: 0.72rem; color: var(--accent-gold); font-style: italic;">(editado)</span>` : "";
-
-          let botonesComentario = "";
-          if (esAutorComentario) {
-            botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido).replace(/'/g,'%27')}')">✏️ Editar</button>`;
-          }
-          if (usuarioActual.es_admin) {
-            const nombreEscapado = (c.usuarios?.nombre || '').replace(/'/g, "\\'");
-            botonesComentario += `<button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${nombreEscapado}', '${cFecha}')">🔍 Huella</button>`;
-            botonesComentario += `<button class="foro-comentario-btn" style="color: var(--error);" onclick="eliminarComentarioForo('${c.id}')">🗑️</button>`;
-          }
-
-          return `
-            <div class="foro-comentario-item" id="comentario_item_${c.id}">
-              <div class="foro-comentario-header">
-                <span class="foro-comentario-autor">Aporte del ${escaparTextoHTMLDocencia(formatearNombreHermano(c.usuarios?.nombre))}</span>
-                <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
-              </div>
-              <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${escaparTextoHTMLDocencia(c.contenido)}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
-            </div>
-          `;
-        }).join('');
+        const comentariosHtml = window.renderizarHilosComentarios?.(comentariosDeEstaReflexion, it.id, m.id, 'general') || '';
 
         return `
           <div class="reflexion-item" style="margin-bottom: 20px; border-left: 3px solid var(--accent-gold); padding: 18px 20px; border-radius: 0 6px 6px 0;">
@@ -1459,19 +1438,19 @@ async function mostrarMuroReflexionesUsuarios() {
             </div>
             <div style="font-size: 1rem; line-height: 1.6; font-style: italic; margin-bottom: 8px;">"${escaparTextoHTMLDocencia(it.reflexion)}"</div>
             
-            <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${it.id}')">
+            <button class="foro-btn-toggle-comentar" onclick="toggleFormularioComentario('${it.id}', 'general_')">
               💬 Comentarios (${comentariosDeEstaReflexion.length})
             </button>
 
-            <div id="caja_comentario_${it.id}" class="foro-comentar-caja hidden">
-              <textarea id="input_comentario_${it.id}" name="input_comentario_${it.id}" rows="3" class="foro-comentar-input" placeholder="Escriba su comentario aquí..."></textarea>
+            <div id="general_caja_comentario_${it.id}" class="foro-comentar-caja hidden">
+              <textarea id="general_input_comentario_${it.id}" name="general_input_comentario_${it.id}" rows="3" class="foro-comentar-input" placeholder="Escriba su comentario aquí..."></textarea>
               <div style="display: flex; justify-content: flex-end; gap: 8px;">
-                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleFormularioComentario('${it.id}')">Cancelar</button>
-                <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem; width: auto;" onclick="enviarComentarioForo('${it.id}', '${m.id}')">Publicar</button>
+                <button class="btn-secondary" style="padding: 6px 12px; font-size: 0.85rem;" onclick="toggleFormularioComentario('${it.id}', 'general_')">Cancelar</button>
+                <button class="btn-primary" style="padding: 6px 14px; font-size: 0.85rem; width: auto;" onclick="enviarComentarioForo('${it.id}', '${m.id}', 'general_')">Publicar</button>
               </div>
             </div>
 
-            <div class="foro-comentarios-wrapper" id="lista_comentarios_${it.id}">
+            <div class="foro-comentarios-wrapper" id="general_lista_comentarios_${it.id}">
               ${comentariosHtml}
             </div>
           </div>
@@ -1505,24 +1484,25 @@ async function mostrarMuroReflexionesUsuarios() {
     aviso.append(titulo, document.createElement('br'), detalle);
     cont.appendChild(aviso);
   }
+  window.restaurarBorradoresComentarios?.(cont, borradores);
 }
 
 /* ==========================================================================
    GESTIÓN DE COMENTARIOS DEL FORO
    ========================================================================== */
-function toggleFormularioComentario(progresoId) {
-  const caja = document.getElementById(`caja_comentario_${progresoId}`);
+function toggleFormularioComentario(progresoId, ambito = '') {
+  const caja = document.getElementById(`${ambito}caja_comentario_${progresoId}`);
   if (caja) {
     caja.classList.toggle('hidden');
     if (!caja.classList.contains('hidden')) {
-      const txt = document.getElementById(`input_comentario_${progresoId}`);
+      const txt = document.getElementById(`${ambito}input_comentario_${progresoId}`);
       if (txt) txt.focus();
     }
   }
 }
 
-async function enviarComentarioForo(progresoId, moduloId) {
-  const input = document.getElementById(`input_comentario_${progresoId}`);
+async function enviarComentarioForo(progresoId, moduloId, ambito = '') {
+  const input = document.getElementById(`${ambito}input_comentario_${progresoId}`);
   if (!input) return;
 
   const texto = input.value.trim();
@@ -1541,7 +1521,7 @@ async function enviarComentarioForo(progresoId, moduloId) {
     alert("No se guardó el comentario: " + (error?.message || "No hubo confirmación del servidor.") + " El texto permanece disponible para reintentar.");
   } else {
     input.value = "";
-    toggleFormularioComentario(progresoId);
+    toggleFormularioComentario(progresoId, ambito);
     
     const seccionMuroUsuarios = document.getElementById('seccionMuroUsuarios');
     if (seccionMuroUsuarios && !seccionMuroUsuarios.classList.contains('hidden')) {
@@ -1556,40 +1536,44 @@ function abrirModalEditarComentario(comentarioId, textoCodificado) {
   const texto = decodeURIComponent(textoCodificado);
   document.getElementById('editComentarioId').value = comentarioId;
   document.getElementById('textareaEditarComentario').value = texto;
-  document.getElementById('modalEditarComentarioForo').classList.remove('hidden');
+  document.getElementById('estadoEditarComentario').textContent = '';
+  const dialogo = document.getElementById('modalEditarComentarioForo');
+  dialogo.classList.remove('hidden');
+  if (!dialogo.open) dialogo.showModal();
+  document.getElementById('textareaEditarComentario').focus();
 }
 
 async function guardarEdicionComentarioModal() {
+  const boton = document.getElementById('btnGuardarEdicionComentario');
+  if (boton.disabled) return;
   const id = document.getElementById('editComentarioId').value;
-  const texto = document.getElementById('textareaEditarComentario').value.trim();
-
-  if (texto.length < 5) {
-    alert("El texto no puede quedar vacío.");
+  const input = document.getElementById('textareaEditarComentario');
+  const texto = input.value.trim();
+  const estado = document.getElementById('estadoEditarComentario');
+  if (texto.length < 5 || texto.length > 1500) {
+    estado.textContent = 'Escriba entre 5 y 1500 caracteres.';
     return;
   }
-
-  const { error } = await sbApp.from('comentarios_muro').update({
-    contenido: texto,
-    editado: true,
-    editado_en: new Date().toISOString()
-  }).eq('id', id);
-
-  if (error) {
-    alert("Error al editar comentario: " + error.message);
-  } else {
+  const actor = usuarioActual;
+  boton.disabled = true;
+  estado.textContent = 'Guardando comentario…';
+  try {
+    const { data: guardado, error } = await sbApp.rpc('maestro_editar_comentario_propio', {
+      p_comentario_id: id, p_contenido: texto
+    });
+    if (error || !guardado) throw new Error(error?.message || 'No se pudo confirmar el guardado.');
+    if (usuarioActual !== actor) return;
     cerrarModalUniversalDirecto('modalEditarComentarioForo');
-    
-    const cuerpoEl = document.getElementById(`comentario_cuerpo_${id}`);
-    if (cuerpoEl) {
-      cuerpoEl.innerText = texto;
-    }
-
     const seccionMuroUsuarios = document.getElementById('seccionMuroUsuarios');
     if (seccionMuroUsuarios && !seccionMuroUsuarios.classList.contains('hidden')) {
       await mostrarMuroReflexionesUsuarios();
-    } else if (moduloActual) {
+    } else if (moduloActual && !document.getElementById('seccionDocencia').classList.contains('hidden')) {
       await cargarMuroReflexiones();
     }
+  } catch (error) {
+    if (usuarioActual === actor) estado.textContent = (error.message || 'No se pudo confirmar la edición.') + ' Su texto se conserva.';
+  } finally {
+    boton.disabled = false;
   }
 }
 
@@ -2170,16 +2154,21 @@ function habilitarEdicionReflexion() {
 
 async function cargarMuroReflexiones() {
   const contenedor = document.getElementById('contenedorMuro');
-  contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Cargando aportes de la Cámara...</p>";
+  let borradores;
+  const contextoMuro = moduloActual, actorMuro = usuarioActual;
+  if (!contenedor.innerHTML) contenedor.innerHTML = "<p class='td-loading'>Cargando aportes de la Cámara...</p>";
 
   const {data: muro,error}=await sbApp.rpc('muro_docente_autorizado',{p_modulo:moduloActual.id});
+  if (moduloActual !== contextoMuro || usuarioActual !== actorMuro) return;
   const data=muro?.aportes;
 
-  contenedor.innerHTML = "";
-  if(error){
-    contenedor.innerHTML="<p>No se pudo cargar el muro. Vuelva a abrirlo para reintentar.</p>";
+  if(error || !Array.isArray(data)){
+    if (window.mostrarEstadoHilos) window.mostrarEstadoHilos(contenedor, 'No se pudo actualizar el muro. Sus borradores se conservan; vuelva a abrirlo para reintentar.');
+    else contenedor.innerHTML='<p>No se pudo cargar el muro. Vuelva a abrirlo para reintentar.</p>';
     return;
   }
+  borradores = window.capturarBorradoresComentarios?.(contenedor);
+  contenedor.innerHTML = '';
   if (data && data.length > 0) {
     let comentariosMap = {};
     const comentariosData=muro?.comentarios;
@@ -2203,33 +2192,7 @@ async function cargarMuroReflexiones() {
       usuariosVistos.add(item.usuario_id);
 
       const coms = comentariosMap[item.id] || [];
-      let comsHtml = coms.map(c => {
-        const cFecha = c.creado_en 
-          ? new Date(c.creado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-          : "";
-        const esAutor = (c.usuario_id === usuarioActual.id);
-        const editadoTag = c.editado ? ` <span style="font-size: 0.72rem; color: var(--accent-gold); font-style: italic;">(editado)</span>` : "";
-
-        let botonesComentario = "";
-        if (esAutor) {
-          botonesComentario += `<button class="foro-comentario-btn" onclick="abrirModalEditarComentario('${c.id}', '${encodeURIComponent(c.contenido).replace(/'/g,'%27')}')">✏️ Editar</button>`;
-        }
-        if (usuarioActual.es_admin) {
-          const nombreEscapado = (c.usuarios?.nombre || '').replace(/'/g, "\\'");
-          botonesComentario += `<button class="foro-comentario-btn" onclick="abrirAuditoriaComentario('${c.id}', '${encodeURIComponent(c.contenido_original || c.contenido)}', '${nombreEscapado}', '${cFecha}')">🔍 Huella</button>`;
-          botonesComentario += `<button class="foro-comentario-btn" style="color: var(--error);" onclick="eliminarComentarioForo('${c.id}')">🗑️</button>`;
-        }
-
-        return `
-          <div class="foro-comentario-item" id="comentario_item_${c.id}">
-            <div class="foro-comentario-header">
-              <span class="foro-comentario-autor">Aporte del ${escaparTextoHTMLDocencia(formatearNombreHermano(c.usuarios?.nombre))}</span>
-              <span class="foro-comentario-fecha">${cFecha}${editadoTag}</span>
-            </div>
-            <div class="foro-comentario-cuerpo" id="comentario_cuerpo_${c.id}">${escaparTextoHTMLDocencia(c.contenido)}</div>${botonesComentario ? `<div class="foro-comentario-acciones">${botonesComentario}</div>` : ''}
-          </div>
-        `;
-      }).join('');
+      const comsHtml = window.renderizarHilosComentarios?.(coms, item.id, moduloActual.id) || '';
 
       contenedor.innerHTML += `
         <div class="reflexion-item" style="margin-bottom: 20px;">
@@ -2257,6 +2220,7 @@ async function cargarMuroReflexiones() {
   } else {
     contenedor.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>Aún no hay reflexiones consagradas en este trabajo.</p>";
   }
+  window.restaurarBorradoresComentarios?.(contenedor, borradores);
 }
 
 /* ==========================================================================
@@ -2458,7 +2422,10 @@ function cerrarModalUniversal(event, modalId) {
 
 function cerrarModalUniversalDirecto(modalId) {
   const el = document.getElementById(modalId);
-  if (el) el.classList.add('hidden');
+  if (el) {
+    if (el.tagName === 'DIALOG' && el.open) el.close();
+    el.classList.add('hidden');
+  }
 }
 
 function abrirModalConfirmacion(titulo, mensaje, callback) {
@@ -2484,7 +2451,7 @@ document.addEventListener('keydown', (e) => {
 
     ['modalCertificado', 'modalMisAvances', 'modalAuditoriaModulo', 'modalParametrosHermano', 'modalEditarComentarioForo', 'modalAuditoriaComentario', 'modalConfirmarAccion', 'modalRecuperarClave', 'modalCambiarMiClave', 'modalAdminClaveHermano', 'modalAdminUsuario'].forEach(id => {
       const el = document.getElementById(id);
-      if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
+      if (el && !el.classList.contains('hidden')) cerrarModalUniversalDirecto(id);
     });
   }
 });

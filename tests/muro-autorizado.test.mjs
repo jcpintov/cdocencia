@@ -10,7 +10,7 @@ const escapeSource=app.slice(escapeStart,app.indexOf('\n}',escapeStart)+2);
 const formatSource=app.slice(app.indexOf('function limpiarTratamientoHermano(nombre)'),app.indexOf('function validarSeguridadClave('));
 test('muro muestra aportes ajenos por RPC sin consultar respuestas privadas',async()=>{
  const cont={innerHTML:''};const calls=[];
- const ctx={document:{getElementById:()=>cont},moduloActual:{id:'m'},usuarioActual:{id:'u',es_admin:false},
+ const ctx={window:{},document:{getElementById:()=>cont},moduloActual:{id:'m'},usuarioActual:{id:'u',es_admin:false},
  sbApp:{rpc:async(name,args)=>{calls.push({name,args});return {data:{aportes:[{id:'p',modulo_id:'m',usuario_id:'otro',reflexion:'<img src=x onerror=alert(1)>',usuarios:{nombre:'<b>Otro</b>'}}],comentarios:[]},error:null};}}};
  runInNewContext(escapeSource+'\n'+formatSource+'\n'+src,ctx);await ctx.cargarMuroReflexiones();
  assert.equal(calls[0].name,'muro_docente_autorizado');assert.equal(calls[0].args.p_modulo,'m');
@@ -18,7 +18,7 @@ test('muro muestra aportes ajenos por RPC sin consultar respuestas privadas',asy
  assert.ok(cont.innerHTML.includes('&lt;b&gt;Otro'));
 });
 test('error de permisos o red se presenta como error y permite reintento',async()=>{
- const cont={innerHTML:''};const ctx={document:{getElementById:()=>cont},moduloActual:{id:'m'},
+ const cont={innerHTML:''};const ctx={window:{},usuarioActual:{id:'u'},document:{getElementById:()=>cont},moduloActual:{id:'m'},
  sbApp:{rpc:async()=>({data:null,error:{code:'42501'}})}};
  runInNewContext(src,ctx);await ctx.cargarMuroReflexiones();assert.match(cont.innerHTML,/No se pudo cargar/);
 });
@@ -27,3 +27,4 @@ test('consulta pública no incluye email ni respuestas de evaluación',()=>{
  assert.doesNotMatch(sql,/respuestas_evaluacion|u\.email/);
  assert.match(sql,/revoke all[\s\S]*from public,anon/);
 });
+
