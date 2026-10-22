@@ -36,7 +36,7 @@ export default async function handler(req,res){
    return reply(res,200,{ok:true,...await rpc('texto_'+action,{id:datos.id})});
   }
   if(action==='agente_consultar'){
-   const {prepararConsultaAgente,informeConsultaDoctrina}=await import('../lib/agente-doctrina.js');
+   const {prepararConsultaAgente}=await import('../lib/agente-doctrina.js');
    let entrada;try{entrada=prepararConsultaAgente(datos);}catch(e){return reply(res,422,{error:e.message});}
    const {consultarGroqDoctrina}=await import('../lib/groq-doctrina.js');
    return reply(res,200,{ok:true,informe:await consultarGroqDoctrina(entrada,{rpc})});

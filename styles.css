@@ -2712,3 +2712,43 @@ body.theme-nocturno #seccionDocencia .nav-item-title{color:#f0f4f8!important}
   word-break: normal;
 }
 
+
+/* Doctrina: consulta principal y administración bajo demanda. */
+#adminSeccionDoctrina { --doctrina-tinta:#233444; --doctrina-borde:#d7e0e8; color:var(--doctrina-tinta); }
+#adminSeccionDoctrina .doctrina-cabecera { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-bottom:20px; }
+#adminSeccionDoctrina .doctrina-cabecera h2 { margin:6px 0 0; }
+#adminSeccionDoctrina .doctrina-reserva { font-size:.82rem; letter-spacing:.04em; color:#526778; }
+#adminSeccionDoctrina .doctrina-chat { max-width:900px; margin:0 auto 28px; padding:28px; border:1px solid var(--doctrina-borde); border-radius:12px; background:#fff; box-shadow:0 4px 18px #23344406; }
+#adminSeccionDoctrina .doctrina-chat h3 { margin:0 0 10px; font-size:1.35rem; color:var(--doctrina-tinta); }
+#adminSeccionDoctrina .doctrina-ayuda { color:#526778; line-height:1.6; margin-bottom:20px; }
+#adminSeccionDoctrina .doctrina-chat form { display:flex; flex-direction:column; gap:12px; }
+#adminSeccionDoctrina .doctrina-chat textarea { box-sizing:border-box; width:100%; resize:vertical; min-height:128px; font:inherit; line-height:1.65; padding:16px; border:1px solid #8295a4; border-radius:8px; background:#fff; color:var(--doctrina-tinta); }
+#adminSeccionDoctrina :is(textarea,input,select,button,summary):focus-visible { outline:3px solid #316c9b; outline-offset:3px; }
+#adminSeccionDoctrina textarea::placeholder { color:#607182; opacity:1; }
+#adminSeccionDoctrina .doctrina-envio { display:flex; justify-content:space-between; align-items:center; gap:16px; }
+#adminSeccionDoctrina .doctrina-envio span { font-size:.8rem; color:#526778; }
+#adminSeccionDoctrina .doctrina-envio button { min-width:128px; min-height:44px; margin:0; }
+#adminSeccionDoctrina .doctrina-criterio { color:#526778; font-size:.8rem; line-height:1.6; margin:20px 0 0; padding-top:16px; border-top:1px solid #e7ecf0; }
+#adminSeccionDoctrina .doctrina-respuesta { font-size:1.05rem; line-height:1.85; margin-top:28px; padding-top:22px; border-top:1px solid var(--doctrina-borde); overflow-wrap:anywhere; }
+#adminSeccionDoctrina .doctrina-respuesta p { white-space:pre-wrap; margin:0 0 16px; }
+#adminSeccionDoctrina .doctrina-consulta-estado { padding:18px 0 0; color:#526778; }
+#adminSeccionDoctrina .doctrina-consulta-error { border-left:3px solid #b16a25; padding-left:16px; }
+#adminSeccionDoctrina .doctrina-administracion { border:1px solid var(--doctrina-borde); border-radius:8px; margin-bottom:14px; background:#fff; }
+#adminSeccionDoctrina summary { cursor:pointer; padding:16px; font-weight:600; color:var(--doctrina-tinta); }
+#adminSeccionDoctrina .doctrina-panel-contenido { padding:0 20px 20px; }
+#adminSeccionDoctrina .doctrina-subpanel { border-top:1px solid var(--doctrina-borde); margin-top:16px; }
+#adminSeccionDoctrina .doctrina-subpanel summary { padding-left:0; }
+#adminSeccionDoctrina .doctrina-filtros { display:flex; align-items:flex-end; gap:20px; margin:20px 0; }
+#adminSeccionDoctrina .doctrina-filtros>div { flex:1; }
+#adminSeccionDoctrina .doctrina-fuente { padding:16px 0; border-top:1px solid var(--doctrina-borde); }
+#adminSeccionDoctrina .doctrina-fuente h4 { font-size:.95rem; line-height:1.5; }
+#adminSeccionDoctrina .doctrina-fuente p { font-size:.9rem; line-height:1.65; overflow-wrap:anywhere; }
+#adminSeccionDoctrina .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+@media(max-width:600px) {
+  #adminSeccionDoctrina .doctrina-cabecera { align-items:flex-start; flex-direction:column; }
+  #adminSeccionDoctrina .doctrina-chat { padding:18px; margin-bottom:20px; }
+  #adminSeccionDoctrina .doctrina-envio { flex-direction:column; align-items:stretch; }
+  #adminSeccionDoctrina .doctrina-envio span { display:none; }
+  #adminSeccionDoctrina .doctrina-filtros { flex-direction:column; align-items:stretch; }
+  #adminSeccionDoctrina .doctrina-panel-contenido { padding:0 14px 14px; }
+}

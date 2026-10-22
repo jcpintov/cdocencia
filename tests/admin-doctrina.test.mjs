@@ -6,7 +6,7 @@ import {createHash} from 'node:crypto';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 const raw=readFileSync(new URL('../api/admin-doctrina.js',import.meta.url),'utf8');
-const source=raw.replace("const {consultarGroqDoctrina}=await import('../lib/groq-doctrina.js');",'').replace("const {prepararConsultaAgente,informeConsultaDoctrina}=await import('../lib/agente-doctrina.js');",'').replace(/^import .*;$/gm,'').replace('export default async function handler','async function handler');
+const source=raw.replace("const {consultarGroqDoctrina}=await import('../lib/groq-doctrina.js');",'').replace("const {prepararConsultaAgente}=await import('../lib/agente-doctrina.js');",'').replace(/^import .*;$/gm,'').replace('export default async function handler','async function handler');
 const actor='11111111-1111-4111-8111-111111111111';
 function setup(o={}){
  const calls=[];const pdf=Buffer.from('%PDF-1.4\nExample synthetic fixture\n%%EOF');
@@ -46,7 +46,7 @@ test('una extracción no comienza si falla la integridad del original',async()=>
 test('agente mantiene la autorización previa y solo consulta fuentes mediante RPC protegida',async()=>{
  const ajeno=setup({foreign:true});assert.equal((await ajeno.request({action:'agente_consultar',pregunta:'Consulta suficientemente larga',consulta:'acacia'})).code,403);assert.equal(ajeno.calls.length,0);
  const s=setup();assert.equal((await s.request({action:'agente_consultar',pregunta:'corta',consulta:'acacia'})).code,422);assert.equal(s.calls.length,0);
- const r=await s.request({action:'agente_consultar',pregunta:'¿Qué representa la acacia?',consulta:'acacia',antecedentes:'Caso aportado'});assert.equal(r.code,200);assert.equal(r.body.informe.generativo,false);assert.deepEqual(s.calls,[['rpc','texto_buscar'],['rpc','texto_buscar']]);
+ const r=await s.request({action:'agente_consultar',pregunta:'¿Qué representa la acacia?',consulta:'acacia',antecedentes:'Caso aportado'});assert.equal(r.code,200);assert.equal(r.body.informe.generativo,false);assert.deepEqual(s.calls,[]);
 });
 
 test('permisos Groq requieren confirmación explícita e identidad Superadmin',async()=>{

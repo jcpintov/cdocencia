@@ -26,11 +26,33 @@ function entorno(){const dom=new JSDOM(html,{url:'https://fixture.example.invali
 {
  const {dom,w}=entorno();let resolver;
  w.eval(await readFile('doctrina-admin.js','utf8'));
- const informe={cobertura:{vigentes:3,consultables:1,pendientes:2},secciones:[{titulo:'Conclusión condicionada',texto:'<img src=x onerror=alert(1)>'}],fuentes:[{referencia:'F1',titulo:'<script>privado</script>',clase:'doctrina',pagina:2,version:1,sha256:'abc'}]};
+ const informe={generativo:true,cobertura:{vigentes:3,consultables:1,pendientes:2},secciones:[{titulo:'Conclusión condicionada',texto:'<img src=x onerror=alert(1)>'}],fuentes:[{referencia:'F1',titulo:'<script>privado</script>',clase:'doctrina',pagina:2,version:1,sha256:'abc'}]};
  w.fetch=async()=>({ok:true,json:async()=>({ok:true,informe})});
- w.document.getElementById('doctrinaAgentePregunta').value='¿Qué representa la acacia?';w.document.getElementById('doctrinaAgenteTerminos').value='acacia';await w.consultarAgenteDoctrina();
- const salida=w.document.getElementById('doctrinaAgenteResultado');assert.match(salida.textContent,/F1/);assert.match(salida.textContent,/página PDF 2/);assert.equal(salida.querySelectorAll('script,img').length,0);assert.equal(salida.getAttribute('aria-busy'),'false');
+ w.document.getElementById('doctrinaAgentePregunta').value='¿Qué representa la acacia?';await w.consultarAgenteDoctrina();
+ const salida=w.document.getElementById('doctrinaAgenteResultado');assert.match(salida.textContent,/F1/);assert.match(salida.textContent,/página 2/);assert.equal(salida.querySelectorAll('script,img').length,0);assert.equal(salida.getAttribute('aria-busy'),'false');
  w.fetch=()=>new Promise(r=>{resolver=r;});const pendiente=w.consultarAgenteDoctrina();await new Promise(r=>setTimeout(r,0));w.limpiarBibliotecaDoctrina();w.usuarioActual=null;resolver({ok:true,json:async()=>({ok:true,informe})});await pendiente;
  assert.equal(salida.textContent,'');assert.equal(w.document.getElementById('doctrinaAgentePregunta').value,'');assert.equal(w.document.getElementById('doctrinaAgenteConsultar').disabled,false);dom.window.close();
+}
+{
+ const {dom,w}=entorno();
+ w.eval(await readFile('doctrina-admin.js','utf8'));
+ const form=w.document.getElementById('doctrinaAgenteFormulario');
+ assert.equal(form.querySelectorAll('textarea,input').length,1);
+ assert.equal(w.document.getElementById('doctrinaBibliotecaPanel').open,false);
+ assert.equal(w.document.getElementById('doctrinaIndexacionPanel').open,false);
+ let envios=0;form.requestSubmit=()=>envios++;
+ const campo=w.document.getElementById('doctrinaAgentePregunta');
+ campo.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+ campo.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',shiftKey:true,bubbles:true,cancelable:true}));
+ campo.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter',isComposing:true,bubbles:true,cancelable:true}));
+ assert.equal(envios,1,'Mayús+Enter y composición no envían consultas');
+ campo.value='¿Qué deber existe al cubrir un cargo?';
+ w.fetch=async()=>({ok:false,json:async()=>({error:'Servicio temporalmente no disponible'})});
+ await w.consultarAgenteDoctrina();
+ assert.match(w.document.getElementById('doctrinaAgenteResultado').textContent,/temporalmente/);
+ assert.equal(campo.value,'¿Qué deber existe al cubrir un cargo?');
+ assert.equal(w.document.getElementById('doctrinaAgenteConsultar').textContent,'Consultar');
+ assert.equal(w.document.getElementById('doctrinaAgenteConsultar').disabled,false);
+ dom.window.close();
 }
 console.log('PASS DOM: perfil con código previo, datos bloqueados hasta confirmar, revisión por página correcta, resultados seguros y limpieza de sesión.');

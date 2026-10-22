@@ -35,3 +35,7 @@ test('conserva originales, páginas, estado de extracción sin repetir instrucci
  assert.equal(res.fuentes[0].pagina,7);
  assert.ok(!res.secciones.some(s=>s.texto.includes(instruccion)));
 });
+
+test('normaliza palabras vacías con tilde y evita contaminar la búsqueda',()=>{const q=derivarBusquedaDoctrinal('¿Qué deber masónico tiene quien cubre un cargo?');assert.doesNotMatch(q,/masónico|masonico|quien/);});
+
+test('conserva tildes para el analizador español y amplía iniciacion sin tilde',()=>{assert.match(derivarBusquedaDoctrinal('¿Qué es la iniciación?'),/iniciación/);assert.match(derivarBusquedaDoctrinal('¿Qué es la iniciacion?'),/iniciación/);});
