@@ -116,7 +116,7 @@ try{
   await respuestaActual.filter({hasText:'La acacia'}).waitFor();
   assert.match(await respuestaActual.innerText(),/F1/);
   assert.ok(await page.locator('#doctrinaAgenteFormulario').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
-  await respuestaActual.locator('summary').click();await page.getByRole('button',{name:'Ver fuente',exact:true}).click();await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=1'));await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();
+  await respuestaActual.locator('summary').click();await respuestaActual.getByRole('button',{name:'Ver fuente',exact:true}).click();await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=1'));await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();
  }
  await page.getByText('Autorizaciones documentales para Groq',{exact:true}).click();await page.getByRole('button',{name:'Revisar autorizaciones',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).click();await page.getByRole('button',{name:'Revocar permiso',exact:true}).waitFor();assert.match(await page.locator('#doctrinaGroqPermisos').innerText(),/Autorizado para Groq/);await page.getByRole('button',{name:'Revocar permiso',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).waitFor();
  await page.setViewportSize({width:1440,height:950});
