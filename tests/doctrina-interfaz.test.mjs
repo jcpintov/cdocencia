@@ -9,7 +9,7 @@ test('Doctrina existe únicamente dentro de la consola Superadmin',()=>{
  assert.ok(html.indexOf('id="tabNavDoctrina"')>adminStart);
  assert.ok(html.indexOf('id="adminSeccionDoctrina"')>adminStart);
  assert.equal((html.match(/id="tabNavDoctrina"/g)||[]).length,1);
- assert.match(app,/doctrina: \['tabNavDoctrina', 'Doctrina y Reglamentos'\]/);
+ assert.match(app,/doctrina:\s*\['tabNavDoctrina',\s*'Doctrina y Reglamentos',\s*'adminSeccionDoctrina'\]/);
  assert.match(app,/limpiarBibliotecaDoctrina\(\)/);
 });
 test('datos remotos se presentan como texto y no se publica automáticamente',()=>{
