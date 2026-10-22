@@ -3354,59 +3354,70 @@ function eliminarModuloYReordenar(moduloId) {
    MATRIZ DE AVANCE
    ========================================================================== */
 async function cargarMetricasAvance(moduloId) {
-  const tbody = document.getElementById('tablaMetricasBody');
-  tbody.innerHTML = `<tr><td colspan="6" class="td-loading">Consultando registros...</td></tr>`;
-
-  const { data: usuarios } = await sbApp
-    .from('usuarios')
-    .select('id, nombre, email')
-    .order('nombre', { ascending: true });
-
-  const { data: progresos } = await sbApp
-    .from('progreso_maestro')
-    .select('*')
-    .eq('modulo_id', moduloId);
-
-  tbody.innerHTML = "";
-
-  if (!usuarios || usuarios.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic;">No hay usuarios registrados en el padrón.</td></tr>`;
+  const tbody=document.getElementById('tablaMetricasBody');
+  if(!tbody)return;
+  tbody.replaceChildren();
+  const mensaje=document.createElement('tr');
+  const esperando=document.createElement('td');
+  esperando.colSpan=6;esperando.className='td-loading';
+  esperando.textContent='Consultando registros…';
+  mensaje.appendChild(esperando);tbody.appendChild(mensaje);
+  const actor=usuarioActual;
+  const [resultadoUsuarios,resultadoProgreso]=await Promise.all([
+    sbApp.from('usuarios').select('id,nombre,email').order('nombre',{ascending:true}),
+    sbApp.from('progreso_maestro').select('*').eq('modulo_id',moduloId)
+  ]);
+  if(usuarioActual!==actor)return;
+  tbody.replaceChildren();
+  const error=resultadoUsuarios.error||resultadoProgreso.error;
+  function aviso(texto){
+    const fila=document.createElement('tr'),columna=document.createElement('td');
+    columna.colSpan=6;columna.className='admin-empty-state';
+    columna.textContent=texto;fila.appendChild(columna);tbody.appendChild(fila);
+  }
+  if(error){
+    aviso('No fue posible consultar los avances. Compruebe su sesión y pulse Actualizar.');
     return;
   }
-
-  const progMap = {};
-  if (progresos) progresos.forEach(p => { progMap[p.usuario_id] = p; });
-
-  usuarios.forEach(u => {
-    const p = progMap[u.id];
-    const leido = (p && p.leido);
-    const completado = (p && p.completado);
-    const preguntas = (p && p.intentos_preguntas !== undefined) ? `${p.intentos_preguntas}/8` : '—';
-    const reflexion = (p && p.reflexion) ? `"${p.reflexion.slice(0, 70)}..."` : '—';
-    const fecha = (p && p.completado_en) 
-      ? new Date(p.completado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }) 
-      : '—';
-
-    const pId = p ? p.id : '';
-    const nombreEscapado = (u.nombre || '').replace(/'/g, "\\'");
-
-    tbody.innerHTML += `
-      <tr>
-        <td>
-          <a href="javascript:void(0)" onclick="abrirModalMisAvances('${u.id}')" style="font-weight: 600; color: var(--primary);">
-            ${u.nombre || 'Hermano'}
-          </a>
-        </td>
-        <td>${leido ? '<span style="color: var(--success); font-weight: 600;">✓ Leído</span>' : '<span style="color: var(--text-muted);">Pendiente</span>'}</td>
-        <td>${completado ? '<span style="color: var(--success); font-weight: 600;">8/8 ✓</span>' : preguntas}</td>
-        <td style="font-size: 0.82rem; font-style: italic;">${reflexion}</td>
-        <td>${fecha}</td>
-        <td>
-          <button class="admin-link-btn" onclick="abrirModalParametrosHermano('${pId}', '${u.id}', '${moduloId}', '${nombreEscapado}')">⚙️ Modificar</button>
-        </td>
-      </tr>
-    `;
-  });
+  const usuarios=resultadoUsuarios.data||[],progresos=resultadoProgreso.data||[];
+  if(!usuarios.length){aviso('No hay integrantes registrados en el padrón.');return;}
+  const progMap=new Map(progresos.map(p=>[p.usuario_id,p]));
+  for(const u of usuarios){
+    const p=progMap.get(u.id)||null;
+    const tr=document.createElement('tr');
+    const columna=(texto)=>{
+      const td=document.createElement('td');td.textContent=texto;
+      tr.appendChild(td);return td;
+    };
+    const nombre=columna('');
+    const botonNombre=document.createElement('button');
+    botonNombre.type='button';botonNombre.className='admin-link-btn';
+    botonNombre.textContent=u.nombre||'Hermano';
+    botonNombre.setAttribute('aria-label','Consultar avances de '+(u.nombre||'integrante'));
+    botonNombre.addEventListener('click',()=>{void abrirModalMisAvances(u.id);});
+    nombre.appendChild(botonNombre);
+    const lectura=columna(p?.leido?'✓ Leído':'Pendiente');
+    lectura.style.color=p?.leido?'var(--success)':'var(--text-muted)';
+    const preguntas= p?.completado?'8/8 ✓':p?.intentos_preguntas!==undefined?String(p.intentos_preguntas)+'/8':'—';
+    const examen=columna(preguntas);
+    if(p?.completado){examen.style.color='var(--success)';examen.style.fontWeight='600';}
+    const reflexion=columna(p?.reflexion?'"'+String(p.reflexion).slice(0,70)+'…"':'—');
+    reflexion.style.fontSize='.82rem';reflexion.style.fontStyle='italic';
+    const fecha=p?.completado_en?new Date(p.completado_en).toLocaleDateString('es-CL',{
+      day:'2-digit',month:'2-digit',year:'numeric'
+    }):'—';
+    columna(fecha);
+    const acciones=columna('');
+    const modificar=document.createElement('button');modificar.type='button';
+    modificar.className='admin-link-btn';modificar.textContent='Modificar';
+    modificar.setAttribute('aria-label','Modificar avance de '+(u.nombre||'integrante'));
+    // La edición usa el progreso del Hermano seleccionado, nunca misProgresos
+    // (que corresponde a la sesión actual, no al registro de Superadmin).
+    modificar.addEventListener('click',()=>abrirModalParametrosHermano(
+      p?.id||'',u.id,moduloId,u.nombre||'Hermano',p
+    ));
+    acciones.appendChild(modificar);tbody.appendChild(tr);
+  }
 }
 
 function recargarMetricasActuales() {
@@ -3414,14 +3425,14 @@ function recargarMetricasActuales() {
   if (sel) cargarMetricasAvance(sel.value);
 }
 
-function abrirModalParametrosHermano(progresoId, usuarioId, moduloId, nombreHermano) {
+function abrirModalParametrosHermano(progresoId, usuarioId, moduloId, nombreHermano, progreso=null) {
   document.getElementById('subParamHermano').innerText = `Modificando avance para: ${nombreHermano}`;
   document.getElementById('paramProgresoId').value = progresoId || '';
   document.getElementById('paramUsuarioId').value = usuarioId;
   document.getElementById('paramModuloId').value = moduloId;
 
-  const prog = misProgresos[moduloId];
-  if (prog && prog.usuario_id === usuarioId) {
+  const prog=progreso?.usuario_id===usuarioId ? progreso : null;
+  if (prog) {
     document.getElementById('paramLeido').value = prog.leido ? 'true' : 'false';
     document.getElementById('paramIntentos').value = prog.intentos_preguntas || 0;
     document.getElementById('paramReflexion').value = prog.reflexion || '';
