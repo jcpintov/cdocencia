@@ -108,12 +108,28 @@ try{
  await page.getByRole('button',{name:'Aprobar extracción revisada',exact:true}).click();await page.locator('#doctrinaTextoEstado').filter({hasText:'aprobado'}).waitFor();assert.ok(await page.locator('#doctrinaTextoDialogo').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
  await page.getByRole('button',{name:'Cerrar texto',exact:true}).click();await page.locator('#doctrinaIndexacionPanel > summary').click();await page.locator('#doctrinaConsultaTexto').fill('acacia');await page.getByRole('button',{name:'Buscar con referencias',exact:true}).click();await page.locator('#doctrinaBusquedaResultados').filter({hasText:'página 1'}).waitFor();
  for(const viewport of [{width:1440,height:950},{width:390,height:844}]){
-  await page.setViewportSize(viewport);await page.locator('#doctrinaAgentePregunta').fill('¿Qué representa la acacia?');await page.locator('#doctrinaAgenteConsultar').click();await page.locator('#doctrinaAgenteResultado').filter({hasText:'La acacia'}).waitFor();
-  assert.match(await page.locator('#doctrinaAgenteResultado').innerText(),/F1/);assert.ok(await page.locator('#doctrinaAgenteFormulario').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
-  await page.locator('#doctrinaAgenteResultado summary').click();await page.getByRole('button',{name:'Ver fuente',exact:true}).click();await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=1'));await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();
+  await page.setViewportSize(viewport);await page.locator('#doctrinaAgentePregunta').fill('¿Qué representa la acacia?');await page.locator('#doctrinaAgenteConsultar').click();await page.locator('#doctrinaConversacion .doctrina-mensaje-asistente').filter({hasText:'La acacia'}).last().waitFor();
+  assert.match(await page.locator('#doctrinaConversacion .doctrina-mensaje-asistente').last().innerText(),/F1/);assert.ok(await page.locator('#doctrinaAgenteFormulario').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
+  await page.locator('#doctrinaConversacion .doctrina-mensaje-asistente').last().locator('summary').click();await page.getByRole('button',{name:'Ver fuente',exact:true}).click();await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=1'));await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();
  }
  await page.getByText('Autorizaciones documentales para Groq',{exact:true}).click();await page.getByRole('button',{name:'Revisar autorizaciones',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).click();await page.getByRole('button',{name:'Revocar permiso',exact:true}).waitFor();assert.match(await page.locator('#doctrinaGroqPermisos').innerText(),/Autorizado para Groq/);await page.getByRole('button',{name:'Revocar permiso',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).waitFor();
- await page.setViewportSize({width:1440,height:950});await page.getByRole('button',{name:'Mi perfil',exact:true}).click();await page.locator('#perfilSuperadminSolicitar').waitFor({state:'visible'});
+ await page.setViewportSize({width:1440,height:950});
+ const footer=await page.locator('#seccionAdmin .admin-side-footer').evaluate(el=>{
+  const perfil=el.querySelector('.admin-perfil-btn'),salida=el.querySelector('.admin-logout');
+  const pb=perfil.getBoundingClientRect(),sb=salida.getBoundingClientRect();
+  const cs=getComputedStyle(perfil);
+  const rgb=v=>v.match(/\d+/g).slice(0,3).map(Number).map(x=>x/255);
+  const luminance=v=>rgb(v).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4).reduce((sum,c,i)=>sum+c*[.2126,.7152,.0722][i],0);
+  const a=luminance(cs.color),b=luminance(cs.backgroundColor);
+  return {sameWidth:Math.abs(pb.width-sb.width)<1,left:Math.abs(pb.left-sb.left)<1,contrast:(Math.max(a,b)+.05)/(Math.min(a,b)+.05),within:pb.right<=el.getBoundingClientRect().right+1};
+ });
+ assert.ok(footer.sameWidth&&footer.left&&footer.contrast>=4.5&&footer.within,'Acciones de cuenta legibles y alineadas: '+JSON.stringify(footer));
+ const gap=await page.locator('#seccionAdmin .admin-links-bottom').evaluate(el=>({
+  label:el.querySelector('.admin-menu-label')?.textContent?.trim(),
+  separated:getComputedStyle(el).borderTopWidth!=='0px'
+ }));
+ assert.equal(gap.label,'Herramientas externas');assert.ok(gap.separated);
+ await page.getByRole('button',{name:'Mi perfil',exact:true}).click();await page.locator('#perfilSuperadminSolicitar').waitFor({state:'visible'});
  await page.locator('#perfilSuperadminNombre').fill('Nombre Actualizado');await page.locator('#perfilSuperadminEmail').fill('nuevo@example.invalid');await page.locator('#perfilSuperadminSolicitar').click();await page.locator('#perfilSuperadminEstado').filter({hasText:'Código enviado'}).waitFor();assert.equal(await page.locator('#perfilSuperadminEmail').isDisabled(),true);
  await page.locator('#perfilSuperadminCodigo').fill('12345678');await page.locator('#perfilSuperadminConfirmar').click();await page.locator('#perfilSuperadminEstado').filter({hasText:'Perfil actualizado'}).waitFor();
  await page.setViewportSize({width:390,height:844});assert.ok(await page.locator('#perfilSuperadminDialogo').evaluate(e=>e.scrollWidth<=e.clientWidth+1));await page.locator('#perfilSuperadminCerrar').click();assert.equal(await page.locator('#perfilSuperadminCodigo').inputValue(),'');
