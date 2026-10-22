@@ -113,3 +113,42 @@ test('instrucción obsoleta de revisión manual obligatoria fue eliminada',()=>{
  assert.doesNotMatch(html,/Contraste cada página con el PDF antes de marcarla revisada/);
  assert.match(html,/El texto legible se indexa sin revisión página por página/);
 });
+
+
+test('métricas muestran datos como texto y editan el progreso del participante correcto',async()=>{
+ const source=app.slice(app.indexOf('async function cargarMetricasAvance(moduloId) {'),app.indexOf('function recargarMetricasActuales()',app.indexOf('async function cargarMetricasAvance(moduloId) {')));
+ assert.doesNotMatch(source,/innerHTML\s*\+=|href="javascript:/);
+ assert.doesNotMatch(source,/misProgresos/);
+ class Elemento{
+  constructor(tag){this.tag=tag;this.children=[];this.style={};this.attrs={};this.textContent='';this.events={};}
+  appendChild(el){this.children.push(el);return el;}
+  replaceChildren(){this.children=[];}
+  setAttribute(k,v){this.attrs[k]=v;}
+  addEventListener(k,cb){this.events[k]=cb;}
+ }
+ const tabla=new Elemento('tbody');
+ const participante={id:'usuario-1',nombre:'Hermano <script>alert(1)</script>',email:'x@example.invalid'};
+ const progreso={id:'progreso-1',usuario_id:'usuario-1',modulo_id:'modulo-1',leido:true,intentos_preguntas:4,reflexion:'Reflexión de prueba',completado:false};
+ let selected=null;
+ const actor={id:'admin',es_admin:true};
+ const ctx={
+  usuarioActual:actor,Map,Promise,Date,document:{getElementById:()=>tabla,createElement:tag=>new Elemento(tag)},
+  abrirModalParametrosHermano:(...params)=>{selected=params;},
+  abrirModalMisAvances:()=>Promise.resolve(),
+  sbApp:{from:table=>({select:()=>({
+    order:()=>Promise.resolve({data:[participante],error:null}),
+    eq:()=>Promise.resolve({data:[progreso],error:null})
+  })})}
+ };
+ runInNewContext(source,ctx);
+ await ctx.cargarMetricasAvance('modulo-1');
+ assert.equal(tabla.children.length,1);
+ const row=tabla.children[0];
+ assert.equal(row.children.length,6);
+ assert.equal(row.children[0].children[0].textContent,participante.nombre);
+ assert.match(row.children[3].textContent,/Reflexión de prueba/);
+ row.children[5].children[0].events.click();
+ assert.equal(selected[0],progreso.id);
+ assert.equal(selected[1],participante.id);
+ assert.equal(selected[4],progreso,'datos propios del seleccionado, no de la cuenta Superadmin');
+});
