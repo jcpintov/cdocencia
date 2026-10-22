@@ -12,14 +12,15 @@ test('eliminada la leyenda lateral redundante en las vistas de usuario y Superad
  assert.match(html,/<h3>Consola Superadmin<\/h3>/);
 });
 
-test('Usuarios y padrón encabeza Gestión docente, después de Vista general',()=>{
+test('menú de Superadmin conserva los grupos y el orden solicitado',()=>{
  const sidebar=html.slice(html.indexOf('<nav class="admin-menu-list"'),html.indexOf('</nav>',html.indexOf('<nav class="admin-menu-list"')));
- const vista=sidebar.indexOf('>Vista general</p>');
- const docente=sidebar.indexOf('>Gestión docente</p>');
- const usuarios=sidebar.indexOf('id="tabNavUsuarios"');
- const asignaciones=sidebar.indexOf('id="tabNavAsignaciones"');
- assert.ok(vista>=0&&docente>vista&&usuarios>docente&&asignaciones>usuarios);
- assert.ok(!sidebar.slice(vista,docente).includes('id="tabNavUsuarios"'));
+ const grupos=[...sidebar.matchAll(/admin-menu-label">([^<]+)<\/p>/g)].map(m=>m[1]);
+ assert.deepEqual(grupos,['Vista general','Gestión docente','Participación y seguimiento']);
+ const esperado=[['tabNavResumen','tabNavTenidas'],['tabNavAsignaciones','tabNavCargar','tabNavDoctrina','tabNavEditorDoctrina','tabNavGestionTrabajos','tabNavUsuarios'],['tabNavMuroGeneral','tabNavMetricas','tabNavAccesos','tabNavPresencial']];
+ const bloques=sidebar.split('<div class="admin-menu-group">').slice(1);
+ assert.deepEqual(bloques.map(b=>[...b.matchAll(/id="(tabNav\w+)"/g)].map(m=>m[1])),esperado);
+ const pie=html.slice(html.indexOf('<div class="admin-side-footer">'),html.indexOf('<div class="admin-links-bottom"'));
+ assert.ok(pie.indexOf('Mi perfil')<pie.indexOf('Cerrar sesión'));
 });
 
 test('Herramientas externas comienza con acceso directo a ChatGPT',()=>{
