@@ -152,3 +152,24 @@ test('métricas muestran datos como texto y editan el progreso del participante 
  assert.equal(selected[1],participante.id);
  assert.equal(selected[4],progreso,'datos propios del seleccionado, no de la cuenta Superadmin');
 });
+
+
+test('sesión persistida rechazada se descarta localmente y no persiste en próximas cargas',async()=>{
+ const inicio=app.indexOf('async function recuperarSesionGuardada() {');
+ const source=app.slice(inicio,app.indexOf('// Encabezado compartido',inicio));
+ const message={textContent:''};let signOuts=[],removed=false;
+ const ctx={versionSesion:0,document:{getElementById:()=>message},
+  sessionStorage:{removeItem(){removed=true}},
+  sbApp:{auth:{
+   getSession:async()=>({data:{session:{access_token:'token-expirado'}},error:null}),
+   getUser:async()=>({data:{user:null},error:{status:403}}),
+   signOut:async options=>{signOuts.push(options);return {error:null};}
+  }}
+ };
+ runInNewContext(source,ctx);
+ await ctx.recuperarSesionGuardada();
+ assert.equal(removed,true);
+ assert.equal(signOuts.length,1);
+ assert.equal(signOuts[0].scope,'local');
+ assert.match(message.textContent,/Inicie sesión nuevamente/);
+});
