@@ -44,3 +44,14 @@ for(const escenario of ['suficiente','insuficiente','sin_principales','error']){
 test('un pasaje sin identificador o huella nunca queda autorizado por coincidencia de undefined',()=>{assert.equal(seleccionarFuentes([{fragmento:'Texto',clase:'normativa'}],new Map()).length,0);});
 
 test('selecciona fundamentos de deber, calificación y competencia aunque procedan del mismo libro',()=>{const candidatas=Array.from({length:6},(_,i)=>({...fuentes[4],pagina:i+1,relevancia:6-i,busquedas:[i<4?0:i-3]}));const elegidas=seleccionarFuentes(candidatas,permisos);assert.deepEqual(elegidas.slice(0,3).map(f=>f.busquedas[0]),[0,1,2]);});
+
+test('prioriza principios, Constitución, General, Justicia y otros reglamentos',()=>{
+ const titulos=['Reglamento de Votaciones','Reglamento de Justicia','Reglamento General','Constitución','Principios'];
+ const fs=titulos.map((titulo,i)=>({...fuentes[4],version_id:String(i),titulo,relevancia:10+i}));
+ assert.deepEqual(seleccionarFuentes(fs,new Map(fs.map(f=>[f.version_id,f.sha256]))).map(f=>f.titulo),[...titulos].reverse());
+});
+test('conserva páginas reglamentarias concretas junto a principios y Constitución del mismo PDF',()=>{
+ const fs=Array.from({length:12},(_,i)=>({...fuentes[4],version_id:'adce9f1f-c193-42f1-83fa-9600a9154a29',pagina:i+4,prioridad_normativa:i<2?0:i<8?1:2,relevancia:12-i}));
+ const r=seleccionarFuentes(fs,new Map([[fs[0].version_id,fs[0].sha256]]));
+ assert.deepEqual(r.map(f=>f.prioridad_normativa),[0,0,1,1,2,2]);
+});

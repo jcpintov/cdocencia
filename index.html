@@ -958,16 +958,13 @@
           <div><span class="doctrina-reserva">Espacio privado · Superadmin</span><h2 id="doctrinaTituloSeccion">Doctrina y Reglamentos</h2></div>
           <button type="button" id="doctrinaActualizar" class="btn-secondary" onclick="cargarBibliotecaDoctrina()">Actualizar biblioteca</button>
         </header>
-        <section class="doctrina-chat" aria-labelledby="doctrinaAgenteTitulo">
-          <h3 id="doctrinaAgenteTitulo">¿Qué necesitas consultar?</h3>
-          <p class="doctrina-ayuda">Escribe tu pregunta o describe el caso. La IA buscará en la biblioteca y responderá con sus fuentes.</p>
+        <section class="doctrina-chat" aria-label="Consulta a la biblioteca">
           <form id="doctrinaAgenteFormulario" onsubmit="event.preventDefault();consultarAgenteDoctrina()">
             <label for="doctrinaAgentePregunta" class="sr-only">Tu consulta</label>
-            <textarea id="doctrinaAgentePregunta" name="consulta_doctrina" rows="4" minlength="10" maxlength="2000" placeholder="Por ejemplo: ¿qué deberes corresponden a un maestro cuando se le solicita cubrir un cargo?" aria-describedby="doctrinaConsultaAyuda" required></textarea>
-            <div class="doctrina-envio"><span id="doctrinaConsultaAyuda">Enter para consultar · Mayús + Enter para una nueva línea</span><button id="doctrinaAgenteConsultar" type="submit" class="btn-primary">Consultar</button></div>
+            <textarea id="doctrinaAgentePregunta" name="consulta_doctrina" rows="4" minlength="10" maxlength="2000" placeholder="Escribe tu pregunta…" required></textarea>
+            <div class="doctrina-envio"><button id="doctrinaAgenteConsultar" type="submit" class="btn-primary">Consultar</button></div>
           </form>
           <div id="doctrinaAgenteResultado" aria-live="polite" aria-busy="false"></div>
-          <p class="doctrina-criterio">Reglamento → Doctrina → Docencia → Tradición. Bibliografía cuando falte fundamento en estas fuentes.</p>
         </section>
         <details class="doctrina-administracion" id="doctrinaBibliotecaPanel">
           <summary>Biblioteca documental</summary>
@@ -1333,7 +1330,7 @@
 <dialog id="doctrinaTextoDialogo" aria-labelledby="doctrinaTextoTitulo"><h2 id="doctrinaTextoTitulo">Texto del original</h2><p>Contraste cada página con el PDF antes de marcarla revisada. No se realiza OCR automático.</p><label for="doctrinaTextoPagina">Página del PDF</label><input id="doctrinaTextoPagina" type="number" min="1" max="600" value="1"><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_pagina')">Cargar página</button><label for="doctrinaTextoContenido">Texto de la página, editable para corregir la extracción</label><textarea id="doctrinaTextoContenido" maxlength="40000" rows="14"></textarea><label><input type="checkbox" id="doctrinaTextoSinTexto"> Página contrastada con el PDF y verificada sin texto</label><p id="doctrinaTextoEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" class="btn-secondary" onclick="cerrarTextoDoctrina()">Cerrar texto</button><button type="button" class="btn-secondary" onclick="contrastarPaginaTextoDoctrina(this)">Contrastar página con PDF</button><button type="button" id="doctrinaTextoExtraer" class="btn-secondary" onclick="accionTextoDoctrina('texto_extraer')">Extraer texto</button><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_revisar_pagina')">Guardar página revisada</button><button type="button" class="btn-primary" onclick="accionTextoDoctrina('texto_aprobar')">Aprobar extracción revisada</button></div></dialog>
 <dialog id="perfilSuperadminDialogo" aria-labelledby="perfilSuperadminTitulo"><h2 id="perfilSuperadminTitulo">Mi perfil de Superadmin</h2><p>Los cambios requieren un código enviado al correo actual. No se modifican antes de validarlo.</p><label for="perfilSuperadminNombre">Nombre</label><input id="perfilSuperadminNombre" type="text" minlength="3" maxlength="150" autocomplete="off"><label for="perfilSuperadminEmail">Correo nuevo</label><input id="perfilSuperadminEmail" type="email" maxlength="254" autocomplete="off"><label for="perfilSuperadminCodigo">Código de autorización</label><input id="perfilSuperadminCodigo" inputmode="numeric" autocomplete="one-time-code" maxlength="8"><p id="perfilSuperadminEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" id="perfilSuperadminCerrar" class="btn-secondary" onclick="cerrarPerfilSuperadmin()">Cerrar perfil</button><button type="button" id="perfilSuperadminSolicitar" class="btn-secondary" onclick="accionPerfilSuperadmin('solicitar')">Enviar código al correo actual</button><button type="button" id="perfilSuperadminConfirmar" class="btn-primary" onclick="accionPerfilSuperadmin('confirmar')">Validar código y guardar</button><button type="button" id="perfilSuperadminRecuperar" class="btn-secondary" hidden onclick="accionPerfilSuperadmin('recuperar')">Recuperar cambio pendiente</button></div></dialog>
   <script src="perfil-superadmin.js"></script>
-  <script src="doctrina-admin.js?v=20261022"></script>
+  <script src="doctrina-admin.js?v=20261022b"></script>
   <script src="bitacora-sesion.js"></script>
   <script src="ui-v2.js" defer></script>
 </body>

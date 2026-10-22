@@ -110,9 +110,10 @@ elsif p_accion='texto_llm_listar' then
   coincidencias as (
    select d.titulo,d.clase,t.estado as estado_texto,fuente.id as version_id,fuente.numero as version,fuente.sha256,
     ip.pagina,ip.texto,consulta.q,
+    case when fuente.id='adce9f1f-c193-42f1-83fa-9600a9154a29'::uuid then case when ip.pagina between 4 and 5 then 0 when ip.pagina between 6 and 21 then 1 else 2 end when lower(d.titulo) like '%principios%' then 0 when lower(d.titulo) like '%constituc%' and lower(d.titulo) not like '%reglamento general%' then 1 when lower(d.titulo) like '%reglamento general%' then 2 when lower(d.titulo) like '%justicia%' then 3 else 4 end as prioridad_normativa,
     ts_rank_cd(ip.busqueda,consulta.q) as relevancia,
     case d.clase when 'normativa' then 0 when 'doctrina' then 1 when 'docencia' then 2 when 'tradicion' then 3 when 'bibliografia' then 4 else 5 end as prioridad,
-    row_number() over(partition by fuente.id order by ts_rank_cd(ip.busqueda,consulta.q) desc,ip.pagina) as posicion
+    row_number() over(partition by fuente.id,(case when fuente.id='adce9f1f-c193-42f1-83fa-9600a9154a29'::uuid then case when ip.pagina between 4 and 5 then 0 when ip.pagina between 6 and 21 then 1 else 2 end when lower(d.titulo) like '%principios%' then 0 when lower(d.titulo) like '%constituc%' and lower(d.titulo) not like '%reglamento general%' then 1 when lower(d.titulo) like '%reglamento general%' then 2 when lower(d.titulo) like '%justicia%' then 3 else 4 end) order by ts_rank_cd(ip.busqueda,consulta.q) desc,ip.pagina) as posicion
    from doctrina.indice_paginas ip
    join doctrina.versiones fuente on fuente.id=ip.version_id and fuente.sha256=ip.sha256
    join doctrina.textos_extraidos t on t.version_id=fuente.id and t.sha256=fuente.sha256
@@ -122,12 +123,12 @@ elsif p_accion='texto_llm_listar' then
     and length(btrim(ip.texto))>=20 and not ip.requiere_ocr and ip.busqueda @@ consulta.q
   ), seleccionadas as materialized (
    select c.* from coincidencias c where c.posicion<=4
-   order by c.prioridad,c.relevancia desc,c.titulo,c.pagina limit 50
+   order by c.prioridad,c.prioridad_normativa,c.relevancia desc,c.titulo,c.pagina limit 50
   )
   select coalesce(jsonb_agg(z),'[]') into filas from (
-   select c.titulo,c.clase,c.estado_texto,c.version_id,c.version,c.sha256,c.pagina,
+   select c.titulo,c.clase,c.estado_texto,c.version_id,c.version,c.sha256,c.pagina,c.prioridad_normativa,
     left(ts_headline('spanish',c.texto,c.q,'StartSel=, StopSel=, MaxFragments=3, MaxWords=110, MinWords=30'),1800) as fragmento,c.relevancia
-   from seleccionadas c order by c.prioridad,c.relevancia desc,c.titulo,c.pagina
+   from seleccionadas c order by c.prioridad,c.prioridad_normativa,c.relevancia desc,c.titulo,c.pagina
   ) z;
   select jsonb_build_object('vigentes',count(*),'consultables',count(*) filter(where t.estado in ('indexado','revision','aprobado') and t.sha256=fuente.sha256),'pendientes',count(*) filter(where (t.estado is null or t.estado not in ('indexado','revision','aprobado')) or t.sha256 is distinct from fuente.sha256)) into cobertura
   from doctrina.documentos d
