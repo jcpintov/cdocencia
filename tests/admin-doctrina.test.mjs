@@ -11,9 +11,9 @@ const actor='11111111-1111-4111-8111-111111111111';
 function setup(o={}){
  const calls=[];const pdf=Buffer.from('%PDF-1.4\nExample synthetic fixture\n%%EOF');
  const storage={createSignedUploadUrl:async path=>{calls.push(['upload',path]);return {data:{token:'signed-test'}};},download:async()=>({data:new Blob([o.badPDF?'invalid':pdf])}),createSignedUrl:async()=>{calls.push(['sign']);return {data:{signedUrl:'https://example.supabase.co/storage/v1/object/sign/a'}};}};
- const admin={from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{id:'profile',es_admin:!o.notAdmin,email:'jpintov@gmail.com'}})})})}),rpc:async(name,args)=>{calls.push(['rpc',args.p_accion]);return {data:args.p_accion==='listar'?{documentos:[],inventario:[]}:args.p_accion==='obtener'?(o.missing?null:{path:'path',bytes:pdf.length,sha256:o.badHash?'0'.repeat(64):createHash('sha256').update(pdf).digest('hex')}):{version_id:'v'}};},storage:{getBucket:async()=>({data:{public:!!o.publicBucket}}),from:()=>storage}};
+ const admin={from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{id:'profile',es_admin:!o.notAdmin,email:'jpintov@gmail.com'}})})})}),rpc:async(name,args)=>{calls.push(['rpc',args.p_accion]);if(o.rpcError&&args.p_accion==='clasificar')return {data:null,error:{code:o.rpcError,message:'Detalles internos privados'}};return {data:args.p_accion==='listar'?{documentos:[],inventario:[]}:args.p_accion==='obtener'?(o.missing?null:{path:'path',bytes:pdf.length,sha256:o.badHash?'0'.repeat(64):createHash('sha256').update(pdf).digest('hex')}):{version_id:'v'}};},storage:{getBucket:async()=>({data:{public:!!o.publicBucket}}),from:()=>storage}};
  const client={auth:{getUser:async()=>({data:{user:{id:actor,email:o.foreign?'other@example.invalid':'jpintov@gmail.com'}},error:o.invalidAuth?{}:null})}};
- const ctx=createContext({createClient:(_u,k)=>k==='service'?admin:client,process:{env:{SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}},randomUUID:()=>actor,createHash,Buffer,prepararConsultaAgente,informeConsultaDoctrina,consultarGroqDoctrina:(entrada,options)=>consultarGroqReal(entrada,{...options,env:{}})});
+ const ctx=createContext({console:{error:()=>{}},createClient:(_u,k)=>k==='service'?admin:client,process:{env:{SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}},randomUUID:()=>actor,createHash,Buffer,prepararConsultaAgente,informeConsultaDoctrina,consultarGroqDoctrina:(entrada,options)=>consultarGroqReal(entrada,{...options,env:{}})});
  const handler=new Script(source+'\nhandler').runInContext(ctx);
  const request=async(body={},auth='Bearer valid',method='POST')=>{const res={headers:{},setHeader(k,v){this.headers[k]=v;},status(n){this.code=n;return this;},json(v){this.body=v;return this;}};await handler({method,body,headers:{authorization:auth}},res);return res;};
  return {request,calls,pdf};
@@ -68,4 +68,25 @@ test('reclasifica mediante RPC protegida y valida categorías e identidad',async
  const s=setup();assert.equal((await s.request({action:'clasificar',id:actor,clase:'doctrina',clase_actual:'docencia'})).code,200);assert.deepEqual(s.calls,[['rpc','clasificar']]);
  const i=setup();assert.equal((await i.request({action:'clasificar',id:actor,clase:'inventada',clase_actual:'docencia'})).code,422);assert.equal(i.calls.length,0);
  const f=setup({foreign:true});assert.equal((await f.request({action:'clasificar',id:actor,clase:'doctrina',clase_actual:'docencia'})).code,403);assert.equal(f.calls.length,0);
+});
+
+test('clasificación: conflicto concurrente se comunica como 409 y no como 503',async()=>{
+ const r=await setup({rpcError:'40001'}).request({action:'clasificar',id:actor,clase:'doctrina',clase_actual:'tradicion'});
+ assert.equal(r.code,409);assert.match(r.body.error,/categoría cambió/);assert.ok(r.body.referencia);
+ assert.doesNotMatch(JSON.stringify(r.body),/Detalles internos/);
+});
+test('clasificación: errores de validación conservan 422 y no incluyen SQL privado',async()=>{
+ for(const codigo of ['22023','22P02','23514']){
+  const r=await setup({rpcError:codigo}).request({action:'clasificar',id:actor,clase:'doctrina',clase_actual:'tradicion'});
+  assert.equal(r.code,422);assert.doesNotMatch(JSON.stringify(r.body),/Detalles internos/);
+ }
+});
+test('clasificación: error no reconocido conserva diagnóstico trazable sin filtrar información privada',async()=>{
+ const r=await setup({rpcError:'PGRST999'}).request({action:'clasificar',id:actor,clase:'doctrina',clase_actual:'tradicion'});
+ assert.equal(r.code,503);assert.match(r.body.error,/PGRST999/);assert.ok(r.body.referencia);
+ assert.doesNotMatch(JSON.stringify(r.body),/Detalles internos/);
+});
+test('sin permisos de ejecución administrativa, la clasificación devuelve 403',async()=>{
+ const r=await setup({rpcError:'42501'}).request({action:'clasificar',id:actor,clase:'doctrina',clase_actual:'tradicion'});
+ assert.equal(r.code,403);
 });
