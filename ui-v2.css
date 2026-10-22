@@ -2453,3 +2453,30 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 #perfilSuperadminDialogo .btn-primary{background:#17354b;color:#fff}
 
 #doctrinaTextoDialogo input[type=checkbox]{width:20px;height:20px;padding:0;vertical-align:middle}
+
+/* Calendario legible: tonos suaves, feriado prioritario sobre fin de semana. */
+.tenidas-semana span:nth-child(n+6){background:#edf4fb;border-radius:6px;color:#244a68}
+.tenidas-dia{padding:8px;min-height:118px;box-shadow:0 1px 3px #17354b0a}
+.tenidas-dia.tenidas-fin-semana{background:#edf4fb;border-color:#b9cfe2}
+.tenidas-dia.tenidas-feriado{background:#fceff2;border-color:#dfb9c3}
+.tenidas-dia.tenidas-seleccionado{outline:2px solid #507e9f;outline-offset:-2px}
+.tenidas-numero{font-size:1rem;color:#18364d}
+.tenidas-feriado .tenidas-numero{color:#793b4b}
+.tenida-mini{background:#ffffffb8;border:1px solid #c1d1de;border-left:3px solid #7a98ad;line-height:1.5}
+.tenidas-leyenda{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:.85rem;color:#344b60}
+.tenidas-leyenda-fin,.tenidas-leyenda-feriado{display:inline-flex;align-items:center;gap:6px}
+.tenidas-leyenda-fin:before,.tenidas-leyenda-feriado:before{content:'';display:inline-block;width:14px;height:14px;border-radius:3px;border:1px solid #b9cfe2;background:#edf4fb}
+.tenidas-leyenda-feriado:before{background:#fceff2;border-color:#dfb9c3}
+/* Originales e inventario: estados explícitos y controles compactos en una fila. */
+#adminSeccionDoctrina .doctrina-tarjeta{margin:12px 0;padding:16px;border:1px solid #a8bdd2;border-left:4px solid #477ca5;border-radius:9px;background:#fff;min-width:0;box-shadow:0 1px 4px #17354b0a}
+#adminSeccionDoctrina .doctrina-verificado{border-color:#9bc5ad;border-left-color:#338257}
+#adminSeccionDoctrina .doctrina-eliminado{border-color:#d5a8ad;border-left-color:#b34a59;background:#fff9fa}
+#adminSeccionDoctrina .doctrina-tarjeta h4{font-size:1.05rem;line-height:1.6;letter-spacing:.01em;color:#15334b}
+#adminSeccionDoctrina .doctrina-tarjeta p{font-size:.9rem;line-height:1.6;margin:5px 0;color:#344b60}
+.doctrina-estado{display:inline-block;margin-left:10px;padding:1px 8px;border-radius:12px;background:#eaf1f8;color:#24567c;font-size:.75rem;font-weight:600;vertical-align:middle}
+.doctrina-verificado .doctrina-estado{background:#eaf5ee;color:#24633f}
+.doctrina-eliminado .doctrina-estado{background:#fbecef;color:#913344}
+#adminSeccionDoctrina .doctrina-acciones{display:flex;flex-wrap:nowrap;gap:6px;width:100%;max-width:100%;overflow-x:auto;padding:4px 0 7px;margin-top:8px}
+#adminSeccionDoctrina .doctrina-acciones button{flex:0 0 auto;width:auto;min-height:34px;padding:6px 10px;font-size:.8rem;line-height:1.4;white-space:nowrap;margin:0;border-radius:5px}
+#adminSeccionDoctrina textarea{box-sizing:border-box;max-width:100%;background:#fff;color:#172b3a;border:1px solid #64748b;border-radius:6px;padding:10px;font:inherit}
+@media(max-width:640px){.tenidas-dia{min-height:62px;padding:2px}#adminSeccionDoctrina .doctrina-tarjeta{padding:12px}#adminSeccionDoctrina .doctrina-acciones button{min-height:44px}.doctrina-estado{margin-left:6px}}

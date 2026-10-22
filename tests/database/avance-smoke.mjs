@@ -4,6 +4,12 @@ import {readFile} from 'node:fs/promises';
 import assert from 'node:assert/strict';
 const {PGlite}=createRequire(process.env.QA_SQL_ROOT+'/package.json')('@electric-sql/pglite');
 const db=new PGlite();
+// Reloj fijo: a medianoche UTC, restar dos minutos cambia de día y falsea la cuota diaria.
+// Se aplica tanto a las funciones del fixture como a sus registros de prueba.
+const relojSQL=sql=>sql.replace(/\bnow\(\)/g,"timestamptz '2026-11-05 12:00:00+00'");
+const ejecutarSQL=db.exec.bind(db),consultarSQL=db.query.bind(db);
+db.exec=(sql,...args)=>ejecutarSQL(relojSQL(sql),...args);
+db.query=(sql,...args)=>consultarSQL(relojSQL(sql),...args);
 const actor='11111111-1111-4111-8111-111111111111',usuario='22222222-2222-4222-8222-222222222222',version='33333333-3333-4333-8333-333333333333';
 const rpc=async(fn,accion,datos={},quien=actor)=>(await db.query(`select public.${fn}($1::uuid,$2::text,$3::jsonb) as r`,[quien,accion,JSON.stringify(datos)])).rows[0].r;
 const cal=async(accion,datos={})=>(await db.query('select public.calendario_recordatorios_servicio($1,$2::jsonb) as r',[accion,JSON.stringify(datos)])).rows[0].r;
@@ -95,3 +101,4 @@ try{
  for(const role of ['anon','authenticated'])for(const fn of ['superadmin_perfil_codigo(uuid,text,jsonb)','doctrina_texto_superadmin(uuid,text,jsonb)','calendario_recordatorios_servicio(text,jsonb)','primer_acceso_emitir(text,text)'])assert.equal((await db.query('select has_function_privilege($1,$2,$3) as r',[role,'public.'+fn,'EXECUTE'])).rows[0].r,false);
  console.log('PASS PostgreSQL aislado: migraciones, OTP previo/código erróneo/repetición/identidad estable, revisión obligatoria por página, búsqueda citada, retiro, reserva durable sin repetición, bloqueo Dummy y ACL.');
 }catch(e){console.error('FAIL PostgreSQL:',e.message,e.detail||'');process.exitCode=1;}finally{await db.close();}
+

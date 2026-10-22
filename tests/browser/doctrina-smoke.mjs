@@ -46,6 +46,9 @@ try{
  await page.getByRole('button',{name:'Revisión',exact:true}).click();await page.locator('#doctrinaRevisionNota').fill('Original comprobado');fail=true;
  await page.getByRole('button',{name:'Aprobar como vigente'}).click();await page.locator('#doctrinaRevisionEstado').filter({hasText:'Error de prueba'}).waitFor();assert.equal(await page.locator('#doctrinaRevisionNota').inputValue(),'Original comprobado');fail=false;
  await page.getByRole('button',{name:'Aprobar como vigente'}).click();await page.locator('#doctrinaRevisionDialogo').waitFor({state:'hidden'});await page.locator('.doctrina-documento').filter({hasText:'vigente'}).waitFor();
+ const tarjeta=page.locator('#doctrinaDocumentos .doctrina-tarjeta');
+ assert.equal(await tarjeta.evaluate(e=>getComputedStyle(e).borderLeftColor),'rgb(51, 130, 87)');
+ assert.equal(new Set(await tarjeta.locator('.doctrina-acciones button').evaluateAll(bs=>bs.map(b=>b.getBoundingClientRect().top))).size,1);
  await page.getByRole('button',{name:'Eliminar',exact:true}).click();await page.locator('.doctrina-documento').waitFor({state:'hidden'});
  await page.getByLabel('Mostrar eliminados',{exact:true}).check();await page.getByRole('button',{name:'Restaurar',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Descargar original'}).count(),0);
  await page.getByRole('button',{name:'Restaurar',exact:true}).click();await page.getByRole('button',{name:'Revisión',exact:true}).waitFor();

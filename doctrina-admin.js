@@ -51,17 +51,19 @@ function renderizarBibliotecaDoctrina(){
   const filas=bibliotecaDoctrina[tipo].filter(d=>tipo!=='documentos'||d.estado!=='retirado'||document.getElementById('doctrinaMostrarRetirados')?.checked).filter(d=>normalizarBusquedaAdmin(`${d.titulo||d.archivo} ${d.clase}`).includes(buscar));
   if(!filas.length){const p=document.createElement('p');p.className='admin-empty-state';p.textContent=buscar?'Sin coincidencias para esta búsqueda.':tipo==='documentos'?'Todavía no hay originales incorporados.':'No hay registros en el inventario.';cont.appendChild(p);}
   filas.forEach(d=>{
-   const card=document.createElement('article');card.className='doctrina-documento';
+   const card=document.createElement('article');const eliminado=(d.original_estado||d.estado)==='retirado',verificado=tipo==='documentos'?d.estado==='vigente'&&d.revision==='listo':d.estado==='archivo_verificado'&&!eliminado;card.className='doctrina-documento doctrina-tarjeta '+(eliminado?'doctrina-eliminado':verificado?'doctrina-verificado':'doctrina-pendiente');
    const titulo=document.createElement('h4');titulo.textContent=d.titulo||d.archivo;
    const detalle=document.createElement('p');detalle.textContent=tipo==='documentos'?`${d.clase} · ${d.estado} · ${d.revision||'sin versión'} · ${Math.ceil((d.bytes||0)/1024)} KB`:`${d.clase} · ${d.estado} · ${d.grado_validado?'Grado revisado':'Grado pendiente'} · ${d.derechos_verificados?'Derechos revisados':'Derechos pendientes'}`;
+   const estadoVisual=document.createElement('span');estadoVisual.className='doctrina-estado';estadoVisual.textContent=eliminado?'Eliminado':verificado?'Verificado':'Pendiente';titulo.appendChild(estadoVisual);
    card.append(titulo,detalle);
-   if(tipo==='documentos'&&d.version_id){const boton=document.createElement('button');boton.type='button';boton.className='admin-link-btn';boton.textContent='Descargar original';boton.addEventListener('click',()=>descargarOriginalDoctrina(d.version_id,boton));card.appendChild(boton);}
+   if(tipo==='documentos'&&d.extraccion_estado){const textoEstado=document.createElement('p');textoEstado.className='doctrina-extraccion-estado';textoEstado.textContent='Texto: '+d.extraccion_estado+(d.paginas?' · '+d.paginas+' páginas':'')+(d.paginas_pendientes!=null?' · '+d.paginas_pendientes+' por revisar':'');card.appendChild(textoEstado);}
    if(tipo==='documentos'&&d.version_id){
     const acciones=document.createElement('div');acciones.className='doctrina-acciones';
     const agregar=(texto,fn)=>{const b=document.createElement('button');b.type='button';b.className='btn-secondary';b.textContent=texto;b.addEventListener('click',()=>fn(b));acciones.appendChild(b);};
     if(d.estado==='retirado'){
      card.querySelector('button')?.remove();agregar('Restaurar',b=>cambiarRetiroDoctrina(d,'restaurar',b));
     }else{
+     agregar('Descargar original',b=>descargarOriginalDoctrina(d.version_id,b));
      if(d.estado==='vigente')agregar('Texto por páginas',()=>abrirTextoDoctrina(d));
      agregar('Consultar original',b=>abrirVisorDoctrina(d,b));
      agregar('Revisión',()=>abrirRevisionDoctrina(d));
