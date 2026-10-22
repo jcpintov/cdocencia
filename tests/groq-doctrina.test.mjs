@@ -4,12 +4,37 @@ import {consultarGroqDoctrina,validarRespuestaGroq,seleccionarFuentes,MODELO_GRO
 const entrada={pregunta:'¿Qué simboliza la acacia?',consulta:'acacia',consultaAmpliada:'acacia OR inmortalidad',antecedentes:'Alegación del consultante'};
 const fuente={titulo:'Fuente sintética',clase:'doctrina',version_id:'v',version:1,pagina:3,sha256:'abc',estado_texto:'indexado',fragmento:'La acacia representa un símbolo de inmortalidad.'};
 const resultado=()=>({respuesta:'La acacia representa un símbolo de continuidad [F1].',referencias:['F1'],base_suficiente:true});
+
+test('repregunta lee páginas en paralelo, una vez por turno, y vuelve a leer en el turno siguiente',async()=>{
+ const fuentes=[{...fuente,pagina:1},{...fuente,pagina:2}];
+ let activas=0,maximas=0,lecturas=0;
+ const rpc=async(a,d)=>{
+  if(a==='texto_contexto')return {paginas:fuentes};
+  if(a==='texto_llm_listar')return {autorizaciones:[{...fuente,autorizado:true,modelo:MODELO_GROQ}]};
+  if(a==='texto_pagina'){
+   lecturas++;maximas=Math.max(maximas,++activas);
+   await new Promise(resolve=>setImmediate(resolve));activas--;
+   return {sha256:fuente.sha256,pagina:{numero:d.pagina,texto:fuente.fragmento}};
+  }
+  return {ok:true,id:'reserva'};
+ };
+ const pregunta={...entrada,historial:[{role:'user',content:'Consulta anterior'}],fuentesPrevias:fuentes};
+ const fetchImpl=async(_u,o)=>{
+  assert.equal(JSON.parse(o.body).tools,undefined);
+  return {ok:true,text:async()=>JSON.stringify({choices:[{finish_reason:'stop',message:{content:JSON.stringify(resultado())}}]})};
+ };
+ const opciones={rpc,fetchImpl,env:{GROQ_API_KEY:'fixture',GROQ_ZDR_CONFIRMADO:'true'}};
+ assert.equal((await consultarGroqDoctrina(pregunta,opciones)).generativo,true);
+ assert.equal(lecturas,2);assert.equal(maximas,2);
+ assert.equal((await consultarGroqDoctrina(pregunta,opciones)).generativo,true);
+ assert.equal(lecturas,4);
+});
 function entorno(op={}){
  const llamadas=[],env={GROQ_API_KEY:'clave-sintetica',GROQ_ZDR_CONFIRMADO:'true',...op.env};
  let envios=0,validaciones=0,body;
  const rpc=async(accion,datos)=>{llamadas.push([accion,datos]);
   if(accion==='texto_buscar')return {resultados:op.sinFuentes?[]:[fuente],cobertura:{vigentes:36,consultables:1,pendientes:35}};
-  if(accion==='texto_llm_listar')return {autorizaciones:op.sinPermiso?[]:[{version_id:'v',sha256:op.huellaDistinta?'otra':'abc',autorizado:true,modelo:MODELO_GROQ}]};
+  if(accion==='texto_llm_listar')return {autorizaciones:op.sinPermiso?[]:[{version_id:'v',sha256:op.huellaDistinta?'otra':'abc',autorizado:true,modelo:MODELO_GROQ},...(op.autorizadas||[])]};
   if(accion==='texto_llm_reservar')return {ok:!op.limite,id:'reserva'};
   if(accion==='texto_llm_validar')return {ok:++validaciones!==(op.revocarEn||0)};
   return {ok:true};
@@ -19,13 +44,24 @@ function entorno(op={}){
   envios++;body=solicitud;if(op.error)throw new Error('Error privado: clave-sintetica');
   return {ok:!op.status,status:op.status||200,text:async()=>op.raw||JSON.stringify({choices:[{finish_reason:op.truncada?'length':'stop',message:{content:JSON.stringify(op.respuesta||resultado())}}]})};
  };
- return {run:()=>consultarGroqDoctrina(entrada,{rpc,env,fetchImpl}),llamadas,get envios(){return envios},get body(){return body}};
+ return {run:()=>consultarGroqDoctrina({...entrada,...op.entrada},{rpc,env,fetchImpl}),llamadas,get envios(){return envios},get body(){return body}};
 }
+
+test('las fuentes de una memoria revisada se reservan y una memoria revocada no se envía',async()=>{
+ const memoria={pregunta:'Caso previo',respuesta:'RECUERDO_REVISADO',fuentes:[{version_id:'m',sha256:'memoria',pagina:2}]};
+ const s=entorno({entrada:{casosRevisados:[memoria]},autorizadas:[{version_id:'m',sha256:'memoria',autorizado:true,modelo:MODELO_GROQ}]});
+ assert.equal((await s.run()).generativo,true);
+ assert.ok(s.body.messages[1].content.includes('RECUERDO_REVISADO'));
+ assert.ok(s.llamadas.find(([a])=>a==='texto_llm_reservar')[1].fuentes.some(f=>f.version_id==='m'));
+ const revocada=entorno({entrada:{casosRevisados:[memoria]}});await revocada.run();
+ assert.ok(!revocada.body.messages[1].content.includes('RECUERDO_REVISADO'));
+});
 for(const op of [{env:{GROQ_API_KEY:''}},{env:{GROQ_ZDR_CONFIRMADO:'false'}},{sinPermiso:true},{sinFuentes:true},{huellaDistinta:true},{limite:true},{revocarEn:1}])
  test('bloquea salida externa sin configuración, evidencia, permiso o reserva: '+JSON.stringify(op),async()=>{const s=entorno(op),r=await s.run();assert.equal(r.generativo,false);assert.equal(s.envios,0)});
 test('consulta biblioteca ampliada y genera una respuesta fluida con citas verificadas',async()=>{
  const s=entorno(),r=await s.run();
  assert.equal(r.generativo,true);
+ assert.equal(r.base_suficiente,true);
  assert.equal(r.modelo,MODELO_GROQ);
  assert.equal(s.envios,1);
  assert.equal(s.body.tools,undefined);
@@ -36,6 +72,11 @@ test('consulta biblioteca ampliada y genera una respuesta fluida con citas verif
  assert.equal(r.secciones.length,1);
  assert.equal(r.secciones[0].titulo,'Respuesta');
  assert.match(r.secciones[0].texto,/\[F1\]/);
+});
+
+test('una respuesta de fundamento parcial conserva explícitamente ese alcance',async()=>{
+ const r=await entorno({respuesta:{...resultado(),base_suficiente:false}}).run();
+ assert.equal(r.generativo,true);assert.equal(r.base_suficiente,false);
 });
 for(const op of [{status:429},{status:500},{error:true},{raw:'no json'},{truncada:true},{revocarEn:2}])
  test('no publica resultados fallidos ni reintenta a espaldas del Superadmin: '+JSON.stringify(op),async()=>{const s=entorno(op),r=await s.run();assert.equal(r.generativo,false);assert.equal(s.envios,1);assert.ok(r.fuentes.length);assert.equal(JSON.stringify(r).includes('clave-sintetica'),false)});

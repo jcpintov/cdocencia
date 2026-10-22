@@ -1,3 +1,4 @@
+import {guardarCasoCandidato,recuperarCasosRevisados,cargarMemoriaSesion} from '../lib/memoria-casos.js';
 import { createClient } from '@supabase/supabase-js';
 import { randomUUID, createHash } from 'node:crypto';
 const BUCKET='doctrina-originales-privados';
@@ -21,7 +22,7 @@ export default async function handler(req,res){
   const {data:perfil,error:profileError}=await admin.from('usuarios').select('id,email,es_admin').eq('auth_user_id',user.id).maybeSingle();
   if(profileError||!perfil?.es_admin||(String(user.email||'').toLowerCase()!=='jpintov@gmail.com'&&user.app_metadata?.superadmin_principal!==true)||String(perfil.email||'').toLowerCase()!==String(user.email||'').toLowerCase())return reply(res,403,{error:'Acceso exclusivo de Superadmin'});
   const {action,...datos}=req.body||{};
-  if(!['listar','preparar','registrar','descargar','visualizar','revisar','retirar','restaurar','clasificar','texto_extraer','texto_pagina','texto_revisar_pagina','texto_aprobar','texto_buscar','agente_consultar','llm_listar','llm_autorizar','llm_revocar','llm_autorizar_biblioteca'].includes(action))return reply(res,422,{error:'Acción inválida'});
+  if(!['listar','preparar','registrar','descargar','visualizar','revisar','retirar','restaurar','clasificar','texto_extraer','texto_pagina','texto_revisar_pagina','texto_aprobar','texto_buscar','agente_consultar','llm_listar','llm_autorizar','llm_revocar','llm_autorizar_biblioteca','caso_aprobar','caso_retirar','memoria_sesion'].includes(action))return reply(res,422,{error:'Acción inválida'});
   const rpc=async(accion,payload={})=>{
    const {data,error}=await admin.rpc(accion.startsWith('texto_')?'doctrina_texto_superadmin':'doctrina_gestion_superadmin',{p_actor:user.id,p_accion:accion,p_datos:payload});
    if(error)throw new Error('database');return data;
@@ -39,11 +40,26 @@ export default async function handler(req,res){
    if(!uuid(datos.id)||!clases.includes(datos.clase)||!clases.includes(datos.clase_actual))return reply(res,422,{error:'Clasificación no válida'});
    return reply(res,200,{ok:true,...await rpc('clasificar',{id:datos.id,clase:datos.clase,clase_actual:datos.clase_actual})});
   }
+  if(action==='memoria_sesion'){
+   return reply(res,200,{ok:true,memoria:await cargarMemoriaSesion(admin,user.id,process.env.DOCTRINA_MEMORIA_CASOS_ENABLED==='true')});
+  }
+  if(['caso_aprobar','caso_retirar'].includes(action)){
+   if(process.env.DOCTRINA_MEMORIA_CASOS_ENABLED!=='true')return reply(res,503,{error:'La memoria de casos todavía no está habilitada'});
+   if(!uuid(datos.id)||datos.confirmacion!==true)return reply(res,422,{error:'Seleccione y confirme el caso que desea revisar o retirar'});
+   const estado=action==='caso_aprobar'?'revisado':'retirado';
+   const {data,error}=await admin.from('agente_casos').update({estado,revisado_en:new Date().toISOString()}).eq('id',datos.id).eq('actor',user.id).select('id,estado').maybeSingle();
+   if(error||!data)return reply(res,422,{error:'No se pudo actualizar el caso'});
+   return reply(res,200,{ok:true,caso:data});
+  }
   if(action==='agente_consultar'){
    const {prepararConsultaAgente}=await import('../lib/agente-doctrina.js');
    let entrada;try{entrada=prepararConsultaAgente(datos);}catch(e){return reply(res,422,{error:e.message});}
    const {consultarGroqDoctrina}=await import('../lib/groq-doctrina.js');
-   return reply(res,200,{ok:true,informe:await consultarGroqDoctrina(entrada,{rpc})});
+   const memoriaHabilitada=process.env.DOCTRINA_MEMORIA_CASOS_ENABLED==='true';
+   if(memoriaHabilitada)try{entrada.casosRevisados=await recuperarCasosRevisados(admin,user.id,entrada.pregunta);}catch{console.warn('DOCTRINA_MEMORIA_NO_DISPONIBLE');}
+   const informe=await consultarGroqDoctrina(entrada,{rpc,onMetrics:metricas=>console.info('DOCTRINA_RENDIMIENTO',JSON.stringify(metricas))});
+   if(memoriaHabilitada&&informe.generativo)try{informe.caso_memoria_id=await guardarCasoCandidato(admin,user.id,entrada,informe);}catch{console.warn('DOCTRINA_MEMORIA_NO_GUARDADA');}
+   return reply(res,200,{ok:true,informe});
   }
   if(action==='texto_buscar'){if(typeof datos.consulta!=='string'||datos.consulta.trim().length<3||datos.consulta.length>250)return reply(res,422,{error:'Escriba una consulta de 3 a 250 caracteres'});return reply(res,200,{ok:true,...await rpc(action,{consulta:datos.consulta})});}
   if(['texto_pagina','texto_revisar_pagina','texto_aprobar'].includes(action)){

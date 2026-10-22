@@ -1,6 +1,6 @@
 import {createClient} from '@supabase/supabase-js';
 import {randomUUID,createHash} from 'node:crypto';
-import {validarFicha,extraerTrabajo,coincidenciasTrabajo,pedirJSONTrabajos,validarRevision,validarOratoria,exportarOratoria,promptOrador,ROL_ORADOR} from '../lib/trabajos-tenida.js';
+import {validarFicha,extraerTrabajo,coincidenciasTrabajo,pedirJSONTrabajos,validarRevision,validarOratoria,generarOratoriaRevisada,exportarOratoria,promptOrador,ROL_ORADOR} from '../lib/trabajos-tenida.js';
 import {prepararConsultaAgente} from '../lib/agente-doctrina.js';
 import {consultarGroqDoctrina} from '../lib/groq-doctrina.js';
 const BUCKET='trabajos-tenida-privados',MAX=10485760;
@@ -68,7 +68,7 @@ export default async function handler(req,res){
    const reserva=await documental('texto_llm_reservar',{fuentes:fuentes.map(({version_id,sha256,pagina})=>({version_id,sha256,pagina})),hash:createHash('sha256').update(bloque.texto).digest('hex')});
    if(!reserva?.ok)throw Error(reserva?.mensaje||'No se pudo autorizar el análisis.');
    let estado='fallido';try{
-    const r=await pedirJSONTrabajos(`Eres un revisor docente masónico. Revisa únicamente este bloque del trabajo, no juzgues el documento completo. Criterios: ${JSON.stringify(ROL_ORADOR.revision)}. Devuelve {"sintesis":"tesis y conexión con el conjunto, máximo 450 caracteres", "pasajes":["hasta tres citas EXACTAS del bloque, de 20 a 600 caracteres"], "observaciones":[{"tipo":"citas|ia|contenido","pasaje":"cita EXACTA que requiere examen","explicacion":"observación contextualizada, sin veredicto ni porcentaje de autoría"}]}. Si no hay observaciones fundamentadas usa []. Nunca atribuyas autoría IA a partir del estilo. No califiques contenidos simbólicos de grados superiores como adecuados para grados inferiores.`,{ficha:datos.ficha,bloque:bloque.numero,total:e.bloques.length,texto:bloque.texto,principios:principios.map(p=>p.fragmento).join('\n'),coincidencias},{validar:async()=> (await documental('texto_llm_validar',{id:reserva.id})).ok});
+    const r=await pedirJSONTrabajos(`Eres un revisor docente masónico. Revisa únicamente este bloque del trabajo, no juzgues el documento completo. Criterios: ${JSON.stringify(ROL_ORADOR.revision)}. Devuelve {"sintesis":"tesis y conexión con el conjunto, máximo 450 caracteres", "pasajes":["de una a tres citas EXACTAS del bloque, de 20 a 600 caracteres, que respalden la síntesis"], "observaciones":[{"tipo":"citas|ia|contenido","pasaje":"cita EXACTA que requiere examen","explicacion":"observación contextualizada, sin veredicto ni porcentaje de autoría"}]}. Si no hay observaciones fundamentadas usa []. Nunca atribuyas autoría IA a partir del estilo. No califiques contenidos simbólicos de grados superiores como adecuados para grados inferiores.`,{ficha:datos.ficha,bloque:bloque.numero,total:e.bloques.length,texto:bloque.texto,principios:principios.map(p=>p.fragmento).join('\n'),coincidencias},{validar:async()=> (await documental('texto_llm_validar',{id:reserva.id})).ok});
     datos.revision_bloques.push({...validarRevision(r,bloque),coincidencias});estado='completado';
    }finally{await documental('texto_llm_finalizar',{id:reserva.id,estado});}
   }else if(action==='contrastar'){
@@ -89,8 +89,8 @@ export default async function handler(req,res){
    const reserva=await documental('texto_llm_reservar',{fuentes:fuentes.map(({version_id,sha256,pagina})=>({version_id,sha256,pagina})),hash:createHash('sha256').update(JSON.stringify(datos.contraste)).digest('hex')});
    if(!reserva?.ok)throw Error(reserva?.mensaje||'No se pudo validar el contraste documental.');
    let estado='fallido';try{
-    const r=await pedirJSONTrabajos(promptOrador(datos.ficha),{ficha:datos.ficha,trabajo_completo_revisado:datos.revision_bloques.map(({numero,sintesis,pasajes})=>({numero,sintesis,pasajes:pasajes.slice(0,1).map(p=>p.slice(0,300))})),contraste:datos.contraste.secciones,precision_del_orador:datos.decision.nota},{validar:async()=> (await documental('texto_llm_validar',{id:reserva.id})).ok});
-    datos.oratoria={...validarOratoria(r),estado:'borrador',fuentes,creado_en:new Date().toISOString()};estado='completado';
+    const r=await generarOratoriaRevisada(datos.ficha,{ficha:datos.ficha,trabajo_completo_revisado:datos.revision_bloques.map(({numero,sintesis,pasajes})=>({numero,sintesis,pasajes:pasajes.slice(0,1).map(p=>p.slice(0,300))})),contraste:datos.contraste.secciones,precision_del_orador:datos.decision.nota},{validar:async()=> (await documental('texto_llm_validar',{id:reserva.id})).ok});
+    datos.oratoria={...r,estado:'borrador',fuentes,creado_en:new Date().toISOString()};estado='completado';
    }finally{await documental('texto_llm_finalizar',{id:reserva.id,estado});}
   }else if(action==='editar'){
    if(!datos.oratoria)throw Error('Primero genere las conclusiones.');
@@ -102,6 +102,12 @@ export default async function handler(req,res){
   if(trabajo&&rpc)try{await rpc('liberar',{id:trabajo.id,bloqueo:trabajo.bloqueo});}catch{}
   // No registrar texto privado, respuestas ni credenciales del proveedor.
   const mensaje=typeof error.message==='string'&&error.message.length<300?error.message:'No se pudo completar el paso. El avance guardado se conserva.';
-  return reply(res,422,{error:mensaje});
+  const etapa=['revisar','contrastar','decision','generar','editar'].includes(req.body?.action)?req.body.action:'solicitud';
+  const referencia=randomUUID();
+  // Diagnóstico correlacionable sin texto del trabajo, respuesta de IA ni credenciales.
+  console.warn('ORADOR_PASO_FALLIDO',JSON.stringify({etapa,referencia}));
+  const status=[429,503].includes(error.status)?error.status:422;
+  if(status===429)res.setHeader('Retry-After',String(error.reintentar_en||15));
+  return reply(res,status,{error:mensaje,etapa,referencia,codigo:error.codigo,reintentar_en:error.reintentar_en});
  }
 }

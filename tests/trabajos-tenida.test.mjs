@@ -1,11 +1,45 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validarFicha,dividirTrabajo,extraerTrabajo,coincidenciasTrabajo,validarRevision,validarOratoria,pedirJSONTrabajos,exportarOratoria,ROL_ORADOR} from '../lib/trabajos-tenida.js';
+import {validarFicha,dividirTrabajo,extraerTrabajo,coincidenciasTrabajo,validarRevision,validarOratoria,generarOratoriaRevisada,pedirJSONTrabajos,exportarOratoria,ROL_ORADOR,promptOrador} from '../lib/trabajos-tenida.js';
 import JSZip from 'jszip';
 const ficha={tema:'Trabajo sobre la escucha',autor:'Autor de prueba',tenida:'Tenida ordinaria',fecha:'2026-10-22',grado:1,tipo:'ordinaria',uso_ia:'no_informada',nota_ia:''};
-test('ficha exige cuatro campos y coherencia entre ceremonia y grado',()=>{
+
+test('corrige una oratoria fuera de rango una vez y no reintenta un límite de proveedor',async()=>{
+ let llamadas=0;
+ const r=await generarOratoriaRevisada(ficha,{}, {pedir:async prompt=>{
+  llamadas++;if(llamadas===2)assert.match(prompt,/Revisión obligatoria/);
+  return {texto:Array(llamadas===1?100:350).fill('Reflexión').join(' ')};
+ }});
+ assert.equal(r.palabras,350);assert.equal(llamadas,2);
+ llamadas=0;
+ await assert.rejects(generarOratoriaRevisada(ficha,{}, {pedir:async()=>{llamadas++;throw Object.assign(Error('Límite'),{status:429});}}),/Límite/);
+ assert.equal(llamadas,1);
+});
+
+test('una revisión sin pasajes verificables no se presenta como revisión terminada',()=>{
+ assert.throws(()=>validarRevision({sintesis:'Resumen sin evidencia comprobable.',pasajes:['Pasaje inventado que no consta en el texto.'],observaciones:[]},{numero:1,texto:'El bloque original examina una idea diferente.'}),/pasaje verificable/);
+});
+
+test('las conclusiones ordinarias no reciben el arco de bienvenida ceremonial',()=>{
+ const ordinaria=promptOrador(ficha);
+ assert.ok(!ordinaria.includes(ROL_ORADOR.calidad_ceremonial.arco));
+ assert.ok(ordinaria.includes(ROL_ORADOR.calidad_conclusiones.fidelidad));
+ assert.ok(ordinaria.includes(ROL_ORADOR.calidad_conclusiones.criterio));
+ assert.ok(ordinaria.includes(ROL_ORADOR.calidad_conclusiones.rigor));
+ assert.ok(ordinaria.includes(ROL_ORADOR.calidad_conclusiones.cierre));
+ assert.ok(ordinaria.includes(ROL_ORADOR.ejemplos_criticos_conclusiones[0].aprender));
+ const ceremonial=promptOrador({...ficha,tipo:'iniciacion'});
+ assert.ok(ceremonial.includes(ROL_ORADOR.calidad_ceremonial.arco));
+ assert.ok(!ceremonial.includes(ROL_ORADOR.ejemplos_criticos_conclusiones[0].aprender));
+});
+test('ficha exige tema, autor, fecha y grado sin nombre de tenida duplicado',()=>{
  assert.equal(validarFicha(ficha).tema,ficha.tema);
- for(const k of ['tema','autor','tenida','fecha'])assert.throws(()=>validarFicha({...ficha,[k]:''}));
+ for(const k of ['tema','autor','fecha'])assert.throws(()=>validarFicha({...ficha,[k]:''}));
+ const {tenida,...sinTenida}=ficha;
+ assert.equal(validarFicha(sinTenida).grado,1);
+ assert.equal(validarFicha(sinTenida).tenida,'Grado 1 · Aprendiz');
+ assert.equal(validarFicha({...sinTenida,grado:2}).tenida,'Grado 2 · Compañero');
+ assert.equal(validarFicha({...sinTenida,grado:3}).tenida,'Grado 3 · Maestro');
  assert.throws(()=>validarFicha({...ficha,fecha:'2026-02-30'}));
  assert.throws(()=>validarFicha({...ficha,tipo:'exaltacion',homenajeados:'Hermano'}));
  assert.throws(()=>validarFicha({...ficha,tipo:'iniciacion',homenajeados:''}));

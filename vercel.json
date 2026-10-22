@@ -17,7 +17,7 @@
   "functions": {
     "api/admin-doctrina.js": {
       "maxDuration": 300,
-      "includeFiles": "node_modules/unpdf/dist/**"
+      "includeFiles": "{node_modules/unpdf/dist/**,config/memoria-agente.json}"
     },
     "api/cron-recordatorios.js": {
       "maxDuration": 300
@@ -33,7 +33,7 @@
     },
     "api/admin-orador.js": {
       "maxDuration": 300,
-      "includeFiles": "{node_modules/unpdf/dist/**,config/orador.json}"
+      "includeFiles": "{node_modules/unpdf/dist/**,config/orador.json,config/memoria-agente.json}"
     }
   },
   "buildCommand": "node scripts/verificar-groq.mjs && node scripts/verificar-orador.mjs",

@@ -287,6 +287,7 @@ function configurarEntornoUsuario() {
       document.getElementById('modalCambioClaveObligatorio').classList.remove('hidden');
       return;
     }
+    if(typeof cargarMemoriaAgenteSesion==='function')void cargarMemoriaAgenteSesion();
     document.getElementById('seccionAdmin').classList.remove('hidden');
     document.getElementById('seccionDocencia').classList.add('hidden');
     document.getElementById('seccionBienvenida').classList.add('hidden');

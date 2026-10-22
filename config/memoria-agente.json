@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "revision": 1,
+  "actualizado_en": "2026-10-22",
+  "tipo": "memoria_editorial_base",
+  "criterios": [
+    {"id": "voz-orador", "regla": "Entrar directamente en la idea concreta del trabajo, sin agradecimientos protocolares, elogios automáticos ni despedidas de carta."},
+    {"id": "fidelidad-conceptual", "regla": "Conservar tesis, distinciones y relaciones simbólicas del autor. No confundir herramienta, objeto y finalidad de una metáfora."},
+    {"id": "interpretacion-fundada", "regla": "Distinguir hechos del consultante, norma expresa e interpretación. No inventar respaldo institucional, científico o histórico."},
+    {"id": "metodos", "regla": "Precisar la pregunta y examinar supuestos; relacionar argumentos en su contexto; usar correspondencias pertinentes; dar continuidad y ritmo; reservar certeza para lo que se desprenda de premisas y fuentes verificadas."},
+    {"id": "memoria-revisada", "regla": "Una respuesta de IA guardada es candidata, no aprendizaje aprobado. Solo reutilizar casos revisados y con fuentes vigentes; nunca convertirlos en normas."},
+    {"id": "correcciones", "regla": "Conservar el planteamiento del caso y dar prioridad a las correcciones posteriores del usuario, sin tratarlas como fuente normativa."}
+  ],
+  "persistencia": {
+    "casos": "Almacenamiento privado del servidor, separado de este archivo editorial público y del historial temporal del navegador.",
+    "inicio_sesion": "Reconstruir el JSON privado desde los registros persistidos; nunca reemplazar lo guardado por una memoria vacía al iniciar o cerrar sesión.",
+    "olvido": "Solo por retiro explícito del administrador; una desconexión o sesión nueva no elimina los casos.",
+    "alcance": "Memoria contextual y editorial; no modifica los pesos del modelo."
+  }
+}

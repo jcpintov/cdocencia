@@ -1,5 +1,7 @@
 name: Interfaz, administración y DOCTRINA
 on:
+  push:
+    branches: [main]
   pull_request:
     paths:
       - 'app.js'
@@ -60,4 +62,7 @@ jobs:
           node tests/browser/doctrina-smoke.mjs
           node tests/browser/plataforma-dom.mjs
           node tests/database/avance-smoke.mjs
+          node tests/browser/orador-dom.mjs
+          node tests/browser/memoria-casos-dom.mjs
+          node tests/database/memoria-casos-smoke.mjs
 
