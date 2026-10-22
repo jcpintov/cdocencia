@@ -1,6 +1,7 @@
 // Prueba explícita con datos inventados; no consulta la base ni imprime credenciales.
 import {consultarGroqDoctrina,MODELO_GROQ} from '../lib/groq-doctrina.js';
-if(process.env.GROQ_PRUEBA_SINTETICA!=='true'){
+import {buscarBibliotecaConGroq} from '../lib/busqueda-groq.js';
+if(process.env.GROQ_PRUEBA_SINTETICA!=='true'&&process.env.VERCEL_ENV!=='production'){
  console.log('GROQ_SYNTHETIC_CHECK_SKIP');
 }else{
  const fuente={titulo:'Documento sintético de comprobación',clase:'docencia',version_id:'sintetico',version:1,pagina:1,sha256:'sintetico',fragmento:'Ejercicio ficticio: el círculo de estudio inicia a las 20:00. Su duración prevista es de sesenta minutos. Este texto no contiene disposiciones masónicas ni datos personales.'};
@@ -10,6 +11,10 @@ if(process.env.GROQ_PRUEBA_SINTETICA!=='true'){
   return {ok:true,id:'prueba-sintetica-sin-registro'};
  };
  try{
+  const busquedas=[];
+  await buscarBibliotecaConGroq({pregunta:'que dise la constitusion sobre inisiasion?',antecedentes:''},{modelo:MODELO_GROQ,env:process.env,fetchImpl:fetch,rpc:async(_a,d)=>{busquedas.push(d.consulta);return {resultados:[]};}});
+  if(!busquedas.some(q=>/iniciación|admisión/i.test(q)))throw Error('normalizacion_sintetica');
+  console.log('GROQ_SEARCH_SYNTHETIC_OK consultas='+JSON.stringify(busquedas));
   const r=await consultarGroqDoctrina({pregunta:'Según el ejercicio ficticio, ¿a qué hora empieza y cuánto dura la actividad?',consulta:'círculo estudio',antecedentes:''},{rpc,fetchImpl:async(url,options)=>{
    const response=await fetch(url,options),raw=await response.text();
    let diagnostico={status:response.status};
