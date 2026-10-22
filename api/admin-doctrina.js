@@ -24,7 +24,15 @@ export default async function handler(req,res){
   if(!['listar','preparar','registrar','descargar','visualizar','revisar','retirar','restaurar','clasificar','texto_extraer','texto_pagina','texto_revisar_pagina','texto_aprobar','texto_buscar','agente_consultar','llm_listar','llm_autorizar','llm_revocar','llm_autorizar_biblioteca'].includes(action))return reply(res,422,{error:'Acción inválida'});
   const rpc=async(accion,payload={})=>{
    const {data,error}=await admin.rpc(accion.startsWith('texto_')?'doctrina_texto_superadmin':'doctrina_gestion_superadmin',{p_actor:user.id,p_accion:accion,p_datos:payload});
-   if(error)throw new Error('database');return data;
+   if(error){
+    // Nunca descartar el código de Supabase: diferencia conflicto, permisos
+    // y conectividad, sin enviar detalles internos al navegador.
+    const fallo=new Error('Operación documental no completada');
+    fallo.codigoDb=String(error.code||'DESCONOCIDO').slice(0,24);
+    fallo.operacion=accion;
+    throw fallo;
+   }
+   return data;
   };
   if(['llm_listar','llm_autorizar','llm_revocar','llm_autorizar_biblioteca'].includes(action)){
    if(action==='llm_autorizar_biblioteca'){
@@ -88,6 +96,20 @@ export default async function handler(req,res){
   const {data,error}=await storage.createSignedUrl(version.path,60,{download:action==='descargar'});
   if(error||!data?.signedUrl)return reply(res,503,{error:'No se pudo habilitar la descarga'});
   return reply(res,200,{ok:true,url:data.signedUrl,expira_segundos:60});
- }catch{return reply(res,503,{error:'No fue posible completar la operación documental. Reintente.'});}
+ }catch(fallo){
+  const codigo=String(fallo?.codigoDb||'INDETERMINADO').slice(0,24);
+  const accion=String(req.body?.action||'').replace(/[^a-z_]/gi,'').slice(0,36);
+  const referencia=randomUUID().slice(0,8);
+  // Solo metadatos técnicos, sin nombres de documentos, fragmentos, correo ni tokens.
+  console.error('[admin-doctrina] fallo de operación',{referencia,accion,codigo});
+  if(accion==='clasificar'){
+   if(codigo==='40001')return reply(res,409,{error:'La categoría cambió desde la última actualización. Actualice la biblioteca antes de guardar.',referencia});
+   if(['22023','22P02','23514'].includes(codigo))return reply(res,422,{error:'La categoría o la versión del documento no es válida. Actualice la biblioteca y vuelva a intentarlo.',referencia});
+   if(codigo==='42501')return reply(res,403,{error:'No se autorizó modificar la categoría con la sesión actual.',referencia});
+   if(codigo==='57014')return reply(res,503,{error:'La base documental no respondió a tiempo. Verifique si la categoría cambió antes de reintentar.',referencia});
+   return reply(res,503,{error:'No se pudo guardar la categoría. Código de diagnóstico '+codigo+'. Referencia '+referencia+'. La clasificación original se conserva.',referencia});
+  }
+  return reply(res,503,{error:'No fue posible completar la operación documental. Referencia '+referencia+'.',referencia});
+ }
 }
 
