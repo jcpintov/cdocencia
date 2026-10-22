@@ -41,7 +41,7 @@ for(const op of [{status:429},{status:500},{error:true},{raw:'no json'},{truncad
  test('no publica resultados fallidos ni reintenta a espaldas del Superadmin: '+JSON.stringify(op),async()=>{const s=entorno(op),r=await s.run();assert.equal(r.generativo,false);assert.equal(s.envios,1);assert.ok(r.fuentes.length);assert.equal(JSON.stringify(r).includes('clave-sintetica'),false)});
 test('rechaza referencias inventadas, campos ausentes o sin citas en el análisis',()=>{
  assert.throws(()=>validarRespuestaGroq({},[{referencia:'F1'}]));
- for(const cambia of [{referencias:['F99']},{referencias:[]},{respuesta:'La fuente F99 exige algo.'},{respuesta:'No consta ningún deber',referencias:['F1']},{base_suficiente:undefined},{respuesta:'x'.repeat(5001)}]){
+ for(const cambia of [{referencias:['F99']},{referencias:[]},{respuesta:'La fuente F99 exige algo.'},{respuesta:'No consta ningún deber',referencias:[]},{base_suficiente:undefined},{respuesta:'x'.repeat(5001)}]){
   const x={...resultado(),...cambia};
   if(cambia.fundamentos){x.referencias=['F1']}
   assert.throws(()=>validarRespuestaGroq(x,[{referencia:'F1'}]));
@@ -60,3 +60,5 @@ test('respeta jerarquía aunque una fuente inferior tenga más coincidencias',()
  const permisos=new Map(documentos.map(f=>[f.version_id,f.sha256]));
  assert.equal(seleccionarFuentes(documentos,permisos)[0].version_id,'reg');
 });
+
+test('presenta la referencia explícita del modelo aunque no la repita en la prosa',()=>{const secciones=validarRespuestaGroq({respuesta:'La actividad comienza a las 20:00.',referencias:['F1'],base_suficiente:true},[{referencia:'F1'}]);assert.match(secciones[0].texto,/20:00/);assert.match(secciones[0].texto,/\[F1\]/);});
