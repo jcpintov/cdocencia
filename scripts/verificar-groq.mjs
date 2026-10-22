@@ -19,7 +19,7 @@ if(process.env.GROQ_PRUEBA_SINTETICA!=='true'&&process.env.VERCEL_ENV!=='product
    const response=await fetch(url,options),raw=await response.text();
    let diagnostico={status:response.status};
    try{const j=JSON.parse(raw),choice=j.choices?.[0];diagnostico.finish=choice?.finish_reason;
-    try{const payload=JSON.parse(choice?.message?.content||'');diagnostico.secciones=payload.secciones?.map(s=>({titulo:s.titulo,caracteres:s.texto?.length,referencias:s.referencias,referencia_en_texto:/\bF\d+\b/.test(s.texto||'')}));}catch{diagnostico.formato='json_invalido';}
+    try{const payload=JSON.parse(choice?.message?.content||'');diagnostico.campos=Object.keys(payload);diagnostico.longitud=payload.respuesta?.length;diagnostico.referencias=payload.referencias;diagnostico.base_suficiente=payload.base_suficiente;diagnostico.citadas=[...(payload.respuesta||'').matchAll(/\bF\d+\b/g)].map(x=>x[0]);diagnostico.secciones=payload.secciones?.map(s=>({titulo:s.titulo,caracteres:s.texto?.length,referencias:s.referencias,referencia_en_texto:/\bF\d+\b/.test(s.texto||'')}));}catch{diagnostico.formato='json_invalido';}
    }catch{diagnostico.formato='respuesta_invalida';}
    console.log('GROQ_SYNTHETIC_DIAGNOSTIC '+JSON.stringify(diagnostico));
    return {ok:response.ok,status:response.status,text:async()=>raw};
