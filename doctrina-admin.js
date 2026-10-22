@@ -5,6 +5,7 @@ let consultaBusquedaTextoDoctrina = 0;
 let consultaAgenteDoctrina = 0;
 let controladorAgenteDoctrina = null;
 let historialAgenteDoctrina = [];
+let fuentesConversacionDoctrina = [];
 let consultaPermisosGroq = 0;
 let cargaDoctrinaPendiente = null;
 function limpiarBibliotecaDoctrina(){
@@ -229,7 +230,7 @@ function nuevaConversacionDoctrina(){
  const campo=document.getElementById('doctrinaAgentePregunta');if(campo){campo.value='';campo.minLength=10;campo.placeholder='Escribe tu pregunta…';campo.focus();}
 }
 function invalidarAgenteDoctrina(){
- historialAgenteDoctrina=[];
+ historialAgenteDoctrina=[];fuentesConversacionDoctrina=[];
  document.getElementById('doctrinaConversacion')?.replaceChildren();
  const campo=document.getElementById('doctrinaAgentePregunta');if(campo){campo.minLength=10;campo.placeholder='Escribe tu pregunta…';}
  consultaAgenteDoctrina++;controladorAgenteDoctrina?.abort();controladorAgenteDoctrina=null;
@@ -314,7 +315,7 @@ async function consultarAgenteDoctrina() {
  boton.textContent = 'Consultando…';
  try {
   const resultado = await peticionDoctrina('agente_consultar', {
-   pregunta,historial:historialAgenteDoctrina.length>5?[historialAgenteDoctrina[0],...historialAgenteDoctrina.slice(-4)]:historialAgenteDoctrina
+   pregunta,fuentesPrevias:fuentesConversacionDoctrina,historial:historialAgenteDoctrina.length>5?[historialAgenteDoctrina[0],...historialAgenteDoctrina.slice(-4)]:historialAgenteDoctrina
   }, controlador.signal);
   if (vigente()) {
    if(!resultado.informe?.generativo){presentarRespuestaDoctrina(resultado.informe,vigente);return;}
@@ -323,8 +324,9 @@ async function consultarAgenteDoctrina() {
    const mensaje=document.createElement('p');mensaje.className='doctrina-mensaje-usuario';mensaje.textContent=pregunta;
    const respuesta=document.createElement('div');respuesta.className='doctrina-mensaje-asistente';respuesta.setAttribute('aria-label','Respuesta del asistente');
    turnoVista.append(mensaje,respuesta);conversacion.appendChild(turnoVista);
-   presentarRespuestaDoctrina(resultado.informe,vigente,respuesta);
+   presentarRespuestaDoctrina(resultado.informe,()=>usuarioActual?.es_admin && usuarioActual.id===actor && biblioteca===consultaBibliotecaDoctrina,respuesta);
    historialAgenteDoctrina.push({role:'user',content:pregunta},{role:'assistant',content:resultado.informe.secciones.map(s=>s.texto).join('\n\n').slice(0,5000)});
+   fuentesConversacionDoctrina=(resultado.informe.fuentes||[]).slice(0,6).map(({version_id,sha256,pagina})=>({version_id,sha256,pagina}));
    salida.replaceChildren();campo.value='';campo.minLength=1;campo.placeholder='Continúa la conversación…';campo.focus();
    turnoVista.scrollIntoView?.({behavior:'smooth',block:'start'});
   }
