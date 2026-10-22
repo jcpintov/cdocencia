@@ -63,3 +63,8 @@ test('respeta jerarquía aunque una fuente inferior tenga más coincidencias',()
 });
 
 test('presenta la referencia explícita del modelo aunque no la repita en la prosa',()=>{const secciones=validarRespuestaGroq({respuesta:'La actividad comienza a las 20:00.',referencias:['F1'],base_suficiente:true},[{referencia:'F1'}]);assert.match(secciones[0].texto,/20:00/);assert.match(secciones[0].texto,/\[F1\]/);});
+
+test('presenta las referencias estructuradas que faltan sin eliminar citas existentes',()=>{
+ const s=validarRespuestaGroq({respuesta:'Corresponde examinar el deber [F3].',referencias:['F2','F3'],base_suficiente:true},[{referencia:'F2'},{referencia:'F3'}]);
+ assert.match(s[0].texto,/\[F3\]/);assert.match(s[0].texto,/Fuentes: \[F2\]/);
+});
