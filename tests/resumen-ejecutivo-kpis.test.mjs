@@ -14,7 +14,7 @@ test('Resumen Ejecutivo contiene seis KPI y trabajos se divide en tres',()=>{
  const b=m[1];
  const esperado=['kpiUsuarios','kpiResumenAsignados','kpiResumenEntregados','kpiResumenPendientes','kpiCompletados','kpiComentarios'];
  assert.deepEqual([...b.matchAll(/<strong id="([^"]+)">/g)].map(x=>x[1]),esperado);
- assert.equal((b.match(/class="admin-kpi"/g)||[]).length,6);
+ assert.equal((b.match(/class="admin-kpi admin-kpi-accion"/g)||[]).length,6);
  assert.doesNotMatch(b,/id="kpiModulos"/);
 });
 
