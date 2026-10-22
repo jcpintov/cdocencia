@@ -55,9 +55,31 @@ test('cada KPI navega a su destino; las asignaciones reciben filtro antes de car
  assert.equal(views.length,6,'usuario no administrativo no puede usar el atajo');
 });
 
+
+test('los cuatro KPI del cronograma también son botones y abren filtros adecuados',()=>{
+ const bloques=[
+  ['asignados','kpiTrabajosAsignados','Asignados'],
+  ['pendientes','kpiTrabajosPendientes','Pendientes'],
+  ['vencidos','kpiTrabajosVencidos','Vencidos'],
+  ['publicados','kpiTrabajosPublicados','Publicados']
+ ];
+ const section=html.slice(html.indexOf('id="cronogramaTrabajosAdmin"'),html.indexOf('id="adminSeccionUsuarios"'));
+ for(const [key,id,label] of bloques){
+  const re=new RegExp('<button[^>]*onclick="abrirDetalleKpiResumen\\(\\x27'+key+'\\x27\\)"[^>]*>\\s*<span>'+label+'</span>\\s*<strong id="'+id+'">');
+  assert.match(section,re);
+ }
+ const source=app.slice(app.indexOf('function abrirDetalleKpiResumen('),app.indexOf('async function cargarResumenAdmin()'));
+ const filter={value:'todos'},ctx={usuarioActual:{es_admin:true},document:{getElementById:id=>id==='asignacionesEstadoFiltro'?filter:id==='adminVistaActual'?{focus(){},scrollIntoView(){}}:null},cambiarSubseccionAdmin:()=>{}};
+ runInNewContext(source,ctx);
+ ctx.abrirDetalleKpiResumen('vencidos');assert.equal(filter.value,'vencidos');
+ ctx.abrirDetalleKpiResumen('publicados');assert.equal(filter.value,'entregados');
+ assert.match(asignaciones,/if\(filtro==='vencidos'\)return a\.vigente&&estadoTrabajo\(a\)==='Vencido'/);
+ assert.match(css,/\.cronograma-trabajos \.admin-kpi-accion:focus-visible/);
+});
+
 test('en Asignaciones hay filtros por vigencia y por publicación del trabajo',()=>{
  assert.match(html,/id="asignacionesEstadoFiltro"/);
- for(const key of ['todos','entregados','pendientes'])assert.match(html,new RegExp('<option value="'+key+'">'));
+ for(const key of ['todos','entregados','pendientes','vencidos'])assert.match(html,new RegExp('<option value="'+key+'">'));
  assert.match(asignaciones,/if\(filtro==='entregados'\)return a\.vigente&&estadoTrabajo\(a\)==='Publicado'/);
  assert.match(asignaciones,/if\(filtro==='pendientes'\)return a\.vigente&&estadoTrabajo\(a\)!=='Publicado'/);
  assert.match(asignaciones,/if\(\$\('asignacionesEstadoFiltro'\)\)\$\('asignacionesEstadoFiltro'\)\.value='todos'/);
