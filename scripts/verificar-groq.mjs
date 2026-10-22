@@ -29,7 +29,7 @@ if(process.env.DOCTRINA_QA_CASO==='true'||(process.env.GROQ_PRUEBA_SINTETICA!=='
   if(!r.generativo){console.error('GROQ_SYNTHETIC_CHECK_FAIL: '+r.aviso);process.exitCode=1;}
   else if(!r.secciones.some(s=>s.texto.includes('20:00'))||!r.secciones.some(s=>/sesenta|60/.test(s.texto))){console.error('GROQ_SYNTHETIC_CHECK_FAIL: contenido sintético esperado ausente');process.exitCode=1;}
   else console.log('GROQ_SYNTHETIC_CHECK_OK model='+r.modelo+' sections='+r.secciones.length+' references='+r.fuentes.length);
- }catch{console.error('GROQ_SYNTHETIC_CHECK_FAIL: no se pudo completar la prueba');process.exitCode=1;}
+ }catch(e){console.error('GROQ_SYNTHETIC_CHECK_FAIL: '+e.message);process.exitCode=1;}
 }
 
 try { await verificarCasoDoctrina(); } catch(e) { console.error(e.message); process.exitCode=1; }
