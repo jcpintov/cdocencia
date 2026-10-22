@@ -2730,7 +2730,11 @@ async function guardarArchivoOriginalEnBD() {
    ========================================================================== */
 async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   const tbody = document.getElementById('tablaAccesosBody');
-  tbody.innerHTML = `<tr><td colspan="7" class="td-loading">Consultando registros...</td></tr>`;
+  const estado=document.getElementById('bitacoraAdminEstado');
+  const actor=usuarioActual;
+  if(!tbody||!actor?.es_admin)return;
+  if(estado)estado.textContent='Consultando registros del servidor…';
+  tbody.innerHTML = `<tr><td colspan="8" class="td-loading">Consultando registros...</td></tr>`;
 
   const selectFiltro = document.getElementById('filtroUsuarioAcceso');
   if (selectFiltro && selectFiltro.options.length <= 1) {
@@ -2757,15 +2761,17 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   }
 
   const { data: registros, error } = await query;
-
+  if(usuarioActual!==actor)return;
   tbody.innerHTML = "";
 
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="7">No fue posible consultar la bitácora. Pulse Actualizar para reintentar.</td></tr>';
+    if(estado)estado.textContent='Error de acceso a registros (código '+String(error.code||error.status||'sin respuesta').slice(0,24)+').';
+    tbody.innerHTML = '<tr><td colspan="8">No fue posible consultar la bitácora. Verifique su sesión y pulse Actualizar.</td></tr>';
     return;
   }
   if (!registros || registros.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); font-style: italic;">No hay ingresos registrados para el criterio seleccionado.</td></tr>`;
+    if(estado)estado.textContent='No existen registros en este criterio.';
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic;">No hay ingresos registrados para el criterio seleccionado.</td></tr>`;
     return;
   }
 
@@ -2774,7 +2780,8 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   if (ocultarAdmin) {
     const { data: admins, error: adminError } = await sbApp.from('usuarios').select('id,email,es_admin');
     if (adminError) {
-      tbody.innerHTML = '<tr><td colspan="7">No fue posible aplicar el filtro de administrador.</td></tr>';
+      if(estado)estado.textContent='No pudo obtenerse el padrón necesario para ocultar cuentas especiales.';
+      tbody.innerHTML = '<tr><td colspan="8">No fue posible aplicar el filtro de administrador. Compruebe su sesión.</td></tr>';
       return;
     }
     const idsAdmin = new Set((admins || [])
@@ -2783,9 +2790,14 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     registrosVisibles = registros.filter(r => !idsAdmin.has(r.usuario_id));
   }
   if (!registrosVisibles.length) {
-    tbody.innerHTML = '<tr><td colspan="7">Sin registros para el filtro seleccionado.</td></tr>';
+    if(estado)estado.textContent='El filtro excluyó todos los registros visibles. Desmarque «Ocultar administrador y cuenta de prueba» para revisar esas sesiones.';
+    tbody.innerHTML = '<tr><td colspan="8">Sin registros para el filtro seleccionado.</td></tr>';
     return;
   }
+  if(estado)estado.textContent=registrosVisibles.length+' ingresos recuperados · '+
+    registrosVisibles.filter(r=>r.ip_origen).length+' con IP · '+
+    registrosVisibles.filter(r=>Number(r.segundos_activos)>0).length+' con actividad medida · '+
+    registrosVisibles.filter(r=>r.cerrado_en).length+' con cierre confirmado.';
   registrosVisibles.forEach(r => {
     const d = new Date(r.creado_en || r.fecha_acceso);
     const fechaTxt = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone:'America/Santiago' });
@@ -2816,6 +2828,10 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     const actividadCell = document.createElement('td');
     actividadCell.textContent = r.ultima_actividad_en
       ? new Date(r.ultima_actividad_en).toLocaleString('es-CL',{timeZone:'America/Santiago'}) : 'Sin medición histórica';
+    const cierreCell=document.createElement('td');
+    cierreCell.textContent=r.cerrado_en
+      ? new Date(r.cerrado_en).toLocaleString('es-CL',{timeZone:'America/Santiago'})
+      : 'Sin cierre confirmado';
     const duracionCell = document.createElement('td');
     duracionCell.textContent = r.segundos_activos == null ? 'Sin medición histórica'
       : Math.floor(r.segundos_activos/3600)+' h '+Math.floor(r.segundos_activos%3600/60)+' min '+(r.segundos_activos%60)+' s';
@@ -2823,7 +2839,7 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     estadoCell.textContent = r.seguimiento_version !== 1 ? 'Histórico'
       : r.cerrado_en ? 'Cerrada'
       : Date.now()-new Date(r.ultimo_latido_en).getTime()<90000 ? 'Conectada' : 'Sin señal';
-    tr.append(dateCell, nameCell, emailCell, ipCell, actividadCell, duracionCell, estadoCell);
+    tr.append(dateCell, nameCell, emailCell, ipCell, actividadCell, cierreCell, duracionCell, estadoCell);
     tbody.appendChild(tr);
   });
 }
