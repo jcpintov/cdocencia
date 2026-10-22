@@ -74,9 +74,9 @@ elsif p_accion='texto_llm_listar' then
   insert into doctrina.llm_autorizaciones_historial(version_id,actor,autorizado,proveedor,modelo,sha256) values(v.id,p_actor,p_accion='texto_llm_autorizar','groq','openai/gpt-oss-120b',v.sha256);
   return jsonb_build_object('ok',true);
  elsif p_accion='texto_llm_reservar' then
-  if jsonb_typeof(p_datos->'fuentes') is distinct from 'array' or jsonb_array_length(p_datos->'fuentes') not between 1 and 12 or coalesce(p_datos->>'hash','') !~ '^[0-9a-f]{64}$' then raise exception 'Expediente no válido'; end if;
+  if jsonb_typeof(p_datos->'fuentes') is distinct from 'array' or jsonb_array_length(p_datos->'fuentes') not between 1 and 500 or coalesce(p_datos->>'hash','') !~ '^[0-9a-f]{64}$' then raise exception 'Expediente no válido'; end if;
   perform 1 from public.usuarios where auth_user_id=p_actor for update;
-  if exists(select 1 from doctrina.llm_consultas where actor=p_actor and creado_en>now()-interval '60 seconds') or (select count(*) from doctrina.llm_consultas where actor=p_actor and creado_en>=date_trunc('day',now()))>=20 then return jsonb_build_object('ok',false,'mensaje','Límite preventivo: una generación por minuto y hasta 20 por día UTC. Se mantiene la consulta documental.'); end if;
+  if p_datos->>'id' is null and (exists(select 1 from doctrina.llm_consultas where actor=p_actor and creado_en>now()-interval '60 seconds') or (select count(*) from doctrina.llm_consultas where actor=p_actor and creado_en>=date_trunc('day',now()))>=20) then return jsonb_build_object('ok',false,'mensaje','Límite preventivo: una generación por minuto y hasta 20 por día UTC. Se mantiene la consulta documental.'); end if;
   select coalesce(jsonb_agg(f||jsonb_build_object('permiso_revision',a.revision,'texto_revisado_en',t.revisado_en)),'[]') into filas
   from jsonb_array_elements(p_datos->'fuentes') f
   join doctrina.versiones fuente on fuente.id=(f->>'version_id')::uuid and fuente.sha256=f->>'sha256'
@@ -85,6 +85,10 @@ elsif p_accion='texto_llm_listar' then
   join doctrina.llm_autorizaciones a on a.version_id=fuente.id and a.autorizado and a.sha256=fuente.sha256 and a.proveedor='groq' and a.modelo='openai/gpt-oss-120b'
   where fuente.numero=(select max(v2.numero) from doctrina.versiones v2 where v2.documento_id=d.id) and (f->>'pagina')::integer between 1 and t.total_paginas;
   if jsonb_array_length(filas)<>jsonb_array_length(p_datos->'fuentes') then return jsonb_build_object('ok',false,'mensaje','Autorización o versión documental cambió. No se enviaron fragmentos.'); end if;
+  if p_datos->>'id' is not null then
+   update doctrina.llm_consultas set fuentes=filas where id=(p_datos->>'id')::uuid and actor=p_actor and estado='reservado' and creado_en>now()-interval '2 minutes';
+   return jsonb_build_object('ok',found,'id',p_datos->>'id');
+  end if;
   insert into doctrina.llm_consultas(actor,hash,fuentes) values(p_actor,p_datos->>'hash',filas) returning id into consulta_id;
   return jsonb_build_object('ok',true,'id',consulta_id);
  elsif p_accion='texto_llm_validar' then
@@ -102,6 +106,20 @@ elsif p_accion='texto_llm_listar' then
   if p_datos->>'estado' not in ('completado','fallido','limite') then raise exception 'Estado no válido'; end if;
   update doctrina.llm_consultas set estado=p_datos->>'estado',finalizado_en=now() where id=(p_datos->>'id')::uuid and actor=p_actor and estado='reservado';
   return jsonb_build_object('ok',found);
+ end if;
+
+ if p_accion='texto_contexto' then
+  select coalesce(jsonb_agg(z),'[]') into filas from (
+   select d.titulo,d.clase,v2.id version_id,v2.numero version,v2.sha256,ip.pagina,ip.texto fragmento,1 relevancia
+   from doctrina.documentos d join doctrina.versiones v2 on v2.documento_id=d.id
+   join doctrina.indice_paginas ip on ip.version_id=v2.id and ip.sha256=v2.sha256
+   join doctrina.llm_autorizaciones a on a.version_id=v2.id and a.sha256=v2.sha256 and a.autorizado and a.modelo='openai/gpt-oss-120b'
+   where d.estado='vigente' and v2.numero=(select max(v3.numero) from doctrina.versiones v3 where v3.documento_id=d.id)
+    and not ip.requiere_ocr and length(btrim(ip.texto))>=20
+    and (d.clase='normativa' or d.titulo='PRINCIPIOS DE LA MASONERÍA' or ip.pagina<=3)
+   order by case d.clase when 'normativa' then 0 when 'doctrina' then 1 when 'docencia' then 2 when 'tradicion' then 3 else 4 end,d.titulo,ip.pagina
+  )z;
+  return jsonb_build_object('paginas',filas);
  end if;
 
  if p_accion='texto_buscar' then
