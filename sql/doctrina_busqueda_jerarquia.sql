@@ -109,23 +109,25 @@ elsif p_accion='texto_llm_listar' then
   with consulta as (select websearch_to_tsquery('spanish',p_datos->>'consulta') as q),
   coincidencias as (
    select d.titulo,d.clase,t.estado as estado_texto,fuente.id as version_id,fuente.numero as version,fuente.sha256,
-    (p->>'numero')::integer as pagina,
-    left(ts_headline('spanish',p->>'texto',consulta.q,'StartSel=, StopSel=, MaxFragments=3, MaxWords=110, MinWords=30'),1800) as fragmento,
-    ts_rank_cd(to_tsvector('spanish',p->>'texto'),consulta.q) as relevancia,
+    ip.pagina,ip.texto,consulta.q,
+    ts_rank_cd(ip.busqueda,consulta.q) as relevancia,
     case d.clase when 'normativa' then 0 when 'doctrina' then 1 when 'docencia' then 2 when 'tradicion' then 3 when 'bibliografia' then 4 else 5 end as prioridad,
-    row_number() over(partition by fuente.id order by ts_rank_cd(to_tsvector('spanish',p->>'texto'),consulta.q) desc,(p->>'numero')::integer) as posicion
-   from doctrina.textos_extraidos t join doctrina.versiones fuente on fuente.id=t.version_id
-   join doctrina.documentos d on d.id=fuente.documento_id
-   cross join lateral jsonb_array_elements(t.paginas) p cross join consulta
-   where t.estado in ('indexado','revision','aprobado') and d.estado='vigente' and fuente.sha256=t.sha256
+    row_number() over(partition by fuente.id order by ts_rank_cd(ip.busqueda,consulta.q) desc,ip.pagina) as posicion
+   from doctrina.indice_paginas ip
+   join doctrina.versiones fuente on fuente.id=ip.version_id and fuente.sha256=ip.sha256
+   join doctrina.textos_extraidos t on t.version_id=fuente.id and t.sha256=fuente.sha256
+   join doctrina.documentos d on d.id=fuente.documento_id cross join consulta
+   where t.estado in ('indexado','revision','aprobado') and d.estado='vigente'
     and fuente.numero=(select max(v2.numero) from doctrina.versiones v2 where v2.documento_id=d.id)
-    and length(btrim(coalesce(p->>'texto','')))>=20 and not coalesce((p->>'requiere_ocr')::boolean,false)
-    and to_tsvector('spanish',p->>'texto') @@ consulta.q
+    and length(btrim(ip.texto))>=20 and not ip.requiere_ocr and ip.busqueda @@ consulta.q
+  ), seleccionadas as materialized (
+   select c.* from coincidencias c where c.posicion<=4
+   order by c.prioridad,c.relevancia desc,c.titulo,c.pagina limit 50
   )
   select coalesce(jsonb_agg(z),'[]') into filas from (
-   select c.titulo,c.clase,c.estado_texto,c.version_id,c.version,c.sha256,c.pagina,c.fragmento,c.relevancia
-   from coincidencias c where c.posicion<=4
-   order by c.prioridad,c.relevancia desc,c.titulo,c.pagina limit 50
+   select c.titulo,c.clase,c.estado_texto,c.version_id,c.version,c.sha256,c.pagina,
+    left(ts_headline('spanish',c.texto,c.q,'StartSel=, StopSel=, MaxFragments=3, MaxWords=110, MinWords=30'),1800) as fragmento,c.relevancia
+   from seleccionadas c order by c.prioridad,c.relevancia desc,c.titulo,c.pagina
   ) z;
   select jsonb_build_object('vigentes',count(*),'consultables',count(*) filter(where t.estado in ('indexado','revision','aprobado') and t.sha256=fuente.sha256),'pendientes',count(*) filter(where (t.estado is null or t.estado not in ('indexado','revision','aprobado')) or t.sha256 is distinct from fuente.sha256)) into cobertura
   from doctrina.documentos d
