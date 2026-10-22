@@ -109,16 +109,19 @@ elsif p_accion='texto_llm_listar' then
  end if;
 
  if p_accion='texto_contexto' then
+  select paginas into filas from doctrina.contexto_base where unico=true;
+  if found then return jsonb_build_object('paginas',filas); end if;
   select coalesce(jsonb_agg(z),'[]') into filas from (
    select d.titulo,d.clase,v2.id version_id,v2.numero version,v2.sha256,ip.pagina,ip.texto fragmento,1 relevancia
    from doctrina.documentos d join doctrina.versiones v2 on v2.documento_id=d.id
    join doctrina.indice_paginas ip on ip.version_id=v2.id and ip.sha256=v2.sha256
    join doctrina.llm_autorizaciones a on a.version_id=v2.id and a.sha256=v2.sha256 and a.autorizado and a.modelo='openai/gpt-oss-120b'
-   where d.estado='vigente' and v2.numero=(select max(v3.numero) from doctrina.versiones v3 where v3.documento_id=d.id)
+   where d.estado='vigente' and d.clase<>'bibliografia' and v2.numero=(select max(v3.numero) from doctrina.versiones v3 where v3.documento_id=d.id)
     and not ip.requiere_ocr and length(btrim(ip.texto))>=20
     and (d.clase='normativa' or d.titulo='PRINCIPIOS DE LA MASONERÍA' or ip.pagina<=3)
    order by case d.clase when 'normativa' then 0 when 'doctrina' then 1 when 'docencia' then 2 when 'tradicion' then 3 else 4 end,d.titulo,ip.pagina
   )z;
+  insert into doctrina.contexto_base(unico,paginas) values(true,filas) on conflict(unico) do update set paginas=excluded.paginas,preparado_en=now();
   return jsonb_build_object('paginas',filas);
  end if;
 
