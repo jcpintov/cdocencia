@@ -42,7 +42,7 @@ function escenario({rechazar=0,caducidad=null,segundaSesionInvalida=false}={}){
  runInNewContext(script,ctx);
  return {win,requests,warnings,
   get refreshes(){return refrescados},
-  tick:async()=>{await intervalo?.();},
+  tick:async()=>{intervalo?.();for(let i=0;i<25;i++)await Promise.resolve();},
   close:async()=>await win.cerrarBitacoraSesion(),
   advance:ms=>{now+=ms;}
  };
