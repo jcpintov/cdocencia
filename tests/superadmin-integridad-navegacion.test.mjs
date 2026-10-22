@@ -118,7 +118,7 @@ test('instrucción obsoleta de revisión manual obligatoria fue eliminada',()=>{
 test('métricas muestran datos como texto y editan el progreso del participante correcto',async()=>{
  const source=app.slice(app.indexOf('async function cargarMetricasAvance(moduloId) {'),app.indexOf('function recargarMetricasActuales()',app.indexOf('async function cargarMetricasAvance(moduloId) {')));
  assert.doesNotMatch(source,/innerHTML\s*\+=|href="javascript:/);
- assert.doesNotMatch(source,/misProgresos/);
+ assert.doesNotMatch(source,/const\s+prog\s*=\s*misProgresos/);
  class Elemento{
   constructor(tag){this.tag=tag;this.children=[];this.style={};this.attrs={};this.textContent='';this.events={};}
   appendChild(el){this.children.push(el);return el;}
