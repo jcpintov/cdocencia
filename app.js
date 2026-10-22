@@ -3522,37 +3522,73 @@ async function exportarRespaldoCompletoJSON() {
    MURO GENERAL ADMIN
    ========================================================================== */
 async function cargarMuroGeneralAdmin() {
-  const cont = document.getElementById('contenedorMuroGeneralAdmin');
-  cont.innerHTML = "<p class='td-loading'>Cargando muro general...</p>";
-  document.getElementById('muroAdminFechaEmision').innerText = `EMISIÓN: ${new Date().toLocaleDateString('es-CL')}`;
-
-  const { data: reflexiones, error } = await sbApp
-    .from('progreso_maestro')
-    .select('*, usuarios(nombre), modulos(numero_orden, titulo)')
-    .eq('completado', true)
-    .not('reflexion', 'is', null)
-    .order('completado_en', { ascending: false });
-
-  cont.innerHTML = "";
-
-  if (error || !reflexiones || reflexiones.length === 0) {
-    cont.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay reflexiones consagradas.</p>";
+  const cont=document.getElementById('contenedorMuroGeneralAdmin');
+  const interacciones=document.getElementById('muroAdminInteraccionesLista');
+  const estado=document.getElementById('muroAdminInteraccionesEstado');
+  if(!cont)return;
+  const actor=usuarioActual;
+  cont.replaceChildren();
+  if(interacciones)interacciones.replaceChildren();
+  const aviso=texto=>{
+    const p=document.createElement('p');p.className='admin-list-status';
+    p.textContent=texto;cont.appendChild(p);
+  };
+  aviso('Consultando reflexiones, comentarios y respuestas…');
+  if(estado)estado.textContent='Actualizando intervenciones…';
+  document.getElementById('muroAdminFechaEmision').textContent=
+    'EMISIÓN: '+new Date().toLocaleDateString('es-CL',{timeZone:'America/Santiago'});
+  const {data,error}=await sbApp.rpc('muro_docente_autorizado',{p_modulo:null});
+  if(usuarioActual!==actor||!actor?.es_admin)return;
+  cont.replaceChildren();
+  if(error||!Array.isArray(data?.aportes)||!Array.isArray(data?.comentarios)){
+    aviso('No fue posible consultar el Muro. Pulse Actualizar para reintentar.');
+    if(estado)estado.textContent='No se pudieron recuperar los comentarios ni las respuestas.';
     return;
   }
-
-  reflexiones.forEach(r => {
-    const fecha = r.completado_en ? new Date(r.completado_en).toLocaleDateString('es-CL') : '';
-    cont.innerHTML += `
-      <div class="reflexion-item" style="margin-bottom: 16px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-          <strong>Trabajo ${r.modulos?.numero_orden || '—'}: ${escaparTextoHTMLDocencia(r.modulos?.titulo || 'Trazado')}</strong>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">${fecha}</span>
-        </div>
-        <p style="margin: 0 0 6px 0; font-style: italic;">"${escaparTextoHTMLDocencia(r.reflexion)}"</p>
-        <span class="reflexion-autor">${escaparTextoHTMLDocencia(formatearNombreHermano(r.usuarios?.nombre))}</span>
-      </div>
-    `;
-  });
+  const aportes=data.aportes;
+  const comentarios=data.comentarios;
+  function texto(tag,contenido,clase){
+    const el=document.createElement(tag);el.textContent=contenido;
+    if(clase)el.className=clase;return el;
+  }
+  const fechaLegible=v=>{
+    if(!v)return '';
+    const d=new Date(v);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('es-CL',{timeZone:'America/Santiago'});
+  };
+  const relacionados=new Map(aportes.filter(a=>a?.id).map(a=>[a.id,a]));
+  if(!aportes.length)aviso('Todavía no hay reflexiones consagradas.');
+  for(const r of aportes){
+    const card=document.createElement('article');card.className='reflexion-item';
+    const cabecera=document.createElement('div');cabecera.className='muro-admin-interaccion-cabecera';
+    cabecera.appendChild(texto('strong','Trabajo '+(r.modulos?.numero_orden??'—')+
+      ': '+(r.modulos?.titulo||'Trazado')));
+    cabecera.appendChild(texto('time',fechaLegible(r.completado_en)));
+    card.appendChild(cabecera);
+    const parrafo=texto('p','“'+String(r.reflexion||'')+'”');parrafo.className='muro-admin-cita';card.appendChild(parrafo);
+    card.appendChild(texto('span',formatearNombreHermano(r.usuarios?.nombre),'reflexion-autor'));
+    cont.appendChild(card);
+  }
+  const validos=[...new Map(comentarios.filter(c=>c?.id).map(c=>[c.id,c])).values()];
+  if(estado)estado.textContent=aportes.length+' reflexiones y '+validos.length+
+    ' comentarios/respuestas publicados.';
+  if(!interacciones)return;
+  if(!validos.length){
+    interacciones.appendChild(texto('p','No hay comentarios ni respuestas publicados.'));
+    return;
+  }
+  validos.sort((a,b)=>String(b.creado_en||'').localeCompare(String(a.creado_en||'')));
+  for(const c of validos){
+    const aporte=relacionados.get(c.progreso_id);
+    const card=document.createElement('article');card.className='muro-admin-interaccion';
+    const cabecera=document.createElement('div');cabecera.className='muro-admin-interaccion-cabecera';
+    cabecera.appendChild(texto('strong',(c.comentario_padre_id?'Respuesta':'Comentario')+
+      ' · Trabajo '+(aporte?.modulos?.numero_orden??'—')+' · '+(aporte?.modulos?.titulo||'Trazado')));
+    cabecera.appendChild(texto('time',fechaLegible(c.creado_en)));
+    card.appendChild(cabecera);
+    card.appendChild(texto('p',String(c.contenido||''),'muro-admin-cita'));
+    card.appendChild(texto('span',formatearNombreHermano(c.usuarios?.nombre),'reflexion-autor'));
+    interacciones.appendChild(card);
+  }
 }
 
 function imprimirMuroGeneralPDF() {
@@ -3679,6 +3715,29 @@ window.addEventListener('DOMContentLoaded', () => {
   recuperarSesionGuardada();
 });
 
+
+// Cada KPI conduce a un detalle real. El estado de publicación se deriva de
+// los mismos datos de Asignaciones que alimentan los indicadores del Resumen.
+function abrirDetalleKpiResumen(indicador) {
+  if(!usuarioActual?.es_admin)return;
+  const destinos={
+    usuarios:'usuarios',asignados:'asignaciones',entregados:'asignaciones',
+    pendientes:'asignaciones',completados:'metricas',comentarios:'muro_general'
+  };
+  const destino=destinos[indicador];
+  if(!destino)return;
+  if(destino==='asignaciones'){
+    const filtro=document.getElementById('asignacionesEstadoFiltro');
+    if(filtro)filtro.value=indicador==='entregados'?'entregados':
+      indicador==='pendientes'?'pendientes':'todos';
+    const anuladas=document.getElementById('asignacionesVerAnuladas');
+    if(anuladas)anuladas.checked=false;
+  }
+  cambiarSubseccionAdmin(destino);
+  const titulo=document.getElementById('adminVistaActual');
+  titulo?.focus?.({preventScroll:true});
+  titulo?.scrollIntoView?.({block:'start',behavior:'auto'});
+}
 
 async function cargarResumenAdmin() {
   const status = document.getElementById('resumenAdminEstado');
