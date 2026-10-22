@@ -956,24 +956,39 @@
       <section id="adminSeccionDoctrina" class="card card-trazado hidden" aria-labelledby="doctrinaTituloSeccion">
         <header class="doctrina-cabecera">
           <div><span class="doctrina-reserva">Espacio privado · Superadmin</span><h2 id="doctrinaTituloSeccion">Doctrina y Reglamentos</h2></div>
-          <button type="button" id="doctrinaActualizar" class="btn-secondary" onclick="cargarBibliotecaDoctrina()">Actualizar biblioteca</button>
         </header>
-        <section class="doctrina-chat" aria-label="Consulta a la biblioteca">
+        <section class="doctrina-chat" aria-labelledby="doctrinaChatTitulo">
+          <div class="doctrina-chat-encabezado">
+            <div>
+              <h3 id="doctrinaChatTitulo">Consulta doctrinal</h3>
+              <p>Pregunta a la biblioteca en lenguaje natural y contrasta las fuentes citadas.</p>
+            </div>
+            <span class="doctrina-chat-privado">Consulta privada</span>
+          </div>
           <div class="doctrina-hilo">
           <div id="doctrinaConversacion" class="doctrina-conversacion" role="log" aria-label="Conversación con el asistente" aria-live="polite"></div>
           <div id="doctrinaAgenteResultado" aria-live="polite" aria-busy="false"></div>
           </div>
           <form id="doctrinaAgenteFormulario" onsubmit="event.preventDefault();consultarAgenteDoctrina()">
-            <label for="doctrinaAgentePregunta" class="sr-only">Tu consulta</label>
-            <textarea id="doctrinaAgentePregunta" name="consulta_doctrina" rows="2" minlength="10" maxlength="2000" placeholder="Escribe tu pregunta…" required></textarea>
-            <div class="doctrina-envio"><button id="doctrinaAgenteConsultar" type="submit" class="btn-primary">Consultar</button><button id="doctrinaNuevaConversacion" type="button" class="btn-secondary" onclick="nuevaConversacionDoctrina()">Nueva conversación</button></div>
+            <label for="doctrinaAgentePregunta" class="doctrina-pregunta-etiqueta">Tu consulta</label>
+            <textarea id="doctrinaAgentePregunta" name="consulta_doctrina" rows="3" minlength="10" maxlength="2000" placeholder="Escribe tu pregunta sobre la doctrina, los reglamentos o el simbolismo…" aria-describedby="doctrinaPreguntaAyuda" required></textarea>
+            <div class="doctrina-envio">
+              <p id="doctrinaPreguntaAyuda" class="doctrina-envio-ayuda">Ctrl + Enter para consultar · <span id="doctrinaPreguntaContador" aria-live="off">0 / 2000</span></p>
+              <div class="doctrina-acciones-chat">
+                <button id="doctrinaAgenteConsultar" type="submit" class="btn-primary">Consultar</button>
+                <button id="doctrinaNuevaConversacion" type="button" class="btn-secondary" onclick="nuevaConversacionDoctrina()">Nueva conversación</button>
+              </div>
+            </div>
           </form>
         </section>
         <details class="doctrina-administracion" id="doctrinaBibliotecaPanel">
           <summary>Biblioteca documental</summary>
           <div class="doctrina-panel-contenido">
             <p id="doctrinaEstado" role="status" aria-live="polite"></p>
-            <div class="doctrina-filtros"><div><label for="doctrinaBuscar">Buscar documento</label><input id="doctrinaBuscar" name="buscar_documento" type="search" placeholder="Título o categoría" oninput="renderizarBibliotecaDoctrina()"></div><label class="doctrina-check"><input id="doctrinaMostrarRetirados" type="checkbox" onchange="renderizarBibliotecaDoctrina()"> Mostrar eliminados</label></div>
+            <div class="doctrina-biblioteca-herramientas">
+              <div class="doctrina-filtros"><div><label for="doctrinaBuscar">Buscar documento</label><input id="doctrinaBuscar" name="buscar_documento" type="search" placeholder="Título o categoría" oninput="renderizarBibliotecaDoctrina()"></div><label class="doctrina-check"><input id="doctrinaMostrarRetirados" name="mostrar_retirados" type="checkbox" onchange="renderizarBibliotecaDoctrina()"> Mostrar eliminados</label></div>
+              <button type="button" id="doctrinaActualizar" class="btn-secondary" onclick="cargarBibliotecaDoctrina()">Actualizar biblioteca</button>
+            </div>
             <div id="doctrinaDocumentos"></div>
             <details class="doctrina-subpanel"><summary>Incorporar un documento</summary>
               <p>Los originales ingresan como borradores. Desde Revisión puedes aprobarlos como vigentes. Permanecen privados.</p>
