@@ -35,9 +35,9 @@ test('dos vistas del Muro comparten hilos y tratamiento institucional',()=>{
 });
 test('Muro General no reitera tratamiento en pantalla ni PDF',()=>{
  const sec=app.slice(app.indexOf('async function cargarMuroGeneralAdmin()'),app.indexOf('function imprimirMuroGeneralPDF()'));
- assert.match(sec,/escaparTextoHTMLDocencia\(formatearNombreHermano\(r\.usuarios\?\.nombre\)\)/);
+ assert.match(sec,/formatearNombreHermano\(r\.usuarios\?\.nombre\)/);
  assert.doesNotMatch(sec,/Q\.·\.H\.·\. \$\{r\.usuarios\?\.nombre/);
- assert.match(sec,/escaparTextoHTMLDocencia\(r\.reflexion\)/);
+ assert.match(sec,/String\(r\.reflexion\|\|''\)/);\n assert.doesNotMatch(sec,/innerHTML\\s*\\+=/);
 });
 test('certificado ofrece un solo tratamiento y el informe conserva su tratamiento exterior',()=>{
  assert.match(app,/certNombreHermano'\)\.innerText = formatearNombreHermano\(nombreLimpio\)/);
