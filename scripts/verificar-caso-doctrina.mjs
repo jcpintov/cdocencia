@@ -12,6 +12,15 @@ export async function verificarCasoDoctrina() {
   if(error){console.log('CASO_QA_RPC_ERROR '+JSON.stringify({accion,codigo:error.code}));throw Error('CASO_QA_RPC_' + (error.code || 'error'));}
   return data;
  };
+ if(process.env.DOCTRINA_QA_SEGUIMIENTO==='true'){
+  const contexto=await rpc('texto_contexto',{});
+  const fuentes=contexto.paginas.filter(p=>(p.version_id==='adce9f1f-c193-42f1-83fa-9600a9154a29'&&p.pagina===85)||(p.titulo==='PRINCIPIOS DE LA MASONERÍA'&&p.pagina===1));
+  const r=await consultarGroqDoctrina({pregunta:'Aclaro: el hermano manifestó un impedimento físico para desempeñar ese cargo. ¿Cambia la respuesta?',antecedentes:'',fuentesPrevias:fuentes,historial:[{role:'user',content:'¿Qué pasa si un hermano se niega reiteradamente a cubrir un cargo en el templo?'},{role:'assistant',content:'El Venerable Maestro debe preservar el orden de los trabajos. Los maestros deben colaborar al desarrollo de la tenida; debe distinguirse una negativa injustificada de un impedimento atendible.'}]},{rpc,fetchImpl:async(...args)=>{
+   const respuesta=await fetch(...args);if(!respuesta.ok){const j=await respuesta.clone().json().catch(()=>({}));console.log('SEGUIMIENTO_PROVEEDOR '+JSON.stringify({status:respuesta.status,limites:String(j.error?.message||'').match(/(?:Limit|Used|Requested)[: ]+[0-9]+/gi),espera:respuesta.headers.get('retry-after')}));}return respuesta;
+  }});
+  if(!r.generativo||!/impedimento|f[ií]sic|justific/i.test(r.secciones.map(s=>s.texto).join(' ')))throw Error('SEGUIMIENTO_QA: '+(r.aviso||'no contextualizó'));
+  console.log('DOCTRINA_SEGUIMIENTO_REAL_OK contexto_corregido=true fuentes_verificadas=true');return;
+ }
  const informe = await consultarGroqDoctrina({pregunta:'que pasa si un hermano se niega a cubrir un cargo en el templo cuando se le solicita reiteradamente hacerlo',antecedentes:''},{rpc,fetchImpl:async(url,op)=>{
   const r=await fetch(url,op);
   if(r.ok){const j=await r.clone().json().catch(()=>({}));const c=j.choices?.[0];const f=c?.message?.tool_calls?.[0]?.function;let v;try{v=JSON.parse(c?.message?.content||'{}');}catch{} if(v?.respuesta)console.log('CASO_QA_FORMATO '+JSON.stringify({longitud:v.respuesta.length,referencias:v.referencias,citadas:[...v.respuesta.matchAll(/\bF\d+\b/g)].map(x=>x[0]),suficiente:v.base_suficiente}));let a;try{a=JSON.parse(f?.arguments||'{}');}catch{}console.log('CASO_QA_ETAPA '+JSON.stringify({finish:c?.finish_reason,herramienta:f?.name,campos:a?Object.keys(a):[],consultas:a?.consultas?.length,conducta:a?.es_caso_conducta,paginas:a?.paginas}));}

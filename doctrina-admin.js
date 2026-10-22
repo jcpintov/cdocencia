@@ -299,7 +299,7 @@ async function consultarAgenteDoctrina() {
  controladorAgenteDoctrina?.abort();
  const controlador = new AbortController();
  controladorAgenteDoctrina = controlador;
- const espera = setTimeout(() => controlador.abort(), 115000);
+ const espera = setTimeout(() => controlador.abort(), 180000);
  const turno = ++consultaAgenteDoctrina;
  const biblioteca = consultaBibliotecaDoctrina;
  const actor = usuarioActual.id;
