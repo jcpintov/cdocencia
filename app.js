@@ -2564,18 +2564,23 @@ async function cargarDatosAdmin() {
 }
 
 function cambiarSubseccionAdmin(seccion) {
+  // Fuente única de las doce vistas: id del botón, título, id de la sección.
   const vistasAdmin = {
-    resumen: ['tabNavResumen', 'Resumen ejecutivo'], usuarios: ['tabNavUsuarios', 'Usuarios y padrón'],
-    cargar: ['tabNavCargar', 'Archivos originales'], gestion_trabajos: ['tabNavGestionTrabajos', 'Trabajos y cuestionarios'],
-    presencial: ['tabNavPresencial', 'Cámara presencial'], muro_general: ['tabNavMuroGeneral', 'Muro docente'],
-    metricas: ['tabNavMetricas', 'Avance de los maestros'], editor_doctrina: ['tabNavEditorDoctrina', 'Contenido institucional'],
-    tenidas: ['tabNavTenidas', 'Calendario de tenidas'],
-    asignaciones: ['tabNavAsignaciones', 'Asignación de trabajos'],
-    doctrina: ['tabNavDoctrina', 'Doctrina y Reglamentos'],
-    accesos: ['tabNavAccesos', 'Bitácora de accesos']
+    resumen:['tabNavResumen','Resumen ejecutivo','adminSeccionResumen'],
+    usuarios:['tabNavUsuarios','Usuarios y padrón','adminSeccionUsuarios'],
+    cargar:['tabNavCargar','Archivos originales','adminSeccionCarga'],
+    gestion_trabajos:['tabNavGestionTrabajos','Trabajos y cuestionarios','adminSeccionGestionTrabajos'],
+    presencial:['tabNavPresencial','Cámara presencial','adminSeccionPresencial'],
+    muro_general:['tabNavMuroGeneral','Muro docente','adminSeccionMuroGeneral'],
+    metricas:['tabNavMetricas','Avance de los maestros','adminSeccionMetricas'],
+    editor_doctrina:['tabNavEditorDoctrina','Contenido institucional','adminSeccionEditorDoctrina'],
+    tenidas:['tabNavTenidas','Calendario de tenidas','adminSeccionTenidas'],
+    asignaciones:['tabNavAsignaciones','Asignación de trabajos','adminSeccionAsignaciones'],
+    doctrina:['tabNavDoctrina','Doctrina y Reglamentos','adminSeccionDoctrina'],
+    accesos:['tabNavAccesos','Bitácora de accesos','adminSeccionAccesos']
   };
   if (!Object.prototype.hasOwnProperty.call(vistasAdmin, seccion)) return;
-  const [botonActual, tituloActual] = vistasAdmin[seccion];
+  const [botonActual, tituloActual, panelActual] = vistasAdmin[seccion];
   Object.values(vistasAdmin).forEach(([id]) => {
     const boton = document.getElementById(id);
     if (id === botonActual) boton?.setAttribute('aria-current', 'page');
@@ -2591,64 +2596,35 @@ function cambiarSubseccionAdmin(seccion) {
   }
 
   // Un solo mapa determina las doce vistas, sus botones, encabezados y paneles.
-  const btns=Object.values(vistasAdmin).map(([id])=>id);
-  const secs=Object.keys(vistasAdmin).map(nombre=>({
-    resumen:'adminSeccionResumen',usuarios:'adminSeccionUsuarios',
-    cargar:'adminSeccionCarga',gestion_trabajos:'adminSeccionGestionTrabajos',
-    presencial:'adminSeccionPresencial',muro_general:'adminSeccionMuroGeneral',
-    metricas:'adminSeccionMetricas',editor_doctrina:'adminSeccionEditorDoctrina',
-    tenidas:'adminSeccionTenidas',asignaciones:'adminSeccionAsignaciones',
-    doctrina:'adminSeccionDoctrina',accesos:'adminSeccionAccesos'
-  })[nombre]);
-
-  btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
-  secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
+  // Cerrar el panel anterior y activar uno solo; las cargas nunca navegan.
+  Object.values(vistasAdmin).forEach(([id,,panel])=>{
+    document.getElementById(id)?.classList.remove('active');
+    document.getElementById(panel)?.classList.add('hidden');
+  });
+  document.getElementById(botonActual)?.classList.add('active');
+  document.getElementById(panelActual)?.classList.remove('hidden');
 
   if (seccion === 'tenidas') {
-    document.getElementById('tabNavTenidas')?.classList.add('active');
-    document.getElementById('adminSeccionTenidas')?.classList.remove('hidden');
     void window.cargarCalendarioTenidas?.();
   } else if (seccion === 'asignaciones') {
-    document.getElementById('tabNavAsignaciones')?.classList.add('active');
-    document.getElementById('adminSeccionAsignaciones')?.classList.remove('hidden');
     void window.cargarAsignacionesAdmin?.();
   } else if (seccion === 'doctrina') {
-    document.getElementById('tabNavDoctrina')?.classList.add('active');
-    document.getElementById('adminSeccionDoctrina')?.classList.remove('hidden');
     void cargarBibliotecaDoctrina();
   } else if (seccion === 'resumen') {
-    document.getElementById('tabNavResumen')?.classList.add('active');
-    document.getElementById('adminSeccionResumen')?.classList.remove('hidden');
     cargarResumenAdmin();
   } else if (seccion === 'usuarios') {
-    document.getElementById('tabNavUsuarios')?.classList.add('active');
-    document.getElementById('adminSeccionUsuarios')?.classList.remove('hidden');
     cargarListadoUsuariosAdmin();
   } else if (seccion === 'cargar') {
-    document.getElementById('tabNavCargar')?.classList.add('active');
-    document.getElementById('adminSeccionCarga')?.classList.remove('hidden');
   } else if (seccion === 'gestion_trabajos') {
-    document.getElementById('tabNavGestionTrabajos')?.classList.add('active');
-    document.getElementById('adminSeccionGestionTrabajos')?.classList.remove('hidden');
     cargarGestionTrabajosAdmin();
   } else if (seccion === 'presencial') {
-    document.getElementById('tabNavPresencial')?.classList.add('active');
-    document.getElementById('adminSeccionPresencial')?.classList.remove('hidden');
   } else if (seccion === 'muro_general') {
-    document.getElementById('tabNavMuroGeneral')?.classList.add('active');
-    document.getElementById('adminSeccionMuroGeneral')?.classList.remove('hidden');
     cargarMuroGeneralAdmin();
   } else if (seccion === 'editor_doctrina') {
-    document.getElementById('tabNavEditorDoctrina')?.classList.add('active');
-    document.getElementById('adminSeccionEditorDoctrina')?.classList.remove('hidden');
     cargarEditorDoctrinaAdmin();
   } else if (seccion === 'accesos') {
-    document.getElementById('tabNavAccesos')?.classList.add('active');
-    document.getElementById('adminSeccionAccesos')?.classList.remove('hidden');
     cargarBitacoraAccesos();
   } else if (seccion === 'metricas') {
-    document.getElementById('tabNavMetricas')?.classList.add('active');
-    document.getElementById('adminSeccionMetricas')?.classList.remove('hidden');
     if (listaModulos.length > 0) {
       const select = document.getElementById('selectMetricasModulo');
       cargarMetricasAvance(select.value || listaModulos[0].id);
