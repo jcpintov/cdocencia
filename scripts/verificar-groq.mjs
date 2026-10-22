@@ -2,6 +2,7 @@
 import {consultarGroqDoctrina,MODELO_GROQ} from '../lib/groq-doctrina.js';
 import {verificarCasoDoctrina} from './verificar-caso-doctrina.mjs';
 import {buscarBibliotecaConGroq} from '../lib/busqueda-groq.js';
+import {fetchGroqQA} from './groq-qa-fetch.mjs';
 if(process.env.DOCTRINA_QA_CASO==='true'||(process.env.GROQ_PRUEBA_SINTETICA!=='true'&&process.env.VERCEL_ENV!=='production')){
  console.log('GROQ_SYNTHETIC_CHECK_SKIP');
 }else{
@@ -13,11 +14,11 @@ if(process.env.DOCTRINA_QA_CASO==='true'||(process.env.GROQ_PRUEBA_SINTETICA!=='
  };
  try{
   const busquedas=[];
-  await buscarBibliotecaConGroq({pregunta:'que dise la constitusion sobre inisiasion?',antecedentes:''},{modelo:MODELO_GROQ,env:process.env,fetchImpl:fetch,rpc:async(_a,d)=>{busquedas.push(d.consulta);return {resultados:[]};}});
+  await buscarBibliotecaConGroq({pregunta:'que dise la constitusion sobre inisiasion?',antecedentes:''},{modelo:MODELO_GROQ,env:process.env,fetchImpl:fetchGroqQA,rpc:async(_a,d)=>{busquedas.push(d.consulta);return {resultados:[]};}});
   if(!busquedas.some(q=>/iniciación|admisión/i.test(q)))throw Error('normalizacion_sintetica');
   console.log('GROQ_SEARCH_SYNTHETIC_OK consultas='+JSON.stringify(busquedas));
   const r=await consultarGroqDoctrina({pregunta:'Según el ejercicio ficticio, ¿a qué hora empieza y cuánto dura la actividad?',consulta:'círculo estudio',antecedentes:''},{rpc,fetchImpl:async(url,options)=>{
-   const response=await fetch(url,options),raw=await response.text();
+   const response=await fetchGroqQA(url,options),raw=await response.text();
    let diagnostico={status:response.status};
    try{const j=JSON.parse(raw),choice=j.choices?.[0];diagnostico.finish=choice?.finish_reason;
     if(!response.ok)diagnostico.error={codigo:j.error?.code,tipo:j.error?.type,mensaje:j.error?.message?.slice(0,600)};
