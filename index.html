@@ -642,9 +642,9 @@
         </button>
 </div>
         </nav>
-        <div class="admin-side-footer">
-          <button type="button" class="btn-secondary" onclick="abrirPerfilSuperadmin()">Mi perfil</button>
-          <button class="btn-secondary admin-logout" onclick="cerrarSesion()">Cerrar sesión</button>
+        <div class="admin-side-footer" role="group" aria-label="Cuenta de Superadmin">
+          <button type="button" class="admin-perfil-btn" onclick="abrirPerfilSuperadmin()">Mi perfil</button>
+          <button type="button" class="admin-logout" onclick="cerrarSesion()">Cerrar sesión</button>
         </div>
         <div class="admin-links-bottom" aria-label="Herramientas externas">
           <p class="admin-menu-label">Herramientas externas</p>
@@ -670,18 +670,23 @@
           <p class="text-instruccion">Actividad de la Cámara de Docencia; progreso sin el administrador.</p></div>
           <button class="btn-secondary" onclick="cargarResumenAdmin()">Actualizar indicadores</button></div>
         <div class="admin-kpi-grid admin-kpi-grid-resumen" aria-label="Indicadores del Resumen Ejecutivo">
-          <div class="admin-kpi"><span>Usuarios</span><strong id="kpiUsuarios">—</strong></div>
-          <div class="admin-kpi"><span>Asignados</span><strong id="kpiResumenAsignados">—</strong></div>
-          <div class="admin-kpi"><span>Entregados</span><strong id="kpiResumenEntregados">—</strong></div>
-          <div class="admin-kpi"><span>Pendientes</span><strong id="kpiResumenPendientes">—</strong></div>
-          <div class="admin-kpi"><span>Completados</span><strong id="kpiCompletados">—</strong></div>
-          <div class="admin-kpi"><span>Comentarios</span><strong id="kpiComentarios">—</strong><small class="admin-kpi-descripcion">Reflexiones · Comentarios · Respuestas</small></div>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('usuarios')" aria-label="Consultar integrantes en Usuarios y padrón"><span>Usuarios</span><strong id="kpiUsuarios">—</strong><small class="admin-kpi-ir">Ver padrón →</small></button>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('asignados')" aria-label="Consultar todos los trabajos asignados"><span>Asignados</span><strong id="kpiResumenAsignados">—</strong><small class="admin-kpi-ir">Ver asignaciones →</small></button>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('entregados')" aria-label="Consultar trabajos entregados y publicados"><span>Entregados</span><strong id="kpiResumenEntregados">—</strong><small class="admin-kpi-ir">Ver entregados →</small></button>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('pendientes')" aria-label="Consultar trabajos pendientes de publicación"><span>Pendientes</span><strong id="kpiResumenPendientes">—</strong><small class="admin-kpi-ir">Ver pendientes →</small></button>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('completados')" aria-label="Consultar trabajos completados por los maestros"><span>Completados</span><strong id="kpiCompletados">—</strong><small class="admin-kpi-ir">Ver avances →</small></button>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('comentarios')" aria-label="Consultar reflexiones, comentarios y respuestas del Muro docente"><span>Comentarios</span><strong id="kpiComentarios">—</strong><small class="admin-kpi-descripcion">Reflexiones · Comentarios · Respuestas</small><small class="admin-kpi-ir">Ver aportes →</small></button>
         </div>
         <p id="resumenAdminEstado" class="text-instruccion" role="status"></p>
         <button class="btn-primary" onclick="cambiarSubseccionAdmin('usuarios')">Administrar usuarios</button>
         <section id="cronogramaTrabajosAdmin" class="cronograma-trabajos" aria-labelledby="cronogramaTrabajosTitulo">
           <div class="admin-card-header"><div><h2 id="cronogramaTrabajosTitulo">Cronograma de trabajos</h2><p class="text-instruccion">Pendientes por fecha de entrega, desde la más próxima. Publicados al final, del último subido al más antiguo. Cada trabajo abre sus opciones.</p></div><button type="button" class="admin-link-btn" onclick="cargarCronogramaAdmin()">Actualizar cronograma</button></div>
-          <div class="admin-kpi-grid"><div class="admin-kpi"><span>Asignados</span><strong id="kpiTrabajosAsignados">—</strong></div><div class="admin-kpi"><span>Pendientes</span><strong id="kpiTrabajosPendientes">—</strong></div><div class="admin-kpi"><span>Vencidos</span><strong id="kpiTrabajosVencidos">—</strong></div><div class="admin-kpi"><span>Publicados</span><strong id="kpiTrabajosPublicados">—</strong></div></div>
+          <div class="admin-kpi-grid" aria-label="Indicadores del cronograma">
+            <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('asignados')" aria-label="Ver todas las asignaciones del cronograma"><span>Asignados</span><strong id="kpiTrabajosAsignados">—</strong><small class="admin-kpi-ir">Ver asignaciones →</small></button>
+            <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('pendientes')" aria-label="Ver asignaciones no publicadas"><span>Pendientes</span><strong id="kpiTrabajosPendientes">—</strong><small class="admin-kpi-ir">Ver pendientes →</small></button>
+            <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('vencidos')" aria-label="Ver asignaciones vencidas y no publicadas"><span>Vencidos</span><strong id="kpiTrabajosVencidos">—</strong><small class="admin-kpi-ir">Ver vencidos →</small></button>
+            <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('publicados')" aria-label="Ver asignaciones ya publicadas"><span>Publicados</span><strong id="kpiTrabajosPublicados">—</strong><small class="admin-kpi-ir">Ver publicados →</small></button>
+          </div>
           <div class="cronograma-filtros"><label for="cronogramaFiltro">Mostrar</label><select id="cronogramaFiltro" name="cronograma_filtro" onchange="renderizarCronogramaAdmin()"><option value="todos">Todas las asignaciones vigentes</option><option value="proximos">Entregas en los próximos 7 días</option><option value="vencidos">Pendientes vencidos</option><option value="publicados">Publicados</option></select></div>
           <p id="cronogramaEstado" role="status" aria-live="polite">Consultando cronograma…</p>
           <ol id="cronogramaLista" class="cronograma-lista"></ol>
@@ -733,7 +738,11 @@
         <p id="asignacionesEstado" role="status" aria-live="polite"></p>
         <button type="button" id="btnAbrirNuevaAsignacion" class="btn-primary" onclick="abrirNuevaAsignacionDocente()">Asignar trabajo</button>
         <p class="asignacion-aviso">Recordatorio automático único: revisión diaria después de siete días de atraso, si la solicitud original fue enviada y el tema aún no está publicado. Todos los correos llevan copia oculta a jpintov@gmail.com.</p>
-        <div class="asignacion-lista-cabecera"><p id="asignacionesConteo"></p><label><input type="checkbox" id="asignacionesVerAnuladas" onchange="renderizarAsignacionesDocentes()"> Mostrar anuladas</label></div>
+        <div class="asignacion-lista-cabecera">
+          <p id="asignacionesConteo" role="status" aria-live="polite"></p>
+          <label for="asignacionesEstadoFiltro">Mostrar <select id="asignacionesEstadoFiltro" name="filtro_estado_asignaciones" onchange="renderizarAsignacionesDocentes()"><option value="todos">Todas las vigentes</option><option value="entregados">Entregadas / publicadas</option><option value="pendientes">Pendientes de publicación</option><option value="vencidos">Vencidos sin publicar</option></select></label>
+          <label><input type="checkbox" id="asignacionesVerAnuladas" onchange="renderizarAsignacionesDocentes()"> Mostrar anuladas</label>
+        </div>
         <div class="table-responsive"><table class="metricas-table asignaciones-table"><thead><tr><th>Hermano</th><th>Tema</th><th>Asignación</th><th>Entrega · 23:30 h</th><th>Estado y correo</th><th>Acción</th></tr></thead><tbody id="asignacionesBody"><tr><td colspan="6">Abra esta sección para consultar las asignaciones.</td></tr></tbody></table></div>
       </section>
       <dialog id="dialogOpcionesAsignacion" class="correo-asignacion-dialog opciones-asignacion-dialog" aria-labelledby="opcionesAsignacionTitulo">
@@ -911,6 +920,11 @@
           <hr class="informe-hr">
           <div id="contenedorMuroGeneralAdmin"></div>
         </div>
+        <section id="muroAdminInteracciones" class="muro-admin-interacciones" aria-labelledby="muroAdminInteraccionesTitulo">
+          <h3 id="muroAdminInteraccionesTitulo">Comentarios y respuestas publicados</h3>
+          <p id="muroAdminInteraccionesEstado" role="status" aria-live="polite">Consulte el Muro para cargar las intervenciones.</p>
+          <div id="muroAdminInteraccionesLista" class="muro-admin-interacciones-lista"></div>
+        </section>
       </section>
 
       <!-- SUBSECCIÓN 5: MATRIZ DE AVANCE -->
@@ -956,17 +970,29 @@
       <section id="adminSeccionDoctrina" class="card card-trazado hidden" aria-labelledby="doctrinaTituloSeccion">
         <header class="doctrina-cabecera">
           <div><span class="doctrina-reserva">Espacio privado · Superadmin</span><h2 id="doctrinaTituloSeccion">Doctrina y Reglamentos</h2></div>
-          <button type="button" id="doctrinaActualizar" class="btn-secondary" onclick="cargarBibliotecaDoctrina()">Actualizar biblioteca</button>
         </header>
-        <section class="doctrina-chat" aria-label="Consulta a la biblioteca">
+        <section class="doctrina-chat" aria-labelledby="doctrinaChatTitulo">
+          <div class="doctrina-chat-encabezado">
+            <div>
+              <h3 id="doctrinaChatTitulo">Consulta doctrinal</h3>
+              <p>Pregunta a la biblioteca en lenguaje natural y contrasta las fuentes citadas.</p>
+            </div>
+            <span class="doctrina-chat-privado">Consulta privada</span>
+          </div>
           <div class="doctrina-hilo">
           <div id="doctrinaConversacion" class="doctrina-conversacion" role="log" aria-label="Conversación con el asistente" aria-live="polite"></div>
           <div id="doctrinaAgenteResultado" aria-live="polite" aria-busy="false"></div>
           </div>
           <form id="doctrinaAgenteFormulario" onsubmit="event.preventDefault();consultarAgenteDoctrina()">
-            <label for="doctrinaAgentePregunta" class="sr-only">Tu consulta</label>
-            <textarea id="doctrinaAgentePregunta" name="consulta_doctrina" rows="2" minlength="10" maxlength="2000" placeholder="Escribe tu pregunta…" required></textarea>
-            <div class="doctrina-envio"><button id="doctrinaAgenteConsultar" type="submit" class="btn-primary">Consultar</button><button id="doctrinaNuevaConversacion" type="button" class="btn-secondary" onclick="nuevaConversacionDoctrina()">Nueva conversación</button></div>
+            <label for="doctrinaAgentePregunta" class="doctrina-pregunta-etiqueta">Tu consulta</label>
+            <textarea id="doctrinaAgentePregunta" name="consulta_doctrina" rows="3" minlength="10" maxlength="2000" placeholder="Escribe tu pregunta sobre la doctrina, los reglamentos o el simbolismo…" aria-describedby="doctrinaPreguntaAyuda" required></textarea>
+            <div class="doctrina-envio">
+              <p id="doctrinaPreguntaAyuda" class="doctrina-envio-ayuda">Ctrl + Enter para consultar · <span id="doctrinaPreguntaContador" aria-live="off">0 / 2000</span></p>
+              <div class="doctrina-acciones-chat">
+                <button id="doctrinaAgenteConsultar" type="submit" class="btn-primary">Consultar</button>
+                <button id="doctrinaNuevaConversacion" type="button" class="btn-secondary" onclick="nuevaConversacionDoctrina()">Nueva conversación</button>
+              </div>
+            </div>
           </form>
         </section>
         <details class="doctrina-administracion trabajos-panel" id="trabajosPanel" ontoggle="if(this.open)cargarTrabajosTenida()">
@@ -999,7 +1025,10 @@
           <summary>Biblioteca documental</summary>
           <div class="doctrina-panel-contenido">
             <p id="doctrinaEstado" role="status" aria-live="polite"></p>
-            <div class="doctrina-filtros"><div><label for="doctrinaBuscar">Buscar documento</label><input id="doctrinaBuscar" name="buscar_documento" type="search" placeholder="Título o categoría" oninput="renderizarBibliotecaDoctrina()"></div><label class="doctrina-check"><input id="doctrinaMostrarRetirados" type="checkbox" onchange="renderizarBibliotecaDoctrina()"> Mostrar eliminados</label></div>
+            <div class="doctrina-biblioteca-herramientas">
+              <div class="doctrina-filtros"><div><label for="doctrinaBuscar">Buscar documento</label><input id="doctrinaBuscar" name="buscar_documento" type="search" placeholder="Título o categoría" oninput="renderizarBibliotecaDoctrina()"></div><label class="doctrina-check"><input id="doctrinaMostrarRetirados" name="mostrar_retirados" type="checkbox" onchange="renderizarBibliotecaDoctrina()"> Mostrar eliminados</label></div>
+              <button type="button" id="doctrinaActualizar" class="btn-secondary" onclick="cargarBibliotecaDoctrina()">Actualizar biblioteca</button>
+            </div>
             <div id="doctrinaDocumentos"></div>
             <details class="doctrina-subpanel"><summary>Incorporar un documento</summary>
               <p>Los originales ingresan como borradores. Desde Revisión puedes aprobarlos como vigentes. Permanecen privados.</p>
@@ -1044,18 +1073,19 @@
         <div class="admin-card-header">
           <div>
             <h2>Bitácora de Accesos a la Cámara</h2>
-            <p class="text-instruccion" style="margin: 0;">Ingresos, IP y actividad aproximada en primer plano. Sin señal no equivale a cierre confirmado.</p>
+            <p class="text-instruccion" style="margin: 0;">IP registrada por el servidor, ingreso, última actividad, hora de cierre y tiempo activo medido. «Sin señal» no equivale a cierre confirmado.</p>
           </div>
           <div class="admin-header-actions">
             <label for="filtroUsuarioAcceso">Filtrar Hermano:</label>
             <select id="filtroUsuarioAcceso" name="filtroUsuarioAcceso" onchange="cargarBitacoraAccesos(this.value)">
               <option value="todos">👥 Todos los Hermanos</option>
             </select>
-            <label style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem"><input type="checkbox" id="ocultarAdminAccesos" checked onchange="cargarBitacoraAccesos()"> Ocultar administrador y cuenta de prueba</label>
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem"><input type="checkbox" id="ocultarAdminAccesos" name="ocultar_admin_accesos" onchange="cargarBitacoraAccesos()"> Ocultar administrador y cuenta de prueba</label>
             <button class="admin-link-btn" onclick="cargarBitacoraAccesos()">🔄 Actualizar</button>
           </div>
         </div>
 
+        <p id="bitacoraAdminEstado" class="admin-list-status" role="status" aria-live="polite"></p>
         <div class="table-responsive">
           <table class="metricas-table">
             <thead>
@@ -1063,11 +1093,11 @@
                 <th>Fecha y Hora</th>
                 <th>Hermano</th>
                 <th>Correo Electrónico</th>
-                <th>IP de Origen</th><th>Última actividad</th><th>Tiempo activo estimado</th><th>Estado</th>
+                <th>IP de origen</th><th>Última actividad</th><th>Cierre de sesión</th><th>Tiempo activo estimado</th><th>Estado</th>
               </tr>
             </thead>
             <tbody id="tablaAccesosBody">
-              <tr><td colspan="7" class="td-loading">Consultando bitácora...</td></tr>
+              <tr><td colspan="8" class="td-loading">Consultando bitácora...</td></tr>
             </tbody>
           </table>
         </div>
@@ -1356,7 +1386,7 @@
   <script src="calendario-tenidas.js"></script>
 <dialog id="doctrinaRevisionDialogo" aria-labelledby="doctrinaRevisionTitulo"><h2>Revisión del original</h2><h3 id="doctrinaRevisionTitulo"></h3><input type="hidden" id="doctrinaRevisionId"><label for="doctrinaRevisionNota">Observaciones de revisión</label><textarea id="doctrinaRevisionNota" maxlength="2000" rows="5"></textarea><p id="doctrinaRevisionEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" class="btn-secondary" onclick="document.getElementById('doctrinaRevisionDialogo').close()">Cerrar</button><button type="button" class="btn-secondary" onclick="guardarRevisionDoctrina('devolver')">Dejar en revisión</button><button type="button" class="btn-primary" onclick="guardarRevisionDoctrina('aprobar')">Aprobar como vigente</button></div></dialog>
 <dialog id="doctrinaVisorDialogo" aria-labelledby="doctrinaVisorTitulo"><div class="doctrina-acciones"><h2 id="doctrinaVisorTitulo">Consulta del original</h2><button type="button" class="btn-secondary" onclick="cerrarVisorDoctrina()">Cerrar consulta</button></div><form onsubmit="event.preventDefault();irPaginaVisorDoctrina()"><label for="doctrinaVisorPagina">Página del PDF</label><input id="doctrinaVisorPagina" type="number" min="1" max="10000" value="1" required><button type="submit" class="btn-secondary">Ir a página</button></form><p id="doctrinaVisorEstado" role="status" aria-live="polite"></p><iframe id="doctrinaVisorMarco" title="Original PDF privado" referrerpolicy="no-referrer"></iframe></dialog>
-<dialog id="doctrinaTextoDialogo" aria-labelledby="doctrinaTextoTitulo"><h2 id="doctrinaTextoTitulo">Texto del original</h2><p>Contraste cada página con el PDF antes de marcarla revisada. No se realiza OCR automático.</p><label for="doctrinaTextoPagina">Página del PDF</label><input id="doctrinaTextoPagina" type="number" min="1" max="600" value="1"><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_pagina')">Cargar página</button><label for="doctrinaTextoContenido">Texto de la página, editable para corregir la extracción</label><textarea id="doctrinaTextoContenido" maxlength="40000" rows="14"></textarea><label><input type="checkbox" id="doctrinaTextoSinTexto"> Página contrastada con el PDF y verificada sin texto</label><p id="doctrinaTextoEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" class="btn-secondary" onclick="cerrarTextoDoctrina()">Cerrar texto</button><button type="button" class="btn-secondary" onclick="contrastarPaginaTextoDoctrina(this)">Contrastar página con PDF</button><button type="button" id="doctrinaTextoExtraer" class="btn-secondary" onclick="accionTextoDoctrina('texto_extraer')">Extraer texto</button><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_revisar_pagina')">Guardar página revisada</button><button type="button" class="btn-primary" onclick="accionTextoDoctrina('texto_aprobar')">Aprobar extracción revisada</button></div></dialog>
+<dialog id="doctrinaTextoDialogo" aria-labelledby="doctrinaTextoTitulo"><h2 id="doctrinaTextoTitulo">Texto del original</h2><p>El texto legible se indexa sin revisión página por página. Puede corregir manualmente errores de extracción; las páginas escaneadas requieren OCR.</p><label for="doctrinaTextoPagina">Página del PDF</label><input id="doctrinaTextoPagina" type="number" min="1" max="600" value="1"><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_pagina')">Cargar página</button><label for="doctrinaTextoContenido">Texto de la página, editable para corregir la extracción</label><textarea id="doctrinaTextoContenido" maxlength="40000" rows="14"></textarea><label><input type="checkbox" id="doctrinaTextoSinTexto"> Página contrastada con el PDF y verificada sin texto</label><p id="doctrinaTextoEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" class="btn-secondary" onclick="cerrarTextoDoctrina()">Cerrar texto</button><button type="button" class="btn-secondary" onclick="contrastarPaginaTextoDoctrina(this)">Contrastar página con PDF</button><button type="button" id="doctrinaTextoExtraer" class="btn-secondary" onclick="accionTextoDoctrina('texto_extraer')">Extraer texto</button><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_revisar_pagina')">Guardar página revisada</button><button type="button" class="btn-primary" onclick="accionTextoDoctrina('texto_aprobar')">Aprobar extracción revisada</button></div></dialog>
 <dialog id="perfilSuperadminDialogo" aria-labelledby="perfilSuperadminTitulo"><h2 id="perfilSuperadminTitulo">Mi perfil de Superadmin</h2><p>Los cambios requieren un código enviado al correo actual. No se modifican antes de validarlo.</p><label for="perfilSuperadminNombre">Nombre</label><input id="perfilSuperadminNombre" type="text" minlength="3" maxlength="150" autocomplete="off"><label for="perfilSuperadminEmail">Correo nuevo</label><input id="perfilSuperadminEmail" type="email" maxlength="254" autocomplete="off"><label for="perfilSuperadminCodigo">Código de autorización</label><input id="perfilSuperadminCodigo" inputmode="numeric" autocomplete="one-time-code" maxlength="8"><p id="perfilSuperadminEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" id="perfilSuperadminCerrar" class="btn-secondary" onclick="cerrarPerfilSuperadmin()">Cerrar perfil</button><button type="button" id="perfilSuperadminSolicitar" class="btn-secondary" onclick="accionPerfilSuperadmin('solicitar')">Enviar código al correo actual</button><button type="button" id="perfilSuperadminConfirmar" class="btn-primary" onclick="accionPerfilSuperadmin('confirmar')">Validar código y guardar</button><button type="button" id="perfilSuperadminRecuperar" class="btn-secondary" hidden onclick="accionPerfilSuperadmin('recuperar')">Recuperar cambio pendiente</button></div></dialog>
   <script src="perfil-superadmin.js"></script>
   <script src="doctrina-admin.js?v=20261022e"></script>

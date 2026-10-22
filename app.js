@@ -213,10 +213,24 @@ async function registrarIngresoAuditoria() {
 async function recuperarSesionGuardada() {
   const solicitud = versionSesion;
   try {
+    // Una visita sin sesión no debe consultar /auth/v1/user ni provocar
+    // respuestas 403 evitables por credenciales inexistentes o caducadas.
+    const {data:sesionActual,error:sesionError}=await sbApp.auth.getSession();
+    if(solicitud!==versionSesion)return;
+    if(sesionError||!sesionActual?.session?.access_token){
+      sessionStorage.removeItem('camara_usuario_sesion');
+      return;
+    }
     const { data, error } = await sbApp.auth.getUser();
     if (solicitud !== versionSesion) return;
     if (error || !data?.user) {
       sessionStorage.removeItem('camara_usuario_sesion');
+      // Descartar el token persistido que provoca 403 en cada recarga.
+      // Local: no interrumpe otras sesiones legítimas del mismo usuario.
+      try{await sbApp.auth.signOut({scope:'local'});}catch{/* Continuar hacia ingreso limpio. */}
+      if(solicitud!==versionSesion)return;
+      const mensaje=document.getElementById('errorLogin');
+      if(mensaje)mensaje.textContent='La sesión guardada ya no es válida. Inicie sesión nuevamente.';
       return;
     }
     const { data: perfil, error: perfilError } = await sbApp.from('usuarios')
@@ -367,17 +381,30 @@ function cerrarSesion() {
   limpiarBibliotecaDoctrina();
   window.cerrarPerfilSuperadmin?.();
   window.limpiarCalendarioTenidas?.();
-  window.cerrarBitacoraSesion?.();
+  const cierreRegistrado=Promise.resolve(window.cerrarBitacoraSesion?.()).catch(()=>false);
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
   if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
   usuarioActual = null;
+  // Invalidar consultas del padrón todavía pendientes y borrar su caché local.
+  consultaPadronAdmin++;
+  padronUsuariosAdmin=[];
+  const filasPadron=document.getElementById('tablaUsuariosAdminBody');
+  if(filasPadron)filasPadron.replaceChildren();
   sincronizarEncabezadoWorkspaceUsuario();
   moduloActual = null;
   misProgresos = {};
   respuestasMarcadas = {};
   archivoBase64Pendiente = null;
   sessionStorage.removeItem('camara_usuario_sesion');
-  void sbApp.auth.signOut().catch(() => {});
+  // Esperar el POST de cierre antes de revocar el JWT. El plazo acotado
+  // evita bloquear el acceso si el navegador perdió conexión.
+  void (async()=>{
+    await Promise.race([
+      cierreRegistrado,
+      new Promise(resolve=>setTimeout(resolve,2500))
+    ]);
+    await sbApp.auth.signOut().catch(()=>{});
+  })();
 
   document.getElementById('errorLogin').innerText = '';
   document.getElementById('inputEmail').value = '';
@@ -537,7 +564,12 @@ async function cargarListadoUsuariosAdmin() {
     const {data: usuarios, error} = await sbApp.from('usuarios')
       .select('id, nombre, email, es_admin, debe_cambiar_clave, auth_user_id').eq('cuenta_eliminada',false).order('nombre', {ascending:true});
     if (consulta !== consultaPadronAdmin) return;
-    if (error || !Array.isArray(usuarios)) throw new Error('consulta_padron');
+    if (error || !Array.isArray(usuarios)) {
+      const codigo=error?.code;
+      if(error?.status===401||error?.status===403||codigo==='42501')
+        throw new Error('No se pudo acceder al padrón con esta sesión. Compruebe la autenticación y los permisos.');
+      throw new Error('No se pudo consultar el padrón.');
+    }
     padronUsuariosAdmin = usuarios;
     const cuposOcupados = usuarios.filter(u => !u.es_admin && String(u.email || '').trim().toLowerCase() !== 'dummy@ofl.cl').length;
     if (botonAgregar) {
@@ -548,9 +580,9 @@ async function cargarListadoUsuariosAdmin() {
     if (estadoCupos) estadoCupos.textContent = `${cuposOcupados} integrantes registrados`;
     renderizarPadronAdmin();
     if (estado) estado.textContent = 'Padrón actualizado. Puede incorporar nuevos integrantes desde Agregar usuario.';
-  } catch {
+  } catch(error) {
     if (consulta !== consultaPadronAdmin) return;
-    if (estado) estado.textContent = 'No se pudo actualizar el padrón. Reintente; se conservan los datos anteriores.';
+    if (estado) estado.textContent = error?.message || 'No se pudo actualizar el padrón. Reintente; se conservan los datos anteriores.';
     if (!padronUsuariosAdmin.length) tbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No se pudo cargar el padrón. Pulse Actualizar padrón para reintentar.</td></tr>';
   } finally {
     if (consulta === consultaPadronAdmin) {
@@ -2423,8 +2455,11 @@ function cerrarModalCertificado() {
 }
 
 function cerrarModalUniversal(event, modalId) {
-  if (event.target.id === modalId) {
-    document.getElementById(modalId).classList.add('hidden');
+  // Solo un clic directo sobre el fondo, nunca sobre los controles interiores.
+  const fondo=document.getElementById(modalId);
+  if(event?.target===fondo){
+    cerrarModalUniversalDirecto(modalId);
+    // No llamar cambiarSubseccionAdmin: el modal no tiene sección propia.
   }
 }
 
@@ -2492,12 +2527,17 @@ function descargarCertificadoPDF() {
    CONSOLA SUPERADMIN
    ========================================================================== */
 async function cargarDatosAdmin() {
-  const { data: mods } = await sbApp
+  const actor=usuarioActual;
+  const { data: mods, error: errorModulos } = await sbApp
     .from('modulos')
     .select('*')
     .eq('activo', true)
     .order('numero_orden', { ascending: true });
-
+  if(usuarioActual!==actor || !actor?.es_admin)return;
+  if(errorModulos){
+    console.warn('[Admin] No fue posible cargar el catálogo de trabajos');
+    return;
+  }
   listaModulos = mods || [];
   
   const selectMetricas = document.getElementById('selectMetricasModulo');
@@ -2536,22 +2576,28 @@ async function cargarDatosAdmin() {
     }
   }
 
-  cambiarSubseccionAdmin('resumen');
+  // Cargar los selectores nunca cambia de pantalla: la navegación es exclusiva
+  // de acciones explícitas del usuario o del ingreso inicial.
 }
 
 function cambiarSubseccionAdmin(seccion) {
+  // Fuente única de las doce vistas: id del botón, título, id de la sección.
   const vistasAdmin = {
-    resumen: ['tabNavResumen', 'Resumen ejecutivo'], usuarios: ['tabNavUsuarios', 'Usuarios y padrón'],
-    cargar: ['tabNavCargar', 'Archivos originales'], gestion_trabajos: ['tabNavGestionTrabajos', 'Trabajos y cuestionarios'],
-    presencial: ['tabNavPresencial', 'Cámara presencial'], muro_general: ['tabNavMuroGeneral', 'Muro docente'],
-    metricas: ['tabNavMetricas', 'Avance de los maestros'], editor_doctrina: ['tabNavEditorDoctrina', 'Contenido institucional'],
-    tenidas: ['tabNavTenidas', 'Calendario de tenidas'],
-    asignaciones: ['tabNavAsignaciones', 'Asignación de trabajos'],
-    doctrina: ['tabNavDoctrina', 'Doctrina y Reglamentos'],
-    accesos: ['tabNavAccesos', 'Bitácora de accesos']
+    resumen:['tabNavResumen','Resumen ejecutivo','adminSeccionResumen'],
+    usuarios:['tabNavUsuarios','Usuarios y padrón','adminSeccionUsuarios'],
+    cargar:['tabNavCargar','Archivos originales','adminSeccionCarga'],
+    gestion_trabajos:['tabNavGestionTrabajos','Trabajos y cuestionarios','adminSeccionGestionTrabajos'],
+    presencial:['tabNavPresencial','Cámara presencial','adminSeccionPresencial'],
+    muro_general:['tabNavMuroGeneral','Muro docente','adminSeccionMuroGeneral'],
+    metricas:['tabNavMetricas','Avance de los maestros','adminSeccionMetricas'],
+    editor_doctrina:['tabNavEditorDoctrina','Contenido institucional','adminSeccionEditorDoctrina'],
+    tenidas:['tabNavTenidas','Calendario de tenidas','adminSeccionTenidas'],
+    asignaciones:['tabNavAsignaciones','Asignación de trabajos','adminSeccionAsignaciones'],
+    doctrina:['tabNavDoctrina','Doctrina y Reglamentos','adminSeccionDoctrina'],
+    accesos:['tabNavAccesos','Bitácora de accesos','adminSeccionAccesos']
   };
   if (!Object.prototype.hasOwnProperty.call(vistasAdmin, seccion)) return;
-  const [botonActual, tituloActual] = vistasAdmin[seccion];
+  const [botonActual, tituloActual, panelActual] = vistasAdmin[seccion];
   Object.values(vistasAdmin).forEach(([id]) => {
     const boton = document.getElementById(id);
     if (id === botonActual) boton?.setAttribute('aria-current', 'page');
@@ -2566,57 +2612,36 @@ function cambiarSubseccionAdmin(seccion) {
     if (focoEnMenu) tituloVista?.focus({ preventScroll: true });
   }
 
-  const btns = ['tabNavTenidas', 'tabNavAsignaciones', 'tabNavDoctrina', 'tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
-  const secs = ['adminSeccionTenidas', 'adminSeccionAsignaciones', 'adminSeccionDoctrina', 'adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
-
-  btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
-  secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
+  // Un solo mapa determina las doce vistas, sus botones, encabezados y paneles.
+  // Cerrar el panel anterior y activar uno solo; las cargas nunca navegan.
+  Object.values(vistasAdmin).forEach(([id,,panel])=>{
+    document.getElementById(id)?.classList.remove('active');
+    document.getElementById(panel)?.classList.add('hidden');
+  });
+  document.getElementById(botonActual)?.classList.add('active');
+  document.getElementById(panelActual)?.classList.remove('hidden');
 
   if (seccion === 'tenidas') {
-    document.getElementById('tabNavTenidas')?.classList.add('active');
-    document.getElementById('adminSeccionTenidas')?.classList.remove('hidden');
     void window.cargarCalendarioTenidas?.();
   } else if (seccion === 'asignaciones') {
-    document.getElementById('tabNavAsignaciones')?.classList.add('active');
-    document.getElementById('adminSeccionAsignaciones')?.classList.remove('hidden');
     void window.cargarAsignacionesAdmin?.();
   } else if (seccion === 'doctrina') {
-    document.getElementById('tabNavDoctrina')?.classList.add('active');
-    document.getElementById('adminSeccionDoctrina')?.classList.remove('hidden');
     void cargarBibliotecaDoctrina();
   } else if (seccion === 'resumen') {
-    document.getElementById('tabNavResumen')?.classList.add('active');
-    document.getElementById('adminSeccionResumen')?.classList.remove('hidden');
     cargarResumenAdmin();
   } else if (seccion === 'usuarios') {
-    document.getElementById('tabNavUsuarios')?.classList.add('active');
-    document.getElementById('adminSeccionUsuarios')?.classList.remove('hidden');
     cargarListadoUsuariosAdmin();
   } else if (seccion === 'cargar') {
-    document.getElementById('tabNavCargar')?.classList.add('active');
-    document.getElementById('adminSeccionCarga')?.classList.remove('hidden');
   } else if (seccion === 'gestion_trabajos') {
-    document.getElementById('tabNavGestionTrabajos')?.classList.add('active');
-    document.getElementById('adminSeccionGestionTrabajos')?.classList.remove('hidden');
     cargarGestionTrabajosAdmin();
   } else if (seccion === 'presencial') {
-    document.getElementById('tabNavPresencial')?.classList.add('active');
-    document.getElementById('adminSeccionPresencial')?.classList.remove('hidden');
   } else if (seccion === 'muro_general') {
-    document.getElementById('tabNavMuroGeneral')?.classList.add('active');
-    document.getElementById('adminSeccionMuroGeneral')?.classList.remove('hidden');
     cargarMuroGeneralAdmin();
   } else if (seccion === 'editor_doctrina') {
-    document.getElementById('tabNavEditorDoctrina')?.classList.add('active');
-    document.getElementById('adminSeccionEditorDoctrina')?.classList.remove('hidden');
     cargarEditorDoctrinaAdmin();
   } else if (seccion === 'accesos') {
-    document.getElementById('tabNavAccesos')?.classList.add('active');
-    document.getElementById('adminSeccionAccesos')?.classList.remove('hidden');
     cargarBitacoraAccesos();
-  } else {
-    document.getElementById('tabNavMetricas')?.classList.add('active');
-    document.getElementById('adminSeccionMetricas')?.classList.remove('hidden');
+  } else if (seccion === 'metricas') {
     if (listaModulos.length > 0) {
       const select = document.getElementById('selectMetricasModulo');
       cargarMetricasAvance(select.value || listaModulos[0].id);
@@ -2705,7 +2730,11 @@ async function guardarArchivoOriginalEnBD() {
    ========================================================================== */
 async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   const tbody = document.getElementById('tablaAccesosBody');
-  tbody.innerHTML = `<tr><td colspan="7" class="td-loading">Consultando registros...</td></tr>`;
+  const estado=document.getElementById('bitacoraAdminEstado');
+  const actor=usuarioActual;
+  if(!tbody||!actor?.es_admin)return;
+  if(estado)estado.textContent='Consultando registros del servidor…';
+  tbody.innerHTML = `<tr><td colspan="8" class="td-loading">Consultando registros...</td></tr>`;
 
   const selectFiltro = document.getElementById('filtroUsuarioAcceso');
   if (selectFiltro && selectFiltro.options.length <= 1) {
@@ -2732,15 +2761,17 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   }
 
   const { data: registros, error } = await query;
-
+  if(usuarioActual!==actor)return;
   tbody.innerHTML = "";
 
   if (error) {
-    tbody.innerHTML = '<tr><td colspan="7">No fue posible consultar la bitácora. Pulse Actualizar para reintentar.</td></tr>';
+    if(estado)estado.textContent='Error de acceso a registros (código '+String(error.code||error.status||'sin respuesta').slice(0,24)+').';
+    tbody.innerHTML = '<tr><td colspan="8">No fue posible consultar la bitácora. Verifique su sesión y pulse Actualizar.</td></tr>';
     return;
   }
   if (!registros || registros.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); font-style: italic;">No hay ingresos registrados para el criterio seleccionado.</td></tr>`;
+    if(estado)estado.textContent='No existen registros en este criterio.';
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); font-style: italic;">No hay ingresos registrados para el criterio seleccionado.</td></tr>`;
     return;
   }
 
@@ -2749,7 +2780,8 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
   if (ocultarAdmin) {
     const { data: admins, error: adminError } = await sbApp.from('usuarios').select('id,email,es_admin');
     if (adminError) {
-      tbody.innerHTML = '<tr><td colspan="7">No fue posible aplicar el filtro de administrador.</td></tr>';
+      if(estado)estado.textContent='No pudo obtenerse el padrón necesario para ocultar cuentas especiales.';
+      tbody.innerHTML = '<tr><td colspan="8">No fue posible aplicar el filtro de administrador. Compruebe su sesión.</td></tr>';
       return;
     }
     const idsAdmin = new Set((admins || [])
@@ -2758,9 +2790,14 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     registrosVisibles = registros.filter(r => !idsAdmin.has(r.usuario_id));
   }
   if (!registrosVisibles.length) {
-    tbody.innerHTML = '<tr><td colspan="7">Sin registros para el filtro seleccionado.</td></tr>';
+    if(estado)estado.textContent='El filtro excluyó todos los registros visibles. Desmarque «Ocultar administrador y cuenta de prueba» para revisar esas sesiones.';
+    tbody.innerHTML = '<tr><td colspan="8">Sin registros para el filtro seleccionado.</td></tr>';
     return;
   }
+  if(estado)estado.textContent=registrosVisibles.length+' ingresos recuperados · '+
+    registrosVisibles.filter(r=>r.ip_origen).length+' con IP · '+
+    registrosVisibles.filter(r=>Number(r.segundos_activos)>0).length+' con actividad medida · '+
+    registrosVisibles.filter(r=>r.cerrado_en).length+' con cierre confirmado.';
   registrosVisibles.forEach(r => {
     const d = new Date(r.creado_en || r.fecha_acceso);
     const fechaTxt = d.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone:'America/Santiago' });
@@ -2791,6 +2828,10 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     const actividadCell = document.createElement('td');
     actividadCell.textContent = r.ultima_actividad_en
       ? new Date(r.ultima_actividad_en).toLocaleString('es-CL',{timeZone:'America/Santiago'}) : 'Sin medición histórica';
+    const cierreCell=document.createElement('td');
+    cierreCell.textContent=r.cerrado_en
+      ? new Date(r.cerrado_en).toLocaleString('es-CL',{timeZone:'America/Santiago'})
+      : 'Sin cierre confirmado';
     const duracionCell = document.createElement('td');
     duracionCell.textContent = r.segundos_activos == null ? 'Sin medición histórica'
       : Math.floor(r.segundos_activos/3600)+' h '+Math.floor(r.segundos_activos%3600/60)+' min '+(r.segundos_activos%60)+' s';
@@ -2798,7 +2839,7 @@ async function cargarBitacoraAccesos(filtroUsuarioId = null) {
     estadoCell.textContent = r.seguimiento_version !== 1 ? 'Histórico'
       : r.cerrado_en ? 'Cerrada'
       : Date.now()-new Date(r.ultimo_latido_en).getTime()<90000 ? 'Conectada' : 'Sin señal';
-    tr.append(dateCell, nameCell, emailCell, ipCell, actividadCell, duracionCell, estadoCell);
+    tr.append(dateCell, nameCell, emailCell, ipCell, actividadCell, cierreCell, duracionCell, estadoCell);
     tbody.appendChild(tr);
   });
 }
@@ -3346,59 +3387,70 @@ function eliminarModuloYReordenar(moduloId) {
    MATRIZ DE AVANCE
    ========================================================================== */
 async function cargarMetricasAvance(moduloId) {
-  const tbody = document.getElementById('tablaMetricasBody');
-  tbody.innerHTML = `<tr><td colspan="6" class="td-loading">Consultando registros...</td></tr>`;
-
-  const { data: usuarios } = await sbApp
-    .from('usuarios')
-    .select('id, nombre, email')
-    .order('nombre', { ascending: true });
-
-  const { data: progresos } = await sbApp
-    .from('progreso_maestro')
-    .select('*')
-    .eq('modulo_id', moduloId);
-
-  tbody.innerHTML = "";
-
-  if (!usuarios || usuarios.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted); font-style: italic;">No hay usuarios registrados en el padrón.</td></tr>`;
+  const tbody=document.getElementById('tablaMetricasBody');
+  if(!tbody)return;
+  tbody.replaceChildren();
+  const mensaje=document.createElement('tr');
+  const esperando=document.createElement('td');
+  esperando.colSpan=6;esperando.className='td-loading';
+  esperando.textContent='Consultando registros…';
+  mensaje.appendChild(esperando);tbody.appendChild(mensaje);
+  const actor=usuarioActual;
+  const [resultadoUsuarios,resultadoProgreso]=await Promise.all([
+    sbApp.from('usuarios').select('id,nombre,email').order('nombre',{ascending:true}),
+    sbApp.from('progreso_maestro').select('*').eq('modulo_id',moduloId)
+  ]);
+  if(usuarioActual!==actor)return;
+  tbody.replaceChildren();
+  const error=resultadoUsuarios.error||resultadoProgreso.error;
+  function aviso(texto){
+    const fila=document.createElement('tr'),columna=document.createElement('td');
+    columna.colSpan=6;columna.className='admin-empty-state';
+    columna.textContent=texto;fila.appendChild(columna);tbody.appendChild(fila);
+  }
+  if(error){
+    aviso('No fue posible consultar los avances. Compruebe su sesión y pulse Actualizar.');
     return;
   }
-
-  const progMap = {};
-  if (progresos) progresos.forEach(p => { progMap[p.usuario_id] = p; });
-
-  usuarios.forEach(u => {
-    const p = progMap[u.id];
-    const leido = (p && p.leido);
-    const completado = (p && p.completado);
-    const preguntas = (p && p.intentos_preguntas !== undefined) ? `${p.intentos_preguntas}/8` : '—';
-    const reflexion = (p && p.reflexion) ? `"${p.reflexion.slice(0, 70)}..."` : '—';
-    const fecha = (p && p.completado_en) 
-      ? new Date(p.completado_en).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }) 
-      : '—';
-
-    const pId = p ? p.id : '';
-    const nombreEscapado = (u.nombre || '').replace(/'/g, "\\'");
-
-    tbody.innerHTML += `
-      <tr>
-        <td>
-          <a href="javascript:void(0)" onclick="abrirModalMisAvances('${u.id}')" style="font-weight: 600; color: var(--primary);">
-            ${u.nombre || 'Hermano'}
-          </a>
-        </td>
-        <td>${leido ? '<span style="color: var(--success); font-weight: 600;">✓ Leído</span>' : '<span style="color: var(--text-muted);">Pendiente</span>'}</td>
-        <td>${completado ? '<span style="color: var(--success); font-weight: 600;">8/8 ✓</span>' : preguntas}</td>
-        <td style="font-size: 0.82rem; font-style: italic;">${reflexion}</td>
-        <td>${fecha}</td>
-        <td>
-          <button class="admin-link-btn" onclick="abrirModalParametrosHermano('${pId}', '${u.id}', '${moduloId}', '${nombreEscapado}')">⚙️ Modificar</button>
-        </td>
-      </tr>
-    `;
-  });
+  const usuarios=resultadoUsuarios.data||[],progresos=resultadoProgreso.data||[];
+  if(!usuarios.length){aviso('No hay integrantes registrados en el padrón.');return;}
+  const progMap=new Map(progresos.map(p=>[p.usuario_id,p]));
+  for(const u of usuarios){
+    const p=progMap.get(u.id)||null;
+    const tr=document.createElement('tr');
+    const columna=(texto)=>{
+      const td=document.createElement('td');td.textContent=texto;
+      tr.appendChild(td);return td;
+    };
+    const nombre=columna('');
+    const botonNombre=document.createElement('button');
+    botonNombre.type='button';botonNombre.className='admin-link-btn';
+    botonNombre.textContent=u.nombre||'Hermano';
+    botonNombre.setAttribute('aria-label','Consultar avances de '+(u.nombre||'integrante'));
+    botonNombre.addEventListener('click',()=>{void abrirModalMisAvances(u.id);});
+    nombre.appendChild(botonNombre);
+    const lectura=columna(p?.leido?'✓ Leído':'Pendiente');
+    lectura.style.color=p?.leido?'var(--success)':'var(--text-muted)';
+    const preguntas= p?.completado?'8/8 ✓':p?.intentos_preguntas!==undefined?String(p.intentos_preguntas)+'/8':'—';
+    const examen=columna(preguntas);
+    if(p?.completado){examen.style.color='var(--success)';examen.style.fontWeight='600';}
+    const reflexion=columna(p?.reflexion?'"'+String(p.reflexion).slice(0,70)+'…"':'—');
+    reflexion.style.fontSize='.82rem';reflexion.style.fontStyle='italic';
+    const fecha=p?.completado_en?new Date(p.completado_en).toLocaleDateString('es-CL',{
+      day:'2-digit',month:'2-digit',year:'numeric'
+    }):'—';
+    columna(fecha);
+    const acciones=columna('');
+    const modificar=document.createElement('button');modificar.type='button';
+    modificar.className='admin-link-btn';modificar.textContent='Modificar';
+    modificar.setAttribute('aria-label','Modificar avance de '+(u.nombre||'integrante'));
+    // La edición usa el progreso del Hermano seleccionado, nunca misProgresos
+    // (que corresponde a la sesión actual, no al registro de Superadmin).
+    modificar.addEventListener('click',()=>abrirModalParametrosHermano(
+      p?.id||'',u.id,moduloId,u.nombre||'Hermano',p
+    ));
+    acciones.appendChild(modificar);tbody.appendChild(tr);
+  }
 }
 
 function recargarMetricasActuales() {
@@ -3406,14 +3458,14 @@ function recargarMetricasActuales() {
   if (sel) cargarMetricasAvance(sel.value);
 }
 
-function abrirModalParametrosHermano(progresoId, usuarioId, moduloId, nombreHermano) {
+function abrirModalParametrosHermano(progresoId, usuarioId, moduloId, nombreHermano, progreso=null) {
   document.getElementById('subParamHermano').innerText = `Modificando avance para: ${nombreHermano}`;
   document.getElementById('paramProgresoId').value = progresoId || '';
   document.getElementById('paramUsuarioId').value = usuarioId;
   document.getElementById('paramModuloId').value = moduloId;
 
-  const prog = misProgresos[moduloId];
-  if (prog && prog.usuario_id === usuarioId) {
+  const prog=progreso?.usuario_id===usuarioId ? progreso : null;
+  if (prog) {
     document.getElementById('paramLeido').value = prog.leido ? 'true' : 'false';
     document.getElementById('paramIntentos').value = prog.intentos_preguntas || 0;
     document.getElementById('paramReflexion').value = prog.reflexion || '';
@@ -3494,37 +3546,73 @@ async function exportarRespaldoCompletoJSON() {
    MURO GENERAL ADMIN
    ========================================================================== */
 async function cargarMuroGeneralAdmin() {
-  const cont = document.getElementById('contenedorMuroGeneralAdmin');
-  cont.innerHTML = "<p class='td-loading'>Cargando muro general...</p>";
-  document.getElementById('muroAdminFechaEmision').innerText = `EMISIÓN: ${new Date().toLocaleDateString('es-CL')}`;
-
-  const { data: reflexiones, error } = await sbApp
-    .from('progreso_maestro')
-    .select('*, usuarios(nombre), modulos(numero_orden, titulo)')
-    .eq('completado', true)
-    .not('reflexion', 'is', null)
-    .order('completado_en', { ascending: false });
-
-  cont.innerHTML = "";
-
-  if (error || !reflexiones || reflexiones.length === 0) {
-    cont.innerHTML = "<p style='color: var(--text-muted); font-style: italic;'>No hay reflexiones consagradas.</p>";
+  const cont=document.getElementById('contenedorMuroGeneralAdmin');
+  const interacciones=document.getElementById('muroAdminInteraccionesLista');
+  const estado=document.getElementById('muroAdminInteraccionesEstado');
+  if(!cont)return;
+  const actor=usuarioActual;
+  cont.replaceChildren();
+  if(interacciones)interacciones.replaceChildren();
+  const aviso=texto=>{
+    const p=document.createElement('p');p.className='admin-list-status';
+    p.textContent=texto;cont.appendChild(p);
+  };
+  aviso('Consultando reflexiones, comentarios y respuestas…');
+  if(estado)estado.textContent='Actualizando intervenciones…';
+  document.getElementById('muroAdminFechaEmision').textContent=
+    'EMISIÓN: '+new Date().toLocaleDateString('es-CL',{timeZone:'America/Santiago'});
+  const {data,error}=await sbApp.rpc('muro_docente_autorizado',{p_modulo:null});
+  if(usuarioActual!==actor||!actor?.es_admin)return;
+  cont.replaceChildren();
+  if(error||!Array.isArray(data?.aportes)||!Array.isArray(data?.comentarios)){
+    aviso('No fue posible consultar el Muro. Pulse Actualizar para reintentar.');
+    if(estado)estado.textContent='No se pudieron recuperar los comentarios ni las respuestas.';
     return;
   }
-
-  reflexiones.forEach(r => {
-    const fecha = r.completado_en ? new Date(r.completado_en).toLocaleDateString('es-CL') : '';
-    cont.innerHTML += `
-      <div class="reflexion-item" style="margin-bottom: 16px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
-          <strong>Trabajo ${r.modulos?.numero_orden || '—'}: ${escaparTextoHTMLDocencia(r.modulos?.titulo || 'Trazado')}</strong>
-          <span style="font-size: 0.8rem; color: var(--text-muted);">${fecha}</span>
-        </div>
-        <p style="margin: 0 0 6px 0; font-style: italic;">"${escaparTextoHTMLDocencia(r.reflexion)}"</p>
-        <span class="reflexion-autor">${escaparTextoHTMLDocencia(formatearNombreHermano(r.usuarios?.nombre))}</span>
-      </div>
-    `;
-  });
+  const aportes=data.aportes;
+  const comentarios=data.comentarios;
+  function texto(tag,contenido,clase){
+    const el=document.createElement(tag);el.textContent=contenido;
+    if(clase)el.className=clase;return el;
+  }
+  const fechaLegible=v=>{
+    if(!v)return '';
+    const d=new Date(v);return Number.isNaN(d.getTime())?'':d.toLocaleDateString('es-CL',{timeZone:'America/Santiago'});
+  };
+  const relacionados=new Map(aportes.filter(a=>a?.id).map(a=>[a.id,a]));
+  if(!aportes.length)aviso('Todavía no hay reflexiones consagradas.');
+  for(const r of aportes){
+    const card=document.createElement('article');card.className='reflexion-item';
+    const cabecera=document.createElement('div');cabecera.className='muro-admin-interaccion-cabecera';
+    cabecera.appendChild(texto('strong','Trabajo '+(r.modulos?.numero_orden??'—')+
+      ': '+(r.modulos?.titulo||'Trazado')));
+    cabecera.appendChild(texto('time',fechaLegible(r.completado_en)));
+    card.appendChild(cabecera);
+    const parrafo=texto('p','“'+String(r.reflexion||'')+'”');parrafo.className='muro-admin-cita';card.appendChild(parrafo);
+    card.appendChild(texto('span',formatearNombreHermano(r.usuarios?.nombre),'reflexion-autor'));
+    cont.appendChild(card);
+  }
+  const validos=[...new Map(comentarios.filter(c=>c?.id).map(c=>[c.id,c])).values()];
+  if(estado)estado.textContent=aportes.length+' reflexiones y '+validos.length+
+    ' comentarios/respuestas publicados.';
+  if(!interacciones)return;
+  if(!validos.length){
+    interacciones.appendChild(texto('p','No hay comentarios ni respuestas publicados.'));
+    return;
+  }
+  validos.sort((a,b)=>String(b.creado_en||'').localeCompare(String(a.creado_en||'')));
+  for(const c of validos){
+    const aporte=relacionados.get(c.progreso_id);
+    const card=document.createElement('article');card.className='muro-admin-interaccion';
+    const cabecera=document.createElement('div');cabecera.className='muro-admin-interaccion-cabecera';
+    cabecera.appendChild(texto('strong',(c.comentario_padre_id?'Respuesta':'Comentario')+
+      ' · Trabajo '+(aporte?.modulos?.numero_orden??'—')+' · '+(aporte?.modulos?.titulo||'Trazado')));
+    cabecera.appendChild(texto('time',fechaLegible(c.creado_en)));
+    card.appendChild(cabecera);
+    card.appendChild(texto('p',String(c.contenido||''),'muro-admin-cita'));
+    card.appendChild(texto('span',formatearNombreHermano(c.usuarios?.nombre),'reflexion-autor'));
+    interacciones.appendChild(card);
+  }
 }
 
 function imprimirMuroGeneralPDF() {
@@ -3651,6 +3739,30 @@ window.addEventListener('DOMContentLoaded', () => {
   recuperarSesionGuardada();
 });
 
+
+// Cada KPI conduce a un detalle real. El estado de publicación se deriva de
+// los mismos datos de Asignaciones que alimentan los indicadores del Resumen.
+function abrirDetalleKpiResumen(indicador) {
+  if(!usuarioActual?.es_admin)return;
+  const destinos={
+    usuarios:'usuarios',asignados:'asignaciones',entregados:'asignaciones',
+    pendientes:'asignaciones',vencidos:'asignaciones',publicados:'asignaciones',
+    completados:'metricas',comentarios:'muro_general'
+  };
+  const destino=destinos[indicador];
+  if(!destino)return;
+  if(destino==='asignaciones'){
+    const filtro=document.getElementById('asignacionesEstadoFiltro');
+    if(filtro)filtro.value=(indicador==='entregados'||indicador==='publicados')?'entregados':
+      indicador==='pendientes'?'pendientes':indicador==='vencidos'?'vencidos':'todos';
+    const anuladas=document.getElementById('asignacionesVerAnuladas');
+    if(anuladas)anuladas.checked=false;
+  }
+  cambiarSubseccionAdmin(destino);
+  const titulo=document.getElementById('adminVistaActual');
+  titulo?.focus?.({preventScroll:true});
+  titulo?.scrollIntoView?.({block:'start',behavior:'auto'});
+}
 
 async function cargarResumenAdmin() {
   const status = document.getElementById('resumenAdminEstado');

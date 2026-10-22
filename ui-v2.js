@@ -200,3 +200,36 @@
   else prepararMenuAdmin();
 })();
 
+
+
+/* Diálogos Superadmin: clic en el telón cierra únicamente la ventana.
+   No toca la sección activa. Reutiliza los controles de cancelación
+   específicos (ocupado, cambios sin guardar, limpieza del visor, etc.). */
+(function(){
+ 'use strict';
+ function prepararCierreExteriorDialogos(){
+  const dialogs=[...document.querySelectorAll('#seccionAdmin dialog, body > dialog')];
+  for(const dialog of dialogs){
+   // El editor puede tener texto no guardado; un cierre debe ser explícito.
+   if(dialog.id==='doctrinaTextoDialogo'){
+    dialog.addEventListener('cancel',e=>{e.preventDefault();window.cerrarTextoDoctrina?.();});
+   }else if(dialog.id==='doctrinaVisorDialogo'){
+    dialog.addEventListener('cancel',e=>{e.preventDefault();window.cerrarVisorDoctrina?.();});
+   }
+   dialog.addEventListener('click',event=>{
+    if(event.target!==dialog||!dialog.open)return;
+    const r=dialog.getBoundingClientRect();
+    if(event.clientX>=r.left && event.clientX<=r.right &&
+       event.clientY>=r.top && event.clientY<=r.bottom)return;
+    const cancelar=new Event('cancel',{cancelable:true});
+    // El listener propio decide si el modal puede cerrar (p.ej. si está ocupado).
+    if(dialog.dispatchEvent(cancelar)&&dialog.open){
+     if(dialog.id==='modalEditarComentarioForo')window.cerrarModalUniversalDirecto?.(dialog.id);
+     else dialog.close();
+    }
+   });
+  }
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',prepararCierreExteriorDialogos,{once:true});
+ else prepararCierreExteriorDialogos();
+})();

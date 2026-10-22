@@ -14,12 +14,12 @@ test('Resumen Ejecutivo contiene seis KPI y trabajos se divide en tres',()=>{
  const b=m[1];
  const esperado=['kpiUsuarios','kpiResumenAsignados','kpiResumenEntregados','kpiResumenPendientes','kpiCompletados','kpiComentarios'];
  assert.deepEqual([...b.matchAll(/<strong id="([^"]+)">/g)].map(x=>x[1]),esperado);
- assert.equal((b.match(/class="admin-kpi"/g)||[]).length,6);
+ assert.equal((b.match(/class="admin-kpi admin-kpi-accion"/g)||[]).length,6);
  assert.doesNotMatch(b,/id="kpiModulos"/);
 });
 
 test('no cambia los KPI del cronograma de trabajos por equivocación',()=>{
- const m=html.match(/id="cronogramaTrabajosAdmin"[\s\S]*?<div class="admin-kpi-grid">([\s\S]*?)<\/div>\s*<div class="cronograma-filtros"/);
+ const m=html.match(/id="cronogramaTrabajosAdmin"[\s\S]*?<div class="admin-kpi-grid"[^>]*>([\s\S]*?)<\/div>\s*<div class="cronograma-filtros"/);
  assert.ok(m,'cronograma original localizado');
  const ids=[...m[1].matchAll(/<strong id="([^"]+)">/g)].map(x=>x[1]);
  assert.deepEqual(ids,['kpiTrabajosAsignados','kpiTrabajosPendientes','kpiTrabajosVencidos','kpiTrabajosPublicados']);

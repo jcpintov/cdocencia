@@ -2480,3 +2480,460 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 #adminSeccionDoctrina .doctrina-acciones button{flex:0 0 auto;width:auto;min-height:34px;padding:6px 10px;font-size:.8rem;line-height:1.4;white-space:nowrap;margin:0;border-radius:5px}
 #adminSeccionDoctrina textarea{box-sizing:border-box;max-width:100%;background:#fff;color:#172b3a;border:1px solid #64748b;border-radius:6px;padding:10px;font:inherit}
 @media(max-width:640px){.tenidas-dia{min-height:62px;padding:2px}#adminSeccionDoctrina .doctrina-tarjeta{padding:12px}#adminSeccionDoctrina .doctrina-acciones button{min-height:44px}.doctrina-estado{margin-left:6px}}
+
+
+/* Doctrina — panel conversacional de una sola superficie, sin recuadros anidados. */
+#adminSeccionDoctrina .doctrina-cabecera { padding-bottom:12px; }
+#adminSeccionDoctrina .doctrina-chat {
+  box-sizing:border-box;
+  width:min(100%,1040px);
+  max-width:1040px;
+  margin:8px auto 26px;
+  padding:0;
+  overflow:hidden;
+  border:1px solid #c5d3df;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 6px 22px rgba(23,53,75,.045);
+}
+#adminSeccionDoctrina .doctrina-chat-encabezado {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:20px;
+  min-width:0;
+  padding:22px 26px 16px;
+  background:#fff;
+}
+#adminSeccionDoctrina .doctrina-chat-encabezado h3 {
+  margin:0 0 6px;
+  font:650 clamp(1.08rem,1.5vw,1.25rem)/1.4 var(--font-ui,Arial,sans-serif);
+  color:#1b3a50;
+}
+#adminSeccionDoctrina .doctrina-chat-encabezado p {
+  max-width:65ch;
+  margin:0;
+  color:#4d6578;
+  font-size:.88rem;
+  line-height:1.55;
+}
+#adminSeccionDoctrina .doctrina-chat-privado {
+  white-space:nowrap;
+  color:#607486;
+  font-size:.77rem;
+  line-height:1.5;
+  padding-top:3px;
+}
+#adminSeccionDoctrina .doctrina-hilo {
+  box-sizing:border-box;
+  min-width:0;
+  max-height:60dvh;
+  overflow-x:hidden;
+  overflow-y:auto;
+  padding:18px 26px 22px;
+  background:#fff;
+}
+#adminSeccionDoctrina .doctrina-hilo:not(:has(.doctrina-turno,.doctrina-consulta-estado)) {
+  display:none;
+}
+#adminSeccionDoctrina .doctrina-chat form#doctrinaAgenteFormulario {
+  display:grid;
+  gap:10px;
+  box-sizing:border-box;
+  min-width:0;
+  width:100%;
+  margin:0;
+  padding:20px 26px 24px;
+  border:0;
+  border-top:1px solid #e3ebf1;
+  border-radius:0;
+  background:#f7f9fb;
+  box-shadow:none;
+}
+#adminSeccionDoctrina .doctrina-pregunta-etiqueta {
+  display:block;
+  margin:0;
+  font:600 .9rem/1.4 var(--font-ui,Arial,sans-serif);
+  color:#1d435b;
+}
+#adminSeccionDoctrina #doctrinaAgentePregunta {
+  box-sizing:border-box;
+  display:block;
+  width:100%;
+  min-width:0;
+  min-height:104px;
+  max-height:192px;
+  margin:0;
+  padding:14px 16px;
+  border:1px solid #9bb1c0;
+  border-radius:8px;
+  background:white;
+  color:#183a50;
+  font:400 1rem/1.6 var(--font-ui,Arial,sans-serif);
+  resize:vertical;
+  box-shadow:none;
+}
+#adminSeccionDoctrina #doctrinaAgentePregunta:focus-visible {
+  outline:2px solid #376c96;
+  outline-offset:2px;
+  border-color:#376c96;
+}
+#adminSeccionDoctrina .doctrina-envio {
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px 18px;
+  min-width:0;
+}
+#adminSeccionDoctrina .doctrina-envio-ayuda {
+  flex:1 1 190px;
+  min-width:0;
+  margin:0;
+  color:#567084;
+  font:400 .79rem/1.5 var(--font-ui,Arial,sans-serif);
+}
+#adminSeccionDoctrina .doctrina-envio-ayuda span {font:inherit;color:inherit}
+#adminSeccionDoctrina .doctrina-acciones-chat {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex:0 0 auto;
+  gap:10px;
+  min-width:0;
+}
+#adminSeccionDoctrina .doctrina-acciones-chat button {
+  box-sizing:border-box;
+  flex:0 0 auto;
+  width:auto;
+  min-width:146px;
+  min-height:44px;
+  margin:0;
+  padding:10px 16px;
+  border-radius:7px;
+  font-weight:600;
+  white-space:normal;
+  line-height:1.3;
+}
+#adminSeccionDoctrina .doctrina-acciones-chat #doctrinaNuevaConversacion {
+  min-width:160px;
+  background:transparent;
+}
+/* «Actualizar» corresponde al inventario, no a la cabecera de Doctrina. */
+#adminSeccionDoctrina .doctrina-biblioteca-herramientas {
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:12px 20px;
+  margin:16px 0 18px;
+}
+#adminSeccionDoctrina .doctrina-biblioteca-herramientas .doctrina-filtros {
+  flex:1 1 380px;
+  min-width:0;
+  margin:0;
+  align-items:flex-end;
+  gap:14px;
+}
+#adminSeccionDoctrina .doctrina-biblioteca-herramientas .doctrina-filtros>div {min-width:160px}
+#adminSeccionDoctrina .doctrina-biblioteca-herramientas .doctrina-check {margin:0 0 8px}
+#adminSeccionDoctrina .doctrina-biblioteca-herramientas #doctrinaActualizar {
+  box-sizing:border-box;
+  flex:0 0 auto;
+  width:auto;
+  min-height:44px;
+  margin:0;
+  padding:10px 14px;
+}
+/* Selector único por original, menos alto y sin recuadro de formulario duplicado. */
+#adminSeccionDoctrina form.doctrina-clasificacion {
+  display:flex;
+  align-items:flex-end;
+  flex-wrap:wrap;
+  gap:10px 14px;
+  margin:12px 0 6px;
+  padding:12px 14px;
+  border:1px solid #dbe5ec;
+  border-radius:8px;
+  background:#f7f9fb;
+}
+#adminSeccionDoctrina form.doctrina-clasificacion label {
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  margin:0;
+  font-size:.84rem;
+  font-weight:600;
+}
+#adminSeccionDoctrina form.doctrina-clasificacion select {
+  box-sizing:border-box;
+  min-width:180px;
+  max-width:100%;
+  width:auto;
+  min-height:42px;
+  margin:0;
+  padding:8px 30px 8px 10px;
+}
+#adminSeccionDoctrina form.doctrina-clasificacion button {
+  flex:0 0 auto;
+  width:auto;
+  min-height:42px;
+  margin:0;
+  padding:9px 14px;
+}
+#adminSeccionDoctrina form.doctrina-clasificacion [role=status] {
+  flex:1 1 160px;
+  min-width:0;
+  overflow-wrap:anywhere;
+  font-size:.86rem;
+  line-height:1.45;
+}
+@media (max-width:680px) {
+  #adminSeccionDoctrina .doctrina-chat {margin:8px auto 20px}
+  #adminSeccionDoctrina .doctrina-chat-encabezado {
+    flex-direction:column;
+    gap:6px;
+    padding:18px 16px 14px;
+  }
+  #adminSeccionDoctrina .doctrina-chat-privado {padding:0}
+  #adminSeccionDoctrina .doctrina-hilo {padding:16px;max-height:60dvh}
+  #adminSeccionDoctrina .doctrina-chat form#doctrinaAgenteFormulario {padding:16px}
+  #adminSeccionDoctrina .doctrina-envio {align-items:stretch;flex-direction:column}
+  #adminSeccionDoctrina .doctrina-envio-ayuda {flex:0 0 auto}
+  #adminSeccionDoctrina .doctrina-envio .doctrina-envio-ayuda span {display:inline}
+  #adminSeccionDoctrina .doctrina-acciones-chat {display:flex;width:100%}
+  #adminSeccionDoctrina .doctrina-acciones-chat button {flex:1 1 0;min-width:0}
+  #adminSeccionDoctrina .doctrina-acciones-chat #doctrinaNuevaConversacion {min-width:0}
+  #adminSeccionDoctrina .doctrina-biblioteca-herramientas {
+    align-items:stretch;
+    flex-direction:column;
+    gap:12px;
+  }
+  #adminSeccionDoctrina .doctrina-biblioteca-herramientas .doctrina-filtros {
+    flex:0 0 auto;
+    align-items:stretch;
+    flex-direction:column;
+    gap:10px;
+  }
+  #adminSeccionDoctrina .doctrina-biblioteca-herramientas #doctrinaActualizar {align-self:flex-start}
+  #adminSeccionDoctrina form.doctrina-clasificacion select {min-width:160px}
+}
+
+
+/* Superadmin — acciones de cuenta consistentes, legibles y sin estilos de
+   botón claro aplicados sobre el fondo oscuro de la navegación. */
+#seccionAdmin .admin-side-footer{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:10px;
+  min-width:0;
+  width:100%;
+  box-sizing:border-box;
+  margin-top:22px;
+  padding:18px 0 0;
+  border-top:1px solid #3e5869;
+}
+#seccionAdmin .admin-side-footer > :is(.admin-perfil-btn,.admin-logout){
+  appearance:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  min-height:46px;
+  margin:0;
+  padding:10px 16px;
+  border:1px solid #60798a;
+  border-radius:7px;
+  background:#1a384b;
+  color:#eef4f8;
+  font:600 .87rem/1.35 var(--font-ui,Arial,sans-serif);
+  text-align:center;
+  text-decoration:none;
+  cursor:pointer;
+}
+#seccionAdmin .admin-side-footer > .admin-logout{
+  background:transparent;
+  color:#dce8ef;
+  border-color:#536c7c;
+}
+#seccionAdmin .admin-side-footer > :is(.admin-perfil-btn,.admin-logout):hover{
+  background:#294b60;
+  border-color:#a9bfd0;
+  color:#fff;
+}
+#seccionAdmin .admin-side-footer > :is(.admin-perfil-btn,.admin-logout):focus-visible{
+  outline:3px solid #e5c68e;
+  outline-offset:2px;
+}
+#seccionAdmin .admin-links-bottom{
+  box-sizing:border-box;
+  min-width:0;
+  margin-top:18px;
+  padding:18px 0 0;
+  border-top:1px solid #3e5869;
+}
+#seccionAdmin .admin-links-bottom > .admin-menu-label{
+  margin:0 10px 9px;
+  color:#bdcedb;
+}
+/* Barra administrativa extendida: dos acciones simétricas en una misma fila.
+   En el sidebar estrecho se mantienen apiladas con anchura completa. */
+@media (min-width:601px) and (max-width:960px){
+  #seccionAdmin .admin-side-footer{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    max-width:480px;
+  }
+  #seccionAdmin .admin-links-bottom{margin-top:14px}
+}
+
+/* Los KPI del cronograma utilizan la misma semántica interactiva. */
+#adminSeccionResumen .cronograma-trabajos .admin-kpi-accion{
+  appearance:none;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  border:1px solid #b7c9d6;
+  border-radius:9px;
+  background:#f7f9fb;
+  color:#193c53;
+  font-family:var(--font-ui,Arial,sans-serif);
+  text-align:left;
+  cursor:pointer;
+}
+#adminSeccionResumen .cronograma-trabajos .admin-kpi-accion:hover{
+  background:#ecf3f7;
+  border-color:#61879f;
+}
+#adminSeccionResumen .cronograma-trabajos .admin-kpi-accion:focus-visible{
+  outline:3px solid #947137;
+  outline-offset:3px;
+}
+#adminSeccionResumen .cronograma-trabajos .admin-kpi-ir{
+  color:#245574;
+  font-size:.76rem;
+  font-weight:700;
+}
+/* Tarjetas KPI del Resumen: enlace contextual, no solo un bloque estadístico. */
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:7px;
+  box-sizing:border-box;
+  width:100%;
+  height:100%;
+  appearance:none;
+  border:1px solid #b7c9d6;
+  border-radius:10px;
+  background:#f7f9fb;
+  color:#193c53;
+  font-family:var(--font-ui,Arial,sans-serif);
+  text-align:left;
+  cursor:pointer;
+  transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease;
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion:hover {
+  background:#ecf3f7;
+  border-color:#61879f;
+  box-shadow:0 3px 14px rgba(16,51,74,.1);
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion:focus-visible {
+  outline:3px solid #947137;
+  outline-offset:3px;
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion:active {
+  background:#e0edf3;
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion .admin-kpi-ir {
+  margin-top:auto;
+  color:#245574;
+  font-size:.76rem;
+  font-weight:700;
+  line-height:1.4;
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion .admin-kpi-descripcion {
+  color:#52687a;
+  font-size:.72rem;
+  line-height:1.4;
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion strong{
+  color:#193c53;
+  font-variant-numeric:tabular-nums;
+}
+#adminSeccionAsignaciones .asignacion-lista-cabecera{
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px 18px;
+}
+#adminSeccionAsignaciones .asignacion-lista-cabecera>label{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  font-size:.87rem;
+}
+#adminSeccionAsignaciones #asignacionesEstadoFiltro{
+  min-height:42px;
+  width:auto;
+  max-width:100%;
+  font-size:.9rem;
+}
+#adminSeccionMuroGeneral .muro-admin-interacciones{
+  margin-top:30px;
+  padding-top:22px;
+  border-top:1px solid #c8d5df;
+}
+#adminSeccionMuroGeneral .muro-admin-interacciones h3{
+  margin:0 0 10px;
+  color:#193c53;
+  font-size:1.1rem;
+}
+#adminSeccionMuroGeneral .muro-admin-interacciones-lista{
+  display:grid;
+  gap:12px;
+  margin-top:14px;
+}
+#adminSeccionMuroGeneral .muro-admin-interaccion,
+#adminSeccionMuroGeneral .reflexion-item{
+  box-sizing:border-box;
+  overflow-wrap:anywhere;
+  padding:14px 16px;
+  border:1px solid #d8e3eb;
+  border-left:3px solid #af8e50;
+  border-radius:6px;
+  margin:0 0 10px;
+}
+#adminSeccionMuroGeneral .muro-admin-interaccion-cabecera{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:5px 14px;
+  color:#193c53;
+}
+#adminSeccionMuroGeneral .muro-admin-interaccion-cabecera time{
+  font-size:.8rem;
+  color:#5b6d7c;
+}
+#adminSeccionMuroGeneral .muro-admin-cita{
+  white-space:pre-line;
+  line-height:1.6;
+  font-style:italic;
+  margin:9px 0;
+}
+@media(max-width:600px){
+  #adminSeccionAsignaciones .asignacion-lista-cabecera{align-items:stretch}
+  #adminSeccionAsignaciones .asignacion-lista-cabecera>label{width:100%}
+  #adminSeccionAsignaciones #asignacionesEstadoFiltro{width:100%}
+}

@@ -63,7 +63,7 @@ function renderizarBibliotecaDoctrina(){
    if(tipo==='documentos'&&d.version_id){
     const editor=document.createElement('form');editor.className='doctrina-clasificacion';
     const etiqueta=document.createElement('label');etiqueta.textContent='Categoría';
-    const selector=document.createElement('select');selector.setAttribute('aria-label','Categoría de '+d.titulo);
+    const selector=document.createElement('select');selector.id='doctrinaCategoria_'+d.version_id;selector.name='categoria_'+d.version_id;etiqueta.htmlFor=selector.id;selector.setAttribute('aria-label','Categoría de '+d.titulo);
     for(const [valor,texto] of Object.entries({normativa:'Reglamento',doctrina:'Doctrina',docencia:'Docencia',tradicion:'Tradición',ritual:'Ritual',bibliografia:'Bibliografía'})){const opcion=document.createElement('option');opcion.value=valor;opcion.textContent=texto;selector.appendChild(opcion);}
     selector.value=d.clase;etiqueta.appendChild(selector);
     const guardar=document.createElement('button');guardar.type='submit';guardar.className='btn-secondary';guardar.textContent='Guardar categoría';guardar.disabled=true;
@@ -241,9 +241,26 @@ async function contrastarPaginaTextoDoctrina(boton){
  document.getElementById('doctrinaVisorPagina').value=paginaTextoCargada||1;irPaginaVisorDoctrina();
 }
 
+// Presentación del compositor: no altera la consulta ni los antecedentes enviados.
+function ajustarCompositorDoctrina(){
+ const campo=document.getElementById('doctrinaAgentePregunta');
+ if(!campo)return;
+ const contador=document.getElementById('doctrinaPreguntaContador');
+ if(contador)contador.textContent=campo.value.length+' / '+campo.maxLength;
+ campo.style.height='auto';
+ if(campo.value)campo.style.height=Math.min(Math.max(campo.scrollHeight,104),192)+'px';
+}
+document.getElementById('doctrinaAgentePregunta')?.addEventListener('input',ajustarCompositorDoctrina);
+document.getElementById('doctrinaAgentePregunta')?.addEventListener('keydown',event=>{
+ if((event.ctrlKey||event.metaKey)&&event.key==='Enter'&&!event.isComposing){
+  event.preventDefault();
+  document.getElementById('doctrinaAgenteFormulario')?.requestSubmit();
+ }
+});
+
 function nuevaConversacionDoctrina(){
  invalidarAgenteDoctrina();
- const campo=document.getElementById('doctrinaAgentePregunta');if(campo){campo.value='';campo.minLength=10;campo.placeholder='Escribe tu pregunta…';campo.focus();}
+ const campo=document.getElementById('doctrinaAgentePregunta');if(campo){campo.value='';campo.minLength=10;campo.placeholder='Escribe tu pregunta…';ajustarCompositorDoctrina();campo.focus();}
 }
 function invalidarAgenteDoctrina(){
  historialAgenteDoctrina=[];fuentesConversacionDoctrina=[];
@@ -349,7 +366,7 @@ async function consultarAgenteDoctrina() {
    presentarRespuestaDoctrina(resultado.informe,()=>usuarioActual?.es_admin && usuarioActual.id===actor && biblioteca===consultaBibliotecaDoctrina,respuesta);
    historialAgenteDoctrina.push({role:'user',content:pregunta},{role:'assistant',content:resultado.informe.secciones.map(s=>s.texto).join('\n\n').slice(0,5000)});
    fuentesConversacionDoctrina=(resultado.informe.fuentes||[]).slice(0,6).map(({version_id,sha256,pagina})=>({version_id,sha256,pagina}));
-   salida.replaceChildren();if(campo.value.trim()===pregunta){campo.value='';campo.style.height='';}campo.minLength=1;campo.placeholder='Continúa la conversación…';campo.focus();
+   salida.replaceChildren();if(campo.value.trim()===pregunta){campo.value='';ajustarCompositorDoctrina();}campo.minLength=1;campo.placeholder='Continúa la conversación…';campo.focus();
    respuesta.scrollIntoView?.({behavior:'smooth',block:'nearest'});
   }
  } catch (error) {

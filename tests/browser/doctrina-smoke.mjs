@@ -43,6 +43,26 @@ try{
  page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());await page.route('https://**/*',r=>r.abort());await page.goto('http://127.0.0.1:'+server.address().port);
  await page.evaluate(()=>{usuarioActual={id:'admin',es_admin:true};document.getElementById('seccionLogin').classList.add('hidden');document.getElementById('seccionAdmin').classList.remove('hidden');cambiarSubseccionAdmin('doctrina');});
  await page.locator('#doctrinaBibliotecaPanel > summary').click();await page.locator('#doctrinaEstado').filter({hasText:'1 originales'}).waitFor();
+ // Una biblioteca amplia no debe repetir identificadores ni dejar selectores anónimos.
+ const etiquetaChequeo=await page.evaluate(()=>{
+  const actual=bibliotecaDoctrina;
+  try{
+   bibliotecaDoctrina={...actual,documentos:Array.from({length:36},(_,i)=>({
+    ...actual.documentos[0],
+    id:'documento-qa-'+i,
+    version_id:'00000000-0000-4000-8000-'+String(i+1).padStart(12,'0'),
+    titulo:'Original de prueba '+(i+1)
+   }))};
+   renderizarBibliotecaDoctrina();
+   const selects=[...document.querySelectorAll('#doctrinaDocumentos .doctrina-clasificacion select')];
+   const todos=selects.every(sel=>sel.id&&sel.name&&sel.labels?.length===1&&sel.labels[0].control===sel);
+   return {cantidad:selects.length,unicos:new Set(selects.map(sel=>sel.id)).size,
+    nombresUnicos:new Set(selects.map(sel=>sel.name)).size,todos};
+  }finally{bibliotecaDoctrina=actual;renderizarBibliotecaDoctrina();}
+ });
+ assert.deepEqual(etiquetaChequeo,{cantidad:36,unicos:36,nombresUnicos:36,todos:true});
+ assert.ok(await page.locator('#doctrinaBibliotecaPanel #doctrinaActualizar').count());
+ assert.equal(await page.locator('.doctrina-cabecera #doctrinaActualizar').count(),0);
  await page.getByRole('button',{name:'Revisión',exact:true}).click();await page.locator('#doctrinaRevisionNota').fill('Original comprobado');fail=true;
  await page.getByRole('button',{name:'Aprobar como vigente'}).click();await page.locator('#doctrinaRevisionEstado').filter({hasText:'Error de prueba'}).waitFor();assert.equal(await page.locator('#doctrinaRevisionNota').inputValue(),'Original comprobado');fail=false;
  await page.getByRole('button',{name:'Aprobar como vigente'}).click();await page.locator('#doctrinaRevisionDialogo').waitFor({state:'hidden'});await page.locator('.doctrina-documento').filter({hasText:'vigente'}).waitFor();
@@ -53,7 +73,18 @@ try{
  await page.getByLabel('Mostrar eliminados',{exact:true}).check();await page.getByRole('button',{name:'Restaurar',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Descargar original'}).count(),0);
  await page.getByRole('button',{name:'Restaurar',exact:true}).click();await page.getByRole('button',{name:'Revisión',exact:true}).waitFor();
  for(const viewport of [{width:1440,height:950},{width:390,height:844}]){
-  await page.setViewportSize(viewport);await page.getByRole('button',{name:'Revisión',exact:true}).click();
+  await page.setViewportSize(viewport);
+  const conversacionLayout=await page.locator('.doctrina-chat').evaluate(chat=>{
+   const form=chat.querySelector('#doctrinaAgenteFormulario');
+   const c=chat.getBoundingClientRect(),f=form.getBoundingClientRect();
+   const border=parseFloat(getComputedStyle(form).borderLeftWidth);
+   return {dentro:f.left>=c.left-1&&f.right<=c.right+1,
+     bordeSimple:border===0,
+     sinDesborde:chat.scrollWidth<=chat.clientWidth+2};
+  });
+  assert.ok(conversacionLayout.dentro&&conversacionLayout.bordeSimple&&conversacionLayout.sinDesborde,
+   'Compositor no debe desbordar ni dibujar doble borde en '+viewport.width+'px: '+JSON.stringify(conversacionLayout));
+  await page.getByRole('button',{name:'Revisión',exact:true}).click();
   assert.ok(await page.locator('#doctrinaRevisionDialogo').isVisible());
   const colors=await page.locator('#adminSeccionDoctrina label').first().evaluate(e=>({fg:getComputedStyle(e).color,bg:getComputedStyle(e.closest('section')).backgroundColor}));
   const luminance=rgb=>rgb.match(/\d+/g).map(Number).map(v=>{const c=v/255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4;}).reduce((sum,c,i)=>sum+c*[.2126,.7152,.0722][i],0);
@@ -77,12 +108,34 @@ try{
  await page.getByRole('button',{name:'Aprobar extracción revisada',exact:true}).click();await page.locator('#doctrinaTextoEstado').filter({hasText:'aprobado'}).waitFor();assert.ok(await page.locator('#doctrinaTextoDialogo').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
  await page.getByRole('button',{name:'Cerrar texto',exact:true}).click();await page.locator('#doctrinaIndexacionPanel > summary').click();await page.locator('#doctrinaConsultaTexto').fill('acacia');await page.getByRole('button',{name:'Buscar con referencias',exact:true}).click();await page.locator('#doctrinaBusquedaResultados').filter({hasText:'página 1'}).waitFor();
  for(const viewport of [{width:1440,height:950},{width:390,height:844}]){
-  await page.setViewportSize(viewport);await page.locator('#doctrinaAgentePregunta').fill('¿Qué representa la acacia?');await page.locator('#doctrinaAgenteConsultar').click();await page.locator('#doctrinaAgenteResultado').filter({hasText:'La acacia'}).waitFor();
-  assert.match(await page.locator('#doctrinaAgenteResultado').innerText(),/F1/);assert.ok(await page.locator('#doctrinaAgenteFormulario').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
-  await page.locator('#doctrinaAgenteResultado summary').click();await page.getByRole('button',{name:'Ver fuente',exact:true}).click();await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=1'));await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();
+  await page.setViewportSize(viewport);
+  const previos=await page.locator('#doctrinaConversacion .doctrina-mensaje-asistente').count();
+  await page.locator('#doctrinaAgentePregunta').fill('¿Qué representa la acacia?');
+  await page.locator('#doctrinaAgenteConsultar').click();
+  const respuestaActual=page.locator('#doctrinaConversacion .doctrina-mensaje-asistente').nth(previos);
+  await respuestaActual.filter({hasText:'La acacia'}).waitFor();
+  assert.match(await respuestaActual.innerText(),/F1/);
+  assert.ok(await page.locator('#doctrinaAgenteFormulario').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
+  await respuestaActual.locator('summary').click();await respuestaActual.getByRole('button',{name:'Ver fuente',exact:true}).click();await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=1'));await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();
  }
  await page.getByText('Autorizaciones documentales para Groq',{exact:true}).click();await page.getByRole('button',{name:'Revisar autorizaciones',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).click();await page.getByRole('button',{name:'Revocar permiso',exact:true}).waitFor();assert.match(await page.locator('#doctrinaGroqPermisos').innerText(),/Autorizado para Groq/);await page.getByRole('button',{name:'Revocar permiso',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).waitFor();
- await page.setViewportSize({width:1440,height:950});await page.getByRole('button',{name:'Mi perfil',exact:true}).click();await page.locator('#perfilSuperadminSolicitar').waitFor({state:'visible'});
+ await page.setViewportSize({width:1440,height:950});
+ const footer=await page.locator('#seccionAdmin .admin-side-footer').evaluate(el=>{
+  const perfil=el.querySelector('.admin-perfil-btn'),salida=el.querySelector('.admin-logout');
+  const pb=perfil.getBoundingClientRect(),sb=salida.getBoundingClientRect();
+  const cs=getComputedStyle(perfil);
+  const rgb=v=>v.match(/\d+/g).slice(0,3).map(Number).map(x=>x/255);
+  const luminance=v=>rgb(v).map(x=>x<=.04045?x/12.92:((x+.055)/1.055)**2.4).reduce((sum,c,i)=>sum+c*[.2126,.7152,.0722][i],0);
+  const a=luminance(cs.color),b=luminance(cs.backgroundColor);
+  return {sameWidth:Math.abs(pb.width-sb.width)<1,left:Math.abs(pb.left-sb.left)<1,contrast:(Math.max(a,b)+.05)/(Math.min(a,b)+.05),within:pb.right<=el.getBoundingClientRect().right+1};
+ });
+ assert.ok(footer.sameWidth&&footer.left&&footer.contrast>=4.5&&footer.within,'Acciones de cuenta legibles y alineadas: '+JSON.stringify(footer));
+ const gap=await page.locator('#seccionAdmin .admin-links-bottom').evaluate(el=>({
+  label:el.querySelector('.admin-menu-label')?.textContent?.trim(),
+  separated:getComputedStyle(el).borderTopWidth!=='0px'
+ }));
+ assert.equal(gap.label,'Herramientas externas');assert.ok(gap.separated);
+ await page.getByRole('button',{name:'Mi perfil',exact:true}).click();await page.locator('#perfilSuperadminSolicitar').waitFor({state:'visible'});
  await page.locator('#perfilSuperadminNombre').fill('Nombre Actualizado');await page.locator('#perfilSuperadminEmail').fill('nuevo@example.invalid');await page.locator('#perfilSuperadminSolicitar').click();await page.locator('#perfilSuperadminEstado').filter({hasText:'Código enviado'}).waitFor();assert.equal(await page.locator('#perfilSuperadminEmail').isDisabled(),true);
  await page.locator('#perfilSuperadminCodigo').fill('12345678');await page.locator('#perfilSuperadminConfirmar').click();await page.locator('#perfilSuperadminEstado').filter({hasText:'Perfil actualizado'}).waitFor();
  await page.setViewportSize({width:390,height:844});assert.ok(await page.locator('#perfilSuperadminDialogo').evaluate(e=>e.scrollWidth<=e.clientWidth+1));await page.locator('#perfilSuperadminCerrar').click();assert.equal(await page.locator('#perfilSuperadminCodigo').inputValue(),'');
