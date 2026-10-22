@@ -19,8 +19,14 @@ test('menú de Superadmin conserva los grupos y el orden solicitado',()=>{
  const esperado=[['tabNavResumen','tabNavTenidas'],['tabNavDoctrina','tabNavAsignaciones','tabNavCargar','tabNavEditorDoctrina','tabNavGestionTrabajos','tabNavUsuarios'],['tabNavMuroGeneral','tabNavMetricas','tabNavAccesos','tabNavPresencial']];
  const bloques=sidebar.split('<div class="admin-menu-group">').slice(1);
  assert.deepEqual(bloques.map(b=>[...b.matchAll(/id="(tabNav\w+)"/g)].map(m=>m[1])),esperado);
- const pie=html.slice(html.indexOf('<div class="admin-side-footer">'),html.indexOf('<div class="admin-links-bottom"'));
- assert.ok(pie.indexOf('Mi perfil')<pie.indexOf('Cerrar sesión'));
+ const inicio=html.search(/<div class="admin-side-footer"(?:\s[^>]*)?>/);
+ const fin=html.indexOf('<div class="admin-links-bottom"',inicio);
+ assert.ok(inicio>=0 && fin>inicio);
+ const pie=html.slice(inicio,fin);
+ assert.ok(pie.indexOf('Mi perfil')>=0 && pie.indexOf('Mi perfil')<pie.indexOf('Cerrar sesión'));
+ assert.match(pie,/class="admin-perfil-btn"/);
+ assert.match(pie,/class="admin-logout"/);
+ assert.match(pie,/aria-label="Cuenta de Superadmin"/);
 });
 
 test('Herramientas externas comienza con acceso directo a ChatGPT',()=>{
