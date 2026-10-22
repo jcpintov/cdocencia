@@ -19,6 +19,7 @@ export async function verificarCasoDoctrina() {
  }});
  if(!informe.generativo) throw Error('CASO_QA_SIN_RESPUESTA: '+informe.aviso);
  const texto = informe.secciones.map(s=>s.texto).join('\n');
+ console.log('DOCTRINA_CASO_DIAGNOSTICO '+JSON.stringify({generativo:informe.generativo,deber:/deber|obligaci[oó]n|incumplimiento/i.test(texto),competencia:/tribunal|[oó]rgano jurisdiccional/i.test(texto),clases:informe.fuentes.map(f=>f.clase)}));
  if(!/deber|obligaci[oó]n|incumplimiento/i.test(texto) || !/tribunal|[oó]rgano jurisdiccional/i.test(texto) ||
     !informe.fuentes.some(f=>f.clase==='normativa')) throw Error('CASO_QA_FUNDAMENTO_INCOMPLETO');
  console.log('DOCTRINA_CASO_REAL_OK generativo=true fundamento_normativo=true deber=true competencia=true referencias='+informe.fuentes.length);
