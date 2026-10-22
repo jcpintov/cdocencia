@@ -12,7 +12,11 @@ export async function verificarCasoDoctrina() {
   if(error) throw Error('CASO_QA_RPC_' + (error.code || 'error'));
   return data;
  };
- const informe = await consultarGroqDoctrina({pregunta:'que pasa si no asisto por varios meses a la logia y no me excuso',antecedentes:''},{rpc});
+ const informe = await consultarGroqDoctrina({pregunta:'que pasa si no asisto por varios meses a la logia y no me excuso',antecedentes:''},{rpc,fetchImpl:async(url,op)=>{
+  const r=await fetch(url,op);
+  if(!r.ok){const raw=await r.clone().json().catch(()=>({}));const mensaje=String(raw.error?.message||'');console.log('CASO_QA_PROVEEDOR '+JSON.stringify({status:r.status,codigo:raw.error?.code,limites:mensaje.match(/(?:Limit|Used|Requested)[: ]+[0-9]+/gi),reintento:r.headers.get('retry-after')}));}
+  return r;
+ }});
  if(!informe.generativo) throw Error('CASO_QA_SIN_RESPUESTA: '+informe.aviso);
  const texto = informe.secciones.map(s=>s.texto).join('\n');
  if(!/deber|obligaci[oó]n|incumplimiento/i.test(texto) || !/tribunal|[oó]rgano jurisdiccional/i.test(texto) ||

@@ -2,7 +2,7 @@
 import {consultarGroqDoctrina,MODELO_GROQ} from '../lib/groq-doctrina.js';
 import {verificarCasoDoctrina} from './verificar-caso-doctrina.mjs';
 import {buscarBibliotecaConGroq} from '../lib/busqueda-groq.js';
-if(process.env.GROQ_PRUEBA_SINTETICA!=='true'&&process.env.VERCEL_ENV!=='production'){
+if(process.env.DOCTRINA_QA_CASO==='true'||(process.env.GROQ_PRUEBA_SINTETICA!=='true'&&process.env.VERCEL_ENV!=='production')){
  console.log('GROQ_SYNTHETIC_CHECK_SKIP');
 }else{
  const fuente={titulo:'Documento sintético de comprobación',clase:'docencia',version_id:'sintetico',version:1,pagina:1,sha256:'sintetico',fragmento:'Ejercicio ficticio: el círculo de estudio inicia a las 20:00. Su duración prevista es de sesenta minutos. Este texto no contiene disposiciones masónicas ni datos personales.'};
