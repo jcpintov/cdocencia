@@ -2752,3 +2752,12 @@ body.theme-nocturno #seccionDocencia .nav-item-title{color:#f0f4f8!important}
   #adminSeccionDoctrina .doctrina-filtros { flex-direction:column; align-items:stretch; }
   #adminSeccionDoctrina .doctrina-panel-contenido { padding:0 14px 14px; }
 }
+
+/* Conversación privada: una entrada y un hilo legible, sin instrucciones repetidas. */
+#adminSeccionDoctrina .doctrina-conversacion:empty { display:none; }
+#adminSeccionDoctrina .doctrina-turno { margin:0 0 28px; scroll-margin-top:24px; }
+#adminSeccionDoctrina .doctrina-mensaje-usuario { margin:0 0 18px auto; max-width:90%; padding:14px 18px; background:#eaf1f5; border-radius:12px 12px 3px 12px; white-space:pre-wrap; overflow-wrap:anywhere; }
+#adminSeccionDoctrina .doctrina-mensaje-asistente { overflow-wrap:anywhere; }
+#adminSeccionDoctrina .doctrina-mensaje-asistente .doctrina-respuesta { border-top:0; padding-top:0; }
+#adminSeccionDoctrina .doctrina-envio { justify-content:space-between; }
+#adminSeccionDoctrina #doctrinaNuevaConversacion { font-size:.85rem; min-width:0; }

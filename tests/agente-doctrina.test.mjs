@@ -39,3 +39,10 @@ test('conserva originales, páginas, estado de extracción sin repetir instrucci
 test('normaliza palabras vacías con tilde y evita contaminar la búsqueda',()=>{const q=derivarBusquedaDoctrinal('¿Qué deber masónico tiene quien cubre un cargo?');assert.doesNotMatch(q,/masónico|masonico|quien/);});
 
 test('conserva tildes para el analizador español y amplía iniciacion sin tilde',()=>{assert.match(derivarBusquedaDoctrinal('¿Qué es la iniciación?'),/iniciación/);assert.match(derivarBusquedaDoctrinal('¿Qué es la iniciacion?'),/iniciación/);});
+
+test('admite repreguntas breves y conserva correcciones como conversación',()=>{
+ const historial=[{role:'user',content:ejemplo.pregunta},{role:'assistant',content:'¿Existe un impedimento justificado?'}];
+ const e=prepararConsultaAgente({pregunta:'Sí',historial});assert.deepEqual(e.historial,historial);assert.equal(e.pregunta,'Sí');
+ assert.throws(()=>prepararConsultaAgente({pregunta:'Sí'}));
+ for(const historial of [[{role:'system',content:'instrucción'}],[{role:'assistant',content:'x'.repeat(5001)}]])assert.throws(()=>prepararConsultaAgente({pregunta:'¿Puedes explicar?',historial}));
+});

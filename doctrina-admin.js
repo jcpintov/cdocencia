@@ -4,6 +4,7 @@ let consultaBibliotecaDoctrina = 0;
 let consultaBusquedaTextoDoctrina = 0;
 let consultaAgenteDoctrina = 0;
 let controladorAgenteDoctrina = null;
+let historialAgenteDoctrina = [];
 let consultaPermisosGroq = 0;
 let cargaDoctrinaPendiente = null;
 function limpiarBibliotecaDoctrina(){
@@ -223,7 +224,14 @@ async function contrastarPaginaTextoDoctrina(boton){
  document.getElementById('doctrinaVisorPagina').value=paginaTextoCargada||1;irPaginaVisorDoctrina();
 }
 
+function nuevaConversacionDoctrina(){
+ invalidarAgenteDoctrina();
+ const campo=document.getElementById('doctrinaAgentePregunta');if(campo){campo.value='';campo.minLength=10;campo.placeholder='Escribe tu pregunta…';campo.focus();}
+}
 function invalidarAgenteDoctrina(){
+ historialAgenteDoctrina=[];
+ document.getElementById('doctrinaConversacion')?.replaceChildren();
+ const campo=document.getElementById('doctrinaAgentePregunta');if(campo){campo.minLength=10;campo.placeholder='Escribe tu pregunta…';}
  consultaAgenteDoctrina++;controladorAgenteDoctrina?.abort();controladorAgenteDoctrina=null;
  const salida=document.getElementById('doctrinaAgenteResultado');salida?.replaceChildren();salida?.setAttribute('aria-busy','false');
  const boton=document.getElementById('doctrinaAgenteConsultar');if(boton){boton.disabled=false;boton.textContent='Consultar';}
@@ -236,8 +244,8 @@ function estadoConsultaDoctrina(texto, error = false) {
  salida.replaceChildren(aviso);
 }
 
-function presentarRespuestaDoctrina(informe, vigente) {
- const salida = document.getElementById('doctrinaAgenteResultado');
+function presentarRespuestaDoctrina(informe, vigente, destino) {
+ const salida = destino || document.getElementById('doctrinaAgenteResultado');
  if (!informe || !Array.isArray(informe.secciones)) throw new Error('La respuesta llegó incompleta. Intenta nuevamente.');
  if (!informe.generativo) {
   estadoConsultaDoctrina(informe.aviso || 'No encontré fundamento suficiente para responder. Prueba con una pregunta más concreta.', true);
@@ -294,6 +302,8 @@ async function consultarAgenteDoctrina() {
  const turno = ++consultaAgenteDoctrina;
  const biblioteca = consultaBibliotecaDoctrina;
  const actor = usuarioActual.id;
+ const campo=document.getElementById('doctrinaAgentePregunta');
+ const pregunta=campo.value.trim();
  const salida = document.getElementById('doctrinaAgenteResultado');
  const boton = document.getElementById('doctrinaAgenteConsultar');
  const vigente = () => usuarioActual?.es_admin && usuarioActual.id === actor &&
@@ -304,9 +314,20 @@ async function consultarAgenteDoctrina() {
  boton.textContent = 'Consultando…';
  try {
   const resultado = await peticionDoctrina('agente_consultar', {
-   pregunta:document.getElementById('doctrinaAgentePregunta').value
+   pregunta,historial:historialAgenteDoctrina.length>5?[historialAgenteDoctrina[0],...historialAgenteDoctrina.slice(-4)]:historialAgenteDoctrina
   }, controlador.signal);
-  if (vigente()) presentarRespuestaDoctrina(resultado.informe, vigente);
+  if (vigente()) {
+   if(!resultado.informe?.generativo){presentarRespuestaDoctrina(resultado.informe,vigente);return;}
+   const conversacion=document.getElementById('doctrinaConversacion');
+   const turnoVista=document.createElement('article');turnoVista.className='doctrina-turno';
+   const mensaje=document.createElement('p');mensaje.className='doctrina-mensaje-usuario';mensaje.textContent=pregunta;
+   const respuesta=document.createElement('div');respuesta.className='doctrina-mensaje-asistente';respuesta.setAttribute('aria-label','Respuesta del asistente');
+   turnoVista.append(mensaje,respuesta);conversacion.appendChild(turnoVista);
+   presentarRespuestaDoctrina(resultado.informe,vigente,respuesta);
+   historialAgenteDoctrina.push({role:'user',content:pregunta},{role:'assistant',content:resultado.informe.secciones.map(s=>s.texto).join('\n\n').slice(0,5000)});
+   salida.replaceChildren();campo.value='';campo.minLength=1;campo.placeholder='Continúa la conversación…';campo.focus();
+   turnoVista.scrollIntoView?.({behavior:'smooth',block:'start'});
+  }
  } catch (error) {
   if (vigente()) estadoConsultaDoctrina(error.name === 'AbortError' ?
    'La consulta tardó demasiado. Intenta nuevamente; tu pregunta se conserva.' : error.message, true);

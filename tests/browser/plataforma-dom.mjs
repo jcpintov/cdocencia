@@ -29,9 +29,15 @@ function entorno(){const dom=new JSDOM(html,{url:'https://fixture.example.invali
  const informe={generativo:true,cobertura:{vigentes:3,consultables:1,pendientes:2},secciones:[{titulo:'Conclusión condicionada',texto:'<img src=x onerror=alert(1)>'}],fuentes:[{referencia:'F1',titulo:'<script>privado</script>',clase:'doctrina',pagina:2,version:1,sha256:'abc'}]};
  w.fetch=async()=>({ok:true,json:async()=>({ok:true,informe})});
  w.document.getElementById('doctrinaAgentePregunta').value='¿Qué representa la acacia?';await w.consultarAgenteDoctrina();
- const salida=w.document.getElementById('doctrinaAgenteResultado');assert.match(salida.textContent,/F1/);assert.match(salida.textContent,/página 2/);assert.equal(salida.querySelectorAll('script,img').length,0);assert.equal(salida.getAttribute('aria-busy'),'false');
+ const salida=w.document.getElementById('doctrinaAgenteResultado'),hilo=w.document.getElementById('doctrinaConversacion');assert.match(hilo.textContent,/F1/);assert.match(hilo.textContent,/página 2/);assert.equal(hilo.querySelectorAll('script,img').length,0);assert.equal(salida.getAttribute('aria-busy'),'false');
+ assert.equal(w.document.getElementById('doctrinaAgentePregunta').value,'');
+ let repregunta;
+ w.fetch=async(_u,req)=>{repregunta=JSON.parse(req.body);return {ok:true,json:async()=>({ok:true,informe})};};
+ w.document.getElementById('doctrinaAgentePregunta').value='Sí';await w.consultarAgenteDoctrina();
+ assert.equal(repregunta.pregunta,'Sí');assert.equal(repregunta.historial.length,2);assert.match(repregunta.historial[0].content,/acacia/);assert.equal(hilo.querySelectorAll('.doctrina-turno').length,2);
+ w.document.getElementById('doctrinaAgentePregunta').value='Aclaro un antecedente';
  w.fetch=()=>new Promise(r=>{resolver=r;});const pendiente=w.consultarAgenteDoctrina();await new Promise(r=>setTimeout(r,0));w.limpiarBibliotecaDoctrina();w.usuarioActual=null;resolver({ok:true,json:async()=>({ok:true,informe})});await pendiente;
- assert.equal(salida.textContent,'');assert.equal(w.document.getElementById('doctrinaAgentePregunta').value,'');assert.equal(w.document.getElementById('doctrinaAgenteConsultar').disabled,false);dom.window.close();
+ assert.equal(salida.textContent,'');assert.equal(hilo.textContent,'');assert.equal(w.document.getElementById('doctrinaAgentePregunta').value,'');assert.equal(w.document.getElementById('doctrinaAgenteConsultar').disabled,false);dom.window.close();
 }
 {
  const {dom,w}=entorno();

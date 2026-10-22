@@ -25,4 +25,9 @@ export async function verificarCasoDoctrina() {
     !informe.fuentes.some(f=>f.clase==='normativa')) throw Error('CASO_QA_FUNDAMENTO_INCOMPLETO');
  if(!/venerable maestro/i.test(texto) || !/orden|desobedi/i.test(texto) || !/colabora|ayuda|cooper|asistencia/i.test(texto) || !informe.fuentes.some(f=>f.version_id==='adce9f1f-c193-42f1-83fa-9600a9154a29' && f.pagina===85)) throw Error('CASO_QA_DIRECCION_TENIDA_INCOMPLETA');
  console.log('DOCTRINA_CASO_REAL_OK generativo=true fundamento_normativo=true deber=true competencia=true referencias='+informe.fuentes.length);
+ const segunda=await consultarGroqDoctrina({pregunta:'Aclaro: el hermano manifestó un impedimento físico para desempeñar ese cargo. ¿Cambia la respuesta?',antecedentes:'',historial:[{role:'user',content:'que pasa si un hermano se niega a cubrir un cargo en el templo cuando se le solicita reiteradamente hacerlo'},{role:'assistant',content:texto.slice(0,5000)}]},{rpc});
+ const seguimiento=segunda.secciones.map(s=>s.texto).join(' ');
+ if(!segunda.generativo || !/impedimento|f[ií]sic|justific/i.test(seguimiento))throw Error('CASO_QA_CONVERSACION_INSUFICIENTE');
+ console.log('DOCTRINA_CONVERSACION_REAL_OK correccion_contextual=true');
+
 }
