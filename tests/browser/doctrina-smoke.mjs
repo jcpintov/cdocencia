@@ -108,9 +108,15 @@ try{
  await page.getByRole('button',{name:'Aprobar extracción revisada',exact:true}).click();await page.locator('#doctrinaTextoEstado').filter({hasText:'aprobado'}).waitFor();assert.ok(await page.locator('#doctrinaTextoDialogo').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
  await page.getByRole('button',{name:'Cerrar texto',exact:true}).click();await page.locator('#doctrinaIndexacionPanel > summary').click();await page.locator('#doctrinaConsultaTexto').fill('acacia');await page.getByRole('button',{name:'Buscar con referencias',exact:true}).click();await page.locator('#doctrinaBusquedaResultados').filter({hasText:'página 1'}).waitFor();
  for(const viewport of [{width:1440,height:950},{width:390,height:844}]){
-  await page.setViewportSize(viewport);await page.locator('#doctrinaAgentePregunta').fill('¿Qué representa la acacia?');await page.locator('#doctrinaAgenteConsultar').click();await page.locator('#doctrinaConversacion .doctrina-mensaje-asistente').filter({hasText:'La acacia'}).last().waitFor();
-  assert.match(await page.locator('#doctrinaConversacion .doctrina-mensaje-asistente').last().innerText(),/F1/);assert.ok(await page.locator('#doctrinaAgenteFormulario').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
-  await page.locator('#doctrinaConversacion .doctrina-mensaje-asistente').last().locator('summary').click();await page.getByRole('button',{name:'Ver fuente',exact:true}).click();await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=1'));await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();
+  await page.setViewportSize(viewport);
+  const previos=await page.locator('#doctrinaConversacion .doctrina-mensaje-asistente').count();
+  await page.locator('#doctrinaAgentePregunta').fill('¿Qué representa la acacia?');
+  await page.locator('#doctrinaAgenteConsultar').click();
+  const respuestaActual=page.locator('#doctrinaConversacion .doctrina-mensaje-asistente').nth(previos);
+  await respuestaActual.filter({hasText:'La acacia'}).waitFor();
+  assert.match(await respuestaActual.innerText(),/F1/);
+  assert.ok(await page.locator('#doctrinaAgenteFormulario').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
+  await respuestaActual.locator('summary').click();await page.getByRole('button',{name:'Ver fuente',exact:true}).click();await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=1'));await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();
  }
  await page.getByText('Autorizaciones documentales para Groq',{exact:true}).click();await page.getByRole('button',{name:'Revisar autorizaciones',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).click();await page.getByRole('button',{name:'Revocar permiso',exact:true}).waitFor();assert.match(await page.locator('#doctrinaGroqPermisos').innerText(),/Autorizado para Groq/);await page.getByRole('button',{name:'Revocar permiso',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).waitFor();
  await page.setViewportSize({width:1440,height:950});
