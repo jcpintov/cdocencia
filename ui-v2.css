@@ -2788,3 +2788,120 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
   }
   #seccionAdmin .admin-links-bottom{margin-top:14px}
 }
+
+/* Tarjetas KPI del Resumen: enlace contextual, no solo un bloque estadístico. */
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:7px;
+  box-sizing:border-box;
+  width:100%;
+  height:100%;
+  appearance:none;
+  border:1px solid #b7c9d6;
+  border-radius:10px;
+  background:#f7f9fb;
+  color:#193c53;
+  font-family:var(--font-ui,Arial,sans-serif);
+  text-align:left;
+  cursor:pointer;
+  transition:background-color .15s ease,border-color .15s ease,box-shadow .15s ease;
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion:hover {
+  background:#ecf3f7;
+  border-color:#61879f;
+  box-shadow:0 3px 14px rgba(16,51,74,.1);
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion:focus-visible {
+  outline:3px solid #947137;
+  outline-offset:3px;
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion:active {
+  background:#e0edf3;
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion .admin-kpi-ir {
+  margin-top:auto;
+  color:#245574;
+  font-size:.76rem;
+  font-weight:700;
+  line-height:1.4;
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion .admin-kpi-descripcion {
+  color:#52687a;
+  font-size:.72rem;
+  line-height:1.4;
+}
+#adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion strong{
+  color:#193c53;
+  font-variant-numeric:tabular-nums;
+}
+#adminSeccionAsignaciones .asignacion-lista-cabecera{
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px 18px;
+}
+#adminSeccionAsignaciones .asignacion-lista-cabecera>label{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+  font-size:.87rem;
+}
+#adminSeccionAsignaciones #asignacionesEstadoFiltro{
+  min-height:42px;
+  width:auto;
+  max-width:100%;
+  font-size:.9rem;
+}
+#adminSeccionMuroGeneral .muro-admin-interacciones{
+  margin-top:30px;
+  padding-top:22px;
+  border-top:1px solid #c8d5df;
+}
+#adminSeccionMuroGeneral .muro-admin-interacciones h3{
+  margin:0 0 10px;
+  color:#193c53;
+  font-size:1.1rem;
+}
+#adminSeccionMuroGeneral .muro-admin-interacciones-lista{
+  display:grid;
+  gap:12px;
+  margin-top:14px;
+}
+#adminSeccionMuroGeneral .muro-admin-interaccion,
+#adminSeccionMuroGeneral .reflexion-item{
+  box-sizing:border-box;
+  overflow-wrap:anywhere;
+  padding:14px 16px;
+  border:1px solid #d8e3eb;
+  border-left:3px solid #af8e50;
+  border-radius:6px;
+  margin:0 0 10px;
+}
+#adminSeccionMuroGeneral .muro-admin-interaccion-cabecera{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:5px 14px;
+  color:#193c53;
+}
+#adminSeccionMuroGeneral .muro-admin-interaccion-cabecera time{
+  font-size:.8rem;
+  color:#5b6d7c;
+}
+#adminSeccionMuroGeneral :is(.muro-admin-cita,.muro-admin-interaccion .muro-admin-cita,.muro-admin-cita){
+  white-space:pre-line;
+  line-height:1.6;
+  font-style:italic;
+  margin:9px 0;
+}
+@media(max-width:600px){
+  #adminSeccionAsignaciones .asignacion-lista-cabecera{align-items:stretch}
+  #adminSeccionAsignaciones .asignacion-lista-cabecera>label{width:100%}
+  #adminSeccionAsignaciones #asignacionesEstadoFiltro{width:100%}
+}
