@@ -61,4 +61,19 @@ function entorno(){const dom=new JSDOM(html,{url:'https://fixture.example.invali
  assert.equal(w.document.getElementById('doctrinaAgenteConsultar').disabled,false);
  dom.window.close();
 }
+{
+ const {dom,w}=entorno();w.eval(await readFile('doctrina-admin.js','utf8'));
+ const form=w.document.getElementById('doctrinaAgenteFormulario');assert.deepEqual([...form.querySelectorAll('button')].map(b=>b.id),['doctrinaAgenteConsultar','doctrinaNuevaConversacion']);
+ const hilo=w.document.querySelector('.doctrina-hilo');assert.ok(hilo.contains(w.document.getElementById('doctrinaAgenteResultado')));assert.ok(hilo.compareDocumentPosition(form)&w.Node.DOCUMENT_POSITION_FOLLOWING);
+ let resolver;w.fetch=()=>new Promise(r=>resolver=r);w.document.getElementById('doctrinaAgentePregunta').value='¿Qué corresponde hacer en este caso?';const solicitud=w.consultarAgenteDoctrina();await new Promise(r=>setTimeout(r,0));
+ assert.equal(w.document.querySelectorAll('.doctrina-turno[data-estado="pendiente"]').length,1);assert.match(hilo.textContent,/Qué corresponde/);
+ resolver({ok:true,json:async()=>({ok:true,informe:{generativo:true,secciones:[{texto:'Respuesta de prueba [F1].'}],fuentes:[]}})});await solicitud;assert.equal(w.document.querySelectorAll('.doctrina-turno').length,1);assert.match(hilo.textContent,/Respuesta de prueba/);assert.equal(w.document.getElementById('doctrinaAgenteResultado').textContent,'');dom.window.close();
+}
+{
+ const {dom,w}=entorno();w.eval(await readFile('doctrina-admin.js','utf8'));let envio;
+ const doc={id:'d',titulo:'Documento de prueba',clase:'docencia',estado:'vigente',version_id:'v',sha256:'abc'};
+ w.fetch=async(_u,op)=>{const b=JSON.parse(op.body);if(b.action==='clasificar'){envio=b;doc.clase=b.clase;}return {ok:true,json:async()=>b.action==='listar'?{ok:true,documentos:[doc],inventario:[]}:{ok:true}};};
+ await w.cargarBibliotecaDoctrina();const editor=w.document.querySelector('.doctrina-clasificacion');const selector=editor.querySelector('select');selector.value='doctrina';selector.dispatchEvent(new w.Event('change'));await editor.onsubmit({preventDefault(){}});
+ assert.equal(envio.clase,'doctrina');assert.equal(envio.clase_actual,'docencia');assert.equal(w.document.querySelector('.doctrina-clasificacion select').value,'doctrina');assert.match(w.document.getElementById('doctrinaEstado').textContent,/Categoría actualizada/);dom.window.close();
+}
 console.log('PASS DOM: perfil con código previo, datos bloqueados hasta confirmar, revisión por página correcta, resultados seguros y limpieza de sesión.');

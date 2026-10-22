@@ -63,3 +63,9 @@ test('autorización global exige confirmación y sesión privilegiada',async()=>
  assert.equal(r.code,200);assert.deepEqual(s.calls,[['rpc','texto_llm_autorizar_biblioteca']]);
  const no=setup({foreign:true});assert.equal((await no.request({action:'llm_autorizar_biblioteca',confirmacion:true})).code,403);
 });
+
+test('reclasifica mediante RPC protegida y valida categorías e identidad',async()=>{
+ const s=setup();assert.equal((await s.request({action:'clasificar',id:actor,clase:'doctrina',clase_actual:'docencia'})).code,200);assert.deepEqual(s.calls,[['rpc','clasificar']]);
+ const i=setup();assert.equal((await i.request({action:'clasificar',id:actor,clase:'inventada',clase_actual:'docencia'})).code,422);assert.equal(i.calls.length,0);
+ const f=setup({foreign:true});assert.equal((await f.request({action:'clasificar',id:actor,clase:'doctrina',clase_actual:'docencia'})).code,403);assert.equal(f.calls.length,0);
+});

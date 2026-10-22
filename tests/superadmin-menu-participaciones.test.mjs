@@ -16,7 +16,7 @@ test('menú de Superadmin conserva los grupos y el orden solicitado',()=>{
  const sidebar=html.slice(html.indexOf('<nav class="admin-menu-list"'),html.indexOf('</nav>',html.indexOf('<nav class="admin-menu-list"')));
  const grupos=[...sidebar.matchAll(/admin-menu-label">([^<]+)<\/p>/g)].map(m=>m[1]);
  assert.deepEqual(grupos,['Vista general','Gestión docente','Participación y seguimiento']);
- const esperado=[['tabNavResumen','tabNavTenidas'],['tabNavAsignaciones','tabNavCargar','tabNavDoctrina','tabNavEditorDoctrina','tabNavGestionTrabajos','tabNavUsuarios'],['tabNavMuroGeneral','tabNavMetricas','tabNavAccesos','tabNavPresencial']];
+ const esperado=[['tabNavResumen','tabNavTenidas'],['tabNavDoctrina','tabNavAsignaciones','tabNavCargar','tabNavEditorDoctrina','tabNavGestionTrabajos','tabNavUsuarios'],['tabNavMuroGeneral','tabNavMetricas','tabNavAccesos','tabNavPresencial']];
  const bloques=sidebar.split('<div class="admin-menu-group">').slice(1);
  assert.deepEqual(bloques.map(b=>[...b.matchAll(/id="(tabNav\w+)"/g)].map(m=>m[1])),esperado);
  const pie=html.slice(html.indexOf('<div class="admin-side-footer">'),html.indexOf('<div class="admin-links-bottom"'));

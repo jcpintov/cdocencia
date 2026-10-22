@@ -60,6 +60,21 @@ function renderizarBibliotecaDoctrina(){
    card.append(titulo,detalle);
    if(tipo==='documentos'&&d.extraccion_estado){const textoEstado=document.createElement('p');textoEstado.className='doctrina-extraccion-estado';textoEstado.textContent='Texto: '+d.extraccion_estado+(d.paginas?' · '+d.paginas+' páginas':'')+(d.paginas_pendientes!=null?' · '+d.paginas_pendientes+' sin revisión manual (opcional)':'');card.appendChild(textoEstado);}
    if(tipo==='documentos'&&d.version_id){
+    const editor=document.createElement('form');editor.className='doctrina-clasificacion';
+    const etiqueta=document.createElement('label');etiqueta.textContent='Categoría';
+    const selector=document.createElement('select');selector.setAttribute('aria-label','Categoría de '+d.titulo);
+    for(const [valor,texto] of Object.entries({normativa:'Reglamento',doctrina:'Doctrina',docencia:'Docencia',tradicion:'Tradición',ritual:'Ritual',bibliografia:'Bibliografía'})){const opcion=document.createElement('option');opcion.value=valor;opcion.textContent=texto;selector.appendChild(opcion);}
+    selector.value=d.clase;etiqueta.appendChild(selector);
+    const guardar=document.createElement('button');guardar.type='submit';guardar.className='btn-secondary';guardar.textContent='Guardar categoría';guardar.disabled=true;
+    const aviso=document.createElement('span');aviso.setAttribute('role','status');
+    selector.onchange=()=>{guardar.disabled=selector.value===d.clase;aviso.textContent='';};
+    editor.onsubmit=async e=>{e.preventDefault();if(guardar.disabled)return;guardar.disabled=true;selector.disabled=true;const actor=usuarioActual?.id;
+     try{await peticionDoctrina('clasificar',{id:d.version_id,clase:selector.value,clase_actual:d.clase});if(usuarioActual?.id!==actor)return;
+      d.clase=selector.value;invalidarAgenteDoctrina();await cargarBibliotecaDoctrina();document.getElementById('doctrinaEstado').textContent='Categoría actualizada. El contexto documental se regenerará con la nueva clasificación.';
+     }catch(error){if(usuarioActual?.id===actor){aviso.textContent=error.message;guardar.disabled=false;selector.disabled=false;}}
+    };
+    editor.append(etiqueta,guardar,aviso);card.appendChild(editor);
+
     const acciones=document.createElement('div');acciones.className='doctrina-acciones';
     const agregar=(texto,fn)=>{const b=document.createElement('button');b.type='button';b.className='btn-secondary';b.textContent=texto;b.addEventListener('click',()=>fn(b));acciones.appendChild(b);};
     if(d.estado==='retirado'){
@@ -263,6 +278,9 @@ function presentarRespuestaDoctrina(informe, vigente, destino) {
   }
  }
  salida.replaceChildren(respuesta);
+ const copiar=document.createElement('button');copiar.type='button';copiar.className='doctrina-copiar';copiar.textContent='Copiar respuesta';
+ copiar.onclick=async()=>{try{await navigator.clipboard.writeText(informe.secciones.map(s=>s.texto).join('\n\n'));copiar.textContent='Copiado';}catch{copiar.textContent='No se pudo copiar';}};
+ salida.appendChild(copiar);
  if (!informe.fuentes?.length) return;
  const referencias = document.createElement('details');
  const resumen = document.createElement('summary');
@@ -309,6 +327,13 @@ async function consultarAgenteDoctrina() {
  const boton = document.getElementById('doctrinaAgenteConsultar');
  const vigente = () => usuarioActual?.es_admin && usuarioActual.id === actor &&
   turno === consultaAgenteDoctrina && biblioteca === consultaBibliotecaDoctrina;
+ const conversacion=document.getElementById('doctrinaConversacion');
+ const ultimo=conversacion.lastElementChild;if(ultimo?.dataset.estado==='error' && ultimo.dataset.pregunta===pregunta)ultimo.remove();
+ const turnoVista=document.createElement('article');turnoVista.className='doctrina-turno';turnoVista.dataset.estado='pendiente';turnoVista.dataset.pregunta=pregunta;
+ const mensaje=document.createElement('p');mensaje.className='doctrina-mensaje-usuario';mensaje.textContent=pregunta;
+ const respuesta=document.createElement('div');respuesta.className='doctrina-mensaje-asistente';respuesta.setAttribute('aria-label','Respuesta del asistente');respuesta.setAttribute('aria-busy','true');
+ turnoVista.append(mensaje,respuesta);conversacion.appendChild(turnoVista);
+ turnoVista.scrollIntoView?.({behavior:'smooth',block:'nearest'});
  estadoConsultaDoctrina('Analizando el caso y contrastando la biblioteca…');
  salida.setAttribute('aria-busy', 'true');
  boton.disabled = true;
@@ -318,23 +343,19 @@ async function consultarAgenteDoctrina() {
    pregunta,fuentesPrevias:fuentesConversacionDoctrina,historial:historialAgenteDoctrina.length>5?[historialAgenteDoctrina[0],...historialAgenteDoctrina.slice(-4)]:historialAgenteDoctrina
   }, controlador.signal);
   if (vigente()) {
-   if(!resultado.informe?.generativo){presentarRespuestaDoctrina(resultado.informe,vigente);return;}
-   const conversacion=document.getElementById('doctrinaConversacion');
-   const turnoVista=document.createElement('article');turnoVista.className='doctrina-turno';
-   const mensaje=document.createElement('p');mensaje.className='doctrina-mensaje-usuario';mensaje.textContent=pregunta;
-   const respuesta=document.createElement('div');respuesta.className='doctrina-mensaje-asistente';respuesta.setAttribute('aria-label','Respuesta del asistente');
-   turnoVista.append(mensaje,respuesta);conversacion.appendChild(turnoVista);
+   if(!resultado.informe?.generativo){turnoVista.dataset.estado='error';presentarRespuestaDoctrina(resultado.informe,vigente);return;}
+   turnoVista.dataset.estado='completado';
    presentarRespuestaDoctrina(resultado.informe,()=>usuarioActual?.es_admin && usuarioActual.id===actor && biblioteca===consultaBibliotecaDoctrina,respuesta);
    historialAgenteDoctrina.push({role:'user',content:pregunta},{role:'assistant',content:resultado.informe.secciones.map(s=>s.texto).join('\n\n').slice(0,5000)});
    fuentesConversacionDoctrina=(resultado.informe.fuentes||[]).slice(0,6).map(({version_id,sha256,pagina})=>({version_id,sha256,pagina}));
-   salida.replaceChildren();campo.value='';campo.minLength=1;campo.placeholder='Continúa la conversación…';campo.focus();
-   turnoVista.scrollIntoView?.({behavior:'smooth',block:'start'});
+   salida.replaceChildren();if(campo.value.trim()===pregunta){campo.value='';campo.style.height='';}campo.minLength=1;campo.placeholder='Continúa la conversación…';campo.focus();
+   respuesta.scrollIntoView?.({behavior:'smooth',block:'nearest'});
   }
  } catch (error) {
-  if (vigente()) estadoConsultaDoctrina(error.name === 'AbortError' ?
-   'La consulta tardó demasiado. Intenta nuevamente; tu pregunta se conserva.' : error.message, true);
+  if (vigente()) {turnoVista.dataset.estado='error';estadoConsultaDoctrina(error.name === 'AbortError' ?
+   'La consulta tardó demasiado. Intenta nuevamente; tu pregunta se conserva.' : error.message, true);}
  } finally {
-  clearTimeout(espera);
+  clearTimeout(espera);respuesta.setAttribute('aria-busy','false');
   if (controladorAgenteDoctrina === controlador) controladorAgenteDoctrina = null;
   if (vigente()) {
    boton.disabled = false;
@@ -394,3 +415,7 @@ async function cargarAutorizacionesGroq(){
   if(!r.autorizaciones.length)salida.textContent='No hay originales vigentes para autorizar.';
  }catch(e){if(turno===consultaPermisosGroq&&usuarioActual?.id===actor)salida.textContent=e.message;}
 }
+
+document.getElementById('doctrinaAgentePregunta')?.addEventListener('input',evento=>{
+ const campo=evento.target;campo.style.height='auto';campo.style.height=Math.min(campo.scrollHeight,220)+'px';
+});

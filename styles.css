@@ -2761,3 +2761,27 @@ body.theme-nocturno #seccionDocencia .nav-item-title{color:#f0f4f8!important}
 #adminSeccionDoctrina .doctrina-mensaje-asistente .doctrina-respuesta { border-top:0; padding-top:0; }
 #adminSeccionDoctrina .doctrina-envio { justify-content:space-between; }
 #adminSeccionDoctrina #doctrinaNuevaConversacion { font-size:.85rem; min-width:0; }
+
+/* Hilo continuo y compositor integrado; mismo orden de acciones en móvil. */
+#adminSeccionDoctrina .doctrina-chat { padding:0; overflow:hidden; border-radius:16px; }
+#adminSeccionDoctrina .doctrina-hilo { padding:24px; max-height:65dvh; overflow:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+#adminSeccionDoctrina .doctrina-hilo:not(:has(.doctrina-turno)) { padding:0 24px; }
+#adminSeccionDoctrina .doctrina-chat form#doctrinaAgenteFormulario { padding:18px 24px; border-top:1px solid var(--doctrina-borde); background:#f5f8fa; }
+#adminSeccionDoctrina .doctrina-chat textarea { min-height:80px; max-height:220px; line-height:1.55; }
+#adminSeccionDoctrina .doctrina-mensaje-asistente .doctrina-respuesta { margin-top:0; line-height:1.7; }
+#adminSeccionDoctrina .doctrina-mensaje-usuario { color:#1c3e52; }
+#adminSeccionDoctrina .doctrina-copiar { background:transparent; color:#526778; border:0; padding:8px 0; font-size:.82rem; cursor:pointer; }
+#adminSeccionDoctrina .doctrina-mensaje-asistente>details { margin-top:8px; border-top:1px solid #e3e9ed; }
+#adminSeccionDoctrina .doctrina-mensaje-asistente>details>summary { padding:12px 0; font-size:.88rem; }
+#adminSeccionDoctrina .doctrina-clasificacion { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin:12px 0; }
+#adminSeccionDoctrina .doctrina-clasificacion label { display:flex; flex-direction:column; gap:4px; font-size:.85rem; }
+#adminSeccionDoctrina .doctrina-clasificacion select { min-width:160px; padding:8px; }
+#adminSeccionDoctrina .doctrina-clasificacion button { margin:0; padding:9px 12px; font-size:.85rem; }
+@media(max-width:640px){
+ #adminSeccionDoctrina .doctrina-hilo { padding:18px 14px; max-height:60dvh; }
+ #adminSeccionDoctrina .doctrina-chat form#doctrinaAgenteFormulario { padding:14px; }
+ #adminSeccionDoctrina .doctrina-envio { flex-direction:column; align-items:stretch; gap:8px; }
+ #adminSeccionDoctrina .doctrina-envio button { width:100%; }
+ #adminSeccionDoctrina .doctrina-mensaje-usuario { max-width:96%; }
+}
+@media(prefers-reduced-motion:reduce){#adminSeccionDoctrina .doctrina-hilo{scroll-behavior:auto;}}
