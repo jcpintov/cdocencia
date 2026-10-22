@@ -670,12 +670,12 @@
           <p class="text-instruccion">Actividad de la Cámara de Docencia; progreso sin el administrador.</p></div>
           <button class="btn-secondary" onclick="cargarResumenAdmin()">Actualizar indicadores</button></div>
         <div class="admin-kpi-grid admin-kpi-grid-resumen" aria-label="Indicadores del Resumen Ejecutivo">
-          <div class="admin-kpi"><span>Usuarios</span><strong id="kpiUsuarios">—</strong></div>
-          <div class="admin-kpi"><span>Asignados</span><strong id="kpiResumenAsignados">—</strong></div>
-          <div class="admin-kpi"><span>Entregados</span><strong id="kpiResumenEntregados">—</strong></div>
-          <div class="admin-kpi"><span>Pendientes</span><strong id="kpiResumenPendientes">—</strong></div>
-          <div class="admin-kpi"><span>Completados</span><strong id="kpiCompletados">—</strong></div>
-          <div class="admin-kpi"><span>Comentarios</span><strong id="kpiComentarios">—</strong><small class="admin-kpi-descripcion">Reflexiones · Comentarios · Respuestas</small></div>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('usuarios')" aria-label="Consultar integrantes en Usuarios y padrón"><span>Usuarios</span><strong id="kpiUsuarios">—</strong><small class="admin-kpi-ir">Ver padrón →</small></button>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('asignados')" aria-label="Consultar todos los trabajos asignados"><span>Asignados</span><strong id="kpiResumenAsignados">—</strong><small class="admin-kpi-ir">Ver asignaciones →</small></button>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('entregados')" aria-label="Consultar trabajos entregados y publicados"><span>Entregados</span><strong id="kpiResumenEntregados">—</strong><small class="admin-kpi-ir">Ver entregados →</small></button>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('pendientes')" aria-label="Consultar trabajos pendientes de publicación"><span>Pendientes</span><strong id="kpiResumenPendientes">—</strong><small class="admin-kpi-ir">Ver pendientes →</small></button>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('completados')" aria-label="Consultar trabajos completados por los maestros"><span>Completados</span><strong id="kpiCompletados">—</strong><small class="admin-kpi-ir">Ver avances →</small></button>
+          <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('comentarios')" aria-label="Consultar reflexiones, comentarios y respuestas del Muro docente"><span>Comentarios</span><strong id="kpiComentarios">—</strong><small class="admin-kpi-descripcion">Reflexiones · Comentarios · Respuestas</small><small class="admin-kpi-ir">Ver aportes →</small></button>
         </div>
         <p id="resumenAdminEstado" class="text-instruccion" role="status"></p>
         <button class="btn-primary" onclick="cambiarSubseccionAdmin('usuarios')">Administrar usuarios</button>
@@ -733,7 +733,11 @@
         <p id="asignacionesEstado" role="status" aria-live="polite"></p>
         <button type="button" id="btnAbrirNuevaAsignacion" class="btn-primary" onclick="abrirNuevaAsignacionDocente()">Asignar trabajo</button>
         <p class="asignacion-aviso">Recordatorio automático único: revisión diaria después de siete días de atraso, si la solicitud original fue enviada y el tema aún no está publicado. Todos los correos llevan copia oculta a jpintov@gmail.com.</p>
-        <div class="asignacion-lista-cabecera"><p id="asignacionesConteo"></p><label><input type="checkbox" id="asignacionesVerAnuladas" onchange="renderizarAsignacionesDocentes()"> Mostrar anuladas</label></div>
+        <div class="asignacion-lista-cabecera">
+          <p id="asignacionesConteo" role="status" aria-live="polite"></p>
+          <label for="asignacionesEstadoFiltro">Mostrar <select id="asignacionesEstadoFiltro" name="filtro_estado_asignaciones" onchange="renderizarAsignacionesDocentes()"><option value="todos">Todas las vigentes</option><option value="entregados">Entregadas / publicadas</option><option value="pendientes">Pendientes de publicación</option></select></label>
+          <label><input type="checkbox" id="asignacionesVerAnuladas" onchange="renderizarAsignacionesDocentes()"> Mostrar anuladas</label>
+        </div>
         <div class="table-responsive"><table class="metricas-table asignaciones-table"><thead><tr><th>Hermano</th><th>Tema</th><th>Asignación</th><th>Entrega · 23:30 h</th><th>Estado y correo</th><th>Acción</th></tr></thead><tbody id="asignacionesBody"><tr><td colspan="6">Abra esta sección para consultar las asignaciones.</td></tr></tbody></table></div>
       </section>
       <dialog id="dialogOpcionesAsignacion" class="correo-asignacion-dialog opciones-asignacion-dialog" aria-labelledby="opcionesAsignacionTitulo">
@@ -911,6 +915,11 @@
           <hr class="informe-hr">
           <div id="contenedorMuroGeneralAdmin"></div>
         </div>
+        <section id="muroAdminInteracciones" class="muro-admin-interacciones" aria-labelledby="muroAdminInteraccionesTitulo">
+          <h3 id="muroAdminInteraccionesTitulo">Comentarios y respuestas publicados</h3>
+          <p id="muroAdminInteraccionesEstado" role="status" aria-live="polite">Consulte el Muro para cargar las intervenciones.</p>
+          <div id="muroAdminInteraccionesLista" class="muro-admin-interacciones-lista"></div>
+        </section>
       </section>
 
       <!-- SUBSECCIÓN 5: MATRIZ DE AVANCE -->
