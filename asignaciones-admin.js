@@ -128,9 +128,19 @@
  }
  function render(){
   opciones();const cuerpo=$('asignacionesBody');cuerpo.replaceChildren();
-  const lista=datos.asignaciones.filter(a=>$('asignacionesVerAnuladas').checked||a.vigente).sort(ordenarAsignaciones);
-  $('asignacionesConteo').textContent=datos.asignaciones.filter(a=>a.vigente).length+' asignaciones vigentes · '+datos.catalogo.filter(x=>tipoUnidadDocencia(x.codigo)==='tema').length+' temas en el catálogo';
-  if(!lista.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;td.textContent='No hay asignaciones para mostrar.';tr.appendChild(td);cuerpo.appendChild(tr);}
+  const filtro=$('asignacionesEstadoFiltro')?.value||'todos';
+  const vigentes=datos.asignaciones.filter(a=>a.vigente);
+  const lista=datos.asignaciones.filter(a=>{
+   if(filtro==='entregados')return a.vigente&&estadoTrabajo(a)==='Publicado';
+   if(filtro==='pendientes')return a.vigente&&estadoTrabajo(a)!=='Publicado';
+   return a.vigente||$('asignacionesVerAnuladas').checked;
+  }).sort(ordenarAsignaciones);
+  $('asignacionesConteo').textContent=lista.length+' de '+vigentes.length+' asignaciones vigentes'+
+   (filtro==='entregados'?' · entregadas/publicadas':filtro==='pendientes'?' · pendientes de publicación':' · todas')+
+   ' · '+datos.catalogo.filter(x=>tipoUnidadDocencia(x.codigo)==='tema').length+' temas del catálogo';
+  if(!lista.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;
+   td.textContent=filtro==='entregados'?'Todavía no hay asignaciones entregadas y publicadas.':filtro==='pendientes'?'No quedan trabajos pendientes de publicación.':'No hay asignaciones para mostrar.';
+   tr.appendChild(td);cuerpo.appendChild(tr);}
   lista.forEach(a=>{
    const tr=document.createElement('tr');tr.className='asignacion-fila asignacion-'+(a.vigente?estadoTrabajo(a).toLowerCase():'anulada');if(a.id===seleccion)tr.classList.add('asignacion-seleccionada');
    const textos=[a.nombre,a.codigo+' · '+a.tema,fecha(a.fecha_asignacion),fecha(a.fecha_entrega)+' · 23:30',a.vigente?estadoTrabajo(a):'Anulada'];
@@ -246,6 +256,8 @@
   ++consulta;datosCargados=false;datos={usuarios:[],catalogo:[],asignaciones:[]};seleccion=null;vista=null;ocupado=false;
   $('dialogOpcionesAsignacion')?.close();if($('asignacionRecordatorioVista'))$('asignacionRecordatorioVista').srcdoc='';
   $('dialogCorreoAsignacion')?.close();if($('correoAsignacionVista'))$('correoAsignacionVista').srcdoc='';
+  if($('asignacionesEstadoFiltro'))$('asignacionesEstadoFiltro').value='todos';
+  if($('asignacionesVerAnuladas'))$('asignacionesVerAnuladas').checked=false;
   for(const id of ['asignacionesBody','asignacionUsuario','asignacionTema'])$(id)?.replaceChildren();
   if($('asignacionForm'))$('asignacionForm').reset();
   window.renderizarCronogramaAdmin();
