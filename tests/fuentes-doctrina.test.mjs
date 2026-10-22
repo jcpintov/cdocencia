@@ -42,3 +42,5 @@ for(const escenario of ['suficiente','insuficiente','sin_principales','error']){
 }
 
 test('un pasaje sin identificador o huella nunca queda autorizado por coincidencia de undefined',()=>{assert.equal(seleccionarFuentes([{fragmento:'Texto',clase:'normativa'}],new Map()).length,0);});
+
+test('selecciona fundamentos de deber, calificación y competencia aunque procedan del mismo libro',()=>{const candidatas=Array.from({length:6},(_,i)=>({...fuentes[4],pagina:i+1,relevancia:6-i,busquedas:[i<4?0:i-3]}));const elegidas=seleccionarFuentes(candidatas,permisos);assert.deepEqual(elegidas.slice(0,3).map(f=>f.busquedas[0]),[0,1,2]);});

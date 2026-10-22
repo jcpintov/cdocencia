@@ -1,5 +1,6 @@
 // Prueba explícita con datos inventados; no consulta la base ni imprime credenciales.
 import {consultarGroqDoctrina,MODELO_GROQ} from '../lib/groq-doctrina.js';
+import {verificarCasoDoctrina} from './verificar-caso-doctrina.mjs';
 import {buscarBibliotecaConGroq} from '../lib/busqueda-groq.js';
 if(process.env.GROQ_PRUEBA_SINTETICA!=='true'&&process.env.VERCEL_ENV!=='production'){
  console.log('GROQ_SYNTHETIC_CHECK_SKIP');
@@ -29,3 +30,5 @@ if(process.env.GROQ_PRUEBA_SINTETICA!=='true'&&process.env.VERCEL_ENV!=='product
   else console.log('GROQ_SYNTHETIC_CHECK_OK model='+r.modelo+' sections='+r.secciones.length+' references='+r.fuentes.length);
  }catch{console.error('GROQ_SYNTHETIC_CHECK_FAIL: no se pudo completar la prueba');process.exitCode=1;}
 }
+
+try { await verificarCasoDoctrina(); } catch(e) { console.error(e.message); process.exitCode=1; }

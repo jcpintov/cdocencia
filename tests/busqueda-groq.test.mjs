@@ -8,3 +8,5 @@ test('ejecuta las búsquedas decididas por Groq y conserva la pregunta original 
 for(const respuesta of [tool([]),tool(['a']),tool(['x'.repeat(251)]),tool(['uno','dos','tres','cuatro']),{choices:[{finish_reason:'stop',message:{content:'Respuesta inventada'}}]}, {choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'ejecutar_sql',arguments:'{}'}}]}}]}]){
  test('no ejecuta herramientas o argumentos inválidos: '+JSON.stringify(respuesta).slice(0,80),async()=>{const s=entorno(respuesta);await assert.rejects(buscarBibliotecaConGroq(entrada,s));assert.equal(s.consultas.length,0);});
 }
+
+test('abre una frase sin resultados en conceptos alternativos antes de detenerse',async()=>{const s=entorno(tool(['ausencia prolongada injustificada']));await buscarBibliotecaConGroq(entrada,s);assert.deepEqual(s.consultas,['ausencia prolongada injustificada','ausencia OR prolongada OR injustificada']);});

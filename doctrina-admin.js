@@ -290,7 +290,7 @@ async function consultarAgenteDoctrina() {
  controladorAgenteDoctrina?.abort();
  const controlador = new AbortController();
  controladorAgenteDoctrina = controlador;
- const espera = setTimeout(() => controlador.abort(), 65000);
+ const espera = setTimeout(() => controlador.abort(), 115000);
  const turno = ++consultaAgenteDoctrina;
  const biblioteca = consultaBibliotecaDoctrina;
  const actor = usuarioActual.id;
@@ -298,7 +298,7 @@ async function consultarAgenteDoctrina() {
  const boton = document.getElementById('doctrinaAgenteConsultar');
  const vigente = () => usuarioActual?.es_admin && usuarioActual.id === actor &&
   turno === consultaAgenteDoctrina && biblioteca === consultaBibliotecaDoctrina;
- estadoConsultaDoctrina('Buscando fundamentos en la biblioteca…');
+ estadoConsultaDoctrina('Analizando el caso y contrastando la biblioteca…');
  salida.setAttribute('aria-busy', 'true');
  boton.disabled = true;
  boton.textContent = 'Consultando…';

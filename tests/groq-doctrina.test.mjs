@@ -49,7 +49,8 @@ test('rechaza referencias inventadas, campos ausentes o sin citas en el análisi
 });
 test('no envía expediente superior al límite',async()=>{
  const larga={...entrada,pregunta:'漢'.repeat(2000),antecedentes:'漢'.repeat(3000)};
- const rpc=async(action)=>action==='texto_buscar'?{resultados:[fuente]}:action==='texto_llm_listar'?{autorizaciones:[{version_id:'v',sha256:'abc',modelo:MODELO_GROQ,autorizado:true}]}:{ok:true,id:'reserva'};
+ const fuentes=Array.from({length:6},(_,i)=>({...fuente,version_id:'v'+i}));
+ const rpc=async(action,datos)=>action==='texto_buscar'?{resultados:fuentes}:action==='texto_pagina'?{sha256:'abc',pagina:{numero:datos.pagina,texto:'漢'.repeat(6500)}}:action==='texto_llm_listar'?{autorizaciones:fuentes.map(f=>({...f,modelo:MODELO_GROQ,autorizado:true}))}:{ok:true,id:'reserva'};
  let enviado=false;
  const r=await consultarGroqDoctrina(larga,{rpc,env:{GROQ_API_KEY:'x',GROQ_ZDR_CONFIRMADO:'true'},fetchImpl:async(_url,op)=>{if(JSON.parse(op.body).tools)return {ok:true,text:async()=>JSON.stringify({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{id:'busqueda',type:'function',function:{name:'buscar_biblioteca',arguments:'{"consultas":["acacia"]}'}}]}}]})};enviado=true}});
  assert.equal(enviado,false);assert.equal(r.generativo,false);

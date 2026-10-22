@@ -74,7 +74,7 @@ elsif p_accion='texto_llm_listar' then
   insert into doctrina.llm_autorizaciones_historial(version_id,actor,autorizado,proveedor,modelo,sha256) values(v.id,p_actor,p_accion='texto_llm_autorizar','groq','openai/gpt-oss-120b',v.sha256);
   return jsonb_build_object('ok',true);
  elsif p_accion='texto_llm_reservar' then
-  if jsonb_typeof(p_datos->'fuentes') is distinct from 'array' or jsonb_array_length(p_datos->'fuentes') not between 1 and 6 or coalesce(p_datos->>'hash','') !~ '^[0-9a-f]{64}$' then raise exception 'Expediente no válido'; end if;
+  if jsonb_typeof(p_datos->'fuentes') is distinct from 'array' or jsonb_array_length(p_datos->'fuentes') not between 1 and 12 or coalesce(p_datos->>'hash','') !~ '^[0-9a-f]{64}$' then raise exception 'Expediente no válido'; end if;
   perform 1 from public.usuarios where auth_user_id=p_actor for update;
   if exists(select 1 from doctrina.llm_consultas where actor=p_actor and creado_en>now()-interval '60 seconds') or (select count(*) from doctrina.llm_consultas where actor=p_actor and creado_en>=date_trunc('day',now()))>=20 then return jsonb_build_object('ok',false,'mensaje','Límite preventivo: una generación por minuto y hasta 20 por día UTC. Se mantiene la consulta documental.'); end if;
   select coalesce(jsonb_agg(f||jsonb_build_object('permiso_revision',a.revision,'texto_revisado_en',t.revisado_en)),'[]') into filas
