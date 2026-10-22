@@ -3722,14 +3722,15 @@ function abrirDetalleKpiResumen(indicador) {
   if(!usuarioActual?.es_admin)return;
   const destinos={
     usuarios:'usuarios',asignados:'asignaciones',entregados:'asignaciones',
-    pendientes:'asignaciones',completados:'metricas',comentarios:'muro_general'
+    pendientes:'asignaciones',vencidos:'asignaciones',publicados:'asignaciones',
+    completados:'metricas',comentarios:'muro_general'
   };
   const destino=destinos[indicador];
   if(!destino)return;
   if(destino==='asignaciones'){
     const filtro=document.getElementById('asignacionesEstadoFiltro');
-    if(filtro)filtro.value=indicador==='entregados'?'entregados':
-      indicador==='pendientes'?'pendientes':'todos';
+    if(filtro)filtro.value=(indicador==='entregados'||indicador==='publicados')?'entregados':
+      indicador==='pendientes'?'pendientes':indicador==='vencidos'?'vencidos':'todos';
     const anuladas=document.getElementById('asignacionesVerAnuladas');
     if(anuladas)anuladas.checked=false;
   }
