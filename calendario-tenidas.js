@@ -33,10 +33,12 @@
   const filtro=$('tenidasGradoFiltro').value,visibles=trabajos.filter(t=>filtro==='todos'||String(t.grado)===filtro);
   const [y,m]=mes.split('-').map(Number),inicio=(new Date(Date.UTC(y,m-1,1)).getUTCDay()+6)%7,total=new Date(Date.UTC(y,m,0)).getUTCDate();
   $('tenidasTituloMes').textContent=new Date(Date.UTC(y,m-1,15)).toLocaleDateString('es-CL',{month:'long',year:'numeric',timeZone:'UTC'});
+  const feriados=window.feriadosCalendarioChile?.(y);
+  $('tenidasFeriadosEstado').textContent=feriados?'Chile · '+y:'Feriados de este año pendientes de actualización';
   let html=Array.from({length:inicio},()=>'<div class="tenidas-dia-vacio" aria-hidden="true"></div>').join('');
   for(let n=1;n<=total;n++){
-   const fecha=mes+'-'+String(n).padStart(2,'0'),items=visibles.filter(t=>t.fecha===fecha);
-   html+=`<div class="tenidas-dia${fecha===hoy()?' tenidas-hoy':''}${fecha===dia?' tenidas-seleccionado':''}"><button type="button" class="tenidas-numero" data-dia="${fecha}" aria-label="${e(fecha)}: ${items.length} trabajos${items.length?'':'. Agregar trabajo'}">${n}<span class="tenidas-cantidad">${items.length||''}</span></button>${items.map(t=>`<button type="button" class="tenida-mini" data-trabajo="${e(t.id)}" title="${e(grados[t.grado]+': '+t.tema+' — '+t.autor)}"><span>${e((t.hora||'20:00').slice(0,5))} · ${t.grado}°</span> ${e(t.tema)}</button>`).join('')}</div>`;
+   const fecha=mes+'-'+String(n).padStart(2,'0'),items=visibles.filter(t=>t.fecha===fecha),feriado=feriados?.[fecha],finSemana=[0,6].includes(new Date(Date.UTC(y,m-1,n)).getUTCDay());
+   html+=`<div class="tenidas-dia${finSemana?' tenidas-fin-semana':''}${feriado?' tenidas-feriado':''}${fecha===hoy()?' tenidas-hoy':''}${fecha===dia?' tenidas-seleccionado':''}"><button type="button" class="tenidas-numero" data-dia="${fecha}" title="${e(feriado||'')}" aria-label="${e(fecha)}${feriado?': '+e(feriado):''}: ${items.length} trabajos${items.length?'':'. Agregar trabajo'}">${n}<span class="tenidas-cantidad">${items.length||''}</span></button>${items.map(t=>`<button type="button" class="tenida-mini" data-trabajo="${e(t.id)}" title="${e(grados[t.grado]+': '+t.tema+' — '+t.autor)}"><span>${e((t.hora||'20:00').slice(0,5))} · ${t.grado}°</span> ${e(t.tema)}</button>`).join('')}</div>`;
   }
   $('tenidasCuadricula').innerHTML=html;
   const agenda=visibles.filter(t=>!dia||t.fecha===dia);

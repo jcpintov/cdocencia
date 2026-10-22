@@ -35,6 +35,9 @@ try{
  await page.locator('#tenidasMes').fill('2026-11');await page.locator('#tenidasMes').dispatchEvent('change');
  await page.locator('#tenidasTituloMes').filter({hasText:'noviembre'}).waitFor();
  assert.equal(await page.locator('.tenidas-numero').count(),30);
+ assert.equal(await page.locator('[data-dia="2026-11-01"]').evaluate(e=>getComputedStyle(e.parentElement).backgroundColor),'rgb(252, 239, 242)');
+ assert.equal(await page.locator('[data-dia="2026-11-07"]').evaluate(e=>getComputedStyle(e.parentElement).backgroundColor),'rgb(237, 244, 251)');
+
  await page.locator('#tenidasNuevo').click();
  assert.equal(await page.locator('#tenidasHora').inputValue(),'20:00');await page.locator('#tenidasHora').fill('19:30');
  await page.locator('#tenidasFecha').fill('2026-11-10');await page.locator('#tenidasGrado').selectOption('3');
