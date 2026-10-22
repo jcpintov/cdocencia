@@ -213,10 +213,20 @@ async function registrarIngresoAuditoria() {
 async function recuperarSesionGuardada() {
   const solicitud = versionSesion;
   try {
+    // Una visita sin sesión no debe consultar /auth/v1/user ni provocar
+    // respuestas 403 evitables por credenciales inexistentes o caducadas.
+    const {data:sesionActual,error:sesionError}=await sbApp.auth.getSession();
+    if(solicitud!==versionSesion)return;
+    if(sesionError||!sesionActual?.session?.access_token){
+      sessionStorage.removeItem('camara_usuario_sesion');
+      return;
+    }
     const { data, error } = await sbApp.auth.getUser();
     if (solicitud !== versionSesion) return;
     if (error || !data?.user) {
       sessionStorage.removeItem('camara_usuario_sesion');
+      const mensaje=document.getElementById('errorLogin');
+      if(mensaje)mensaje.textContent='La sesión guardada ya no es válida. Inicie sesión nuevamente.';
       return;
     }
     const { data: perfil, error: perfilError } = await sbApp.from('usuarios')
@@ -537,7 +547,12 @@ async function cargarListadoUsuariosAdmin() {
     const {data: usuarios, error} = await sbApp.from('usuarios')
       .select('id, nombre, email, es_admin, debe_cambiar_clave, auth_user_id').eq('cuenta_eliminada',false).order('nombre', {ascending:true});
     if (consulta !== consultaPadronAdmin) return;
-    if (error || !Array.isArray(usuarios)) throw new Error('consulta_padron');
+    if (error || !Array.isArray(usuarios)) {
+      const codigo=error?.code;
+      if(error?.status===401||error?.status===403||codigo==='42501')
+        throw new Error('No se pudo acceder al padrón con esta sesión. Compruebe la autenticación y los permisos.');
+      throw new Error('No se pudo consultar el padrón.');
+    }
     padronUsuariosAdmin = usuarios;
     const cuposOcupados = usuarios.filter(u => !u.es_admin && String(u.email || '').trim().toLowerCase() !== 'dummy@ofl.cl').length;
     if (botonAgregar) {
@@ -548,9 +563,9 @@ async function cargarListadoUsuariosAdmin() {
     if (estadoCupos) estadoCupos.textContent = `${cuposOcupados} integrantes registrados`;
     renderizarPadronAdmin();
     if (estado) estado.textContent = 'Padrón actualizado. Puede incorporar nuevos integrantes desde Agregar usuario.';
-  } catch {
+  } catch(error) {
     if (consulta !== consultaPadronAdmin) return;
-    if (estado) estado.textContent = 'No se pudo actualizar el padrón. Reintente; se conservan los datos anteriores.';
+    if (estado) estado.textContent = error?.message || 'No se pudo actualizar el padrón. Reintente; se conservan los datos anteriores.';
     if (!padronUsuariosAdmin.length) tbody.innerHTML = '<tr><td colspan="6" class="admin-empty-state">No se pudo cargar el padrón. Pulse Actualizar padrón para reintentar.</td></tr>';
   } finally {
     if (consulta === consultaPadronAdmin) {
@@ -2423,8 +2438,11 @@ function cerrarModalCertificado() {
 }
 
 function cerrarModalUniversal(event, modalId) {
-  if (event.target.id === modalId) {
-    document.getElementById(modalId).classList.add('hidden');
+  // Solo un clic directo sobre el fondo, nunca sobre los controles interiores.
+  const fondo=document.getElementById(modalId);
+  if(event?.target===fondo){
+    cerrarModalUniversalDirecto(modalId);
+    // No llamar cambiarSubseccionAdmin: el modal no tiene sección propia.
   }
 }
 
@@ -2492,12 +2510,17 @@ function descargarCertificadoPDF() {
    CONSOLA SUPERADMIN
    ========================================================================== */
 async function cargarDatosAdmin() {
-  const { data: mods } = await sbApp
+  const actor=usuarioActual;
+  const { data: mods, error: errorModulos } = await sbApp
     .from('modulos')
     .select('*')
     .eq('activo', true)
     .order('numero_orden', { ascending: true });
-
+  if(usuarioActual!==actor || !actor?.es_admin)return;
+  if(errorModulos){
+    console.warn('[Admin] No fue posible cargar el catálogo de trabajos');
+    return;
+  }
   listaModulos = mods || [];
   
   const selectMetricas = document.getElementById('selectMetricasModulo');
@@ -2536,7 +2559,8 @@ async function cargarDatosAdmin() {
     }
   }
 
-  cambiarSubseccionAdmin('resumen');
+  // Cargar los selectores nunca cambia de pantalla: la navegación es exclusiva
+  // de acciones explícitas del usuario o del ingreso inicial.
 }
 
 function cambiarSubseccionAdmin(seccion) {
@@ -2566,8 +2590,16 @@ function cambiarSubseccionAdmin(seccion) {
     if (focoEnMenu) tituloVista?.focus({ preventScroll: true });
   }
 
-  const btns = ['tabNavTenidas', 'tabNavAsignaciones', 'tabNavDoctrina', 'tabNavResumen', 'tabNavUsuarios', 'tabNavCargar', 'tabNavGestionTrabajos', 'tabNavPresencial', 'tabNavMuroGeneral', 'tabNavMetricas', 'tabNavEditorDoctrina', 'tabNavAccesos'];
-  const secs = ['adminSeccionTenidas', 'adminSeccionAsignaciones', 'adminSeccionDoctrina', 'adminSeccionResumen', 'adminSeccionUsuarios', 'adminSeccionCarga', 'adminSeccionGestionTrabajos', 'adminSeccionPresencial', 'adminSeccionMuroGeneral', 'adminSeccionMetricas', 'adminSeccionEditorDoctrina', 'adminSeccionAccesos'];
+  // Un solo mapa determina las doce vistas, sus botones, encabezados y paneles.
+  const btns=Object.values(vistasAdmin).map(([id])=>id);
+  const secs=Object.keys(vistasAdmin).map(nombre=>({
+    resumen:'adminSeccionResumen',usuarios:'adminSeccionUsuarios',
+    cargar:'adminSeccionCarga',gestion_trabajos:'adminSeccionGestionTrabajos',
+    presencial:'adminSeccionPresencial',muro_general:'adminSeccionMuroGeneral',
+    metricas:'adminSeccionMetricas',editor_doctrina:'adminSeccionEditorDoctrina',
+    tenidas:'adminSeccionTenidas',asignaciones:'adminSeccionAsignaciones',
+    doctrina:'adminSeccionDoctrina',accesos:'adminSeccionAccesos'
+  })[nombre]);
 
   btns.forEach(b => document.getElementById(b)?.classList.remove('active'));
   secs.forEach(s => document.getElementById(s)?.classList.add('hidden'));
@@ -2614,7 +2646,7 @@ function cambiarSubseccionAdmin(seccion) {
     document.getElementById('tabNavAccesos')?.classList.add('active');
     document.getElementById('adminSeccionAccesos')?.classList.remove('hidden');
     cargarBitacoraAccesos();
-  } else {
+  } else if (seccion === 'metricas') {
     document.getElementById('tabNavMetricas')?.classList.add('active');
     document.getElementById('adminSeccionMetricas')?.classList.remove('hidden');
     if (listaModulos.length > 0) {
