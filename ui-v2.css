@@ -2719,3 +2719,72 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
   #adminSeccionDoctrina .doctrina-biblioteca-herramientas #doctrinaActualizar {align-self:flex-start}
   #adminSeccionDoctrina form.doctrina-clasificacion select {min-width:160px}
 }
+
+
+/* Superadmin — acciones de cuenta consistentes, legibles y sin estilos de
+   botón claro aplicados sobre el fondo oscuro de la navegación. */
+#seccionAdmin .admin-side-footer{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:10px;
+  min-width:0;
+  width:100%;
+  box-sizing:border-box;
+  margin-top:22px;
+  padding:18px 0 0;
+  border-top:1px solid #3e5869;
+}
+#seccionAdmin .admin-side-footer > :is(.admin-perfil-btn,.admin-logout){
+  appearance:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  min-height:46px;
+  margin:0;
+  padding:10px 16px;
+  border:1px solid #60798a;
+  border-radius:7px;
+  background:#1a384b;
+  color:#eef4f8;
+  font:600 .87rem/1.35 var(--font-ui,Arial,sans-serif);
+  text-align:center;
+  text-decoration:none;
+  cursor:pointer;
+}
+#seccionAdmin .admin-side-footer > .admin-logout{
+  background:transparent;
+  color:#dce8ef;
+  border-color:#536c7c;
+}
+#seccionAdmin .admin-side-footer > :is(.admin-perfil-btn,.admin-logout):hover{
+  background:#294b60;
+  border-color:#a9bfd0;
+  color:#fff;
+}
+#seccionAdmin .admin-side-footer > :is(.admin-perfil-btn,.admin-logout):focus-visible{
+  outline:3px solid #e5c68e;
+  outline-offset:2px;
+}
+#seccionAdmin .admin-links-bottom{
+  box-sizing:border-box;
+  min-width:0;
+  margin-top:18px;
+  padding:18px 0 0;
+  border-top:1px solid #3e5869;
+}
+#seccionAdmin .admin-links-bottom > .admin-menu-label{
+  margin:0 10px 9px;
+  color:#bdcedb;
+}
+/* Barra administrativa extendida: dos acciones simétricas en una misma fila.
+   En el sidebar estrecho se mantienen apiladas con anchura completa. */
+@media (min-width:601px) and (max-width:960px){
+  #seccionAdmin .admin-side-footer{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    max-width:480px;
+  }
+  #seccionAdmin .admin-links-bottom{margin-top:14px}
+}
