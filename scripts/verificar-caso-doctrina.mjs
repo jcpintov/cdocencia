@@ -9,11 +9,12 @@ export async function verificarCasoDoctrina() {
  if(error || !actor?.auth_user_id) throw Error('CASO_QA_IDENTIDAD');
  const rpc = async (accion, datos = {}) => {
   const {data,error} = await admin.rpc('doctrina_texto_superadmin',{p_actor:actor.auth_user_id,p_accion:accion,p_datos:datos});
-  if(error) throw Error('CASO_QA_RPC_' + (error.code || 'error'));
+  if(error){console.log('CASO_QA_RPC_ERROR '+JSON.stringify({accion,codigo:error.code}));throw Error('CASO_QA_RPC_' + (error.code || 'error'));}
   return data;
  };
  const informe = await consultarGroqDoctrina({pregunta:'que pasa si no asisto por varios meses a la logia y no me excuso',antecedentes:''},{rpc,fetchImpl:async(url,op)=>{
   const r=await fetch(url,op);
+  if(r.ok){const j=await r.clone().json().catch(()=>({}));const c=j.choices?.[0];const f=c?.message?.tool_calls?.[0]?.function;let a;try{a=JSON.parse(f?.arguments||'{}');}catch{}console.log('CASO_QA_ETAPA '+JSON.stringify({finish:c?.finish_reason,herramienta:f?.name,campos:a?Object.keys(a):[],consultas:a?.consultas?.length,conducta:a?.es_caso_conducta}));}
   if(!r.ok){const raw=await r.clone().json().catch(()=>({}));const mensaje=String(raw.error?.message||'');console.log('CASO_QA_PROVEEDOR '+JSON.stringify({status:r.status,codigo:raw.error?.code,limites:mensaje.match(/(?:Limit|Used|Requested)[: ]+[0-9]+/gi),reintento:r.headers.get('retry-after')}));}
   return r;
  }});
