@@ -225,6 +225,10 @@ async function recuperarSesionGuardada() {
     if (solicitud !== versionSesion) return;
     if (error || !data?.user) {
       sessionStorage.removeItem('camara_usuario_sesion');
+      // Descartar el token persistido que provoca 403 en cada recarga.
+      // Local: no interrumpe otras sesiones legítimas del mismo usuario.
+      try{await sbApp.auth.signOut({scope:'local'});}catch{/* Continuar hacia ingreso limpio. */}
+      if(solicitud!==versionSesion)return;
       const mensaje=document.getElementById('errorLogin');
       if(mensaje)mensaje.textContent='La sesión guardada ya no es válida. Inicie sesión nuevamente.';
       return;
