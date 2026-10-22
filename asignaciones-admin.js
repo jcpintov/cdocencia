@@ -133,13 +133,14 @@
   const lista=datos.asignaciones.filter(a=>{
    if(filtro==='entregados')return a.vigente&&estadoTrabajo(a)==='Publicado';
    if(filtro==='pendientes')return a.vigente&&estadoTrabajo(a)!=='Publicado';
+   if(filtro==='vencidos')return a.vigente&&estadoTrabajo(a)==='Vencido';
    return a.vigente||$('asignacionesVerAnuladas').checked;
   }).sort(ordenarAsignaciones);
   $('asignacionesConteo').textContent=lista.length+' de '+vigentes.length+' asignaciones vigentes'+
-   (filtro==='entregados'?' · entregadas/publicadas':filtro==='pendientes'?' · pendientes de publicación':' · todas')+
+   (filtro==='entregados'?' · entregadas/publicadas':filtro==='pendientes'?' · pendientes de publicación':filtro==='vencidos'?' · vencidas':' · todas')+
    ' · '+datos.catalogo.filter(x=>tipoUnidadDocencia(x.codigo)==='tema').length+' temas del catálogo';
   if(!lista.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;
-   td.textContent=filtro==='entregados'?'Todavía no hay asignaciones entregadas y publicadas.':filtro==='pendientes'?'No quedan trabajos pendientes de publicación.':'No hay asignaciones para mostrar.';
+   td.textContent=filtro==='entregados'?'Todavía no hay asignaciones entregadas y publicadas.':filtro==='pendientes'?'No quedan trabajos pendientes de publicación.':filtro==='vencidos'?'No hay trabajos vencidos y pendientes de publicación.':'No hay asignaciones para mostrar.';
    tr.appendChild(td);cuerpo.appendChild(tr);}
   lista.forEach(a=>{
    const tr=document.createElement('tr');tr.className='asignacion-fila asignacion-'+(a.vigente?estadoTrabajo(a).toLowerCase():'anulada');if(a.id===seleccion)tr.classList.add('asignacion-seleccionada');
