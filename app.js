@@ -381,6 +381,11 @@ function cerrarSesion() {
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
   if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
   usuarioActual = null;
+  // Invalidar consultas del padrón todavía pendientes y borrar su caché local.
+  consultaPadronAdmin++;
+  padronUsuariosAdmin=[];
+  const filasPadron=document.getElementById('tablaUsuariosAdminBody');
+  if(filasPadron)filasPadron.replaceChildren();
   sincronizarEncabezadoWorkspaceUsuario();
   moduloActual = null;
   misProgresos = {};
