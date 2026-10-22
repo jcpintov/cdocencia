@@ -381,7 +381,7 @@ function cerrarSesion() {
   limpiarBibliotecaDoctrina();
   window.cerrarPerfilSuperadmin?.();
   window.limpiarCalendarioTenidas?.();
-  window.cerrarBitacoraSesion?.();
+  const cierreRegistrado=Promise.resolve(window.cerrarBitacoraSesion?.()).catch(()=>false);
   if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
   if (temporizadorLecturaId) clearTimeout(temporizadorLecturaId);
   usuarioActual = null;
@@ -396,7 +396,15 @@ function cerrarSesion() {
   respuestasMarcadas = {};
   archivoBase64Pendiente = null;
   sessionStorage.removeItem('camara_usuario_sesion');
-  void sbApp.auth.signOut().catch(() => {});
+  // Esperar el POST de cierre antes de revocar el JWT. El plazo acotado
+  // evita bloquear el acceso si el navegador perdió conexión.
+  void (async()=>{
+    await Promise.race([
+      cierreRegistrado,
+      new Promise(resolve=>setTimeout(resolve,2500))
+    ]);
+    await sbApp.auth.signOut().catch(()=>{});
+  })();
 
   document.getElementById('errorLogin').innerText = '';
   document.getElementById('inputEmail').value = '';
