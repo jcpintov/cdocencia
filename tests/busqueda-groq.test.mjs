@@ -12,3 +12,9 @@ for(const respuesta of [tool([]),tool(['a']),tool(['x'.repeat(251)]),tool(['uno'
 test('abre una frase sin resultados en conceptos alternativos antes de detenerse',async()=>{const s=entorno(tool(['ausencia prolongada injustificada']));await buscarBibliotecaConGroq(entrada,s);assert.deepEqual(s.consultas,['ausencia prolongada injustificada','ausencia OR prolongada OR injustificada']);});
 
 test('en un caso de conducta contrasta calificación y competencia, además de los hechos',async()=>{const respuesta=tool(['asistencia OR excusa']);respuesta.choices[0].message.tool_calls[0].function.arguments=JSON.stringify({consultas:['asistencia OR excusa'],es_caso_conducta:true});const s=entorno(respuesta);await buscarBibliotecaConGroq(entrada,s);assert.ok(s.consultas.includes('incumplimiento deber'));assert.ok(s.consultas.includes('ayuda asistencia'));});
+
+test('el planificador recibe instrucciones de herramientas sin criterios de redacción que compitan',async()=>{
+ const s=entorno(tool(['iniciación']));const original=s.fetchImpl;
+ s.fetchImpl=async(u,op)=>{const b=JSON.parse(op.body);assert.match(b.messages[0].content,/única salida es una llamada a buscar_biblioteca/);assert.doesNotMatch(b.messages[0].content,/Criterios editoriales persistentes/);return original(u,op);};
+ await buscarBibliotecaConGroq(entrada,s);
+});
