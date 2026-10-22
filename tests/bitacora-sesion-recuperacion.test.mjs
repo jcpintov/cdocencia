@@ -109,3 +109,13 @@ test('bitácora administrativa expone ingreso, IP, última actividad, cierre y d
  assert.match(fn,/r\.ultimo_latido_en/);
  assert.doesNotMatch(fn,/colspan="7"/);
 });
+
+test('bitácora muestra inicialmente al Superadmin; ocultarlo requiere marcar el filtro',()=>{
+ const block=html.slice(html.indexOf('id="adminSeccionAccesos"'),html.indexOf('<!-- MODAL: CONFIRMACIÓN',html.indexOf('id="adminSeccionAccesos"')));
+ const control=block.match(/<input[^>]*id="ocultarAdminAccesos"[^>]*>/)?.[0];
+ assert.ok(control,'checkbox de filtro del administrador presente');
+ assert.doesNotMatch(control,/\schecked(?:\s|>|=)/);
+ assert.match(control,/name="ocultar_admin_accesos"/);
+ const bitacora=app.slice(app.indexOf('async function cargarBitacoraAccesos('),app.indexOf('/* ==========================================================================',app.indexOf('async function cargarBitacoraAccesos(')));
+ assert.match(bitacora,/const ocultarAdmin = document\.getElementById\('ocultarAdminAccesos'\)\?\.checked === true/);
+});
