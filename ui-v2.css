@@ -2789,6 +2789,38 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
   #seccionAdmin .admin-links-bottom{margin-top:14px}
 }
 
+/* Los KPI del cronograma utilizan la misma semántica interactiva. */
+#adminSeccionResumen .cronograma-trabajos .admin-kpi-accion{
+  appearance:none;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:8px;
+  box-sizing:border-box;
+  width:100%;
+  min-width:0;
+  border:1px solid #b7c9d6;
+  border-radius:9px;
+  background:#f7f9fb;
+  color:#193c53;
+  font-family:var(--font-ui,Arial,sans-serif);
+  text-align:left;
+  cursor:pointer;
+}
+#adminSeccionResumen .cronograma-trabajos .admin-kpi-accion:hover{
+  background:#ecf3f7;
+  border-color:#61879f;
+}
+#adminSeccionResumen .cronograma-trabajos .admin-kpi-accion:focus-visible{
+  outline:3px solid #947137;
+  outline-offset:3px;
+}
+#adminSeccionResumen .cronograma-trabajos .admin-kpi-ir{
+  color:#245574;
+  font-size:.76rem;
+  font-weight:700;
+}
 /* Tarjetas KPI del Resumen: enlace contextual, no solo un bloque estadístico. */
 #adminSeccionResumen .admin-kpi-grid-resumen .admin-kpi-accion {
   display:flex;
@@ -2894,7 +2926,7 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
   font-size:.8rem;
   color:#5b6d7c;
 }
-#adminSeccionMuroGeneral :is(.muro-admin-cita,.muro-admin-interaccion .muro-admin-cita,.muro-admin-cita){
+#adminSeccionMuroGeneral .muro-admin-cita{
   white-space:pre-line;
   line-height:1.6;
   font-style:italic;
