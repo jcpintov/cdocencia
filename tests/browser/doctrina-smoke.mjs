@@ -43,6 +43,26 @@ try{
  page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>d.accept());await page.route('https://**/*',r=>r.abort());await page.goto('http://127.0.0.1:'+server.address().port);
  await page.evaluate(()=>{usuarioActual={id:'admin',es_admin:true};document.getElementById('seccionLogin').classList.add('hidden');document.getElementById('seccionAdmin').classList.remove('hidden');cambiarSubseccionAdmin('doctrina');});
  await page.locator('#doctrinaBibliotecaPanel > summary').click();await page.locator('#doctrinaEstado').filter({hasText:'1 originales'}).waitFor();
+ // Una biblioteca amplia no debe repetir identificadores ni dejar selectores anónimos.
+ const etiquetaChequeo=await page.evaluate(()=>{
+  const actual=bibliotecaDoctrina;
+  try{
+   bibliotecaDoctrina={...actual,documentos:Array.from({length:36},(_,i)=>({
+    ...actual.documentos[0],
+    id:'documento-qa-'+i,
+    version_id:'00000000-0000-4000-8000-'+String(i+1).padStart(12,'0'),
+    titulo:'Original de prueba '+(i+1)
+   }))};
+   renderizarBibliotecaDoctrina();
+   const selects=[...document.querySelectorAll('#doctrinaDocumentos .doctrina-clasificacion select')];
+   const todos=selects.every(sel=>sel.id&&sel.name&&sel.labels?.length===1&&sel.labels[0].control===sel);
+   return {cantidad:selects.length,unicos:new Set(selects.map(sel=>sel.id)).size,
+    nombresUnicos:new Set(selects.map(sel=>sel.name)).size,todos};
+  }finally{bibliotecaDoctrina=actual;renderizarBibliotecaDoctrina();}
+ });
+ assert.deepEqual(etiquetaChequeo,{cantidad:36,unicos:36,nombresUnicos:36,todos:true});
+ assert.ok(await page.locator('#doctrinaBibliotecaPanel #doctrinaActualizar').count());
+ assert.equal(await page.locator('.doctrina-cabecera #doctrinaActualizar').count(),0);
  await page.getByRole('button',{name:'Revisión',exact:true}).click();await page.locator('#doctrinaRevisionNota').fill('Original comprobado');fail=true;
  await page.getByRole('button',{name:'Aprobar como vigente'}).click();await page.locator('#doctrinaRevisionEstado').filter({hasText:'Error de prueba'}).waitFor();assert.equal(await page.locator('#doctrinaRevisionNota').inputValue(),'Original comprobado');fail=false;
  await page.getByRole('button',{name:'Aprobar como vigente'}).click();await page.locator('#doctrinaRevisionDialogo').waitFor({state:'hidden'});await page.locator('.doctrina-documento').filter({hasText:'vigente'}).waitFor();
@@ -53,7 +73,18 @@ try{
  await page.getByLabel('Mostrar eliminados',{exact:true}).check();await page.getByRole('button',{name:'Restaurar',exact:true}).waitFor();assert.equal(await page.getByRole('button',{name:'Descargar original'}).count(),0);
  await page.getByRole('button',{name:'Restaurar',exact:true}).click();await page.getByRole('button',{name:'Revisión',exact:true}).waitFor();
  for(const viewport of [{width:1440,height:950},{width:390,height:844}]){
-  await page.setViewportSize(viewport);await page.getByRole('button',{name:'Revisión',exact:true}).click();
+  await page.setViewportSize(viewport);
+  const conversacionLayout=await page.locator('.doctrina-chat').evaluate(chat=>{
+   const form=chat.querySelector('#doctrinaAgenteFormulario');
+   const c=chat.getBoundingClientRect(),f=form.getBoundingClientRect();
+   const border=parseFloat(getComputedStyle(form).borderLeftWidth);
+   return {dentro:f.left>=c.left-1&&f.right<=c.right+1,
+     bordeSimple:border===0,
+     sinDesborde:chat.scrollWidth<=chat.clientWidth+2};
+  });
+  assert.ok(conversacionLayout.dentro&&conversacionLayout.bordeSimple&&conversacionLayout.sinDesborde,
+   'Compositor no debe desbordar ni dibujar doble borde en '+viewport.width+'px: '+JSON.stringify(conversacionLayout));
+  await page.getByRole('button',{name:'Revisión',exact:true}).click();
   assert.ok(await page.locator('#doctrinaRevisionDialogo').isVisible());
   const colors=await page.locator('#adminSeccionDoctrina label').first().evaluate(e=>({fg:getComputedStyle(e).color,bg:getComputedStyle(e.closest('section')).backgroundColor}));
   const luminance=rgb=>rgb.match(/\d+/g).map(Number).map(v=>{const c=v/255;return c<=.04045?c/12.92:((c+.055)/1.055)**2.4;}).reduce((sum,c,i)=>sum+c*[.2126,.7152,.0722][i],0);
