@@ -17,7 +17,7 @@
     .logo-login-ofl { display:block; width:110px; max-width:35%; height:auto; margin:14px auto 20px; object-fit:contain; }
     @media (max-width:600px) { .logo-login-ofl { width:95px; } }
   </style>
-  <link rel="stylesheet" href="styles.css?v=doctrina-20261022d">
+  <link rel="stylesheet" href="styles.css?v=doctrina-20261022e">
   <link rel="stylesheet" href="ui-v2.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.21/mammoth.browser.min.js"></script>
@@ -969,6 +969,32 @@
             <div class="doctrina-envio"><button id="doctrinaAgenteConsultar" type="submit" class="btn-primary">Consultar</button><button id="doctrinaNuevaConversacion" type="button" class="btn-secondary" onclick="nuevaConversacionDoctrina()">Nueva conversación</button></div>
           </form>
         </section>
+        <details class="doctrina-administracion trabajos-panel" id="trabajosPanel" ontoggle="if(this.open)cargarTrabajosTenida()">
+          <summary>Trabajos de tenida · Orador</summary>
+          <div class="doctrina-panel-contenido">
+            <div class="trabajos-encabezado"><p>Del trabajo leído a sus conclusiones, con revisión documental previa.</p><button type="button" class="btn-secondary" onclick="nuevoTrabajoTenida()">Nuevo trabajo</button></div>
+            <div id="trabajosLista" class="trabajos-lista"></div>
+            <form id="trabajosFormulario" class="trabajos-formulario" onsubmit="event.preventDefault();subirTrabajoTenida()" hidden>
+              <h3>Incorporar trabajo</h3>
+              <div class="trabajos-campos">
+                <label>Tema<input name="tema" required minlength="2" maxlength="250"></label>
+                <label>Autor o autores<input name="autor" required minlength="2" maxlength="250"></label>
+                <label>Tenida<input name="tenida" required minlength="2" maxlength="250" placeholder="Nombre o identificación de la tenida"></label>
+                <label>Fecha de lectura<input name="fecha" type="date" required></label>
+                <label>Grado<select name="grado" required><option value="1">1° · Aprendiz</option><option value="2">2° · Compañero</option><option value="3">3° · Maestro</option></select></label>
+                <label>Tipo<select name="tipo" onchange="cambiarTipoTrabajo(this.value)"><option value="ordinaria">Conclusiones de un trabajo</option><option value="iniciacion">Bienvenida · Iniciación</option><option value="aumento">Bienvenida · Aumento de salario</option><option value="exaltacion">Bienvenida · Exaltación</option></select></label>
+                <label id="trabajosHomenajeados" hidden>Hermanos que reciben la bienvenida<input name="homenajeados" maxlength="500"></label>
+                <label>Asistencia de IA declarada por el autor<select name="uso_ia"><option value="no_informada">No informada</option><option value="sin_ia">Declara no haber usado IA</option><option value="declarada">Declara asistencia de IA</option></select></label>
+              </div>
+              <label>Detalle de la asistencia de IA, si corresponde<textarea name="nota_ia" rows="2" maxlength="2000"></textarea></label>
+              <label>Original PDF con texto o Word DOCX · hasta 10 MB<input name="archivo" type="file" accept=".pdf,.docx" required></label>
+              <label class="doctrina-check"><input name="autoriza_ia" type="checkbox" required> Autorizo enviar el texto de este trabajo a Groq para su revisión y conclusiones. El original se conserva privado.</label>
+              <button class="btn-primary" type="submit">Guardar trabajo privado</button>
+            </form>
+            <p id="trabajosEstado" role="status" aria-live="polite"></p>
+            <div id="trabajosDetalle"></div>
+          </div>
+        </details>
         <details class="doctrina-administracion" id="doctrinaBibliotecaPanel">
           <summary>Biblioteca documental</summary>
           <div class="doctrina-panel-contenido">
@@ -1333,7 +1359,8 @@
 <dialog id="doctrinaTextoDialogo" aria-labelledby="doctrinaTextoTitulo"><h2 id="doctrinaTextoTitulo">Texto del original</h2><p>Contraste cada página con el PDF antes de marcarla revisada. No se realiza OCR automático.</p><label for="doctrinaTextoPagina">Página del PDF</label><input id="doctrinaTextoPagina" type="number" min="1" max="600" value="1"><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_pagina')">Cargar página</button><label for="doctrinaTextoContenido">Texto de la página, editable para corregir la extracción</label><textarea id="doctrinaTextoContenido" maxlength="40000" rows="14"></textarea><label><input type="checkbox" id="doctrinaTextoSinTexto"> Página contrastada con el PDF y verificada sin texto</label><p id="doctrinaTextoEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" class="btn-secondary" onclick="cerrarTextoDoctrina()">Cerrar texto</button><button type="button" class="btn-secondary" onclick="contrastarPaginaTextoDoctrina(this)">Contrastar página con PDF</button><button type="button" id="doctrinaTextoExtraer" class="btn-secondary" onclick="accionTextoDoctrina('texto_extraer')">Extraer texto</button><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_revisar_pagina')">Guardar página revisada</button><button type="button" class="btn-primary" onclick="accionTextoDoctrina('texto_aprobar')">Aprobar extracción revisada</button></div></dialog>
 <dialog id="perfilSuperadminDialogo" aria-labelledby="perfilSuperadminTitulo"><h2 id="perfilSuperadminTitulo">Mi perfil de Superadmin</h2><p>Los cambios requieren un código enviado al correo actual. No se modifican antes de validarlo.</p><label for="perfilSuperadminNombre">Nombre</label><input id="perfilSuperadminNombre" type="text" minlength="3" maxlength="150" autocomplete="off"><label for="perfilSuperadminEmail">Correo nuevo</label><input id="perfilSuperadminEmail" type="email" maxlength="254" autocomplete="off"><label for="perfilSuperadminCodigo">Código de autorización</label><input id="perfilSuperadminCodigo" inputmode="numeric" autocomplete="one-time-code" maxlength="8"><p id="perfilSuperadminEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" id="perfilSuperadminCerrar" class="btn-secondary" onclick="cerrarPerfilSuperadmin()">Cerrar perfil</button><button type="button" id="perfilSuperadminSolicitar" class="btn-secondary" onclick="accionPerfilSuperadmin('solicitar')">Enviar código al correo actual</button><button type="button" id="perfilSuperadminConfirmar" class="btn-primary" onclick="accionPerfilSuperadmin('confirmar')">Validar código y guardar</button><button type="button" id="perfilSuperadminRecuperar" class="btn-secondary" hidden onclick="accionPerfilSuperadmin('recuperar')">Recuperar cambio pendiente</button></div></dialog>
   <script src="perfil-superadmin.js"></script>
-  <script src="doctrina-admin.js?v=20261022d"></script>
+  <script src="doctrina-admin.js?v=20261022e"></script>
+  <script src="trabajos-tenida.js?v=20261022a"></script>
   <script src="bitacora-sesion.js"></script>
   <script src="ui-v2.js" defer></script>
 </body>

@@ -1,0 +1,15 @@
+import {readFile} from 'node:fs/promises';
+import {createRequire} from 'node:module';
+import assert from 'node:assert/strict';
+const {JSDOM}=createRequire(process.env.QA_DOM_ROOT+'/package.json')('jsdom');
+const dom=new JSDOM(await readFile('index.html','utf8'),{url:'https://fixture.invalid',runScripts:'outside-only'}),w=dom.window;
+w.usuarioActual={id:'admin',es_admin:true};w.sbApp={auth:{getSession:async()=>({data:{session:{access_token:'fixture'}}})}};
+const trabajo={id:'a',revision:1,bloques_total:2,datos:{ficha:{tema:'<img src=x>Escucha',autor:'Autor',tenida:'Tenida',fecha:'2026-10-22',grado:1,tipo:'ordinaria',uso_ia:'no_informada',nota_ia:''},extraccion:{palabras:800,minutos:6.8,paginas:null,avisos:[]},revision_bloques:[]}};
+const calls=[];w.fetch=async(_u,opt)=>{const b=JSON.parse(opt.body);calls.push(b);if(b.action==='revisar'){trabajo.datos.revision_bloques.push({numero:trabajo.datos.revision_bloques.length+1,sintesis:'Resumen',observaciones:[],coincidencias:[]});trabajo.revision++;}return {ok:true,json:async()=>({ok:true,trabajo,trabajos:[{id:'a',ficha:trabajo.datos.ficha}]})};};
+w.eval(await readFile('trabajos-tenida.js','utf8'));
+await w.cargarTrabajosTenida();assert.equal(w.document.querySelectorAll('#trabajosLista img').length,0);
+await w.abrirTrabajoTenida('a');assert.equal(w.document.querySelectorAll('#trabajosDetalle img').length,0);assert.equal(w.document.querySelectorAll('.trabajos-entrega').length,2);
+await w.pasoTrabajoTenida('revisar');assert.equal(calls.filter(c=>c.action==='revisar').length,2);assert.match(w.document.getElementById('trabajosDetalle').textContent,/Contrastar con la biblioteca/);
+w.nuevoTrabajoTenida();const f=w.document.getElementById('trabajosFormulario');assert.equal(f.hidden,false);w.cambiarTipoTrabajo('exaltacion');assert.equal(f.elements.grado.value,'3');assert.equal(f.elements.homenajeados.required,true);
+w.limpiarTrabajosTenida();assert.equal(w.document.getElementById('trabajosDetalle').textContent,'');assert.equal(f.hidden,true);
+dom.window.close();console.log('PASS DOM Orador: dos entregas, revisión reanudable, grado ceremonial, texto seguro y limpieza de sesión.');

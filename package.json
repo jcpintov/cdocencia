@@ -3,6 +3,9 @@
   "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^2.57.0",
+    "docx": "9.5.1",
+    "jszip": "3.10.1",
+    "mammoth": "1.13.0",
     "nodemailer": "^7.0.6",
     "unpdf": "1.9.1"
   }

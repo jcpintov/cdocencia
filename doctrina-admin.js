@@ -9,6 +9,7 @@ let fuentesConversacionDoctrina = [];
 let consultaPermisosGroq = 0;
 let cargaDoctrinaPendiente = null;
 function limpiarBibliotecaDoctrina(){
+ if(typeof limpiarTrabajosTenida==='function')limpiarTrabajosTenida();
  consultaBibliotecaDoctrina++;consultaBusquedaTextoDoctrina++;consultaPermisosGroq++;invalidarAgenteDoctrina();
  document.getElementById('doctrinaAgenteFormulario')?.reset();
  const salidaAgente=document.getElementById('doctrinaAgenteResultado');if(salidaAgente)salidaAgente.setAttribute('aria-busy','false');
