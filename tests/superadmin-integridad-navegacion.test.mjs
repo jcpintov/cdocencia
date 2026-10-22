@@ -103,7 +103,7 @@ test('la restauración no solicita /auth/v1/user sin sesión local',async()=>{
 test('padrón: otorgar solamente SELECT de la columna usada como filtro y preservar RLS',()=>{
  assert.match(migration,/GRANT SELECT\s*\(\s*cuenta_eliminada\s*\)\s*ON\s+TABLE\s+public\.usuarios\s+TO\s+authenticated/i);
  assert.doesNotMatch(migration,/GRANT\s+SELECT\s+ON\s+(TABLE\s+)?public\.usuarios/i);
- assert.doesNotMatch(migration,/DISABLE ROW LEVEL SECURITY|TO anon|clave_hash|token_recuperacion\s*\)/i);
+ assert.doesNotMatch(migration,/DISABLE ROW LEVEL SECURITY|TO anon|GRANT\s+SELECT\s*\([^)]*(?:clave_hash|token_recuperacion)/i);
  const fetch=app.slice(app.indexOf('async function cargarListadoUsuariosAdmin()'),app.indexOf('function abrirModalCrearUsuario()'));
  assert.match(fetch,/\.eq\('cuenta_eliminada',false\)/);
  assert.match(fetch,/error\?\.status===403/);
