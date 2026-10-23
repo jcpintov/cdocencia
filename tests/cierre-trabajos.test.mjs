@@ -62,3 +62,7 @@ test('guardado usa normalizador, no trim() sobre texto, y conserva controles UI'
   assert.match(html,/id="editModTexto"[^>]*rows="14"/);
   assert.match(css,/#seccionDocencia \.trazado-cierre/);
 });
+
+test('texto de originales nunca ejecuta etiquetas HTML en el lector',()=>{
+ const html=renderizarTrazadoEnriquecido('<img src=x onerror=alert(1)>\n\nCuerpo <script>alert(1)</script>');assert.doesNotMatch(html,/<img|<script/);assert.match(html,/&lt;img/);
+});

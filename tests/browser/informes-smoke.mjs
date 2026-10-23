@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import {crearHandlerInformes} from '../../server/admin-informes.js';
 const require=createRequire(process.env.QA_PLAYWRIGHT_ROOT+'/package.json'),{chromium}=require('playwright');
 const catalogo=JSON.parse(await readFile('tests/browser/catalogo-fixture.json','utf8')).catalogo;
-const usuarios=Array.from({length:26},(_,i)=>({id:'u'+i,nombre:i===0?'Álvaro Pérez':i===1?'José <script>alert(1)</script>':'Hermano '+String(i+1).padStart(2,'0'),email:'user'+i+'@example.invalid',es_admin:false,auth_user_id:'auth'+i,cuenta_eliminada:false}));
+const usuarios=Array.from({length:26},(_,i)=>({id:'u'+i,nombre:i===0?'Álvaro Pérez':i===2?'Q.·.H.·. Juan Francisco Fernández de la Fuente Valenzuela':i===1?'José <script>alert(1)</script>':'Hermano '+String(i+1).padStart(2,'0'),email:'user'+i+'@example.invalid',es_admin:false,auth_user_id:'auth'+i,cuenta_eliminada:false}));
 const administrador={id:'admin',nombre:'Julio César',email:'jpintov@gmail.com',es_admin:true,auth_user_id:'auth-admin'};
 let asignaciones=[0,1].map((i)=>({id:'a'+i,usuario_id:'u0',nombre:usuarios[0].nombre,email:usuarios[0].email,codigo:i?'INCI011B':'INCI011A',tema:'Un tema con título largo para comprobar el formato del documento',vigente:true,version:1,fecha_asignacion:'2026-10-20',fecha_entrega:'2026-11-10',correos:[],recordatorio:{publicado:false,estado:'sin_solicitud'}}));
 const progresos=[{id:'p1',usuario_id:'u0',modulo_id:'m1',leido:true,completado:true}];
@@ -63,7 +63,7 @@ try{
   const pdfInicio=performance.now(),descarga=page.waitForEvent('download');await page.locator('#btnDescargarInformeEjecutivo').click();const file=await descarga;
   assert.equal(file.suggestedFilename(),'informe-'+tipo+'-'+new Date().toISOString().slice(0,10)+'.pdf');await file.saveAs('tmp/informes-qa/'+tipo+'.pdf');tiempos.at(-1).pdf_ms=Math.round(performance.now()-pdfInicio);
   const pdfLeido=await extractText(new Uint8Array(await readFile('tmp/informes-qa/'+tipo+'.pdf')),{mergePages:false});assert.ok(pdfLeido.totalPages>=1&&pdfLeido.totalPages<=2,'Paginación sin página huérfana');
-  for(const pagina of pdfLeido.text){assert.match(pagina,/PLATAFORMA DE DOCENCIA PARA MAESTROS/);assert.match(pagina,/TALAGANTE/);assert.match(pagina,/EMISIÓN:/);}assert.match(pdfLeido.text.join(' '),/Álvaro Pérez/);
+  for(const pagina of pdfLeido.text){assert.match(pagina,/PLATAFORMA DE DOCENCIA PARA MAESTROS/);assert.match(pagina,/TALAGANTE/);assert.match(pagina,/EMISIÓN:/);}assert.match(pdfLeido.text.join(' '),/Álvaro Pérez/);assert.doesNotMatch(pdfLeido.text.join(' '),/Excluye administradores|23:30|Fechas en formato/i);assert.doesNotMatch(await page.locator('#informeEjecutivoContenido').innerText(),/excluye administradores|23:30|Fechas en formato/i);
   await page.locator('#btnCerrarInformeEjecutivo').click();assert.equal(await dialog.isVisible(),false);
   assert.equal(await page.locator('#adminSeccionResumen').isVisible(),true);
  }
@@ -76,7 +76,7 @@ try{
  await page.setViewportSize({width:1440,height:1000});await page.evaluate(()=>{cambiarSubseccionAdmin('asignaciones');});await page.locator('#asignacionesPadronBody tr').nth(25).waitFor();
  assert.equal(await page.locator('#asignacionesPadronBody tr').count(),26);assert.match(await page.locator('#asignacionesPadronConteo').textContent(),/1 con trabajo · 25 sin trabajo/);
  assert.equal(await page.locator('#asignacionesPadronBody script').count(),0);
- await page.getByRole('button',{name:'Asignar trabajo a Hermano 03',exact:true}).click();assert.equal(await page.locator('#asignacionUsuario').inputValue(),'u2');await page.locator('#btnCerrarOpcionesAsignacion').click();
+ await page.getByRole('button',{name:'Asignar trabajo a '+usuarios[2].nombre,exact:true}).click();assert.equal(await page.locator('#asignacionUsuario').inputValue(),'u2');await page.locator('#btnCerrarOpcionesAsignacion').click();
  await page.getByRole('button',{name:'Editar INCI011A de Álvaro Pérez',exact:true}).click();assert.equal(await page.locator('#asignacionTema').inputValue(),'INCI011A');await page.locator('#btnCerrarOpcionesAsignacion').click();
  await page.getByRole('button',{name:'Eliminar asignación INCI011A de Álvaro Pérez',exact:true}).click();await page.waitForFunction(()=>!document.getElementById('dialogOpcionesAsignacion').open);assert.equal(asignaciones[0].vigente,false);
  assert.equal(await page.locator('#adminSeccionAsignaciones').isVisible(),true);

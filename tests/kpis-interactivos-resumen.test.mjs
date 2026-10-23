@@ -72,7 +72,7 @@ test('los cuatro KPI del cronograma también son botones y abren filtros adecuad
  const filter={value:'todos'},ctx={usuarioActual:{es_admin:true},document:{getElementById:id=>id==='asignacionesEstadoFiltro'?filter:id==='adminVistaActual'?{focus(){},scrollIntoView(){}}:null},cambiarSubseccionAdmin:()=>{}};
  runInNewContext(source,ctx);
  ctx.abrirDetalleKpiResumen('vencidos');assert.equal(filter.value,'vencidos');
- ctx.abrirDetalleKpiResumen('publicados');assert.equal(filter.value,'entregados');
+ ctx.abrirDetalleKpiResumen('publicados');assert.equal(filter.value,'publicados');
  assert.match(asignaciones,/if\(filtro==='vencidos'\)return a\.vigente&&estadoTrabajo\(a\)==='Vencido'/);
  assert.match(css,/\.cronograma-trabajos \.admin-kpi-accion:focus-visible/);
 });
@@ -80,8 +80,8 @@ test('los cuatro KPI del cronograma también son botones y abren filtros adecuad
 test('en Asignaciones hay filtros por vigencia y por publicación del trabajo',()=>{
  assert.match(html,/id="asignacionesEstadoFiltro"/);
  for(const key of ['todos','entregados','pendientes','vencidos'])assert.match(html,new RegExp('<option value="'+key+'">'));
- assert.match(asignaciones,/if\(filtro==='entregados'\)return a\.vigente&&estadoTrabajo\(a\)==='Publicado'/);
- assert.match(asignaciones,/if\(filtro==='pendientes'\)return a\.vigente&&estadoTrabajo\(a\)!=='Publicado'/);
+ assert.match(asignaciones,/if\(filtro==='entregados'\)return a\.vigente&&estaEntregado\(a\)/);
+ assert.match(asignaciones,/if\(filtro==='pendientes'\)return a\.vigente&&!estaEntregado\(a\)/);
  assert.match(asignaciones,/if\(\$\('asignacionesEstadoFiltro'\)\)\$\('asignacionesEstadoFiltro'\)\.value='todos'/);
  assert.match(asignaciones,/recordatorio\?\.publicado/);
 });

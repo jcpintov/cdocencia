@@ -19,10 +19,18 @@ async function cargarConversacionesDoctrina(mas=false){
    const actual=()=>usuarioActual===actor&&lista.contains(ficha);
    b.onclick=async()=>{
     if(!actual()||!confirm(caso.estado==='revisado'?'¿Retirar esta conversación de la memoria JSON?':'¿Aprueba esta conversación después de revisar su contenido y las fuentes citadas?'))return;
-    b.disabled=true;
+    b.disabled=true;eliminar.disabled=true;
     try{await peticionDoctrina(caso.estado==='revisado'?'caso_retirar':'caso_aprobar',{id:caso.id,confirmacion:true});if(!actual())return;vaciarMemoriaSesionLocal();await cargarMemoriaAgenteSesion();if(actual())await cargarConversacionesDoctrina();}
-    catch(e){if(actual()){estado.textContent=e.message;b.disabled=false;}}
-   };ficha.appendChild(b);lista.appendChild(ficha);
+    catch(e){if(actual()){estado.textContent=e.message;b.disabled=false;eliminar.disabled=false;}}
+   };
+   const eliminar=document.createElement('button');eliminar.type='button';eliminar.className='btn-secondary btn-eliminar-registro';eliminar.textContent='Eliminar registro';
+   eliminar.onclick=async()=>{
+    if(!actual()||!confirm('¿Eliminar definitivamente esta conversación guardada? Se quitará del listado y de la memoria JSON. Esta acción no se puede deshacer.'))return;
+    b.disabled=true;eliminar.disabled=true;
+    try{const r=await peticionDoctrina('caso_eliminar',{id:caso.id,confirmacion:true});if(!actual())return;if(r.eliminado!==true)throw Error('El servidor no confirmó la eliminación');vaciarMemoriaSesionLocal();await cargarMemoriaAgenteSesion();if(actual())await cargarConversacionesDoctrina();}
+    catch(e){if(actual()){estado.textContent=e.message;b.disabled=false;eliminar.disabled=false;}}
+   };
+   const acciones=document.createElement('div');acciones.className='doctrina-caso-acciones';acciones.append(b,eliminar);ficha.appendChild(acciones);lista.appendChild(ficha);
   }
   conversacionesCargadas+=r.conversaciones.length;estado.textContent=conversacionesCargadas+' de '+r.total+' conversaciones. Solo las aprobadas forman parte del JSON.';botonMas.classList.toggle('hidden',!r.hay_mas);
  }catch(e){if(vigente())estado.textContent=e.message;}

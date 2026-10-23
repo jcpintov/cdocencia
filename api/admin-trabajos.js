@@ -22,7 +22,14 @@ export default async function handler(req,res) {
   const {data:perfil,error:perfilError}=await admin.from('usuarios').select('id,email,es_admin,rol,cuenta_eliminada')
     .eq('auth_user_id',identity.user.id).maybeSingle();
   if(perfilError||!esOperador(perfil,identity.user))return respond(res,403,{error:'Se requiere administración docente'});
-  const {action,id}=req.body||{};
+  let body=req.body;
+  if(typeof body==='string'){try{body=JSON.parse(body);}catch{return respond(res,400,{error:'Solicitud inválida'});}}
+  if(!body||typeof body!=='object'||Array.isArray(body))return respond(res,400,{error:'Solicitud inválida'});
+  req.body=body;const {action,id}=body;
+  if(typeof action==='string'&&action.startsWith('nuevo_')){
+    const {gestionarNuevoTrabajo}=await import('../server/nuevos-trabajos.js');
+    const r=await gestionarNuevoTrabajo(body,{admin,actor:identity.user});return respond(res,r.status,r.body);
+  }
   if(!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id||'')))
     return respond(res,422,{error:'Identificador de trabajo inválido'});
   if(!['editar','preguntas'].includes(action))

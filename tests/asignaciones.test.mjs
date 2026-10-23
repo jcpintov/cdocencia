@@ -80,3 +80,16 @@ test('fechas inexistentes y plazo anterior no llegan a la base',async()=>{
 });
 
 test('Administrador delegado puede listar asignaciones con su propia identidad',async()=>{const s=setup({email:'delegado@example.invalid',rol:'ADMIN'});const r=await s.request({action:'listar'});assert.equal(r.code,200);assert.equal(s.calls[0].action,'listar');});
+
+test('observación valida versión, usuario y longitud sin enviar correos',async()=>{
+ const s=setup({rol:'ADMIN',email:'delegado@example.invalid'});const base={action:'observacion',usuario_id:intento,version:0,observacion:'Excusado por disponibilidad'};
+ for(const cambio of [{version:-1},{usuario_id:'otro'},{observacion:'x'.repeat(501)},{observacion:null}])assert.equal((await s.request({...base,...cambio})).code,422);
+ assert.equal(s.calls.length,0);assert.equal((await s.request(base)).code,200);assert.equal(s.calls[0].data.observacion,base.observacion);assert.equal(s.calls[0].action,'observacion');
+});
+test('entrega y reapertura requieren confirmación y datos válidos; nunca invocan SMTP',async()=>{
+ const s=setup();const base={id:registro.id,version:1,confirmado:true};
+ assert.equal((await s.request({...base,action:'entregar',fecha_entrega_real:'2026-02-30',nota:''})).code,422);
+ assert.equal((await s.request({...base,action:'reabrir',confirmado:false})).code,422);
+ for(const action of ['entregar','reabrir'])assert.equal((await s.request({...base,action,fecha_entrega_real:'2026-10-23',nota:'Recepción'})).code,200);
+ assert.deepEqual(s.calls.map(c=>c.action),['entregar','reabrir']);
+});

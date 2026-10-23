@@ -2987,3 +2987,31 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 .informe-documento .informe-membrete h2{font:400 14px/1.5 Arial,sans-serif;color:#708093;margin:0 0 10px}
 .informe-documento .informe-membrete-detalle p{font-size:12px;color:#708093}
 @media(max-width:600px){.informe-membrete{grid-template-columns:minmax(0,1fr) 64px;gap:16px;padding-bottom:16px}.informe-membrete img{width:64px}.informe-membrete-detalle{grid-column:1/-1;text-align:left}.informe-documento .informe-membrete p{font-size:12px}.informe-documento .informe-membrete h2{font-size:14px}}
+
+/* Nombres legibles: columna amplia y saltos solo entre palabras. */
+.informe-documento th:first-child,.informe-documento td:first-child{overflow-wrap:normal;word-break:normal;hyphens:none}
+.doctrina-caso-acciones{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.doctrina-caso .btn-eliminar-registro{color:#8f2323;background:#fff;border:1px solid #b85c5c}
+
+.asignacion-entregado,.cronograma-entregado{border-left:4px solid #2a7759;background:#f0faf4;color:#214b38}
+.asignacion-observacion{max-width:34ch;white-space:pre-wrap;overflow-wrap:anywhere;color:#45596a;font-size:.9rem;margin:8px 0}
+#dialogObservacionAsignacion textarea,#dialogEntregaAsignacion textarea{box-sizing:border-box;width:100%;font:inherit;margin:8px 0}
+#dialogEntregaAsignacion label,#dialogObservacionAsignacion label{display:block;font-weight:700;margin-top:12px}
+
+.informe-documento td:first-child{white-space:pre-line}
+
+.nuevo-trabajo-dialog{box-sizing:border-box;margin:auto;width:min(1040px,94vw);max-width:94vw;max-height:92dvh;overflow:auto;padding:24px;border:1px solid #a6bbc9;border-radius:12px;background:#f5f8fa;color:#203b50;font:16px/1.5 Arial,sans-serif}
+.nuevo-trabajo-dialog::backdrop{background:#122231a8}
+.nuevo-trabajo-dialog h2,.nuevo-trabajo-dialog h3{color:#203b50}
+.nuevo-trabajo-dialog label{display:block;font-weight:700;margin:14px 0 6px}
+.nuevo-trabajo-dialog input:not([type=checkbox]),.nuevo-trabajo-dialog textarea,.nuevo-trabajo-dialog select{box-sizing:border-box;max-width:100%;width:100%;font:inherit;color:#203b50;background:#fff;border:1px solid #9db0be;border-radius:5px;padding:9px}
+.nuevo-trabajo-dialog pre{font:14px/1.5 Arial,sans-serif;white-space:pre-wrap;overflow-wrap:anywhere;max-height:360px;overflow:auto;background:#fff;padding:12px;border:1px solid #c6d3dc}
+.nuevo-trabajo-dialog button{margin:8px 0;white-space:normal}
+.nuevo-trabajo-dialog .btn-secondary{background:#fff;color:#203b50;border:1px solid #8b9eac}
+.nuevo-trabajo-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.nuevo-trabajo-pregunta{padding:16px;margin:18px 0;background:#fff;border:1px solid #bdcdd8;border-radius:8px}
+.nuevo-trabajo-confirmacion{font-weight:400!important}
+.nuevos-trabajos-borradores{margin:14px 0}.nuevos-trabajos-borradores button{display:block;margin:10px 0}
+@media(max-width:600px){.nuevo-trabajo-dialog{padding:14px}.nuevo-trabajo-grid{grid-template-columns:1fr}.nuevo-trabajo-dialog button{max-width:100%}}
+.nuevo-trabajo-dialog{overflow-wrap:anywhere}
+.nuevo-trabajo-grid>div,.nuevo-trabajo-dialog form{min-width:0}

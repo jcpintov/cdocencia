@@ -383,6 +383,7 @@ function cerrarSesion() {
   const botonIngreso = document.querySelector('#formAccesoCamara button[type="submit"]');
   if (botonIngreso) botonIngreso.disabled = false;
   window.limpiarAsignacionesAdmin?.();
+  window.limpiarNuevosTrabajos?.();
   window.limpiarInformesAdmin?.();
   window.limpiarRolesAdmin?.();
   limpiarBibliotecaDoctrina();
@@ -1750,8 +1751,9 @@ function renderizarTrazadoEnriquecido(textoBruto) {
                      (limpio.length < 90 && limpio.endsWith(':')) ||
                      (limpio.length < 80 && limpio === limpio.toUpperCase() && !limpio.includes('. '));
 
-    if (esTitulo) return '<h3 class="trazado-subtitulo">' + limpio + '</h3>';
-    return '<p class="trazado-parrafo">' + limpio.replace(/\n/g, ' ') + '</p>';
+    const seguro=limpio.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if (esTitulo) return '<h3 class="trazado-subtitulo">' + seguro + '</h3>';
+    return '<p class="trazado-parrafo">' + seguro.replace(/\n/g, ' ') + '</p>';
   }).join('');
 
   if (!cierre) return html;
@@ -2062,7 +2064,7 @@ function renderizarPreguntaActual() {
     return `
       <label class="opcion-label" id="label_paso_${op.letra}" for="${inputId}" onclick="evaluarRespuestaPasoAPaso('${op.letra}', '${p.respuesta_correcta}')">
         <input type="radio" id="${inputId}" name="preg_paso_radio_${indicePreguntaActiva}" value="${op.letra}">
-        <span><strong>${op.letra}) </strong>${op.texto}</span>
+        <span><strong>${op.letra}) </strong>${escaparTextoHTMLDocencia(op.texto)}</span>
       </label>
     `;
   }).join('');
@@ -2076,11 +2078,11 @@ function renderizarPreguntaActual() {
       <p style="font-size: 0.85rem; font-weight: 700; color: var(--accent-gold-dark); text-transform: uppercase; margin-bottom: 6px;">
         ${etiquetaPregunta}
       </p>
-      <p style="font-weight: 600; margin-bottom: 14px;">${p.enunciado}</p>
+      <p style="font-weight: 600; margin-bottom: 14px;">${escaparTextoHTMLDocencia(p.enunciado)}</p>
       ${opcionesHtml}
       <div class="feedback-box" id="feedback_paso_box">
         <div style="font-weight: 700; margin-bottom: 6px;" id="feedback_paso_titulo"></div>
-        <div id="feedback_paso_texto">${p.retroalimentacion}</div>
+        <div id="feedback_paso_texto">${escaparTextoHTMLDocencia(p.retroalimentacion)}</div>
       </div>
     </div>
   `;
@@ -3779,7 +3781,7 @@ function abrirDetalleKpiResumen(indicador) {
   if(!destino)return;
   if(destino==='asignaciones'){
     const filtro=document.getElementById('asignacionesEstadoFiltro');
-    if(filtro)filtro.value=(indicador==='entregados'||indicador==='publicados')?'entregados':
+    if(filtro)filtro.value=indicador==='publicados'?'publicados':indicador==='entregados'?'entregados':
       indicador==='pendientes'?'pendientes':indicador==='vencidos'?'vencidos':'todos';
     const anuladas=document.getElementById('asignacionesVerAnuladas');
     if(anuladas)anuladas.checked=false;

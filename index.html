@@ -695,7 +695,7 @@
             <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('vencidos')" aria-label="Ver asignaciones vencidas y no publicadas"><span>Vencidos</span><strong id="kpiTrabajosVencidos">—</strong><small class="admin-kpi-ir">Ver vencidos →</small></button>
             <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('publicados')" aria-label="Ver asignaciones ya publicadas"><span>Publicados</span><strong id="kpiTrabajosPublicados">—</strong><small class="admin-kpi-ir">Ver publicados →</small></button>
           </div>
-          <div class="cronograma-filtros"><label for="cronogramaFiltro">Mostrar</label><select id="cronogramaFiltro" name="cronograma_filtro" onchange="renderizarCronogramaAdmin()"><option value="todos">Todas las asignaciones vigentes</option><option value="proximos">Entregas en los próximos 7 días</option><option value="vencidos">Pendientes vencidos</option><option value="publicados">Publicados</option></select></div>
+          <div class="cronograma-filtros"><label for="cronogramaFiltro">Mostrar</label><select id="cronogramaFiltro" name="cronograma_filtro" onchange="renderizarCronogramaAdmin()"><option value="todos">Todas las asignaciones vigentes</option><option value="proximos">Entregas en los próximos 7 días</option><option value="vencidos">Pendientes vencidos</option><option value="entregados">Entregados (incluye publicados)</option><option value="publicados">Publicados</option></select></div>
           <p id="cronogramaEstado" role="status" aria-live="polite">Consultando cronograma…</p>
           <ol id="cronogramaLista" class="cronograma-lista"></ol>
         </section>
@@ -758,7 +758,7 @@
         </section>
         <div class="asignacion-lista-cabecera">
           <p id="asignacionesConteo" role="status" aria-live="polite"></p>
-          <label for="asignacionesEstadoFiltro">Mostrar <select id="asignacionesEstadoFiltro" name="filtro_estado_asignaciones" onchange="renderizarAsignacionesDocentes()"><option value="todos">Todas las vigentes</option><option value="entregados">Entregadas / publicadas</option><option value="pendientes">Pendientes de publicación</option><option value="vencidos">Vencidos sin publicar</option></select></label>
+          <label for="asignacionesEstadoFiltro">Mostrar <select id="asignacionesEstadoFiltro" name="filtro_estado_asignaciones" onchange="renderizarAsignacionesDocentes()"><option value="todos">Todas las vigentes</option><option value="entregados">Entregadas (incluye publicadas)</option><option value="publicados">Solo publicadas</option><option value="pendientes">Pendientes de entrega</option><option value="vencidos">Vencidos sin entregar</option></select></label>
           <label><input type="checkbox" id="asignacionesVerAnuladas" onchange="renderizarAsignacionesDocentes()"> Mostrar anuladas</label>
         </div>
         <div class="table-responsive"><table class="metricas-table asignaciones-table"><thead><tr><th>Hermano</th><th>Tema</th><th>Asignación</th><th>Entrega · 23:30 h</th><th>Estado y correo</th><th>Acción</th></tr></thead><tbody id="asignacionesBody"><tr><td colspan="6">Abra esta sección para consultar las asignaciones.</td></tr></tbody></table></div>
@@ -784,10 +784,32 @@
           <h3 id="recordatorioAutomaticoTitulo">Recordatorio automático</h3>
           <p id="asignacionRecordatorioEstado" role="status"></p>
           <dl class="asignacion-contexto"><div><dt>Solicitud original enviada</dt><dd id="asignacionSolicitudEnviada">—</dd></div><div><dt>Desde siete días de atraso</dt><dd id="asignacionRecordatorioFecha">—</dd></div><div><dt>Último resultado</dt><dd id="asignacionRecordatorioResultado">—</dd></div></dl>
-          <p id="asignacionPublicacionEstado"></p><p id="asignacionPublicacionAviso" role="status"></p><button type="button" id="btnRevisarRecordatorioAsignacion" class="btn-secondary" onclick="cerrarIntentoRecordatorioAsignacion()" hidden>Revisé el envío: marcar sin confirmar</button>
+          <p id="asignacionPublicacionEstado"></p><p id="asignacionEntregaEstado"></p><button type="button" id="btnEntregaAsignacion" class="btn-secondary" onclick="gestionarEntregaAsignacion()">Marcar como entregado</button><p id="asignacionPublicacionAviso" role="status"></p><button type="button" id="btnRevisarRecordatorioAsignacion" class="btn-secondary" onclick="cerrarIntentoRecordatorioAsignacion()" hidden>Revisé el envío: marcar sin confirmar</button>
           <p class="text-instruccion">Revisión diaria. La publicación se comprueba por el código del tema asociado a un trabajo activo en Docencia. Un envío sin confirmación requiere revisión y no se repite automáticamente.</p>
           <details id="asignacionRecordatorioDetalle"><summary>Ver texto del recordatorio</summary><p>CCO: jpintov@gmail.com</p><p id="asignacionRecordatorioPreviewEstado" role="status"></p><iframe id="asignacionRecordatorioVista" title="Vista previa del recordatorio automático" sandbox="" referrerpolicy="no-referrer"></iframe></details>
         </section>
+      </dialog>
+      <dialog id="dialogObservacionAsignacion" class="correo-asignacion-dialog" aria-labelledby="observacionAsignacionTitulo">
+        <h2 id="observacionAsignacionTitulo">Observación administrativa</h2>
+        <form onsubmit="event.preventDefault(); guardarObservacionAsignacion();">
+          <p id="observacionAsignacionNombre"></p>
+          <label for="observacionAsignacionTexto">Observación sobre el usuario</label>
+          <textarea id="observacionAsignacionTexto" name="observacion_asignacion" maxlength="500" rows="4" placeholder="Ej.: Excusado temporalmente por disponibilidad."></textarea>
+          <p>Visible solo para la administración. No modifica la disponibilidad ni los indicadores. Use motivos generales, sin diagnósticos.</p>
+          <p id="observacionAsignacionEstado" role="status"></p>
+          <div class="asignacion-botones"><button type="submit" id="btnGuardarObservacionAsignacion" class="btn-primary">Guardar observación</button><button type="button" id="btnBorrarObservacionAsignacion" class="btn-secondary" onclick="borrarObservacionAsignacion()">Borrar observación</button><button type="button" id="btnCerrarObservacionAsignacion" class="btn-secondary" onclick="cerrarObservacionAsignacion()">Cerrar</button></div>
+        </form>
+      </dialog>
+      <dialog id="dialogEntregaAsignacion" class="correo-asignacion-dialog" aria-labelledby="entregaAsignacionTitulo">
+        <h2 id="entregaAsignacionTitulo">Registrar entrega recibida</h2>
+        <form onsubmit="event.preventDefault(); confirmarEntregaAsignacion();">
+          <p id="entregaAsignacionNombre"></p>
+          <label for="entregaAsignacionFecha">Fecha efectiva de recepción</label><input id="entregaAsignacionFecha" name="entrega_fecha_real" type="date" required>
+          <label for="entregaAsignacionNota">Nota de recepción (opcional)</label><textarea id="entregaAsignacionNota" name="entrega_nota" maxlength="500" rows="3" placeholder="Ej.: Recibido por correo."></textarea>
+          <p>Cuenta como entregado y detiene los recordatorios. La publicación y su correo al autor se gestionan por separado.</p>
+          <p id="entregaAsignacionEstado" role="status"></p>
+          <div class="asignacion-botones"><button type="submit" id="btnConfirmarEntregaAsignacion" class="btn-primary">Confirmar entrega</button><button type="button" id="btnCerrarEntregaAsignacion" class="btn-secondary" onclick="cerrarEntregaAsignacion()">Cerrar</button></div>
+        </form>
       </dialog>
       <dialog id="dialogCorreoAsignacion" class="correo-asignacion-dialog" aria-labelledby="correoAsignacionTitulo">
         <div class="correo-asignacion-cabecera"><h2 id="correoAsignacionTitulo">Correo de solicitud de trabajo</h2><button type="button" id="btnCerrarCorreoAsignacion" class="btn-secondary" onclick="cerrarCorreoAsignacion()">Volver</button></div>
@@ -837,9 +859,11 @@
             <p class="text-instruccion" style="margin: 0;">Edite títulos, autor, orden, textos, batería de 8 preguntas o elimine trabajos.</p>
           </div>
           <div class="admin-header-actions">
+            <button type="button" class="btn-primary" onclick="abrirNuevoTrabajo()">Subir trabajo nuevo</button>
             <button id="btnActualizarTrabajosAdmin" type="button" class="admin-link-btn" onclick="cargarGestionTrabajosAdmin()">Actualizar lista</button>
           </div>
         </div>
+        <details class="nuevos-trabajos-borradores"><summary onclick="cargarBorradoresTrabajos()">Mis borradores de trabajos nuevos</summary><div id="nuevosTrabajosBorradores"></div></details>
         <div class="admin-list-toolbar">
           <div class="admin-search-field"><label for="buscarTrabajoAdmin">Buscar trabajo</label>
             <input id="buscarTrabajoAdmin" type="search" name="buscarTrabajoAdmin" placeholder="Título, autor, número o código" oninput="renderizarGestionTrabajosAdmin()" aria-controls="listaGestionTrabajosAdmin">
@@ -1408,6 +1432,32 @@
   <script src="feriados-chile.js"></script>
   <script src="calendario-tenidas.js"></script>
 <dialog id="doctrinaRevisionDialogo" aria-labelledby="doctrinaRevisionTitulo"><h2>Revisión del original</h2><h3 id="doctrinaRevisionTitulo"></h3><input type="hidden" id="doctrinaRevisionId"><label for="doctrinaRevisionNota">Observaciones de revisión</label><textarea id="doctrinaRevisionNota" maxlength="2000" rows="5"></textarea><p id="doctrinaRevisionEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" class="btn-secondary" onclick="document.getElementById('doctrinaRevisionDialogo').close()">Cerrar</button><button type="button" class="btn-secondary" onclick="guardarRevisionDoctrina('devolver')">Dejar en revisión</button><button type="button" class="btn-primary" onclick="guardarRevisionDoctrina('aprobar')">Aprobar como vigente</button></div></dialog>
+<dialog id="dialogNuevoTrabajo" class="nuevo-trabajo-dialog" aria-labelledby="nuevoTrabajoDialogTitulo">
+ <header class="informe-ejecutivo-cabecera"><h2 id="nuevoTrabajoDialogTitulo">Subir trabajo nuevo</h2><button type="button" id="btnCerrarNuevoTrabajo" class="btn-secondary" onclick="cerrarNuevoTrabajo()">Cerrar</button></header>
+ <p id="nuevoTrabajoEstado" role="status" aria-live="polite"></p>
+ <form id="nuevoTrabajoFormulario" onsubmit="event.preventDefault(); accionNuevoTrabajo('guardar');">
+  <label for="nuevoTrabajoArchivo">Original PDF o Word DOCX · hasta 2 MB</label><input id="nuevoTrabajoArchivo" name="nuevo_trabajo_archivo" type="file" accept=".pdf,.docx">
+  <button type="button" class="btn-secondary" onclick="accionNuevoTrabajo('preparar')">Preparar original y texto</button>
+  <section id="nuevoTrabajoEdicion" hidden>
+   <p id="nuevoTrabajoOriginalNombre"></p><button type="button" class="admin-link-btn" onclick="descargarOriginalNuevoTrabajo()">Descargar original intacto</button>
+   <div class="nuevo-trabajo-grid">
+    <div><label for="nuevoTrabajoTitulo">Título</label><input id="nuevoTrabajoTitulo" name="nuevo_trabajo_titulo" maxlength="250"></div>
+    <div><label for="nuevoTrabajoAutor">Autor</label><input id="nuevoTrabajoAutor" name="nuevo_trabajo_autor" maxlength="250"></div>
+    <div><label for="nuevoTrabajoOrden">Número de orden</label><input id="nuevoTrabajoOrden" name="nuevo_trabajo_orden" type="number" min="1" max="999" value="1"></div>
+    <div><label for="nuevoTrabajoCodigo">Tema del programa</label><select id="nuevoTrabajoCodigo" name="nuevo_trabajo_codigo"></select></div>
+   </div>
+   <label for="nuevoTrabajoTexto">Texto limpio para lectura · editable</label><textarea id="nuevoTrabajoTexto" name="nuevo_trabajo_texto" rows="14" maxlength="60000"></textarea>
+   <p>Se normalizan espacios y saltos. Los fragmentos separados permanecen disponibles para contrastar. Revise las notas dudosas y conserve las citas que forman parte del argumento.</p>
+   <details><summary>Ver fragmentos separados</summary><pre id="nuevoTrabajoSeparados"></pre></details>
+   <details><summary>Contrastar con la extracción del original</summary><pre id="nuevoTrabajoExtraido"></pre></details>
+   <label class="nuevo-trabajo-confirmacion"><input id="nuevoTrabajoAutorizarIA" name="nuevo_trabajo_autorizar_ia" type="checkbox"> Autorizo enviar este texto revisado a la IA integrada de Groq para generar el cuestionario.</label>
+   <button type="button" class="btn-secondary" onclick="accionNuevoTrabajo('generar')">Generar las ocho preguntas</button>
+   <p id="nuevoTrabajoPreguntasEstado"></p><div id="nuevoTrabajoPreguntas"></div>
+   <label class="nuevo-trabajo-confirmacion"><input id="nuevoTrabajoRevisado" name="nuevo_trabajo_revisado" type="checkbox"> Revisé el texto, las ocho preguntas, sus alternativas y respuestas.</label>
+   <div class="asignacion-botones"><button type="submit" class="btn-secondary">Guardar borrador</button><button type="button" class="btn-primary" onclick="accionNuevoTrabajo('publicar')">Publicar trabajo revisado</button></div>
+  </section>
+ </form>
+</dialog>
 <dialog id="dialogInformeEjecutivo" class="informe-ejecutivo-dialog" aria-labelledby="informeEjecutivoTitulo">
   <header class="informe-ejecutivo-cabecera"><h2 id="informeEjecutivoTitulo">Informe</h2><div class="informe-ejecutivo-acciones"><button type="button" id="btnDescargarInformeEjecutivo" class="btn-primary" onclick="descargarInformeEjecutivoPDF()" disabled>Descargar PDF</button><button type="button" id="btnCerrarInformeEjecutivo" class="btn-secondary" onclick="cerrarInformeEjecutivo()">Cerrar</button></div></header>
   <p id="informeEjecutivoEstado" role="status" aria-live="polite"></p>
@@ -1418,6 +1468,7 @@
 <dialog id="perfilSuperadminDialogo" aria-labelledby="perfilSuperadminTitulo"><h2 id="perfilSuperadminTitulo">Mi perfil de Superadmin</h2><p>Los cambios requieren un código enviado al correo actual. No se modifican antes de validarlo.</p><label for="perfilSuperadminNombre">Nombre</label><input id="perfilSuperadminNombre" type="text" minlength="3" maxlength="150" autocomplete="off"><label for="perfilSuperadminEmail">Correo nuevo</label><input id="perfilSuperadminEmail" type="email" maxlength="254" autocomplete="off"><label for="perfilSuperadminCodigo">Código de autorización</label><input id="perfilSuperadminCodigo" inputmode="numeric" autocomplete="one-time-code" maxlength="8"><p id="perfilSuperadminEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" id="perfilSuperadminCerrar" class="btn-secondary" onclick="cerrarPerfilSuperadmin()">Cerrar perfil</button><button type="button" id="perfilSuperadminSolicitar" class="btn-secondary" onclick="accionPerfilSuperadmin('solicitar')">Enviar código al correo actual</button><button type="button" id="perfilSuperadminConfirmar" class="btn-primary" onclick="accionPerfilSuperadmin('confirmar')">Validar código y guardar</button><button type="button" id="perfilSuperadminRecuperar" class="btn-secondary" hidden onclick="accionPerfilSuperadmin('recuperar')">Recuperar cambio pendiente</button></div></dialog>
   <script src="perfil-superadmin.js"></script>
   <script src="roles-admin.js"></script>
+  <script src="nuevos-trabajos.js"></script>
   <script src="doctrina-admin.js?v=20261023g"></script>
   <script src="conversaciones-doctrina.js"></script>
   <script src="trabajos-tenida.js?v=20261022a"></script>
