@@ -5,6 +5,7 @@ import {extname,resolve} from 'node:path';
 import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
 const {chromium}=createRequire(process.env.QA_PLAYWRIGHT_ROOT+'/package.json')('playwright');
+const casos=[];
 const root=resolve('.');let fail=false,extraido=false,textoAprobado=false,groqAutorizado=false;
 const paginas=[{numero:1,texto:'La Acacia representa la inmortalidad.',revisada:false,requiere_ocr:false},{numero:2,texto:'',revisada:false,requiere_ocr:true}];
 const doc={id:'documento',version_id:'11111111-1111-4111-8111-111111111111',titulo:'Principios de la Masonería',clase:'normativa',estado:'borrador',revision:'revision',bytes:400,nota_revision:''};
@@ -20,7 +21,12 @@ const server=createServer(async(req,res)=>{try{
   if(fail){res.writeHead(503).end(JSON.stringify({error:'Error de prueba'}));return;}
   if(b.action==='llm_listar'){res.end(JSON.stringify({ok:true,autorizaciones:[{version_id:doc.version_id,titulo:doc.titulo,version:1,autorizado:groqAutorizado,texto_aprobado:textoAprobado}]}));return;}
   if(b.action==='llm_autorizar'||b.action==='llm_revocar'){groqAutorizado=b.action==='llm_autorizar';res.end(JSON.stringify({ok:true}));return;}
-  if(b.action==='agente_consultar'){res.end(JSON.stringify({ok:true,informe:{generativo:true,secciones:[{titulo:'Respuesta',texto:'La acacia representa la inmortalidad [F1].'}],fuentes:[{referencia:'F1',titulo:doc.titulo,clase:doc.clase,version_id:doc.version_id,pagina:1,fragmento:paginas[0].texto}]}}));return;}
+  if(b.action==='casos_listar'){const filas=casos.filter(c=>b.estado==='todos'||c.estado===b.estado);res.end(JSON.stringify({ok:true,conversaciones:filas,total:filas.length,hay_mas:false}));return;}
+  if(b.action==='memoria_exportar'){res.end(JSON.stringify({ok:true,memoria:{schema_version:1,casos:casos.filter(c=>c.estado==='revisado')}}));return;}
+  if(b.action==='memoria_sesion'){res.end(JSON.stringify({ok:true,memoria:{schema_version:1,criterios:[],casos:casos.filter(c=>c.estado==='revisado')}}));return;}
+  if(b.action==='caso_aprobar'||b.action==='caso_retirar'){casos.find(c=>c.id===b.id).estado=b.action==='caso_aprobar'?'revisado':'retirado';res.end(JSON.stringify({ok:true}));return;}
+  if(b.action==='agente_consultar'){const respuesta='La acacia representa la inmortalidad [F1].',id='00000000-0000-4000-8000-'+String(casos.length+1).padStart(12,'0');casos.push({id,pregunta:b.pregunta,respuesta,estado:'candidato',creado_en:new Date().toISOString(),fuentes:[{version_id:doc.version_id,sha256:'a'.repeat(64),pagina:1}],conversacion:[...(b.conversacion||[]),{role:'user',content:b.pregunta},{role:'assistant',content:respuesta}]});res.end(JSON.stringify({ok:true,informe:{generativo:true,caso_memoria_id:id,secciones:[{titulo:'Respuesta',texto:respuesta}],fuentes:[{referencia:'F1',titulo:doc.titulo,clase:doc.clase,version_id:doc.version_id,pagina:1,fragmento:paginas[0].texto}]}}));return;}
+
   if(b.action.startsWith('texto_')){
    if(b.action==='texto_buscar'){res.end(JSON.stringify({ok:true,resultados:textoAprobado?[{titulo:doc.titulo,version_id:doc.version_id,version:1,pagina:1,fragmento:paginas[0].texto}]:[]}));return;}
    if(b.action==='texto_extraer')extraido=true;
@@ -118,6 +124,12 @@ try{
   assert.ok(await page.locator('#doctrinaAgenteFormulario').evaluate(e=>e.scrollWidth<=e.clientWidth+1));
   await respuestaActual.locator('summary').click();await respuestaActual.getByRole('button',{name:'Ver fuente',exact:true}).click();await page.locator('#doctrinaVisorEstado').filter({hasText:'Original verificado'}).waitFor();assert.ok((await page.locator('#doctrinaVisorMarco').getAttribute('src')).endsWith('#page=1'));await page.getByRole('button',{name:'Cerrar consulta',exact:true}).click();
  }
+ assert.equal(await page.getByText('Tu consulta',{exact:true}).count(),0);
+ await page.locator('#doctrinaConversacionesPanel > summary').click();await page.locator('#doctrinaCasosEstado').filter({hasText:'2 de 2'}).waitFor();
+ await page.locator('#doctrinaCasosLista > details').last().locator('summary').click();await page.locator('#doctrinaCasosLista').getByRole('button',{name:'Aprobar para el JSON',exact:true}).last().click();await page.locator('#doctrinaCasosLista summary').filter({hasText:'Aprobada'}).waitFor();
+ const descarga=page.waitForEvent('download');await page.getByRole('button',{name:'Descargar JSON aprobado',exact:true}).click();const archivo=await descarga;const memoria=JSON.parse(await readFile(await archivo.path(),'utf8'));assert.equal(memoria.casos.length,1);assert.equal(memoria.casos[0].conversacion.length,4);
+ await page.locator('#doctrinaCasosLista > details').last().locator('summary').click();assert.ok(await page.locator('#doctrinaCasosLista').evaluate(e=>e.scrollWidth<=e.clientWidth+1));await page.screenshot({path:'tmp/informes-qa/conversaciones-movil.png'});
+ await page.locator('#doctrinaCasosLista').getByRole('button',{name:'Retirar del JSON',exact:true}).click();await page.locator('#doctrinaCasosLista').getByText(/^Retirada/).waitFor();assert.equal(casos.filter(c=>c.estado==='revisado').length,0);
  await page.getByText('Autorizaciones documentales para Groq',{exact:true}).click();await page.getByRole('button',{name:'Revisar autorizaciones',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).click();await page.getByRole('button',{name:'Revocar permiso',exact:true}).waitFor();assert.match(await page.locator('#doctrinaGroqPermisos').innerText(),/Autorizado para Groq/);await page.getByRole('button',{name:'Revocar permiso',exact:true}).click();await page.getByRole('button',{name:'Autorizar fragmentos',exact:true}).waitFor();
  await page.setViewportSize({width:1440,height:950});
  const footer=await page.locator('#seccionAdmin .admin-side-footer').evaluate(el=>{

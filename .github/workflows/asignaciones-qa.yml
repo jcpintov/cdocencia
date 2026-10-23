@@ -7,6 +7,8 @@ on:
       - 'app.js'
       - 'calendario-tenidas.js'
       - 'doctrina-admin.js'
+      - 'conversaciones-doctrina.js'
+      - 'lib/memoria-casos.js'
       - 'perfil-superadmin.js'
       - 'roles-admin.js'
       - 'lib/roles-admin.js'

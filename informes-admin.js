@@ -1,9 +1,19 @@
 /* Informes privados: datos nuevos por apertura, sin reutilizar listas truncadas de pantalla. */
 (function(){
  const $=id=>document.getElementById(id);
+ const encabezados={asignaciones:'INFORME DE TRABAJOS ASIGNADOS',avances:'INFORME DE AVANCE DE LOS MAESTROS',actividad:'INFORME DE ACTIVIDAD DE ACCESO'};
  const titulos={asignaciones:'Trabajos asignados',avances:'Avance de los maestros',actividad:'Actividad de acceso'};
  let solicitud=0,controlador=null,exportando=false,informe=null,origen=null;
- let fuentesPDF=null;
+ let fuentesPDF=null,emblemaPDF=null;
+ async function cargarEmblemaPDF(){
+  if(!emblemaPDF)emblemaPDF=fetch('/imgs/emblema.png',{signal:AbortSignal.timeout(10000)}).then(async r=>{
+   if(!r.ok)throw Error('No fue posible cargar el emblema del informe');
+   const bytes=new Uint8Array(await r.arrayBuffer());let texto='';for(let i=0;i<bytes.length;i+=8192)texto+=String.fromCharCode(...bytes.subarray(i,i+8192));
+   return 'data:image/png;base64,'+btoa(texto);
+  }).catch(e=>{emblemaPDF=null;throw e;});
+  return emblemaPDF;
+ }
+ const emision=v=>instante(v)+':'+new Intl.DateTimeFormat('es-CL',{timeZone:'America/Santiago',second:'2-digit'}).format(new Date(v)).padStart(2,'0');
  async function cargarFuentesPDF(){
   if(!fuentesPDF)fuentesPDF=Promise.all(['Regular','Bold'].map(async estilo=>{
    const respuesta=await fetch('/assets/fonts/Docencia-'+estilo+'.ttf',{signal:AbortSignal.timeout(10000)});
@@ -37,9 +47,12 @@
  }
  function presentar(r){
   const doc=$('informeEjecutivoContenido');doc.replaceChildren();
-  doc.appendChild(texto('p','DOCENCIA MASÓNICA DE TERCER GRADO'));
-  doc.appendChild(texto('h2',titulos[r.tipo]));
-  doc.appendChild(texto('p','Emitido: '+instante(r.generado_en)+' · America/Santiago'));
+  const membrete=document.createElement('header');membrete.className='informe-membrete';
+  const identidad=document.createElement('div');identidad.className='informe-membrete-identidad';
+  identidad.append(texto('p','PLATAFORMA DE DOCENCIA PARA MAESTROS'),texto('p','R.·.L.·. OFL 146'),texto('p','TALAGANTE'));
+  const emblema=document.createElement('img');emblema.src='/imgs/emblema.png';emblema.alt='Emblema de la R.·.L.·. Orestes Frödden Lorenzen N.º 146';emblema.width=902;emblema.height=851;
+  const detalle=document.createElement('div');detalle.className='informe-membrete-detalle';detalle.append(texto('h2',encabezados[r.tipo]),texto('p','EMISIÓN: '+emision(r.generado_en)));
+  membrete.append(identidad,emblema,detalle);doc.appendChild(membrete);
   doc.appendChild(texto('p','Padrón docente vigente · excluye administradores y cuentas eliminadas.'));
   const d=r.data;
   if(r.tipo==='asignaciones'){
@@ -91,19 +104,27 @@
   ++solicitud;controlador?.abort();informe=null;
   $('dialogInformeEjecutivo')?.close();$('informeEjecutivoContenido')?.replaceChildren();
  };
- function dibujarInformePDF(pdf,r){
-  const ancho=277,izq=10,fin=193;let y=12;
-  const limpiar=()=>{pdf.setFillColor(255,255,255);pdf.rect(0,0,297,210,'F');};limpiar();
-  function pagina(){pdf.addPage();limpiar();y=12;}
+ function dibujarInformePDF(pdf,r,emblema){
+  const ancho=277,izq=10,fin=193;let y;
+  function membrete(){
+   pdf.setFillColor(255,255,255);pdf.rect(0,0,297,210,'F');
+   pdf.setFont('Docencia','bold');pdf.setFontSize(10.5);pdf.setTextColor(25,42,55);
+   pdf.text('PLATAFORMA DE DOCENCIA PARA MAESTROS',izq,16);
+   pdf.setFont('Docencia','normal');pdf.text('R.·.L.·. OFL 146',izq,24);pdf.text('TALAGANTE',izq,32);
+   pdf.addImage(emblema,'PNG',149,9,26,26*851/902,'emblema-institucional','FAST');
+   pdf.setTextColor(112,126,143);pdf.setFontSize(10);
+   const titulo=pdf.splitTextToSize(encabezados[r.tipo],105);pdf.text(titulo,287,18,{align:'right'});
+   pdf.setFontSize(9);pdf.text('EMISIÓN: '+emision(r.generado_en),287,18+titulo.length*5+5,{align:'right'});
+   pdf.setDrawColor(25,42,55);pdf.setLineWidth(.6);pdf.line(izq,40,287,40);pdf.setLineWidth(.15);y=48;
+  }
+  membrete();
+  function pagina(){pdf.addPage();membrete();}
   function linea(valor,tamano=10,negrita=false){
    pdf.setFont('Docencia',negrita?'bold':'normal');pdf.setFontSize(tamano);pdf.setTextColor(28,48,64);
    const lineas=pdf.splitTextToSize(String(valor),ancho),alto=tamano*.42;
    for(const l of lineas){if(y+alto>fin)pagina();pdf.text(l,izq,y);y+=alto;}
    y+=3;
   }
-  linea('DOCENCIA MASÓNICA DE TERCER GRADO',10);
-  linea(titulos[r.tipo],18,true);
-  linea('Emitido: '+instante(r.generado_en)+' - America/Santiago',9);
   linea('Padrón docente vigente. Excluye administradores y cuentas eliminadas.',9);
   function tablaPDF(titulo,columnas,anchos,filas){
    if(y+25>fin)pagina();
@@ -118,7 +139,7 @@
    for(const fila of filas){
     pdf.setFont('Docencia','normal');pdf.setFontSize(9);
     const celdas=fila.map((c,i)=>pdf.splitTextToSize(String(c??'—'),anchos[i]-5));
-    const alto=Math.max(...celdas.map(c=>c.length))*4+4;
+    const alto=Math.max(...celdas.map(c=>c.length))*4+3;
     if(y+alto>fin){pagina();if(titulo)linea(titulo+' (continuación)',12,true);cabecera();pdf.setFont('Docencia','normal');}
     let x=izq;
     celdas.forEach((c,i)=>{pdf.setFillColor(255,255,255);pdf.rect(x,y,anchos[i],alto,'FD');pdf.text(c,x+2.5,y+5);x+=anchos[i];});y+=alto;
@@ -155,7 +176,7 @@
     const archivo='Docencia-'+fuente.estilo+'.ttf';pdf.addFileToVFS(archivo,fuente.base64);
     pdf.addFont(archivo,'Docencia',fuente.estilo==='Bold'?'bold':'normal');
    }
-   dibujarInformePDF(pdf,datos);
+   dibujarInformePDF(pdf,datos,await cargarEmblemaPDF());
    if(n!==solicitud||usuarioActual!==actor||!usuarioActual?.es_admin)return;
    const total=pdf.internal.getNumberOfPages();
    for(let pagina=1;pagina<=total;pagina++){pdf.setPage(pagina);pdf.setFontSize(8);pdf.setTextColor(80);pdf.text('Documento privado · '+pagina+' / '+total,10,204);}

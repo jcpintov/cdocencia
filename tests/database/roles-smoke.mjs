@@ -68,5 +68,26 @@ try{
  await db.query('update auth.users set banned_until=now()+interval \'1 day\' where id=$1',[otro]);
  await assert.rejects(()=>cambiar(principal,otro,'ADMIN','USER'),/Cuenta sin activar/);
  assert.equal((await db.query('select count(*)::int n from doctrina.auditoria_roles')).rows[0].n,2);
+ // Ampliación: rol previo a Auth y primer acceso con OTP, sin privilegios antes de activar.
+ await db.exec(await readFile('sql/agente_casos_revisados.sql','utf8'));
+ await db.exec(`CREATE SCHEMA extensions;
+ CREATE FUNCTION extensions.crypt(text,text) RETURNS text LANGUAGE sql AS $$SELECT 'fixture:'||$1$$;
+ CREATE FUNCTION extensions.gen_salt(text) RETURNS text LANGUAGE sql AS $$SELECT 'fixture'$$;
+ CREATE TABLE primer_acceso_codigos(usuario_id uuid PRIMARY KEY,codigo_hash text,expira_en timestamptz,enviado_en timestamptz,intentos int,solicitudes int,ventana_inicio timestamptz);`);
+ await db.exec(await readFile('supabase/migrations/20261023190542_conversaciones_admin_pendiente.sql','utf8'));
+ const pendiente='44444444-4444-4444-8444-444444444444';
+ await db.query("INSERT INTO usuarios(id,email,nombre) VALUES($1,'pendiente@example.invalid','Pendiente')",[pendiente]);
+ assert.equal((await cambiar(principal,pendiente,'ADMIN','USER')).rol,'ADMIN');
+ assert.equal(await rol(pendiente),null);
+ assert.equal((await db.query("SELECT primer_acceso_emitir('pendiente@example.invalid','12345678') r")).rows[0].r,true);
+ assert.equal((await db.query("SELECT primer_acceso_verificar('pendiente@example.invalid','12345678') r")).rows[0].r,pendiente);
+ assert.equal((await db.query("SELECT primer_acceso_cancelar('pendiente@example.invalid','00000000') r")).rows[0].r,false);
+ assert.equal((await db.query("SELECT primer_acceso_cancelar('pendiente@example.invalid','12345678') r")).rows[0].r,true);
+ assert.equal((await db.query("SELECT primer_acceso_verificar('pendiente@example.invalid','12345678') r")).rows[0].r,null);
+ await db.query("INSERT INTO auth.users(id,email) VALUES($1,'pendiente@example.invalid')",[pendiente]);
+ await db.query('UPDATE usuarios SET auth_user_id=$1 WHERE id=$1',[pendiente]);assert.equal(await rol(pendiente),'ADMIN');
+ await assert.rejects(()=>cambiar(pendiente,otro,'ADMIN','USER'),/Superadmin requerido/);
+ await db.query("INSERT INTO agente_casos(actor,huella,pregunta,respuesta,fuentes,conversacion) VALUES($1,$2,'Una pregunta','Una respuesta','[]',$3)",[principal,'b'.repeat(64),JSON.stringify([{role:'user',content:'Una pregunta'},{role:'assistant',content:'Una respuesta'}])]);
+ assert.equal((await db.query('SELECT estado FROM agente_casos')).rows[0].estado,'candidato');
  console.log('Roles PostgreSQL OK: migración, delegación, revocación inmediata, RLS, auditoría y protección de Superadmin.');
 }finally{await db.close();}

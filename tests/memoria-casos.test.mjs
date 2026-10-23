@@ -1,6 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {guardarCasoCandidato,recuperarCasosRevisados,filtrarCasosVigentes,cargarMemoriaSesion} from '../lib/memoria-casos.js';
+import {guardarCasoCandidato,recuperarCasosRevisados,filtrarCasosVigentes,cargarMemoriaSesion,listarConversaciones,exportarMemoriaAprobada} from '../lib/memoria-casos.js';
+
+test('archivo conserva el diálogo, queda pendiente y acepta respuestas sin fuentes sin usarlas como norma',async()=>{
+ let fila;const admin={from:()=>({upsert:v=>{fila=v;return {select:()=>({maybeSingle:async()=>({data:{id:'caso'}})})};}})};
+ const historial=[{role:'user',content:'Planteamiento inicial'},{role:'assistant',content:'Respuesta inicial'}];
+ await guardarCasoCandidato(admin,'actor',{pregunta:'Mi precisión',conversacion:historial},{generativo:true,secciones:[{texto:'Respuesta final'}],fuentes:[]});
+ assert.equal(fila.conversacion.length,4);assert.equal(fila.conversacion[0].content,'Planteamiento inicial');assert.equal(fila.estado,undefined);assert.equal(filtrarCasosVigentes([fila],new Map()).length,0);
+});
+test('listado y JSON aprobado mantienen el actor y rechazan páginas fallidas',async()=>{
+ const filtros=[],filas=Array.from({length:501},(_,id)=>({id,pregunta:'Pregunta',conversacion:[]}));let a=0,b=49;
+ const q={select:()=>q,eq:(...x)=>{filtros.push(x);return q;},order:()=>q,range:async(x,y)=>{a=x;b=y;return {data:filas.slice(a,b+1),count:filas.length};}};
+ const admin={from:()=>q};const lista=await listarConversaciones(admin,'actor',{estado:'candidato',desde:50});assert.equal(lista.conversaciones.length,50);assert.equal(lista.hay_mas,true);
+ const memoria=await exportarMemoriaAprobada(admin,'actor');assert.equal(memoria.casos.length,501);assert.ok(filtros.some(x=>x[0]==='estado'&&x[1]==='revisado'));assert.ok(filtros.every(x=>x[0]!=='actor'||x[1]==='actor'));
+ q.range=async()=>({error:{message:'PRIVATE'}});await assert.rejects(()=>exportarMemoriaAprobada(admin,'actor'),/memoria_no_disponible/);
+});
 
 test('el JSON de sesión se reconstruye sin escribir ni vaciar los recuerdos persistidos',async()=>{
  let lecturas=0;

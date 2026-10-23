@@ -1000,7 +1000,7 @@
           <div id="doctrinaAgenteResultado" aria-live="polite" aria-busy="false"></div>
           </div>
           <form id="doctrinaAgenteFormulario" onsubmit="event.preventDefault();consultarAgenteDoctrina()">
-            <label for="doctrinaAgentePregunta" class="doctrina-pregunta-etiqueta">Tu consulta</label>
+            <label for="doctrinaAgentePregunta" class="admin-sr-only">Pregunta para el asistente</label>
             <textarea id="doctrinaAgentePregunta" name="consulta_doctrina" rows="3" minlength="10" maxlength="2000" placeholder="Escribe tu pregunta sobre la doctrina, los reglamentos o el simbolismo…" required></textarea>
             <div class="doctrina-envio">
               <div class="doctrina-acciones-chat">
@@ -1010,6 +1010,14 @@
             </div>
           </form>
         </section>
+        <details class="doctrina-administracion" id="doctrinaConversacionesPanel" ontoggle="if(this.open)cargarConversacionesDoctrina()">
+          <summary>Conversaciones del chat · revisión y memoria</summary>
+          <div class="doctrina-panel-contenido">
+            <p>Revise las conversaciones y sus fuentes antes de aprobarlas. Solo las aprobadas se incorporan al JSON de memoria que utiliza el agente como antecedente.</p>
+            <div class="doctrina-acciones"><label for="doctrinaCasosFiltro">Estado</label><select id="doctrinaCasosFiltro" onchange="cargarConversacionesDoctrina()"><option value="todos">Todas</option><option value="candidato">Pendientes</option><option value="revisado">Aprobadas</option><option value="retirado">Retiradas</option></select><button type="button" class="btn-secondary" onclick="cargarConversacionesDoctrina()">Actualizar conversaciones</button><button type="button" class="btn-secondary" onclick="descargarMemoriaAprobada()">Descargar JSON aprobado</button></div>
+            <p id="doctrinaCasosEstado" role="status" aria-live="polite"></p><div id="doctrinaCasosLista"></div><button type="button" id="doctrinaCasosMas" class="btn-secondary hidden" onclick="cargarConversacionesDoctrina(true)">Cargar más</button>
+          </div>
+        </details>
         <details class="doctrina-administracion trabajos-panel" id="trabajosPanel" ontoggle="if(this.open)cargarTrabajosTenida()">
           <summary>Trabajos de tenida · Orador</summary>
           <div class="doctrina-panel-contenido">
@@ -1410,7 +1418,8 @@
 <dialog id="perfilSuperadminDialogo" aria-labelledby="perfilSuperadminTitulo"><h2 id="perfilSuperadminTitulo">Mi perfil de Superadmin</h2><p>Los cambios requieren un código enviado al correo actual. No se modifican antes de validarlo.</p><label for="perfilSuperadminNombre">Nombre</label><input id="perfilSuperadminNombre" type="text" minlength="3" maxlength="150" autocomplete="off"><label for="perfilSuperadminEmail">Correo nuevo</label><input id="perfilSuperadminEmail" type="email" maxlength="254" autocomplete="off"><label for="perfilSuperadminCodigo">Código de autorización</label><input id="perfilSuperadminCodigo" inputmode="numeric" autocomplete="one-time-code" maxlength="8"><p id="perfilSuperadminEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" id="perfilSuperadminCerrar" class="btn-secondary" onclick="cerrarPerfilSuperadmin()">Cerrar perfil</button><button type="button" id="perfilSuperadminSolicitar" class="btn-secondary" onclick="accionPerfilSuperadmin('solicitar')">Enviar código al correo actual</button><button type="button" id="perfilSuperadminConfirmar" class="btn-primary" onclick="accionPerfilSuperadmin('confirmar')">Validar código y guardar</button><button type="button" id="perfilSuperadminRecuperar" class="btn-secondary" hidden onclick="accionPerfilSuperadmin('recuperar')">Recuperar cambio pendiente</button></div></dialog>
   <script src="perfil-superadmin.js"></script>
   <script src="roles-admin.js"></script>
-  <script src="doctrina-admin.js?v=20261022e"></script>
+  <script src="doctrina-admin.js?v=20261023g"></script>
+  <script src="conversaciones-doctrina.js"></script>
   <script src="trabajos-tenida.js?v=20261022a"></script>
   <script src="bitacora-sesion.js"></script>
   <script src="ui-v2.js" defer></script>

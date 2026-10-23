@@ -30,7 +30,7 @@ export default async function handler(req,res){
   controller.signal.throwIfAborted();if(pe)throw pe;
   if(!esSuperadmin(perfil,identity.user))return reply(403,{error:'Solo Superadmin puede cambiar roles'});
   const {data,error:re}=await admin.rpc('admin_gestionar_rol',{p_actor:identity.user.id,p_usuario:b.id,p_rol:b.rol,p_rol_actual:b.rol_actual,p_motivo:b.motivo.trim()});
-  if(re){const status={'42501':403,'22023':422,'P0002':404,'40001':409}[re.code];if(status)return reply(status,{error:status===409?'El rol cambió. Actualice el padrón.':status===403?'Cuenta protegida o permiso insuficiente':status===404?'Usuario no disponible':'Se requiere una cuenta activa y vinculada a Auth'});throw re;}
+  if(re){const status={'42501':403,'22023':422,'P0002':404,'40001':409}[re.code];if(status)return reply(status,{error:status===409?'El rol cambió. Actualice el padrón.':status===403?'Cuenta protegida o permiso insuficiente':status===404?'Usuario no disponible':'La cuenta vinculada no está activa o verificada'});throw re;}
   return reply(200,{ok:true,usuario:data});
   })();
   const resultado=await Promise.race([tarea,limite]);return reply(resultado.status,resultado.data);

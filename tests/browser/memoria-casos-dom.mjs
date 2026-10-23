@@ -35,3 +35,18 @@ try{
  assert.equal(s.document.getElementById('doctrinaMemoriaEstado'),null,'La memoria se conserva sin textos de relleno');
  console.log('PASS JSON de sesión: carga inicial, reutilización local y recuperación después de limpiar la sesión.');
 }finally{s.close();}
+
+const archivo=new JSDOM(await readFile('index.html','utf8'),{url:'https://fixture.invalid',runScripts:'outside-only'}),a=archivo.window;
+try{
+ a.usuarioActual={id:'actor',es_admin:true};a.confirm=()=>true;let estado='candidato',blob,descargas=0;
+ a.vaciarMemoriaSesionLocal=()=>{};a.cargarMemoriaAgenteSesion=async()=>{};a.Blob=Blob;a.URL.createObjectURL=b=>{blob=b;return 'blob:fixture';};a.URL.revokeObjectURL=()=>{};a.HTMLAnchorElement.prototype.click=()=>descargas++;
+ const caso={id:'11111111-1111-4111-8111-111111111111',pregunta:'<script>Pregunta</script>',respuesta:'Respuesta',fuentes:[],creado_en:'2026-10-23T12:00:00Z',conversacion:[{role:'user',content:'Primera pregunta'},{role:'assistant',content:'<img src=x>Respuesta'}]};
+ a.peticionDoctrina=async(action)=>{if(action==='caso_aprobar')estado='revisado';if(action==='caso_retirar')estado='retirado';if(action==='memoria_exportar')return {memoria:{schema_version:1,casos:estado==='revisado'?[caso]:[]}};return {conversaciones:[{...caso,estado}],total:1,hay_mas:false};};
+ a.eval(await readFile('conversaciones-doctrina.js','utf8'));await a.cargarConversacionesDoctrina();
+ const lista=a.document.getElementById('doctrinaCasosLista');assert.equal(lista.querySelectorAll('script,img').length,0);assert.match(lista.textContent,/Primera pregunta/);assert.match(lista.textContent,/Pendiente/);
+ await lista.querySelector('button').onclick();assert.equal(estado,'revisado');assert.match(lista.textContent,/Aprobada/);
+ await a.descargarMemoriaAprobada();assert.equal(descargas,1);assert.equal(JSON.parse(await blob.text()).casos.length,1);
+ await lista.querySelector('button').onclick();assert.equal(estado,'retirado');await a.descargarMemoriaAprobada();assert.equal(JSON.parse(await blob.text()).casos.length,0);
+ const viejo=lista.querySelector('button');a.limpiarConversacionesDoctrina();a.usuarioActual=null;await viejo.onclick();assert.equal(lista.children.length,0);assert.equal(estado,'retirado');
+ console.log('PASS archivo: diálogo completo, aprobación, retiro, JSON solo aprobado, XSS y limpieza de sesión.');
+}finally{a.close();}

@@ -1,3 +1,4 @@
+import {extractText} from 'unpdf';
 // HTTP + navegador + PDF reales; base y credenciales completamente sintéticas.
 import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
@@ -57,9 +58,12 @@ try{
   const inicio=performance.now();await page.evaluate(t=>abrirInformeEjecutivo(t),tipo);await estado.filter({hasText:'Vista previa lista'}).waitFor();
   tiempos.push({tipo,vista_ms:Math.round(performance.now()-inicio)});assert.equal(await dialog.isVisible(),true);assert.ok(await dialog.evaluate(e=>Math.abs(e.getBoundingClientRect().left+e.getBoundingClientRect().width/2-innerWidth/2)<2),'Modal centrado');
   assert.equal(await page.locator('#informeEjecutivoContenido script').count(),0);
+  await page.locator('.informe-membrete img').evaluate(img=>img.decode());assert.match(await page.locator('.informe-membrete').textContent(),/PLATAFORMA DE DOCENCIA PARA MAESTROS/);assert.match(await page.locator('.informe-membrete').textContent(),/TALAGANTE/);assert.match(await page.locator('.informe-membrete').textContent(),/EMISIÓN:/);
   if(tipo==='actividad'){assert.match(await page.locator('#informeEjecutivoContenido').textContent(),/1101/);assert.match(await page.locator('#informeEjecutivoContenido').textContent(),/25 sin actividad/);}
   const pdfInicio=performance.now(),descarga=page.waitForEvent('download');await page.locator('#btnDescargarInformeEjecutivo').click();const file=await descarga;
   assert.equal(file.suggestedFilename(),'informe-'+tipo+'-'+new Date().toISOString().slice(0,10)+'.pdf');await file.saveAs('tmp/informes-qa/'+tipo+'.pdf');tiempos.at(-1).pdf_ms=Math.round(performance.now()-pdfInicio);
+  const pdfLeido=await extractText(new Uint8Array(await readFile('tmp/informes-qa/'+tipo+'.pdf')),{mergePages:false});assert.ok(pdfLeido.totalPages>=1&&pdfLeido.totalPages<=2,'Paginación sin página huérfana');
+  for(const pagina of pdfLeido.text){assert.match(pagina,/PLATAFORMA DE DOCENCIA PARA MAESTROS/);assert.match(pagina,/TALAGANTE/);assert.match(pagina,/EMISIÓN:/);}assert.match(pdfLeido.text.join(' '),/Álvaro Pérez/);
   await page.locator('#btnCerrarInformeEjecutivo').click();assert.equal(await dialog.isVisible(),false);
   assert.equal(await page.locator('#adminSeccionResumen').isVisible(),true);
  }
@@ -83,6 +87,7 @@ try{
  let errorRol=true;const cambiosRol=[];
  await page.route('**/api/admin-roles',async route=>{const body=route.request().postDataJSON();cambiosRol.push(body);if(errorRol)return route.fulfill({status:500,json:{error:'Error controlado del servidor'}});await page.evaluate(b=>{const u=padronUsuariosAdmin.find(x=>x.id===b.id);u.rol=b.rol;u.es_admin=b.rol==='ADMIN';},body);return route.fulfill({json:{ok:true,usuario:{id:body.id,rol:body.rol}}});});
  await page.evaluate(()=>{cargarListadoUsuariosAdmin=async()=>renderizarPadronAdmin();});
+ await page.evaluate(()=>{padronUsuariosAdmin[0].auth_user_id=null;renderizarPadronAdmin();});
  await page.getByRole('button',{name:'Hacer administrador',exact:true}).first().click();
  await page.locator('#cambioRolMotivo').fill('Responsable docente designado');await page.locator('#cambioRolGuardar').click();
  await page.locator('#cambioRolEstado').filter({hasText:'Error controlado'}).waitFor();assert.equal(await page.locator('#cambioRolDialogo').isVisible(),true);
