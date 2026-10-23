@@ -12,6 +12,7 @@ on:
       - 'lib/roles-admin.js'
       - 'supabase/migrations/**'
       - 'api/admin-*.js'
+      - 'server/**'
       - 'api/cron-calendario*.js'
       - 'lib/correo-calendario.js'
       - 'lib/hora-calendario.js'

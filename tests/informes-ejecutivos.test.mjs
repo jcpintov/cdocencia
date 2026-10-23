@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {crearHandlerInformes} from '../api/admin-informes.js';
+import {crearHandlerInformes} from '../server/admin-informes.js';
 import {leerPaginas,resumirAvances,resumirActividad} from '../lib/informes-ejecutivos.js';
 
 const usuarios=[{id:'u1',nombre:'Ana',email:'ana@example.invalid'},{id:'u2',nombre:'José',email:'jose@example.invalid'},

@@ -4,7 +4,7 @@ import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
 import {createRequire} from 'node:module';
 import assert from 'node:assert/strict';
-import {crearHandlerInformes} from '../../api/admin-informes.js';
+import {crearHandlerInformes} from '../../server/admin-informes.js';
 const require=createRequire(process.env.QA_PLAYWRIGHT_ROOT+'/package.json'),{chromium}=require('playwright');
 const catalogo=JSON.parse(await readFile('tests/browser/catalogo-fixture.json','utf8')).catalogo;
 const usuarios=Array.from({length:26},(_,i)=>({id:'u'+i,nombre:i===0?'Álvaro Pérez':i===1?'José <script>alert(1)</script>':'Hermano '+String(i+1).padStart(2,'0'),email:'user'+i+'@example.invalid',es_admin:false,auth_user_id:'auth'+i,cuenta_eliminada:false}));
@@ -55,7 +55,7 @@ try{
  const dialog=page.locator('#dialogInformeEjecutivo'),estado=page.locator('#informeEjecutivoEstado');
  for(const tipo of ['asignaciones','avances','actividad']){
   const inicio=performance.now();await page.evaluate(t=>abrirInformeEjecutivo(t),tipo);await estado.filter({hasText:'Vista previa lista'}).waitFor();
-  tiempos.push({tipo,vista_ms:Math.round(performance.now()-inicio)});assert.equal(await dialog.isVisible(),true);
+  tiempos.push({tipo,vista_ms:Math.round(performance.now()-inicio)});assert.equal(await dialog.isVisible(),true);assert.ok(await dialog.evaluate(e=>Math.abs(e.getBoundingClientRect().left+e.getBoundingClientRect().width/2-innerWidth/2)<2),'Modal centrado');
   assert.equal(await page.locator('#informeEjecutivoContenido script').count(),0);
   if(tipo==='actividad'){assert.match(await page.locator('#informeEjecutivoContenido').textContent(),/1101/);assert.match(await page.locator('#informeEjecutivoContenido').textContent(),/25 sin actividad/);}
   const pdfInicio=performance.now(),descarga=page.waitForEvent('download');await page.locator('#btnDescargarInformeEjecutivo').click();const file=await descarga;

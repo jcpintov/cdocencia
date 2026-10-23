@@ -35,13 +35,20 @@
       "maxDuration": 300,
       "includeFiles": "{node_modules/unpdf/dist/**,config/orador.json,config/memoria-agente.json}"
     },
-    "api/admin-informes.js": {
+    "api/admin-usuarios.js": {
       "maxDuration": 30
-    },
-    "api/admin-roles.js": {
-      "maxDuration": 20
     }
   },
   "buildCommand": "node scripts/verificar-groq.mjs && node scripts/verificar-orador.mjs",
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "rewrites": [
+    {
+      "source": "/api/admin-informes",
+      "destination": "/api/admin-usuarios?operacion=informes"
+    },
+    {
+      "source": "/api/admin-roles",
+      "destination": "/api/admin-usuarios?operacion=roles"
+    }
+  ]
 }

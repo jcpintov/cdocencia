@@ -2946,7 +2946,7 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 .asignaciones-padron{margin:22px 0;padding:16px 0;border-top:1px solid #ccd8e2;border-bottom:1px solid #ccd8e2}
 .asignaciones-padron td p{margin:0 0 8px}
 .asignaciones-padron-acciones{margin-bottom:8px}
-.informe-ejecutivo-dialog{width:min(1120px,94vw);max-width:94vw;max-height:90dvh;padding:20px;border:1px solid #b3c4d0;border-radius:12px;background:#f1f5f8;color:#243b50;box-shadow:0 20px 70px #0005}
+.informe-ejecutivo-dialog{margin:auto;width:min(1120px,94vw);max-width:94vw;max-height:90dvh;padding:20px;border:1px solid #b3c4d0;border-radius:12px;background:#f1f5f8;color:#243b50;box-shadow:0 20px 70px #0005}
 .informe-ejecutivo-dialog::backdrop{background:#122231a8}
 .informe-ejecutivo-cabecera{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .informe-ejecutivo-cabecera h2{color:#243b50;margin:0;font-size:1.3rem}
@@ -2962,3 +2962,10 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 .informe-documento th{background:#eaf0f5;font-weight:700}
 .informe-documento tr,.informe-documento h2,.informe-documento h3{break-inside:avoid;page-break-inside:avoid}
 @media(max-width:600px){.informe-ejecutivo-dialog{padding:12px}.informes-ejecutivos-acciones>button{width:100%}.informe-ejecutivo-acciones{width:100%}.informe-ejecutivo-acciones>button{flex:1}.informe-documento{padding:18px}}
+
+.cambio-rol-dialog{width:min(560px,94vw);font:16px/1.5 Arial,sans-serif;overflow-wrap:anywhere}
+.cambio-rol-dialog h2{margin-top:0;color:#243b50;font-size:1.4rem}
+.cambio-rol-dialog label{display:block;font-weight:700;margin:16px 0 6px}
+.cambio-rol-dialog textarea{box-sizing:border-box;width:100%;min-height:90px;font:inherit}
+.cambio-rol-dialog .doctrina-acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.cambio-rol-dialog .doctrina-acciones button{flex:1;min-width:130px}

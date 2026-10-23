@@ -12,7 +12,7 @@ test('Administrador puede operar pero no adquiere potestades de Superadmin',()=>
  assert.equal(esSuperadmin({...profile,rol:'SUPERADMIN'},identity),false);
  assert.equal(esSuperadmin({...profile,rol:'SUPERADMIN'},{...identity,app_metadata:{superadmin_principal:true}}),true);
 });
-const source=readFileSync(new URL('../api/admin-roles.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace('export default async function handler','async function handler');
+const source=readFileSync(new URL('../server/admin-roles.js',import.meta.url),'utf8').replace(/^import .*;$/gm,'').replace('export default async function handler','async function handler');
 const payload={id:'22222222-2222-4222-8222-222222222222',rol:'ADMIN',rol_actual:'USER',motivo:'Responsable de docencia'};
 function setup({rol='SUPERADMIN',rpcError=null,fail=false,lento=false}={}){
  const calls=[];const user={id:'actor',email:'jpintov@gmail.com'};
