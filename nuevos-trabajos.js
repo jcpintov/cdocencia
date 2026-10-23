@@ -65,7 +65,6 @@
     const r=await api({action:'nuevo_preparar',id:idArchivo,nombre:file.name,base64:btoa(bin)});mostrar(r.borrador);if(typeof listaModulos!=='undefined'&&Array.isArray(listaModulos))$('nuevoTrabajoOrden').value=Math.min(999,Math.max(0,...listaModulos.map(m=>Number(m.numero_orden)||0))+1);msg('Original conservado. Revise el texto limpio y los fragmentos separados.');
    }else if(accion==='guardar'){await guardar();msg('Borrador guardado. No está publicado.');}
    else if(accion==='generar'){
-    if(usuarioActual?.rol==='ADMIN')throw Error('Las funciones de IA están reservadas a Superadmin');
     if(!$('nuevoTrabajoAutorizarIA').checked)throw Error('Marque la autorización para enviar el texto revisado a Groq.');
     await guardar();msg('Generando ocho preguntas a partir del texto guardado…');const r=await api({action:'nuevo_generar',id:borrador.id,revision:borrador.revision,confirmado:true});mostrar(r.borrador);msg('Ocho preguntas generadas. Revise alternativas, respuesta y sustento antes de publicar.');
    }else if(accion==='publicar'){

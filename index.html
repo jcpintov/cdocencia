@@ -1450,8 +1450,8 @@
    <p>Se normalizan espacios y saltos. Los fragmentos separados permanecen disponibles para contrastar. Revise las notas dudosas y conserve las citas que forman parte del argumento.</p>
    <details><summary>Ver fragmentos separados</summary><pre id="nuevoTrabajoSeparados"></pre></details>
    <details><summary>Contrastar con la extracción del original</summary><pre id="nuevoTrabajoExtraido"></pre></details>
-   <label data-solo-superadmin class="nuevo-trabajo-confirmacion"><input id="nuevoTrabajoAutorizarIA" name="nuevo_trabajo_autorizar_ia" type="checkbox"> Autorizo enviar este texto revisado a la IA integrada de Groq para generar el cuestionario.</label>
-   <button type="button" class="btn-secondary" data-solo-superadmin onclick="accionNuevoTrabajo('generar')">Generar las ocho preguntas</button>
+   <label class="nuevo-trabajo-confirmacion"><input id="nuevoTrabajoAutorizarIA" name="nuevo_trabajo_autorizar_ia" type="checkbox"> Autorizo enviar este texto revisado a la IA integrada de Groq para generar el cuestionario.</label>
+   <button type="button" class="btn-secondary" onclick="accionNuevoTrabajo('generar')">Generar las ocho preguntas</button>
    <p id="nuevoTrabajoPreguntasEstado"></p><div id="nuevoTrabajoPreguntas"></div>
    <label class="nuevo-trabajo-confirmacion"><input id="nuevoTrabajoRevisado" name="nuevo_trabajo_revisado" type="checkbox"> Revisé el texto, las ocho preguntas, sus alternativas y respuestas.</label>
    <div class="asignacion-botones"><button type="submit" class="btn-secondary">Guardar borrador</button><button type="button" class="btn-primary" onclick="accionNuevoTrabajo('publicar')">Publicar trabajo revisado</button></div>
