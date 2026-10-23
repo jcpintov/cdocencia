@@ -36,6 +36,7 @@ let consultaPermisosGroq = 0;
 let cargaDoctrinaPendiente = null;
 function limpiarBibliotecaDoctrina(){
  vaciarMemoriaSesionLocal();
+ window.limpiarConversacionesDoctrina?.();
  if(typeof limpiarTrabajosTenida==='function')limpiarTrabajosTenida();
  consultaBibliotecaDoctrina++;consultaBusquedaTextoDoctrina++;consultaPermisosGroq++;invalidarAgenteDoctrina();
  document.getElementById('doctrinaAgenteFormulario')?.reset();
@@ -414,7 +415,7 @@ async function consultarAgenteDoctrina() {
  boton.textContent = 'Consultando…';
  try {
   const resultado = await peticionDoctrina('agente_consultar', {
-   pregunta,antecedentes:antecedentesCasoDoctrina(historialAgenteDoctrina),fuentesPrevias:fuentesConversacionDoctrina,historial:historialAgenteDoctrina.length>5?[historialAgenteDoctrina[0],...historialAgenteDoctrina.slice(-4)]:historialAgenteDoctrina
+   pregunta,conversacion:historialAgenteDoctrina,antecedentes:antecedentesCasoDoctrina(historialAgenteDoctrina),fuentesPrevias:fuentesConversacionDoctrina,historial:historialAgenteDoctrina.length>5?[historialAgenteDoctrina[0],...historialAgenteDoctrina.slice(-4)]:historialAgenteDoctrina
   }, controlador.signal);
   if (vigente()) {
    if(!resultado.informe?.generativo){if(resultado.informe?.codigo==='GROQ_LIMITE')reintentoAgenteHasta=Date.now()+Math.max(1,Math.min(86400,Number(resultado.informe.reintentar_en)||15))*1000;turnoVista.dataset.estado='error';presentarRespuestaDoctrina(resultado.informe,vigente);return;}

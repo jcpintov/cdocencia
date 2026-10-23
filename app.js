@@ -554,7 +554,7 @@ function renderizarPadronAdmin() {
     celda(u.debe_cambiar_clave ? 'Requiere cambio' : 'Al día');
     celda(u.auth_user_id ? 'Vinculado' : 'Pendiente de activación');
     const acciones=celda('', 'admin-accion-pendiente');
-    if(esSuperadminSesion()&&u.auth_user_id){const b=document.createElement('button');b.type='button';b.className='btn-secondary';b.textContent='Hacer administrador';b.onclick=()=>abrirCambioRol(u.id,'ADMIN');acciones.appendChild(b);}
+    if(esSuperadminSesion()){const b=document.createElement('button');b.type='button';b.className='btn-secondary';b.textContent='Hacer administrador';b.onclick=()=>abrirCambioRol(u.id,'ADMIN');acciones.appendChild(b);}
 
     tbody.appendChild(tr);
   });

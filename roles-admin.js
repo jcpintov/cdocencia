@@ -3,7 +3,7 @@ function limpiarRolesAdmin(){cambioRolPendiente=null;const d=document.getElement
 function abrirCambioRol(id,rol){
  if(!esSuperadminSesion())return;
  const u=padronUsuariosAdmin.find(x=>x.id===id);
- if(!u||u.rol==='SUPERADMIN'||!u.auth_user_id)return;
+ if(!u||u.rol==='SUPERADMIN')return;
  cambioRolPendiente={id,rol,rol_actual:u.rol||'USER',actor:usuarioActual.id};
  let d=document.getElementById('cambioRolDialogo');
  if(!d){d=document.createElement('dialog');d.id='cambioRolDialogo';d.className='informe-ejecutivo-dialog cambio-rol-dialog';d.setAttribute('aria-labelledby','cambioRolTitulo');d.innerHTML='<h2 id="cambioRolTitulo">Cambiar rol</h2><p id="cambioRolUsuario"></p><p>Administrador puede gestionar usuarios y docencia. Los roles, las cuentas administrativas y la configuración de seguridad pertenecen a Superadmin.</p><label for="cambioRolMotivo">Motivo del cambio</label><textarea id="cambioRolMotivo" minlength="5" maxlength="500"></textarea><p id="cambioRolEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button id="cambioRolCancelar" type="button" class="btn-secondary">Cancelar</button><button id="cambioRolGuardar" type="button" class="btn-primary">Confirmar cambio</button></div>';document.body.appendChild(d);document.getElementById('cambioRolCancelar').onclick=()=>{cambioRolPendiente=null;d.close();};document.getElementById('cambioRolGuardar').onclick=guardarCambioRol;}

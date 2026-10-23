@@ -2969,3 +2969,21 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 .cambio-rol-dialog textarea{box-sizing:border-box;width:100%;min-height:90px;font:inherit}
 .cambio-rol-dialog .doctrina-acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 .cambio-rol-dialog .doctrina-acciones button{flex:1;min-width:130px}
+
+.doctrina-caso{border:1px solid #b8c9d5;border-radius:8px;padding:14px;margin:12px 0;background:#fff;color:#203b50;overflow-wrap:anywhere}
+.doctrina-caso summary{font-weight:700;cursor:pointer}
+.doctrina-caso p{margin:12px 0;white-space:pre-wrap}
+#doctrinaConversacionesPanel .doctrina-acciones{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+#doctrinaConversacionesPanel .doctrina-panel-contenido{font:15px/1.55 Arial,sans-serif}
+#doctrinaConversacionesPanel .doctrina-panel-contenido p{font:inherit;color:#203b50}
+#doctrinaConversacionesPanel .doctrina-caso summary{font:700 16px/1.5 Arial,sans-serif}
+
+.informe-membrete{display:grid;grid-template-columns:minmax(0,1.4fr) 84px minmax(0,1fr);align-items:center;gap:22px;border-bottom:2px solid #192a37;padding:0 0 20px;margin-bottom:20px}
+.informe-documento .informe-membrete p{font:14px/1.5 Arial,sans-serif;margin:0;color:#192a37}
+.informe-membrete-identidad p:first-child{font-weight:700!important;margin-bottom:3px!important}
+.informe-membrete img{display:block;width:84px;height:auto;object-fit:contain}
+.informe-membrete-detalle{text-align:right}
+.informe-documento .informe-membrete h2{font:400 14px/1.5 Arial,sans-serif;color:#708093;margin:0 0 10px}
+.informe-documento .informe-membrete-detalle p{font-size:12px;color:#708093}
+@media(max-width:600px){.informe-membrete{grid-template-columns:minmax(0,1fr) 64px;gap:16px;padding-bottom:16px}.informe-membrete img{width:64px}.informe-membrete-detalle{grid-column:1/-1;text-align:left}.informe-documento .informe-membrete p{font-size:12px}.informe-documento .informe-membrete h2{font-size:14px}}
