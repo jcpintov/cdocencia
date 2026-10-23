@@ -47,7 +47,7 @@ jobs:
           persist-credentials: false
       - name: Preparar navegador aislado sin secretos
         run: |
-          npm install --prefix "$RUNNER_TEMP/qa" --ignore-scripts --no-package-lock playwright@1.62.1 jsdom@30.1.3 @electric-sql/pglite@0.5.11
+          npm install --prefix "$RUNNER_TEMP/qa" --ignore-scripts --no-package-lock playwright@1.62.1 jsdom@30.1.3 @electric-sql/pglite@0.5.11 html2pdf.js@0.10.1
           "$RUNNER_TEMP/qa/node_modules/.bin/playwright" install --with-deps chromium
       - name: Probar formulario y catálogo escritorio y móvil
         env:
@@ -56,6 +56,7 @@ jobs:
           QA_DOM_ROOT: ${{ runner.temp }}/qa
           QA_HILOS_CAPTURE: "1"
         run: |
+          node tests/browser/informes-smoke.mjs
           node tests/browser/asignaciones-smoke.mjs
           node tests/browser/usuarios-smoke.mjs
           node tests/browser/tenidas-smoke.mjs

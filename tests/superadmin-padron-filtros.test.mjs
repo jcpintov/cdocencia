@@ -12,10 +12,10 @@ test('busca nombre y correo sin distinguir tildes ni mayúsculas',()=>{
  assert.equal(ctx.filtrarPadronAdmin(usuarios,'ana@example').length,1);
  assert.equal(ctx.filtrarPadronAdmin(usuarios,'sin coincidencias').length,0);
 });
-test('filtros distinguen integrantes de administrador y Dummy sin alterar padrón',()=>{
+test('listado de usuarios excluye administradores y cuentas de prueba sin alterar padrón',()=>{
  assert.equal(ctx.filtrarPadronAdmin(usuarios,'','activos').length,1);
  assert.equal(ctx.filtrarPadronAdmin(usuarios,'','pendientes').length,1);
- assert.equal(ctx.filtrarPadronAdmin(usuarios,'','especiales').length,2);
- assert.equal(ctx.filtrarPadronAdmin(usuarios,'','todos').length,4);
+ assert.equal(ctx.filtrarPadronAdmin(usuarios,'','especiales').length,0);
+ assert.equal(ctx.filtrarPadronAdmin(usuarios,'','todos').length,2);
  assert.equal(usuarios.length,4);
 });

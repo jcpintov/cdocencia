@@ -8,16 +8,17 @@ async function cargarMemoriaAgenteSesion(){
  const version=++versionMemoriaSesion;
  const vigente=()=>usuarioActual?.es_admin&&usuarioActual.id===actor&&version===versionMemoriaSesion;
  let aviso=document.getElementById('doctrinaMemoriaEstado');
- if(!aviso){const f=document.getElementById('doctrinaAgenteFormulario');if(f){aviso=document.createElement('p');aviso.id='doctrinaMemoriaEstado';aviso.setAttribute('role','status');f.before(aviso);}}
+ // La memoria se recupera en silencio; solo los fallos requieren un aviso.
+ if(aviso){aviso.remove();aviso=null;}
  const promesa=(async()=>{
   try{
    const r=await peticionDoctrina('memoria_sesion');
    if(!vigente())return;
    if(r.memoria?.schema_version!==1||!Array.isArray(r.memoria.criterios)||!Array.isArray(r.memoria.casos))throw Error('Memoria incompleta');
    memoriaPersistenteSesion={actor,memoria:r.memoria};
-   if(aviso)aviso.textContent=r.memoria.persistencia_casos?'Memoria recuperada: '+r.memoria.casos.length+' casos revisados recientes. Lo aprendido se conserva entre sesiones.':'Criterios editoriales recuperados. La memoria persistente de casos está pendiente de activación.';
+
    return r.memoria;
-  }catch{if(vigente()&&aviso)aviso.textContent='No se pudo recuperar la memoria de sesión. Los registros del servidor no se han borrado.';}
+  }catch{if(vigente()){const salida=document.getElementById('doctrinaAgenteResultado');if(salida)salida.textContent='No se pudo recuperar la memoria de sesión. Intente nuevamente.';}}
   finally{if(vigente())cargaMemoriaSesion=null;}
  })();
  cargaMemoriaSesion={actor,promesa};return promesa;
@@ -271,8 +272,6 @@ async function contrastarPaginaTextoDoctrina(boton){
 function ajustarCompositorDoctrina(){
  const campo=document.getElementById('doctrinaAgentePregunta');
  if(!campo)return;
- const contador=document.getElementById('doctrinaPreguntaContador');
- if(contador)contador.textContent=campo.value.length+' / '+campo.maxLength;
  campo.style.height='auto';
  if(campo.value)campo.style.height=Math.min(Math.max(campo.scrollHeight,104),192)+'px';
 }

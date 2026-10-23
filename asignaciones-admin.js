@@ -90,6 +90,7 @@
   $('btnActualizarAsignaciones').disabled=ocupado;
   $('btnAbrirNuevaAsignacion').disabled=ocupado;
   document.querySelectorAll('#asignacionesBody button[data-vigente]').forEach(b=>b.disabled=ocupado||b.dataset.vigente!=='true');
+  document.querySelectorAll('#asignacionesPadronBody button').forEach(b=>b.disabled=ocupado);
   $('btnCerrarOpcionesAsignacion').disabled=ocupado;
   $('btnAsignarTrabajo').hidden=!!seleccion;
   ['btnModificarAsignacion','btnEliminarAsignacion','btnCorreoAsignacion'].forEach(id=>$(id).hidden=!seleccion);
@@ -126,6 +127,35 @@
   const previa=datos.asignaciones.find(a=>a.vigente&&a.codigo===codigo);
   $('asignacionDisponibilidad').textContent=previa?'Asignado previamente a '+previa.nombre+(previa.id===seleccion?' (asignación seleccionada).':'.'):codigo?'Tema disponible para asignar.':'Los temas asignados se muestran deshabilitados e identifican al hermano responsable.';
  }
+ function renderPadron(){
+  const cuerpo=$('asignacionesPadronBody');if(!cuerpo)return;cuerpo.replaceChildren();
+  if(!datosCargados){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='Padrón pendiente de actualización.';tr.appendChild(td);cuerpo.appendChild(tr);$('asignacionesPadronConteo').textContent='';return;}
+  const vigentes=datos.asignaciones.filter(a=>a.vigente),mapa=new Map();
+  vigentes.forEach(a=>{if(!mapa.has(a.usuario_id))mapa.set(a.usuario_id,[]);mapa.get(a.usuario_id).push(a);});
+  const usuarios=[...datos.usuarios].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
+  const conTrabajo=usuarios.filter(u=>mapa.has(u.id)).length;
+  $('asignacionesPadronConteo').textContent=usuarios.length+' usuarios · '+conTrabajo+' con trabajo · '+(usuarios.length-conTrabajo)+' sin trabajo asignado';
+  for(const u of usuarios){
+   const tareas=(mapa.get(u.id)||[]).sort(ordenarAsignaciones),tr=document.createElement('tr');
+   tr.className='asignacion-fila '+(tareas.length?'asignacion-pendiente':'asignacion-sin-trabajo');
+   const nombre=document.createElement('td');nombre.textContent=u.nombre;tr.appendChild(nombre);
+   const tiene=document.createElement('td');tiene.textContent=tareas.length?'Con trabajo ('+tareas.length+')':'Sin trabajo';tr.appendChild(tiene);
+   const trabajos=document.createElement('td'),acciones=document.createElement('td');
+   function boton(etiqueta,accion){const b=document.createElement('button');b.type='button';b.className='admin-link-btn';b.textContent=etiqueta;b.disabled=ocupado;b.addEventListener('click',accion);return b;}
+   if(!tareas.length)trabajos.textContent='—';
+   tareas.forEach(a=>{
+    const linea=document.createElement('p');linea.textContent=a.codigo+' · '+a.tema+' · '+estadoTrabajo(a);trabajos.appendChild(linea);
+    const grupo=document.createElement('div');grupo.className='asignaciones-padron-acciones';
+    const editar=boton('Editar',()=>seleccionar(a.id));editar.setAttribute('aria-label','Editar '+a.codigo+' de '+u.nombre);
+    const eliminar=boton('Eliminar',()=>{seleccionar(a.id);void guardar('eliminar');});eliminar.setAttribute('aria-label','Eliminar asignación '+a.codigo+' de '+u.nombre);
+    grupo.append(editar,eliminar);acciones.appendChild(grupo);
+   });
+   const asignar=boton('Asignar trabajo',()=>{window.abrirNuevaAsignacionDocente();$('asignacionUsuario').value=u.id;contexto();$('asignacionTema').focus();});
+   asignar.setAttribute('aria-label','Asignar trabajo a '+u.nombre);acciones.appendChild(asignar);
+   tr.append(trabajos,acciones);cuerpo.appendChild(tr);
+  }
+  if(!usuarios.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='No hay usuarios docentes en el padrón.';tr.appendChild(td);cuerpo.appendChild(tr);}
+ }
  function render(){
   opciones();const cuerpo=$('asignacionesBody');cuerpo.replaceChildren();
   const filtro=$('asignacionesEstadoFiltro')?.value||'todos';
@@ -147,7 +177,7 @@
    const textos=[a.nombre,a.codigo+' · '+a.tema,fecha(a.fecha_asignacion),fecha(a.fecha_entrega)+' · 23:30',a.vigente?estadoTrabajo(a):'Anulada'];
    textos.forEach((x,i)=>{const td=document.createElement('td');td.textContent=x;if(i===4){const s=document.createElement('small');s.className='asignacion-correo-estado';const c=a.correos?.[0];s.textContent=!c?'Sin correo enviado':c.estado==='enviado'?'Correo aceptado por SMTP · CCO '+(c.copia_estado==='aceptada'?'aceptada':'sin confirmar'):c.estado==='preparado'?'Envío en curso / por confirmar':'Correo sin confirmación';td.appendChild(s);const rs=document.createElement('small');rs.className='asignacion-correo-estado';rs.textContent=a.recordatorio?.estado==='enviado'?'Recordatorio enviado':a.recordatorio?.publicado?'Publicado · sin recordatorio':a.recordatorio?.estado==='incierto'?'Recordatorio sin confirmar':a.recordatorio?.estado==='sin_solicitud'?'Recordatorio: falta solicitud':'Recordatorio automático';td.appendChild(rs);}tr.appendChild(td);});
    const td=document.createElement('td'),b=document.createElement('button');b.type='button';b.className='admin-link-btn';b.textContent='Ver opciones';b.dataset.vigente=String(a.vigente);b.disabled=ocupado||!a.vigente;b.setAttribute('aria-label','Ver opciones de '+a.codigo+' de '+a.nombre);b.onclick=()=>seleccionar(a.id);td.appendChild(b);tr.appendChild(td);cuerpo.appendChild(tr);
-  });contexto();botones();seguimiento();window.renderizarCronogramaAdmin();
+  });contexto();renderPadron();botones();seguimiento();window.renderizarCronogramaAdmin();
  }
  function seleccionar(id){
   if(ocupado)return;
@@ -171,10 +201,11 @@
   const n=++consulta;ocupado=true;botones();estado('Consultando padrón, catálogo y asignaciones…');
   try{
    const r=await api({action:'listar'});if(n!==consulta||!usuarioActual?.es_admin)return;
+   if(!r.data||!['usuarios','catalogo','asignaciones'].every(k=>Array.isArray(r.data[k])))throw new Error('El servidor entregó una respuesta incompleta. Actualice antes de continuar.');
    datos=r.data;datosCargados=true;if(seleccion&&!actual()?.vigente)seleccion=null;
    opciones();render();if(!$('asignacionFecha').value&&!seleccion){$('asignacionFecha').value=hoy();$('asignacionEntrega').value=mas21(hoy());}
    estado('Asignaciones actualizadas. Guardar o modificar nunca envía correos.');
-  }catch(e){if(n===consulta){estado(e.message,true);$('cronogramaEstado').textContent='No se pudo actualizar el cronograma. '+e.message;}}
+  }catch(e){if(n===consulta){datosCargados=false;renderPadron();estado(e.message,true);$('cronogramaEstado').textContent='No se pudo actualizar el cronograma. '+e.message;}}
   finally{if(n===consulta){ocupado=false;botones();window.renderizarCronogramaAdmin();}}
  };
  async function guardar(action){
@@ -259,7 +290,8 @@
   $('dialogCorreoAsignacion')?.close();if($('correoAsignacionVista'))$('correoAsignacionVista').srcdoc='';
   if($('asignacionesEstadoFiltro'))$('asignacionesEstadoFiltro').value='todos';
   if($('asignacionesVerAnuladas'))$('asignacionesVerAnuladas').checked=false;
-  for(const id of ['asignacionesBody','asignacionUsuario','asignacionTema'])$(id)?.replaceChildren();
+  for(const id of ['asignacionesBody','asignacionesPadronBody','asignacionUsuario','asignacionTema'])$(id)?.replaceChildren();
+  if($('asignacionesPadronConteo'))$('asignacionesPadronConteo').textContent='';
   if($('asignacionForm'))$('asignacionForm').reset();
   window.renderizarCronogramaAdmin();
  };

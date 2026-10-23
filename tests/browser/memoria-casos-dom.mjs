@@ -32,6 +32,6 @@ try{
  await s.cargarMemoriaAgenteSesion();assert.equal(lecturas,1);
  s.vaciarMemoriaSesionLocal();
  assert.equal((await s.cargarMemoriaAgenteSesion()).casos[0].id,'caso-guardado');assert.equal(lecturas,2);
- assert.match(s.document.getElementById('doctrinaMemoriaEstado').textContent,/conserva entre sesiones/);
+ assert.equal(s.document.getElementById('doctrinaMemoriaEstado'),null,'La memoria se conserva sin textos de relleno');
  console.log('PASS JSON de sesión: carga inicial, reutilización local y recuperación después de limpiar la sesión.');
 }finally{s.close();}

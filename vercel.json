@@ -34,6 +34,9 @@
     "api/admin-orador.js": {
       "maxDuration": 300,
       "includeFiles": "{node_modules/unpdf/dist/**,config/orador.json,config/memoria-agente.json}"
+    },
+    "api/admin-informes.js": {
+      "maxDuration": 30
     }
   },
   "buildCommand": "node scripts/verificar-groq.mjs && node scripts/verificar-orador.mjs",

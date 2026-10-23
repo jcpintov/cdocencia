@@ -44,9 +44,6 @@ function dummy({email='dummy@ofl.cl',es_admin=false,falloAuth=false}={}){
  const ctx={process:{env:{SUPABASE_URL:'url',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}},createClient:(_u,k)=>k==='public'?{auth:{getUser:async()=>({data:{user:{id:'admin-auth',email:'jpintov@gmail.com'}}})}}:admin};runInNewContext(dummySource,ctx);
  return {calls,target,request:async()=>{const r={setHeader(){},status(s){this.code=s;return this;},json(v){this.body=v;return this;}};await ctx.handler({method:'POST',headers:{authorization:'Bearer fixture'},body:{action:'eliminar_dummy',id}},r);return r;}};
 }
-test('eliminar Dummy revoca Auth y conserva el perfil histórico desvinculado; repetir no elimina dos veces',async()=>{
- const s=dummy();assert.equal((await s.request()).code,200);assert.equal(s.calls[0][0],'delete');assert.equal(s.calls[0][2],true);assert.equal(s.target.auth_user_id,null);assert.equal(s.target.cuenta_eliminada,true);assert.equal((await s.request()).code,200);assert.equal(s.calls.filter(c=>c[0]==='delete').length,1);
-});
-test('eliminar Dummy no admite otros usuarios ni Superadmin y no archiva si no se pudo revocar Auth',async()=>{
- assert.equal((await dummy({email:'otro@example.invalid'}).request()).code,403);assert.equal((await dummy({es_admin:true}).request()).code,403);const s=dummy({falloAuth:true});assert.equal((await s.request()).code,503);assert.equal(s.target.cuenta_eliminada,false);
+test('acción antigua de cuenta de prueba está retirada y no elimina otras cuentas',async()=>{
+ const s=dummy();assert.equal((await s.request()).code,400);assert.equal(s.calls.length,0);
 });
