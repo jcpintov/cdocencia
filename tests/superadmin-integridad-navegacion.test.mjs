@@ -32,7 +32,7 @@ test('12 secciones con una sola vista y un botón activo en cada navegación',()
   }
   return nodes.get(id);
  };
- const ctx={usuarioActual:{es_admin:true,rol:"SUPERADMIN"},document:{getElementById:get,activeElement:{}},window:{matchMedia:()=>({matches:false}),cargarAsignacionesAdmin:()=>calls.push('asignaciones'),cargarCalendarioTenidas:()=>calls.push('tenidas')},
+ const ctx={esSuperadminSesion:()=>ctx.usuarioActual?.es_admin===true&&ctx.usuarioActual?.rol!=='ADMIN',usuarioActual:{es_admin:true,rol:"SUPERADMIN"},document:{getElementById:get,activeElement:{}},window:{matchMedia:()=>({matches:false}),cargarAsignacionesAdmin:()=>calls.push('asignaciones'),cargarCalendarioTenidas:()=>calls.push('tenidas')},
   listaModulos:[],cargarResumenAdmin:()=>calls.push('resumen'),cargarListadoUsuariosAdmin:()=>calls.push('usuarios'),cargarGestionTrabajosAdmin:()=>calls.push('gestion_trabajos'),cargarMuroGeneralAdmin:()=>calls.push('muro_general'),cargarEditorDoctrinaAdmin:()=>calls.push('editor_doctrina'),cargarBitacoraAccesos:()=>calls.push('accesos'),cargarBibliotecaDoctrina:()=>{calls.push('doctrina')},cargarMetricasAvance:()=>calls.push('metricas')};
  runInNewContext(nav,ctx);
  for(const [key,button,panel,title] of vistas){
@@ -44,6 +44,11 @@ test('12 secciones con una sola vista y un botón activo en cada navegación',()
   assert.equal(vistas.filter(([,b])=>get(b).classes.has('active')).length,1,'solo un botón activo');
   assert.equal(vistas.filter(([, ,p])=>!get(p).classes.has('hidden')).length,1,'solo un panel visible');
  }
+ ctx.usuarioActual.rol='ADMIN';
+ const antesAdmin=get('adminVistaActual').textContent;
+ for(const seccion of ['doctrina','editor_doctrina'])runInNewContext('cambiarSubseccionAdmin('+JSON.stringify(seccion)+')',ctx);
+ assert.equal(get('adminVistaActual').textContent,antesAdmin,'ADMIN no abre vistas privadas');
+ ctx.usuarioActual.rol='SUPERADMIN';
  const before=get('adminVistaActual').textContent;
  runInNewContext('cambiarSubseccionAdmin("inexistente")',ctx);
  assert.equal(get('adminVistaActual').textContent,before,'solicitud inválida no redirige');
@@ -55,7 +60,7 @@ test('finalizar la carga asíncrona de trabajos no navega a resumen',async()=>{
  let terminar;
  const pending=new Promise(resolve=>{terminar=resolve});
  const actor={es_admin:true,id:'superadmin'};
- const ctx={usuarioActual:actor,listaModulos:[],document:{getElementById:()=>null},
+ const ctx={esSuperadminSesion:()=>ctx.usuarioActual?.es_admin===true&&ctx.usuarioActual?.rol!=='ADMIN',usuarioActual:actor,listaModulos:[],document:{getElementById:()=>null},
   sbApp:{from:()=>({select:()=>({eq:()=>({order:()=>pending})})})},verificarEstadoArchivoModulo:()=>{throw Error('no selectores')},
   cambiarSubseccionAdmin:()=>{throw Error('Una carga tardía no puede cambiar de sección')}};
  runInNewContext(extract,ctx);

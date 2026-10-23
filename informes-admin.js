@@ -32,10 +32,12 @@
   if(titulo)seccion.appendChild(texto('h3',titulo));
   const table=document.createElement('table'),head=document.createElement('thead'),tr=document.createElement('tr');
   columnas.forEach(c=>{const th=texto('th',c);th.scope='col';tr.appendChild(th);});head.appendChild(tr);table.appendChild(head);
+  const anchos=columnas.length===5?[33,9,30,14,14]:columnas.length===6?(columnas[1]==='Código'?[29,9,25,12,12,13]:[37,13,11,14,12,13]):columnas.length===3?[50,22,28]:[100];
+  const cols=document.createElement('colgroup');anchos.forEach(ancho=>{const col=document.createElement('col');col.style.width=ancho+'%';cols.appendChild(col);});table.prepend(cols);
   const body=document.createElement('tbody');
   for(const fila of filas){const row=document.createElement('tr');fila.forEach(v=>row.appendChild(texto('td',v)));body.appendChild(row);}
   if(!filas.length){const row=document.createElement('tr'),td=texto('td','No hay registros para este informe.');td.colSpan=columnas.length;row.appendChild(td);body.appendChild(row);}
-  table.appendChild(body);const marco=document.createElement('div');marco.className='informe-tabla-scroll';marco.tabIndex=0;marco.setAttribute('role','region');marco.setAttribute('aria-label',titulo||'Tabla del informe');if(columnas.length>1)table.style.minWidth=Math.max(540,columnas.length*110)+'px';marco.appendChild(table);seccion.appendChild(marco);destino.appendChild(seccion);
+  table.appendChild(body);const marco=document.createElement('div');marco.className='informe-tabla-scroll';marco.tabIndex=0;marco.setAttribute('role','region');marco.setAttribute('aria-label',titulo||'Tabla del informe');if(columnas.length>1)table.style.minWidth=Math.max(720,columnas.length*145)+'px';marco.appendChild(table);seccion.appendChild(marco);destino.appendChild(seccion);
  }
  function validar(r,tipo){
   if(r?.ok!==true||r.tipo!==tipo||!Number.isFinite(Date.parse(r.generado_en))||!r.data)throw Error('El servidor entregó una respuesta incompleta. Intente nuevamente.');
@@ -53,11 +55,10 @@
   const emblema=document.createElement('img');emblema.src='/imgs/emblema.png';emblema.alt='Emblema de la R.·.L.·. Orestes Frödden Lorenzen N.º 146';emblema.width=902;emblema.height=851;
   const detalle=document.createElement('div');detalle.className='informe-membrete-detalle';detalle.append(texto('h2',encabezados[r.tipo]),texto('p','EMISIÓN: '+emision(r.generado_en)));
   membrete.append(identidad,emblema,detalle);doc.appendChild(membrete);
-  doc.appendChild(texto('p','Padrón docente vigente · excluye administradores y cuentas eliminadas.'));
   const d=r.data;
   if(r.tipo==='asignaciones'){
-   doc.appendChild(texto('p',d.filas.length+' trabajos con asignación vigente. Fechas en formato año-mes-día; entrega hasta las 23:30 h.'));
-   tabla(doc,'',['Nombre','Código','Trabajo','Fecha de asignación','Fecha de entrega'],d.filas.map(f=>[f.nombre,f.codigo,f.trabajo,fecha(f.fecha_asignacion),fecha(f.fecha_entrega)]));
+   doc.appendChild(texto('p',d.filas.length+' trabajos con asignación vigente.'));
+   tabla(doc,'',['Nombre','Código','Trabajo','Fecha de asignación','Fecha de entrega','Estado'],d.filas.map(f=>[f.nombre+(f.observacion?'\n'+f.observacion:''),f.codigo,f.trabajo,fecha(f.fecha_asignacion),fecha(f.fecha_entrega),(f.estado||'Pendiente')+(f.fecha_entrega_real?'\nRecibido: '+fecha(f.fecha_entrega_real):'')]));
   }else if(r.tipo==='avances'){
    doc.appendChild(texto('p',d.filas.length+' maestros · avance sobre los trabajos docentes activos.'));
    tabla(doc,'',['Nombre','Trabajos activos','Leídos','Completados','Pendientes','Avance'],d.filas.map(f=>[f.nombre,f.total,f.leidos,f.completados,f.pendientes,f.total?f.porcentaje+' %':'Sin trabajos activos']));
@@ -125,7 +126,6 @@
    for(const l of lineas){if(y+alto>fin)pagina();pdf.text(l,izq,y);y+=alto;}
    y+=3;
   }
-  linea('Padrón docente vigente. Excluye administradores y cuentas eliminadas.',9);
   function tablaPDF(titulo,columnas,anchos,filas){
    if(y+25>fin)pagina();
    if(titulo)linea(titulo,12,true);
@@ -148,11 +148,11 @@
   }
   const d=r.data;
   if(r.tipo==='asignaciones'){
-   linea(d.filas.length+' trabajos con asignación vigente. Entrega hasta las 23:30 h.',9);
-   tablaPDF('',['Nombre','Código','Trabajo','Fecha asignación','Fecha entrega'],[57,27,111,41,41],d.filas.map(f=>[f.nombre,f.codigo,f.trabajo,fecha(f.fecha_asignacion),fecha(f.fecha_entrega)]));
+   linea(d.filas.length+' trabajos con asignación vigente.',9);
+   tablaPDF('',['Nombre','Código','Trabajo','Fecha asignación','Fecha entrega','Estado'],[80,24,70,34,34,35],d.filas.map(f=>[f.nombre+(f.observacion?'\n'+f.observacion:''),f.codigo,f.trabajo,fecha(f.fecha_asignacion),fecha(f.fecha_entrega),(f.estado||'Pendiente')+(f.fecha_entrega_real?'\nRecibido: '+fecha(f.fecha_entrega_real):'')]));
   }else if(r.tipo==='avances'){
    linea(d.filas.length+' maestros. Avance sobre los trabajos docentes activos.',9);
-   tablaPDF('',['Nombre','Trabajos activos','Leídos','Completados','Pendientes','Avance'],[87,38,38,38,38,38],d.filas.map(f=>[f.nombre,f.total,f.leidos,f.completados,f.pendientes,f.total?f.porcentaje+' %':'Sin trabajos activos']));
+   tablaPDF('',['Nombre','Trabajos activos','Leídos','Completados','Pendientes','Avance'],[102,35,30,40,35,35],d.filas.map(f=>[f.nombre,f.total,f.leidos,f.completados,f.pendientes,f.total?f.porcentaje+' %':'Sin trabajos activos']));
   }else{
    linea('Historial disponible hasta la emisión. Actividad = al menos un ingreso registrado; no implica aprendizaje.',9);
    linea(d.con_actividad.length+' con actividad - '+d.sin_actividad.length+' sin actividad registrada.',9);

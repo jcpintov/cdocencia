@@ -30,7 +30,7 @@ function contexto({email='jpintov@gmail.com',perfil=true,rol,authError=false,fal
    q.maybeSingle=()=>{solo=true;return q;};q.range=(a,b)=>{desde=a;hasta=b;return q;};q.abortSignal=()=>q;
    q.then=(ok,bad)=>Promise.resolve().then(()=>{llamadas++;if(fallo&&!solo)return {error:{code:'internal',message:'DATOS PRIVADOS'}};return {data:solo?{email,es_admin:perfil,rol}:incompleto?null:tablas[tabla].slice(desde,hasta+1)};}).then(ok,bad);return q;
   },
-  rpc(){return {abortSignal:async()=>({data:{asignaciones:[{vigente:true,usuario_id:'u1',nombre:'Ana',codigo:'INCI011A',tema:'Tema',fecha_asignacion:'2026-10-01',fecha_entrega:'2026-10-22'},{vigente:false,usuario_id:'u2'}]}})};}
+  rpc(){return {abortSignal:async()=>({data:{asignaciones:[{vigente:true,usuario_id:'u1',nombre:'Ana',codigo:'INCI011A',tema:'Tema',fecha_asignacion:'2026-10-01',fecha_entrega:'2026-10-22',entregado_el:'2026-10-21',observacion:'Excusada temporalmente'},{vigente:false,usuario_id:'u2'}]}})};}
  };
  const handler=crearHandlerInformes({cliente,plazoMs:25});
  async function request(body={tipo:'actividad'},headers={authorization:'Bearer prueba'},method='POST'){
@@ -55,7 +55,7 @@ test('tres informes: respuesta 200 válida, privada, sin correos ni ID de Auth y
   const r=await contexto().request({tipo});assert.equal(r.code,200);assert.equal(r.body.tipo,tipo);assert.ok(r.body.generado_en);
   assert.equal(r.headers['Cache-Control'],'no-store');assert.match(r.headers['Server-Timing'],/^informe;dur=\d+/);
   assert.ok(r.ms<1000);assert.doesNotMatch(JSON.stringify(r.body),/secret-fixture|auth-admin|example.invalid/);
-  if(tipo==='asignaciones')assert.equal(r.body.data.filas.length,1);
+  if(tipo==='asignaciones'){assert.equal(r.body.data.filas.length,1);assert.equal(r.body.data.filas[0].estado,'Entregado');assert.equal(r.body.data.filas[0].fecha_entrega_real,'2026-10-21');assert.equal(r.body.data.filas[0].observacion,'Excusada temporalmente');}
  }
 });
 test('fallos 5xx y respuestas incompletas nunca generan informe parcial',async()=>{

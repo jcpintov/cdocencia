@@ -19,6 +19,8 @@ const server=createServer(async(req,res)=>{
    let raw='';for await(const x of req)raw+=x;const b=JSON.parse(raw);rpcCalls.push(b);
    let result;
    if(b.action==='listar')result={ok:true,data:{usuarios:[user],catalogo:fixture.catalogo,asignaciones:assignments}};
+   else if(b.action==='observacion'){user.observacion=b.observacion;user.observacion_version=(user.observacion_version||0)+1;result={ok:true,data:{guardado:true}};}
+   else if(b.action==='entregar'||b.action==='reabrir'){const a=assignments.find(a=>a.id===b.id);a.entregado_el=b.action==='entregar'?b.fecha_entrega_real:null;a.entrega_nota=b.nota||'';a.entrega_registrada_en=b.action==='entregar'?new Date().toISOString():null;a.version++;a.recordatorio.estado=b.action==='entregar'?'entregado':'programado';result={ok:true,data:a};}
    else if(b.action==='crear'){
     const a=makeContext({...b,id:'22345678-1234-4234-8234-123456789abc',version:1,vigente:true});assignments.push(a);result={ok:true,data:a};
    }else if(b.action==='modificar'){
@@ -128,6 +130,15 @@ try{
  await page.getByRole('button',{name:'Abrir opciones de INCI011A de José Pérez'}).click();assert.equal(await page.locator('#dialogOpcionesAsignacion').isVisible(),true);
  await page.getByRole('button',{name:'Cerrar',exact:true}).click();
  await page.evaluate(()=>{document.getElementById('adminSeccionResumen').classList.add('hidden');document.getElementById('adminSeccionAsignaciones').classList.remove('hidden');});
+ await page.getByRole('button',{name:'Observación de José Pérez',exact:true}).click();
+ await page.locator('#observacionAsignacionTexto').fill('Excusado por disponibilidad. <script>texto plano</script>');await page.locator('#btnGuardarObservacionAsignacion').click();await page.locator('#dialogObservacionAsignacion').waitFor({state:'hidden'});
+ assert.match(await page.locator('#asignacionesPadronBody').textContent(),/Excusado por disponibilidad/);assert.equal(await page.locator('#asignacionesPadronBody script').count(),0);
+ await page.getByRole('button',{name:'Marcar como entregado INCI011A de José Pérez',exact:true}).click();await page.locator('#entregaAsignacionNota').fill('Recibido por correo');await page.locator('#btnConfirmarEntregaAsignacion').click();await page.locator('#dialogEntregaAsignacion').waitFor({state:'hidden'});
+ assert.ok(assignments[0].entregado_el);assert.equal(await page.locator('#kpiResumenEntregados').textContent(),'1');assert.equal(await page.locator('#kpiResumenPendientes').textContent(),'0');assert.equal(await page.locator('#kpiTrabajosPublicados').textContent(),'0');
+ await page.locator('#asignacionesEstadoFiltro').selectOption('pendientes');assert.equal(await page.locator('#asignacionesBody tr.asignacion-fila').count(),0);
+ await page.locator('#asignacionesEstadoFiltro').selectOption('entregados');assert.equal(await page.locator('#asignacionesBody tr.asignacion-entregado').count(),1);
+ page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Reabrir INCI011A de José Pérez',exact:true}).click();await page.waitForFunction(()=>document.getElementById('kpiResumenPendientes').textContent==='1');assert.equal(assignments[0].entregado_el,null);assert.equal(assignments[0].fecha_entrega,'2026-11-17');
+ await page.locator('#asignacionesEstadoFiltro').selectOption('todos');assert.equal(mailCount,0);
  await page.getByRole('button',{name:'Ver opciones de INCI011A de José Pérez'}).click();
  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Eliminar',exact:true}).click();
  await page.locator('#asignacionesEstado').filter({hasText:'Asignación anulada. Tema liberado; historial conservado.'}).waitFor();

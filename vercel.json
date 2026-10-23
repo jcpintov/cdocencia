@@ -37,6 +37,10 @@
     },
     "api/admin-usuarios.js": {
       "maxDuration": 30
+    },
+    "api/admin-trabajos.js": {
+      "maxDuration": 120,
+      "includeFiles": "node_modules/unpdf/dist/**"
     }
   },
   "buildCommand": "node scripts/verificar-groq.mjs && node scripts/verificar-orador.mjs",

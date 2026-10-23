@@ -21,10 +21,10 @@ export default async function handler(req,res){
   if(authError||!user?.id)return reply(res,401,{error:'Sesión no válida'});
   const admin=createClient(url,secret,options);
   const {data:perfil,error:profileError}=await admin.from('usuarios').select('id,email,es_admin,rol,cuenta_eliminada').eq('auth_user_id',user.id).maybeSingle();
-  if(profileError||!esOperador(perfil,user))return reply(res,403,{error:'Se requiere administración docente'});
+  if(profileError||!esSuperadmin(perfil,user))return reply(res,403,{error:'Se requiere administración docente'});
   const {action,...datos}=req.body||{};
   if(['llm_autorizar','llm_revocar','llm_autorizar_biblioteca'].includes(action)&&!esSuperadmin(perfil,user))return reply(res,403,{error:'La autorización de proveedores pertenece a Superadmin'});
-  if(!['listar','preparar','registrar','descargar','visualizar','revisar','retirar','restaurar','clasificar','texto_extraer','texto_pagina','texto_revisar_pagina','texto_aprobar','texto_buscar','agente_consultar','llm_listar','llm_autorizar','llm_revocar','llm_autorizar_biblioteca','caso_aprobar','caso_retirar','memoria_sesion','casos_listar','memoria_exportar'].includes(action))return reply(res,422,{error:'Acción inválida'});
+  if(!['listar','preparar','registrar','descargar','visualizar','revisar','retirar','restaurar','clasificar','texto_extraer','texto_pagina','texto_revisar_pagina','texto_aprobar','texto_buscar','agente_consultar','llm_listar','llm_autorizar','llm_revocar','llm_autorizar_biblioteca','caso_aprobar','caso_retirar','caso_eliminar','memoria_sesion','casos_listar','memoria_exportar'].includes(action))return reply(res,422,{error:'Acción inválida'});
   const rpc=async(accion,payload={})=>{
    const {data,error}=await admin.rpc(accion.startsWith('texto_')?'doctrina_texto_superadmin':'doctrina_gestion_superadmin',{p_actor:user.id,p_accion:accion,p_datos:payload});
    if(error)throw new Error('database');return data;
@@ -51,6 +51,14 @@ export default async function handler(req,res){
   }
   if(action==='memoria_sesion'){
    return reply(res,200,{ok:true,memoria:await cargarMemoriaSesion(admin,user.id,process.env.DOCTRINA_MEMORIA_CASOS_ENABLED==='true')});
+  }
+  if(action==='caso_eliminar'){
+   if(process.env.DOCTRINA_MEMORIA_CASOS_ENABLED!=='true')return reply(res,503,{error:'La memoria de casos todavía no está habilitada'});
+   if(!uuid(datos.id)||datos.confirmacion!==true)return reply(res,422,{error:'Seleccione y confirme el registro que desea eliminar definitivamente'});
+   const {data,error}=await admin.from('agente_casos').delete().eq('id',datos.id).eq('actor',user.id).select('id').maybeSingle();
+   if(error)return reply(res,503,{error:'No se pudo eliminar el registro. Intente nuevamente'});
+   if(!data)return reply(res,404,{error:'El registro no está disponible'});
+   return reply(res,200,{ok:true,eliminado:true});
   }
   if(['caso_aprobar','caso_retirar'].includes(action)){
    if(process.env.DOCTRINA_MEMORIA_CASOS_ENABLED!=='true')return reply(res,503,{error:'La memoria de casos todavía no está habilitada'});

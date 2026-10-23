@@ -18,7 +18,7 @@ test('repregunta lee páginas en paralelo, una vez por turno, y vuelve a leer en
   }
   return {ok:true,id:'reserva'};
  };
- const pregunta={...entrada,historial:[{role:'user',content:'Consulta anterior'}],fuentesPrevias:fuentes};
+ const pregunta={...entrada,pregunta:'Amplía ese símbolo',historial:[{role:'user',content:'Consulta anterior'}],fuentesPrevias:fuentes};
  const fetchImpl=async(_u,o)=>{
   assert.equal(JSON.parse(o.body).tools,undefined);
   return {ok:true,text:async()=>JSON.stringify({choices:[{finish_reason:'stop',message:{content:JSON.stringify(resultado())}}]})};
@@ -108,4 +108,22 @@ test('presenta la referencia explícita del modelo aunque no la repita en la pro
 test('presenta las referencias estructuradas que faltan sin eliminar citas existentes',()=>{
  const s=validarRespuestaGroq({respuesta:'Corresponde examinar el deber [F3].',referencias:['F2','F3'],base_suficiente:true},[{referencia:'F2'},{referencia:'F3'}]);
  assert.match(s[0].texto,/\[F3\]/);assert.match(s[0].texto,/Fuentes: \[F2\]/);
+});
+
+test('una corrección con fuentes previas vuelve al planificador antes de responder',async()=>{
+ let planificaciones=0;const consultas=[];
+ const rpc=async(a,d)=>{
+  if(a==='texto_contexto')return {paginas:[fuente]};
+  if(a==='texto_llm_listar')return {autorizaciones:[{...fuente,autorizado:true,modelo:MODELO_GROQ}]};
+  if(a==='texto_buscar'){consultas.push(d.consulta);return {resultados:[fuente]};}
+  if(a==='texto_pagina')return {sha256:fuente.sha256,pagina:{numero:d.pagina,texto:fuente.fragmento}};
+  return {ok:true,id:'reserva'};
+ };
+ const fetchImpl=async(_u,o)=>{
+  const b=JSON.parse(o.body);
+  if(b.tools){planificaciones++;return {ok:true,text:async()=>JSON.stringify({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'buscar_biblioteca',arguments:JSON.stringify({consultas:['capacidad OR impedimento']})}}]}}]})};}
+  return {ok:true,text:async()=>JSON.stringify({choices:[{finish_reason:'stop',message:{content:JSON.stringify(resultado())}}]})};
+ };
+ const r=await consultarGroqDoctrina({...entrada,pregunta:'Corrijo: no se negó, no pudo asistir.',historial:[{role:'user',content:'El hermano se negó.'}],fuentesPrevias:[fuente]},{rpc,fetchImpl,env:{GROQ_API_KEY:'fixture',GROQ_ZDR_CONFIRMADO:'true'}});
+ assert.equal(r.generativo,true);assert.equal(planificaciones,1);assert.ok(consultas.includes('capacidad OR impedimento'));
 });

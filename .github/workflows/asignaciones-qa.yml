@@ -20,6 +20,9 @@ on:
       - 'lib/hora-calendario.js'
       - 'lib/extraer-doctrina.js'
       - 'lib/agente-doctrina.js'
+      - 'lib/semantica-agentes.js'
+      - 'lib/busqueda-groq.js'
+      - 'lib/trabajos-tenida.js'
       - 'lib/groq-doctrina.js'
       - 'sql/**'
       - 'package*.json'
@@ -32,6 +35,8 @@ on:
       - 'ui-v2.css'
       - 'styles.css'
       - 'asignaciones-admin.js'
+      - 'nuevos-trabajos.js'
+      - 'lib/nuevos-trabajos.js'
       - 'informes-admin.js'
       - 'lib/informes-ejecutivos.js'
       - 'assets/fonts/**'
@@ -68,6 +73,7 @@ jobs:
           QA_HILOS_CAPTURE: "1"
         run: |
           node tests/browser/informes-smoke.mjs
+          node tests/browser/nuevos-trabajos-smoke.mjs
           node tests/browser/asignaciones-smoke.mjs
           node tests/browser/usuarios-smoke.mjs
           node tests/browser/tenidas-smoke.mjs
@@ -75,6 +81,7 @@ jobs:
           node tests/browser/plataforma-dom.mjs
           node tests/database/avance-smoke.mjs
           node tests/database/roles-smoke.mjs
+          node tests/database/entregas-smoke.mjs
           node tests/browser/orador-dom.mjs
           node tests/browser/memoria-casos-dom.mjs
           node tests/database/memoria-casos-smoke.mjs

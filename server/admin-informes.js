@@ -44,7 +44,7 @@ export function crearHandlerInformes({cliente=createClient,plazoMs=20000}={}){
     if(b.tipo==='asignaciones'){
      const {data:lista,error}=await admin.rpc('admin_asignaciones_docentes',{p_actor:actor.id,p_accion:'listar',p_datos:{}}).abortSignal(signal);
      if(error||!Array.isArray(lista?.asignaciones))throw new Error('Respuesta de asignaciones inválida');
-     data={filas:lista.asignaciones.filter(a=>a.vigente&&ids.has(a.usuario_id)).map(a=>({nombre:a.nombre,codigo:a.codigo,trabajo:a.tema,fecha_asignacion:a.fecha_asignacion,fecha_entrega:a.fecha_entrega}))};
+     data={filas:lista.asignaciones.filter(a=>a.vigente&&ids.has(a.usuario_id)).map(a=>({nombre:a.nombre,codigo:a.codigo,trabajo:a.tema,fecha_asignacion:a.fecha_asignacion,fecha_entrega:a.fecha_entrega,observacion:a.observacion||'',estado:a.recordatorio?.publicado?'Publicado':a.entregado_el?'Entregado':'Pendiente',fecha_entrega_real:a.entregado_el||null}))};
     }else if(b.tipo==='avances'){
      const [modulos,progresos]=await Promise.all([
       leerPaginas(()=>admin.from('modulos').select('id').eq('activo',true).order('id'),{signal}),

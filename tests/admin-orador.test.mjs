@@ -35,4 +35,4 @@ test('no devuelve texto completo ni bloques privados al listar un trabajo para p
  const s=entorno();const r=await s.request({action:'obtener',id:actor});assert.equal(r.code,200);assert.ok(!JSON.stringify(r.body).includes('Texto reservado'));assert.equal(r.body.trabajo.bloques_total,1);assert.equal(r.headers['Cache-Control'],'no-store');
 });
 
-test('Administrador puede listar sus trabajos del Orador',async()=>{const s=entorno({rol:'ADMIN'});assert.equal((await s.request({action:'listar'})).code,200);assert.deepEqual(s.llamadas,['listar']);});
+test('Administrador no puede acceder al Orador',async()=>{const s=entorno({rol:'ADMIN'});for(const action of ['listar','obtener','revisar','generar','exportar'])assert.equal((await s.request({action,id:actor})).code,403);assert.deepEqual(s.llamadas,[]);});

@@ -1,4 +1,4 @@
-import {esOperador} from '../lib/roles-admin.js';
+import {esSuperadmin} from '../lib/roles-admin.js';
 import {createClient} from '@supabase/supabase-js';
 import {randomUUID,createHash} from 'node:crypto';
 import {validarFicha,extraerTrabajo,coincidenciasTrabajo,pedirJSONTrabajos,validarRevision,validarOratoria,generarOratoriaRevisada,exportarOratoria,promptOrador,ROL_ORADOR} from '../lib/trabajos-tenida.js';
@@ -20,7 +20,7 @@ export default async function handler(req,res){
   if(error||!user?.id)return reply(res,401,{error:'Sesión no válida'});
   const admin=createClient(url,secret,options);
   const {data:perfil,error:pe}=await admin.from('usuarios').select('id,email,es_admin,rol,cuenta_eliminada').eq('auth_user_id',user.id).maybeSingle();
-  if(pe||!esOperador(perfil,user))return reply(res,403,{error:'Se requiere administración docente'});
+  if(pe||!esSuperadmin(perfil,user))return reply(res,403,{error:'Se requiere administración docente'});
   rpc=async(accion,datos={})=>{const {data,error}=await admin.rpc('trabajos_tenida_superadmin',{p_actor:user.id,p_accion:accion,p_datos:datos});if(error)throw Error(error.code==='40001'?'El trabajo cambió o ya se está procesando. Actualícelo antes de continuar.':'No se pudo guardar el paso. Reintente.');return data;};
   const documental=async(accion,datos={})=>{const {data,error}=await admin.rpc('doctrina_texto_superadmin',{p_actor:user.id,p_accion:accion,p_datos:datos});if(error)throw Error('No se pudo consultar la biblioteca autorizada.');return data;};
   const {action,...d}=req.body||{};
@@ -69,7 +69,7 @@ export default async function handler(req,res){
    const reserva=await documental('texto_llm_reservar',{fuentes:fuentes.map(({version_id,sha256,pagina})=>({version_id,sha256,pagina})),hash:createHash('sha256').update(bloque.texto).digest('hex')});
    if(!reserva?.ok)throw Error(reserva?.mensaje||'No se pudo autorizar el análisis.');
    let estado='fallido';try{
-    const r=await pedirJSONTrabajos(`Eres un revisor docente masónico. Revisa únicamente este bloque del trabajo, no juzgues el documento completo. Criterios: ${JSON.stringify(ROL_ORADOR.revision)}. Devuelve {"sintesis":"tesis y conexión con el conjunto, máximo 450 caracteres", "pasajes":["de una a tres citas EXACTAS del bloque, de 20 a 600 caracteres, que respalden la síntesis"], "observaciones":[{"tipo":"citas|ia|contenido","pasaje":"cita EXACTA que requiere examen","explicacion":"observación contextualizada, sin veredicto ni porcentaje de autoría"}]}. Si no hay observaciones fundamentadas usa []. Nunca atribuyas autoría IA a partir del estilo. No califiques contenidos simbólicos de grados superiores como adecuados para grados inferiores.`,{ficha:datos.ficha,bloque:bloque.numero,total:e.bloques.length,texto:bloque.texto,principios:principios.map(p=>p.fragmento).join('\n'),coincidencias},{validar:async()=> (await documental('texto_llm_validar',{id:reserva.id})).ok});
+    const r=await pedirJSONTrabajos(`Eres un revisor docente masónico. Revisa únicamente este bloque del trabajo, no juzgues el documento completo. Criterios: ${JSON.stringify(ROL_ORADOR.revision)}. Devuelve {"sintesis":"tesis y conexión con el conjunto, máximo 450 caracteres", "pasajes":["de una a tres citas EXACTAS del bloque, de 20 a 600 caracteres, que respalden la síntesis"], "observaciones":[{"tipo":"citas|ia|contenido|argumentacion","pasaje":"cita EXACTA que requiere examen","explicacion":"observación contextualizada, sin veredicto ni porcentaje de autoría"}]}. En observaciones de argumentacion, cita el pasaje exacto y explica premisas, conclusión, defecto inferencial, posible falacia y corrección; no diagnostiques falacias por palabras aisladas ni por discrepar del autor. Si no hay observaciones fundamentadas usa []. Nunca atribuyas autoría IA a partir del estilo. No califiques contenidos simbólicos de grados superiores como adecuados para grados inferiores.`,{ficha:datos.ficha,bloque:bloque.numero,total:e.bloques.length,texto:bloque.texto,principios:principios.map(p=>p.fragmento).join('\n'),coincidencias},{validar:async()=> (await documental('texto_llm_validar',{id:reserva.id})).ok});
     datos.revision_bloques.push({...validarRevision(r,bloque),coincidencias});estado='completado';
    }finally{await documental('texto_llm_finalizar',{id:reserva.id,estado});}
   }else if(action==='contrastar'){
@@ -90,7 +90,7 @@ export default async function handler(req,res){
    const reserva=await documental('texto_llm_reservar',{fuentes:fuentes.map(({version_id,sha256,pagina})=>({version_id,sha256,pagina})),hash:createHash('sha256').update(JSON.stringify(datos.contraste)).digest('hex')});
    if(!reserva?.ok)throw Error(reserva?.mensaje||'No se pudo validar el contraste documental.');
    let estado='fallido';try{
-    const r=await generarOratoriaRevisada(datos.ficha,{ficha:datos.ficha,trabajo_completo_revisado:datos.revision_bloques.map(({numero,sintesis,pasajes})=>({numero,sintesis,pasajes:pasajes.slice(0,1).map(p=>p.slice(0,300))})),contraste:datos.contraste.secciones,precision_del_orador:datos.decision.nota},{validar:async()=> (await documental('texto_llm_validar',{id:reserva.id})).ok});
+    const r=await generarOratoriaRevisada(datos.ficha,{ficha:datos.ficha,trabajo_completo_revisado:datos.revision_bloques.map(({numero,sintesis,pasajes,observaciones})=>({numero,sintesis,pasajes:pasajes.slice(0,1).map(p=>p.slice(0,300)),observaciones_argumentales:(observaciones||[]).filter(o=>o.tipo==='argumentacion')})),contraste:datos.contraste.secciones,precision_del_orador:datos.decision.nota},{validar:async()=> (await documental('texto_llm_validar',{id:reserva.id})).ok});
     datos.oratoria={...r,estado:'borrador',fuentes,creado_en:new Date().toISOString()};estado='completado';
    }finally{await documental('texto_llm_finalizar',{id:reserva.id,estado});}
   }else if(action==='editar'){

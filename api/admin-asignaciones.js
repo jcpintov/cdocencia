@@ -26,7 +26,7 @@ export default async function handler(req,res){
   let b=req.body;
   if(typeof b==='string'){try{b=JSON.parse(b);}catch{return reply(res,400,{error:'Solicitud inválida'});}}
   b=b||{};
-  if(!['listar','crear','modificar','eliminar','vista_correo','vista_recordatorio','enviar','cerrar_intento','cerrar_recordatorio','procesar_publicaciones'].includes(b.action))return reply(res,422,{error:'Acción no admitida'});
+  if(!['listar','crear','modificar','eliminar','vista_correo','vista_recordatorio','enviar','cerrar_intento','cerrar_recordatorio','procesar_publicaciones','observacion','entregar','reabrir'].includes(b.action))return reply(res,422,{error:'Acción no admitida'});
   const action=b.action;
   if(action==='procesar_publicaciones'){
    const {SMTP_HOST:host,SMTP_USER:user,SMTP_PASSWORD:pass}=process.env;
@@ -35,18 +35,21 @@ export default async function handler(req,res){
    const resultado=await procesarPublicaciones({admin,transport,from:process.env.SMTP_FROM||user,randomUUID});
    return reply(res,200,{ok:true,data:resultado});
   }
-  if(action!=='listar'&&action!=='crear'&&(!uuid(b.id)||!Number.isInteger(b.version)||b.version<1))return reply(res,422,{error:'Seleccione una asignación actualizada'});
+  if(!['listar','crear','observacion'].includes(action)&&(!uuid(b.id)||!Number.isInteger(b.version)||b.version<1))return reply(res,422,{error:'Seleccione una asignación actualizada'});
   if(['crear','modificar'].includes(action)&&(!uuid(b.usuario_id)||!fecha(b.fecha_asignacion)||!fecha(b.fecha_entrega)||b.fecha_entrega<b.fecha_asignacion||typeof b.codigo!=='string'))return reply(res,422,{error:'Revise integrante, tema y fechas'});
   if(action==='enviar'&&(b.confirmado!==true||!uuid(b.intento)||typeof b.reenviar!=='boolean'))return reply(res,422,{error:'Confirme expresamente el envío desde Correo'});
   if(['cerrar_intento','cerrar_recordatorio'].includes(action)&&(!uuid(b.intento)||b.confirmado!==true))return reply(res,422,{error:'Confirme la revisión del intento de correo'});
+  if(action==='observacion'&&(!uuid(b.usuario_id)||!Number.isInteger(b.version)||b.version<0||typeof b.observacion!=='string'||b.observacion.length>500))return reply(res,422,{error:'Revise el usuario y la observación (máximo 500 caracteres)'});
+  if(['entregar','reabrir'].includes(action)&&b.confirmado!==true)return reply(res,422,{error:'Confirme expresamente el cambio de entrega'});
+  if(action==='entregar'&&(!fecha(b.fecha_entrega_real)||typeof b.nota!=='string'||b.nota.length>500))return reply(res,422,{error:'Revise la fecha efectiva y la nota de entrega'});
   const rpc=async(accion,datos={})=>{
    const r=await admin.rpc('admin_asignaciones_docentes',{p_actor:identity.user.id,p_accion:accion,p_datos:datos});
    if(r.error)throw fallo(r.error);return r.data;
   };
-  const datos={id:b.id,version:b.version,usuario_id:b.usuario_id,codigo:b.codigo,fecha_asignacion:b.fecha_asignacion,fecha_entrega:b.fecha_entrega};
+  const datos={id:b.id,version:b.version,usuario_id:b.usuario_id,codigo:b.codigo,fecha_asignacion:b.fecha_asignacion,fecha_entrega:b.fecha_entrega,observacion:b.observacion,fecha_entrega_real:b.fecha_entrega_real,nota:b.nota,confirmado:b.confirmado};
   if(action==='vista_correo'||action==='vista_recordatorio'||action==='enviar'){
    const asignacion=await rpc('vista_correo',{id:b.id,version:b.version});
-   if(action==='vista_recordatorio')return reply(res,200,{ok:true,asignacion,correo:asignacion.recordatorio?.solicitud_enviada_en?generarCorreoRecordatorio(asignacion):null});
+   if(action==='vista_recordatorio')return reply(res,200,{ok:true,asignacion,correo:!asignacion.entregado_el&&!asignacion.recordatorio?.publicado&&asignacion.recordatorio?.solicitud_enviada_en?generarCorreoRecordatorio(asignacion):null});
    const correo=generarCorreoAsignacion(asignacion);
    if(action==='vista_correo')return reply(res,200,{ok:true,correo,asignacion});
    const {SMTP_HOST:host,SMTP_USER:user,SMTP_PASSWORD:pass}=process.env;

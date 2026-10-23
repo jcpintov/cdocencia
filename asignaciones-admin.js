@@ -1,6 +1,6 @@
 /* Solicitud manual y seguimiento del recordatorio automático. */
 (function(){
- let datos={usuarios:[],catalogo:[],asignaciones:[]},seleccion=null,ocupado=false,consulta=0,vista=null,datosCargados=false;
+ let datos={usuarios:[],catalogo:[],asignaciones:[]},seleccion=null,ocupado=false,consulta=0,vista=null,datosCargados=false,observacionSeleccionada=null,entregaSeleccionada=null;
  const $=id=>document.getElementById(id);
  const estado=(texto,error=false)=>{for(const id of ['asignacionesEstado','asignacionModalEstado']){const el=$(id);if(el){el.textContent=texto;el.setAttribute('role',error?'alert':'status');}}};
  const hoy=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Santiago',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
@@ -8,13 +8,16 @@
  const fecha=v=>v?new Date(v+'T12:00:00Z').toLocaleDateString('es-CL',{timeZone:'UTC'}):'—';
  const actual=()=>datos.asignaciones.find(a=>a.id===seleccion);
  const instante=v=>v?new Date(v).toLocaleString('es-CL',{timeZone:'America/Santiago',dateStyle:'long',timeStyle:'short'}):'—';
- const estadosRecordatorio={sin_solicitud:'No programado: falta un correo de solicitud confirmado.',solicitud_pendiente:'En espera: hay una solicitud en curso o sin confirmar.',programado:'Programado para la primera revisión diaria después de cumplir siete días de atraso.',pendiente:'Plazo cumplido. Se revisará en la próxima ejecución diaria.',publicado:'Sin recordatorio: el tema ya está publicado en Docencia.',preparado:'Recordatorio reservado. Si este estado persiste, revise antes de intervenir.',enviando:'Envío en curso o por confirmar. No se repetirá automáticamente.',enviado:'Recordatorio aceptado por el servidor de correo.',incierto:'Envío sin confirmación. Revise el buzón; no se repetirá automáticamente.',cancelado:'Recordatorio cancelado antes del envío por cambio de condiciones.',anulada:'Asignación anulada. No se enviará recordatorio.'};
+ const estadosRecordatorio={entregado:'Sin recordatorio: entrega recibida y registrada.',sin_solicitud:'No programado: falta un correo de solicitud confirmado.',solicitud_pendiente:'En espera: hay una solicitud en curso o sin confirmar.',programado:'Programado para la primera revisión diaria después de cumplir siete días de atraso.',pendiente:'Plazo cumplido. Se revisará en la próxima ejecución diaria.',publicado:'Sin recordatorio: el tema ya está publicado en Docencia.',preparado:'Recordatorio reservado. Si este estado persiste, revise antes de intervenir.',enviando:'Envío en curso o por confirmar. No se repetirá automáticamente.',enviado:'Recordatorio aceptado por el servidor de correo.',incierto:'Envío sin confirmación. Revise el buzón; no se repetirá automáticamente.',cancelado:'Recordatorio cancelado antes del envío por cambio de condiciones.',anulada:'Asignación anulada. No se enviará recordatorio.'};
  function seguimiento(){
   const a=actual(),r=a?.recordatorio;
   $('asignacionRecordatorioPanel').hidden=!a;
   $('btnRevisarRecordatorioAsignacion').hidden=!a||!['preparado','enviando'].includes(r?.estado);
   $('opcionesAsignacionTitulo').textContent=a?'Opciones · '+a.codigo+' · '+a.nombre:'Nueva asignación';
   if(!a)return;
+  $('asignacionEntregaEstado').textContent=a.entregado_el?'Entrega recibida el '+fecha(a.entregado_el)+' · registrada '+instante(a.entrega_registrada_en)+(a.entrega_nota?' · '+a.entrega_nota:''):r?.publicado?'Entregado por publicación.':'Sin entrega registrada.';
+  $('btnEntregaAsignacion').textContent=a.entregado_el?'Reabrir como pendiente':'Marcar como entregado';
+  $('btnEntregaAsignacion').disabled=ocupado||!a.vigente||!!r?.publicado;
   $('asignacionRecordatorioEstado').textContent=estadosRecordatorio[r?.estado]||'Actualice para consultar el seguimiento.';
   $('asignacionSolicitudEnviada').textContent=instante(r?.solicitud_enviada_en);
   $('asignacionRecordatorioFecha').textContent=instante(r?.programado_para);
@@ -37,31 +40,33 @@
   }catch(e){if(seleccion===a.id)$('asignacionRecordatorioPreviewEstado').textContent=e.message;}
  }
 
+ function estaEntregado(a){return !!(a.entregado_el||a.recordatorio?.publicado);}
  function estadoTrabajo(a){
   if(a.recordatorio?.publicado)return 'Publicado';
+  if(a.entregado_el)return 'Entregado';
   return a.fecha_entrega<=hoy()?'Vencido':'Pendiente';
  }
  function fechaSubida(a){
-  return Math.max(0,...(a.recordatorio?.trabajos_publicados||[]).map(m=>Date.parse(m.fecha_subida)||0));
+  return Math.max(Date.parse(a.entrega_registrada_en)||0,...(a.recordatorio?.trabajos_publicados||[]).map(m=>Date.parse(m.fecha_subida)||0));
  }
  function ordenarAsignaciones(a,b){
   if(a.vigente!==b.vigente)return a.vigente?-1:1;
-  const publicadoA=!!a.recordatorio?.publicado,publicadoB=!!b.recordatorio?.publicado;
+  const publicadoA=estaEntregado(a),publicadoB=estaEntregado(b);
   if(publicadoA!==publicadoB)return publicadoA?1:-1;
   return (publicadoA?fechaSubida(b)-fechaSubida(a):a.fecha_entrega.localeCompare(b.fecha_entrega))||a.nombre.localeCompare(b.nombre,'es')||a.codigo.localeCompare(b.codigo);
  }
  window.renderizarCronogramaAdmin=function(){
   const lista=$('cronogramaLista');if(!lista)return;lista.replaceChildren();
-  const todas=datos.asignaciones.filter(a=>a.vigente),pendientes=todas.filter(a=>estadoTrabajo(a)!=='Publicado');
-  for(const [id,n] of [['kpiTrabajosAsignados',todas.length],['kpiTrabajosPendientes',pendientes.length],['kpiTrabajosVencidos',todas.filter(a=>estadoTrabajo(a)==='Vencido').length],['kpiTrabajosPublicados',todas.length-pendientes.length]])$(id).textContent=datosCargados?String(n):'—';
-  // Resumen Ejecutivo: entregado equivale a publicado, sin estados duplicados.
-  const entregados=todas.filter(a=>a.recordatorio?.publicado===true).length;
+  const todas=datos.asignaciones.filter(a=>a.vigente),pendientes=todas.filter(a=>!estaEntregado(a));
+  for(const [id,n] of [['kpiTrabajosAsignados',todas.length],['kpiTrabajosPendientes',pendientes.length],['kpiTrabajosVencidos',todas.filter(a=>estadoTrabajo(a)==='Vencido').length],['kpiTrabajosPublicados',todas.filter(a=>a.recordatorio?.publicado).length]])$(id).textContent=datosCargados?String(n):'—';
+  // Entrega recibida y publicación son dos vías del mismo indicador de entrega.
+  const entregados=todas.filter(estaEntregado).length;
   for(const [id,n] of [['kpiResumenAsignados',todas.length],['kpiResumenEntregados',entregados],['kpiResumenPendientes',todas.length-entregados]]){
    const campo=$(id);if(campo)campo.textContent=datosCargados?n.toLocaleString('es-CL'):'—';
   }
   const filtro=$('cronogramaFiltro').value,fechaHoy=hoy(),limite=new Date(fechaHoy+'T12:00:00Z');limite.setUTCDate(limite.getUTCDate()+7);
   const fin=limite.toISOString().slice(0,10);
-  const visibles=todas.filter(a=>filtro==='todos'||filtro==='publicados'&&estadoTrabajo(a)==='Publicado'||filtro==='vencidos'&&estadoTrabajo(a)==='Vencido'||filtro==='proximos'&&estadoTrabajo(a)!=='Publicado'&&a.fecha_entrega>=fechaHoy&&a.fecha_entrega<=fin).sort(ordenarAsignaciones);
+  const visibles=todas.filter(a=>filtro==='todos'||filtro==='publicados'&&a.recordatorio?.publicado||filtro==='entregados'&&estaEntregado(a)||filtro==='vencidos'&&estadoTrabajo(a)==='Vencido'||filtro==='proximos'&&!estaEntregado(a)&&a.fecha_entrega>=fechaHoy&&a.fecha_entrega<=fin).sort(ordenarAsignaciones);
   visibles.forEach(a=>{
    const li=document.createElement('li'),estadoActual=estadoTrabajo(a);li.className='cronograma-item cronograma-'+estadoActual.toLowerCase();
    const fechaEl=document.createElement('time');fechaEl.dateTime=a.fecha_entrega;fechaEl.textContent=fecha(a.fecha_entrega)+' · 23:30 h';li.appendChild(fechaEl);
@@ -90,16 +95,20 @@
   $('btnActualizarAsignaciones').disabled=ocupado;
   $('btnAbrirNuevaAsignacion').disabled=ocupado;
   document.querySelectorAll('#asignacionesBody button[data-vigente]').forEach(b=>b.disabled=ocupado||b.dataset.vigente!=='true');
-  document.querySelectorAll('#asignacionesPadronBody button').forEach(b=>b.disabled=ocupado);
+  document.querySelectorAll('#asignacionesPadronBody button').forEach(b=>b.disabled=ocupado||b.dataset.publicado==='true');
   $('btnCerrarOpcionesAsignacion').disabled=ocupado;
+  $('btnEntregaAsignacion').disabled=ocupado||!vigente||!!actual()?.recordatorio?.publicado;
+  for(const id of ['btnGuardarObservacionAsignacion','btnBorrarObservacionAsignacion','btnCerrarObservacionAsignacion','btnConfirmarEntregaAsignacion','btnCerrarEntregaAsignacion','observacionAsignacionTexto','entregaAsignacionFecha','entregaAsignacionNota'])$(id).disabled=ocupado;
   $('btnAsignarTrabajo').hidden=!!seleccion;
   ['btnModificarAsignacion','btnEliminarAsignacion','btnCorreoAsignacion'].forEach(id=>$(id).hidden=!seleccion);
  }
  async function api(payload){
+  const actor=usuarioActual;
   const {data:{session}}=await sbApp.auth.getSession();
+  if(!actor?.es_admin||usuarioActual!==actor)throw Error('La sesión cambió. Actualice antes de continuar.');
   if(!session?.access_token)throw new Error('La sesión venció. Inicie sesión nuevamente.');
   const r=await fetch('/api/admin-asignaciones',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},body:JSON.stringify(payload),signal:AbortSignal.timeout(45000)});
-  const d=await r.json().catch(()=>({}));if(!r.ok||!d.ok)throw new Error(d.error||'No se pudo completar la operación. Actualice antes de reintentar.');return d;
+  const d=await r.json().catch(()=>({}));if(usuarioActual!==actor)throw Error('La sesión cambió.');if(!r.ok||!d.ok)throw new Error(d.error||'No se pudo completar la operación. Actualice antes de reintentar.');return d;
  }
  function opciones(){
   const usuario=$('asignacionUsuario'),tema=$('asignacionTema');
@@ -139,16 +148,18 @@
    const tareas=(mapa.get(u.id)||[]).sort(ordenarAsignaciones),tr=document.createElement('tr');
    tr.className='asignacion-fila '+(tareas.length?'asignacion-pendiente':'asignacion-sin-trabajo');
    const nombre=document.createElement('td');nombre.textContent=u.nombre;tr.appendChild(nombre);
-   const tiene=document.createElement('td');tiene.textContent=tareas.length?'Con trabajo ('+tareas.length+')':'Sin trabajo';tr.appendChild(tiene);
+   const tiene=document.createElement('td');tiene.textContent=tareas.length?'Con trabajo ('+tareas.length+')':'Sin trabajo';if(u.observacion){const nota=document.createElement('p');nota.className='asignacion-observacion';nota.textContent=u.observacion;tiene.appendChild(nota);}tr.appendChild(tiene);
    const trabajos=document.createElement('td'),acciones=document.createElement('td');
    function boton(etiqueta,accion){const b=document.createElement('button');b.type='button';b.className='admin-link-btn';b.textContent=etiqueta;b.disabled=ocupado;b.addEventListener('click',accion);return b;}
+   const comentar=boton(u.observacion?'Editar observación':'Agregar observación',()=>abrirObservacion(u));comentar.setAttribute('aria-label','Observación de '+u.nombre);tiene.appendChild(comentar);
    if(!tareas.length)trabajos.textContent='—';
    tareas.forEach(a=>{
     const linea=document.createElement('p');linea.textContent=a.codigo+' · '+a.tema+' · '+estadoTrabajo(a);trabajos.appendChild(linea);
     const grupo=document.createElement('div');grupo.className='asignaciones-padron-acciones';
     const editar=boton('Editar',()=>seleccionar(a.id));editar.setAttribute('aria-label','Editar '+a.codigo+' de '+u.nombre);
     const eliminar=boton('Eliminar',()=>{seleccionar(a.id);void guardar('eliminar');});eliminar.setAttribute('aria-label','Eliminar asignación '+a.codigo+' de '+u.nombre);
-    grupo.append(editar,eliminar);acciones.appendChild(grupo);
+    const entregar=boton(a.entregado_el?'Reabrir como pendiente':'Marcar como entregado',()=>abrirEntrega(a));entregar.setAttribute('aria-label',(a.entregado_el?'Reabrir ':'Marcar como entregado ')+a.codigo+' de '+u.nombre);entregar.dataset.publicado=String(!!a.recordatorio?.publicado);entregar.disabled=ocupado||!!a.recordatorio?.publicado;
+    grupo.append(editar,eliminar,entregar);acciones.appendChild(grupo);
    });
    const asignar=boton('Asignar trabajo',()=>{window.abrirNuevaAsignacionDocente();$('asignacionUsuario').value=u.id;contexto();$('asignacionTema').focus();});
    asignar.setAttribute('aria-label','Asignar trabajo a '+u.nombre);acciones.appendChild(asignar);
@@ -161,21 +172,22 @@
   const filtro=$('asignacionesEstadoFiltro')?.value||'todos';
   const vigentes=datos.asignaciones.filter(a=>a.vigente);
   const lista=datos.asignaciones.filter(a=>{
-   if(filtro==='entregados')return a.vigente&&estadoTrabajo(a)==='Publicado';
-   if(filtro==='pendientes')return a.vigente&&estadoTrabajo(a)!=='Publicado';
+   if(filtro==='entregados')return a.vigente&&estaEntregado(a);
+   if(filtro==='publicados')return a.vigente&&a.recordatorio?.publicado;
+   if(filtro==='pendientes')return a.vigente&&!estaEntregado(a);
    if(filtro==='vencidos')return a.vigente&&estadoTrabajo(a)==='Vencido';
    return a.vigente||$('asignacionesVerAnuladas').checked;
   }).sort(ordenarAsignaciones);
   $('asignacionesConteo').textContent=lista.length+' de '+vigentes.length+' asignaciones vigentes'+
-   (filtro==='entregados'?' · entregadas/publicadas':filtro==='pendientes'?' · pendientes de publicación':filtro==='vencidos'?' · vencidas':' · todas')+
+   (filtro==='entregados'?' · entregadas (incluye publicadas)':filtro==='pendientes'?' · pendientes de entrega':filtro==='vencidos'?' · vencidas':' · todas')+
    ' · '+datos.catalogo.filter(x=>tipoUnidadDocencia(x.codigo)==='tema').length+' temas del catálogo';
   if(!lista.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=6;
-   td.textContent=filtro==='entregados'?'Todavía no hay asignaciones entregadas y publicadas.':filtro==='pendientes'?'No quedan trabajos pendientes de publicación.':filtro==='vencidos'?'No hay trabajos vencidos y pendientes de publicación.':'No hay asignaciones para mostrar.';
+   td.textContent=filtro==='entregados'?'Todavía no hay asignaciones entregadas.':filtro==='pendientes'?'No quedan trabajos pendientes de entrega.':filtro==='vencidos'?'No hay trabajos vencidos y pendientes de entrega.':'No hay asignaciones para mostrar.';
    tr.appendChild(td);cuerpo.appendChild(tr);}
   lista.forEach(a=>{
    const tr=document.createElement('tr');tr.className='asignacion-fila asignacion-'+(a.vigente?estadoTrabajo(a).toLowerCase():'anulada');if(a.id===seleccion)tr.classList.add('asignacion-seleccionada');
    const textos=[a.nombre,a.codigo+' · '+a.tema,fecha(a.fecha_asignacion),fecha(a.fecha_entrega)+' · 23:30',a.vigente?estadoTrabajo(a):'Anulada'];
-   textos.forEach((x,i)=>{const td=document.createElement('td');td.textContent=x;if(i===4){const s=document.createElement('small');s.className='asignacion-correo-estado';const c=a.correos?.[0];s.textContent=!c?'Sin correo enviado':c.estado==='enviado'?'Correo aceptado por SMTP · CCO '+(c.copia_estado==='aceptada'?'aceptada':'sin confirmar'):c.estado==='preparado'?'Envío en curso / por confirmar':'Correo sin confirmación';td.appendChild(s);const rs=document.createElement('small');rs.className='asignacion-correo-estado';rs.textContent=a.recordatorio?.estado==='enviado'?'Recordatorio enviado':a.recordatorio?.publicado?'Publicado · sin recordatorio':a.recordatorio?.estado==='incierto'?'Recordatorio sin confirmar':a.recordatorio?.estado==='sin_solicitud'?'Recordatorio: falta solicitud':'Recordatorio automático';td.appendChild(rs);}tr.appendChild(td);});
+   textos.forEach((x,i)=>{const td=document.createElement('td');td.textContent=x;if(i===4){const s=document.createElement('small');s.className='asignacion-correo-estado';const c=a.correos?.[0];s.textContent=!c?'Sin correo enviado':c.estado==='enviado'?'Correo aceptado por SMTP · CCO '+(c.copia_estado==='aceptada'?'aceptada':'sin confirmar'):c.estado==='preparado'?'Envío en curso / por confirmar':'Correo sin confirmación';td.appendChild(s);const rs=document.createElement('small');rs.className='asignacion-correo-estado';rs.textContent=a.recordatorio?.estado==='enviado'?'Recordatorio enviado':estaEntregado(a)?'Entregado · sin recordatorio':a.recordatorio?.estado==='incierto'?'Recordatorio sin confirmar':a.recordatorio?.estado==='sin_solicitud'?'Recordatorio: falta solicitud':'Recordatorio automático';td.appendChild(rs);}tr.appendChild(td);});
    const td=document.createElement('td'),b=document.createElement('button');b.type='button';b.className='admin-link-btn';b.textContent='Ver opciones';b.dataset.vigente=String(a.vigente);b.disabled=ocupado||!a.vigente;b.setAttribute('aria-label','Ver opciones de '+a.codigo+' de '+a.nombre);b.onclick=()=>seleccionar(a.id);td.appendChild(b);tr.appendChild(td);cuerpo.appendChild(tr);
   });contexto();renderPadron();botones();seguimiento();window.renderizarCronogramaAdmin();
  }
@@ -224,6 +236,31 @@
   }catch(e){estado(e.message,true);}
   finally{ocupado=false;botones();}
  }
+ function abrirObservacion(u){
+  if(ocupado||!usuarioActual?.es_admin)return;observacionSeleccionada={...u};
+  $('observacionAsignacionNombre').textContent=u.nombre;$('observacionAsignacionTexto').value=u.observacion||'';$('observacionAsignacionEstado').textContent='';$('dialogObservacionAsignacion').showModal();$('observacionAsignacionTexto').focus();
+ }
+ window.cerrarObservacionAsignacion=()=>{if(!ocupado){$('dialogObservacionAsignacion').close();observacionSeleccionada=null;$('observacionAsignacionTexto').value='';}};
+ window.guardarObservacionAsignacion=async function(){
+  if(ocupado||!observacionSeleccionada)return;const u=observacionSeleccionada,actor=usuarioActual;ocupado=true;botones();
+  try{await api({action:'observacion',usuario_id:u.id,version:u.observacion_version||0,observacion:$('observacionAsignacionTexto').value.trim()});if(usuarioActual!==actor)return;$('dialogObservacionAsignacion').close();observacionSeleccionada=null;await window.cargarAsignacionesAdmin();estado('Observación guardada. No modifica los indicadores ni envía correos.');}
+  catch(e){if(usuarioActual===actor)$('observacionAsignacionEstado').textContent=e.message;}finally{if(usuarioActual===actor){ocupado=false;botones();}}
+ };
+ window.borrarObservacionAsignacion=()=>{if(!ocupado&&confirm('¿Borrar la observación administrativa de este usuario?')){$('observacionAsignacionTexto').value='';void window.guardarObservacionAsignacion();}};
+ function abrirEntrega(a){
+  if(ocupado||!a.vigente||a.recordatorio?.publicado||!usuarioActual?.es_admin)return;
+  if(a.entregado_el){void reabrirEntrega(a);return;}
+  entregaSeleccionada={...a};$('entregaAsignacionNombre').textContent=a.nombre+' · '+a.codigo+' · '+a.tema;$('entregaAsignacionFecha').value=hoy();$('entregaAsignacionFecha').min=a.fecha_asignacion;$('entregaAsignacionFecha').max=hoy();$('entregaAsignacionNota').value='';$('entregaAsignacionEstado').textContent='';$('dialogEntregaAsignacion').showModal();
+ }
+ window.gestionarEntregaAsignacion=()=>{if(actual())abrirEntrega(actual());};
+ window.cerrarEntregaAsignacion=()=>{if(!ocupado){$('dialogEntregaAsignacion').close();entregaSeleccionada=null;$('entregaAsignacionNota').value='';}};
+ async function cambiarEntrega(a,action,extra={}){
+  if(ocupado)return;const actor=usuarioActual;ocupado=true;botones();
+  try{await api({action,id:a.id,version:a.version,confirmado:true,...extra});if(usuarioActual!==actor)return;$('dialogEntregaAsignacion').close();entregaSeleccionada=null;await window.cargarAsignacionesAdmin();estado(action==='entregar'?'Entrega registrada. Indicadores actualizados y recordatorios detenidos.':'Entrega reabierta. Se conserva el vencimiento original y se revisan las reglas de recordatorio.');}
+  catch(e){if(usuarioActual===actor){if($('dialogEntregaAsignacion').open)$('entregaAsignacionEstado').textContent=e.message;else estado(e.message,true);}}finally{if(usuarioActual===actor){ocupado=false;botones();seguimiento();}}
+ }
+ async function reabrirEntrega(a){if(confirm('¿Reabrir '+a.codigo+' de '+a.nombre+' como pendiente? Se conserva su vencimiento original. Un recordatorio ya enviado no se repetirá.'))await cambiarEntrega(a,'reabrir');}
+ window.confirmarEntregaAsignacion=()=>{if(!entregaSeleccionada||!$('entregaAsignacionFecha').reportValidity())return;return cambiarEntrega(entregaSeleccionada,'entregar',{fecha_entrega_real:$('entregaAsignacionFecha').value,nota:$('entregaAsignacionNota').value.trim()});};
  window.guardarAsignacionDocente=()=>guardar('crear');
  window.modificarAsignacionDocente=()=>guardar('modificar');
  window.eliminarAsignacionDocente=()=>guardar('eliminar');
@@ -285,7 +322,7 @@
  };
  window.cerrarCorreoAsignacion=function(){if(!ocupado){$('dialogCorreoAsignacion').close();$('correoAsignacionVista').srcdoc='';vista=null;}};
  window.limpiarAsignacionesAdmin=function(){
-  ++consulta;datosCargados=false;datos={usuarios:[],catalogo:[],asignaciones:[]};seleccion=null;vista=null;ocupado=false;
+  ++consulta;observacionSeleccionada=null;entregaSeleccionada=null;for(const id of ['dialogObservacionAsignacion','dialogEntregaAsignacion'])$(id)?.close();for(const id of ['observacionAsignacionTexto','entregaAsignacionNota'])if($(id))$(id).value='';datosCargados=false;datos={usuarios:[],catalogo:[],asignaciones:[]};seleccion=null;vista=null;ocupado=false;
   $('dialogOpcionesAsignacion')?.close();if($('asignacionRecordatorioVista'))$('asignacionRecordatorioVista').srcdoc='';
   $('dialogCorreoAsignacion')?.close();if($('correoAsignacionVista'))$('correoAsignacionVista').srcdoc='';
   if($('asignacionesEstadoFiltro'))$('asignacionesEstadoFiltro').value='todos';
@@ -296,6 +333,7 @@
   window.renderizarCronogramaAdmin();
  };
  document.addEventListener('DOMContentLoaded',()=>{
+  for(const id of ['dialogObservacionAsignacion','dialogEntregaAsignacion'])$(id)?.addEventListener('cancel',e=>{if(ocupado)e.preventDefault();else if(id==='dialogObservacionAsignacion')window.cerrarObservacionAsignacion();else window.cerrarEntregaAsignacion();});
   $('dialogOpcionesAsignacion')?.addEventListener('cancel',e=>{if(ocupado)e.preventDefault();else window.cerrarOpcionesAsignacion();});
   $('dialogCorreoAsignacion')?.addEventListener('cancel',e=>{if(ocupado)e.preventDefault();else window.cerrarCorreoAsignacion();});
  });
