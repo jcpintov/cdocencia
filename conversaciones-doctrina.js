@@ -1,7 +1,7 @@
 let revisionConversaciones=0,conversacionesCargadas=0;
 function limpiarConversacionesDoctrina(){revisionConversaciones++;conversacionesCargadas=0;document.getElementById('doctrinaCasosLista')?.replaceChildren();const e=document.getElementById('doctrinaCasosEstado');if(e)e.textContent='';document.getElementById('doctrinaCasosMas')?.classList.add('hidden');}
 async function cargarConversacionesDoctrina(mas=false){
- if(!usuarioActual?.es_admin)return;
+ if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN'))return;
  const actor=usuarioActual,n=++revisionConversaciones,lista=document.getElementById('doctrinaCasosLista'),estado=document.getElementById('doctrinaCasosEstado'),botonMas=document.getElementById('doctrinaCasosMas');
  const vigente=()=>usuarioActual===actor&&n===revisionConversaciones;
  if(!mas){conversacionesCargadas=0;lista.replaceChildren();}estado.textContent='Consultando conversaciones…';botonMas.disabled=true;
@@ -37,7 +37,7 @@ async function cargarConversacionesDoctrina(mas=false){
  finally{if(vigente())botonMas.disabled=false;}
 }
 async function descargarMemoriaAprobada(){
- if(!usuarioActual?.es_admin)return;const actor=usuarioActual,n=revisionConversaciones,e=document.getElementById('doctrinaCasosEstado');e.textContent='Preparando JSON aprobado…';
+ if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN'))return;const actor=usuarioActual,n=revisionConversaciones,e=document.getElementById('doctrinaCasosEstado');e.textContent='Preparando JSON aprobado…';
  try{const r=await peticionDoctrina('memoria_exportar');if(usuarioActual!==actor||n!==revisionConversaciones)return;
   if(r.memoria?.schema_version!==1||!Array.isArray(r.memoria.casos))throw Error('Memoria JSON incompleta');
   const url=URL.createObjectURL(new Blob([JSON.stringify(r.memoria,null,2)],{type:'application/json;charset=utf-8'})),a=document.createElement('a');a.href=url;a.download='memoria-doctrina-aprobada.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);e.textContent='JSON descargado con '+r.memoria.casos.length+' conversaciones aprobadas.';

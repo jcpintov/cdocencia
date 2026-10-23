@@ -21,7 +21,7 @@ export default async function handler(req,res){
   if(authError||!user?.id)return reply(res,401,{error:'Sesión no válida'});
   const admin=createClient(url,secret,options);
   const {data:perfil,error:profileError}=await admin.from('usuarios').select('id,email,es_admin,rol,cuenta_eliminada').eq('auth_user_id',user.id).maybeSingle();
-  if(profileError||!esOperador(perfil,user))return reply(res,403,{error:'Se requiere administración docente'});
+  if(profileError||!esSuperadmin(perfil,user))return reply(res,403,{error:'Se requiere administración docente'});
   const {action,...datos}=req.body||{};
   if(['llm_autorizar','llm_revocar','llm_autorizar_biblioteca'].includes(action)&&!esSuperadmin(perfil,user))return reply(res,403,{error:'La autorización de proveedores pertenece a Superadmin'});
   if(!['listar','preparar','registrar','descargar','visualizar','revisar','retirar','restaurar','clasificar','texto_extraer','texto_pagina','texto_revisar_pagina','texto_aprobar','texto_buscar','agente_consultar','llm_listar','llm_autorizar','llm_revocar','llm_autorizar_biblioteca','caso_aprobar','caso_retirar','caso_eliminar','memoria_sesion','casos_listar','memoria_exportar'].includes(action))return reply(res,422,{error:'Acción inválida'});

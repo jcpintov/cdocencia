@@ -73,7 +73,7 @@ test('reclasifica mediante RPC protegida y valida categorías e identidad',async
  const f=setup({foreign:true});assert.equal((await f.request({action:'clasificar',id:actor,clase:'doctrina',clase_actual:'docencia'})).code,403);assert.equal(f.calls.length,0);
 });
 
-test('Administrador accede a biblioteca pero no puede cambiar autorizaciones externas',async()=>{const s=setup({rol:'ADMIN'});assert.equal((await s.request({action:'listar'})).code,200);for(const action of ['llm_autorizar','llm_revocar','llm_autorizar_biblioteca'])assert.equal((await s.request({action,confirmacion:true,id:actor})).code,403);assert.deepEqual(s.calls,[['rpc','listar']]);});
+test('Administrador no puede acceder a biblioteca, consultas ni memoria',async()=>{const s=setup({rol:'ADMIN'});for(const action of ['listar','agente_consultar','memoria_sesion','casos_listar','memoria_exportar','caso_eliminar','llm_autorizar'])assert.equal((await s.request({action,confirmacion:true,id:actor})).code,403);assert.deepEqual(s.calls,[]);});
 
 test('archivo: filtra por actor verificado y solo exporta casos aprobados',async()=>{const s=setup({memoria:true,casos:[{id:actor,estado:'candidato'}]});assert.equal((await s.request({action:'casos_listar',actor:'intruso',estado:'candidato'})).code,200);assert.ok(s.calls.some(c=>c[0]==='filtro'&&c[1]==='actor'&&c[2]===actor));assert.equal((await s.request({action:'memoria_exportar'})).code,200);assert.ok(s.calls.some(c=>c[1]==='estado'&&c[2]==='revisado'));});
 test('archivo: rechaza filtros inválidos y falla explícitamente sin generar JSON parcial',async()=>{assert.equal((await setup().request({action:'casos_listar'})).code,503);for(const datos of [{estado:'otro'},{desde:-1},{desde:'0'}])assert.equal((await setup({memoria:true}).request({action:'casos_listar',...datos})).code,422);assert.equal((await setup({memoria:true,falloCasos:true}).request({action:'memoria_exportar'})).code,503);});
@@ -87,7 +87,7 @@ test('eliminar conversación exige sesión, permisos, memoria habilitada y confi
  for(const d of [{id:'inválido',confirmacion:true},{id:actor},{id:actor,confirmacion:'true'}]){const s=setup({memoria:true});assert.equal((await s.request({action:'caso_eliminar',...d})).code,422);assert.equal(s.calls.length,0);}
 });
 test('eliminar conversación filtra por propietario verificado, nunca por actor enviado',async()=>{
- for(const rol of ['SUPERADMIN','ADMIN']){
+ for(const rol of ['SUPERADMIN']){
   const s=setup({memoria:true,rol});const r=await s.request({action:'caso_eliminar',id:actor,actor:'intruso',confirmacion:true});
   assert.equal(r.code,200);assert.equal(r.body.eliminado,true);assert.deepEqual(s.calls,[['delete'],['filtro','id',actor],['filtro','actor',actor]]);
  }

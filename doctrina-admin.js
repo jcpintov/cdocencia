@@ -1,12 +1,12 @@
 let memoriaPersistenteSesion=null,cargaMemoriaSesion=null,versionMemoriaSesion=0;
 function vaciarMemoriaSesionLocal(){versionMemoriaSesion++;memoriaPersistenteSesion=null;cargaMemoriaSesion=null;}
 async function cargarMemoriaAgenteSesion(){
- if(!usuarioActual?.es_admin)return;
+ if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN'))return;
  const actor=usuarioActual.id;
  if(memoriaPersistenteSesion?.actor===actor)return memoriaPersistenteSesion.memoria;
  if(cargaMemoriaSesion?.actor===actor)return cargaMemoriaSesion.promesa;
  const version=++versionMemoriaSesion;
- const vigente=()=>usuarioActual?.es_admin&&usuarioActual.id===actor&&version===versionMemoriaSesion;
+ const vigente=()=>usuarioActual?.es_admin&&usuarioActual?.rol!=='ADMIN'&&usuarioActual.id===actor&&version===versionMemoriaSesion;
  let aviso=document.getElementById('doctrinaMemoriaEstado');
  // La memoria se recupera en silencio; solo los fallos requieren un aviso.
  if(aviso){aviso.remove();aviso=null;}
@@ -50,7 +50,7 @@ function limpiarBibliotecaDoctrina(){
  for(const id of ['doctrinaDocumentos','doctrinaInventario','doctrinaBusquedaResultados','doctrinaAgenteResultado','doctrinaGroqPermisos'])document.getElementById(id)?.replaceChildren();
 }
 async function peticionDoctrina(action,datos={},signal){
- if(!usuarioActual?.es_admin)throw new Error('Acceso exclusivo de Superadmin');
+ if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN'))throw new Error('Acceso exclusivo de Superadmin');
  const {data,error}=await sbApp.auth.getSession();
  if(error||!data?.session?.access_token)throw new Error('Sesión vencida. Inicie sesión nuevamente.');
  const response=await fetch('/api/admin-doctrina',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+data.session.access_token},body:JSON.stringify({action,...datos}),signal});
@@ -59,7 +59,7 @@ async function peticionDoctrina(action,datos={},signal){
  return result;
 }
 async function cargarBibliotecaDoctrina(){
- if(!usuarioActual?.es_admin)return;
+ if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN'))return;
  invalidarAgenteDoctrina();
  const consulta=++consultaBibliotecaDoctrina;
  const estado=document.getElementById('doctrinaEstado');
@@ -67,7 +67,7 @@ async function cargarBibliotecaDoctrina(){
  estado.textContent='Consultando biblioteca e inventario…';boton.disabled=true;
  try{
   const result=await peticionDoctrina('listar');
-  if(consulta!==consultaBibliotecaDoctrina||!usuarioActual?.es_admin)return;
+  if(consulta!==consultaBibliotecaDoctrina||(!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN'))return;
   if(!Array.isArray(result.documentos)||!Array.isArray(result.inventario))throw new Error('Respuesta documental incompleta');
   bibliotecaDoctrina=result;renderizarBibliotecaDoctrina();
   estado.textContent=`${result.documentos.length} originales incorporados; ${result.inventario.length} registros del inventario. Acceso solo Superadmin.`;
@@ -75,7 +75,7 @@ async function cargarBibliotecaDoctrina(){
  finally{if(consulta===consultaBibliotecaDoctrina)boton.disabled=false;}
 }
 function renderizarBibliotecaDoctrina(){
- if(!usuarioActual?.es_admin)return;
+ if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN'))return;
  const buscar=normalizarBusquedaAdmin(document.getElementById('doctrinaBuscar')?.value||'');
  for(const tipo of ['documentos','inventario']){
   const cont=document.getElementById(tipo==='documentos'?'doctrinaDocumentos':'doctrinaInventario');cont.replaceChildren();
@@ -125,7 +125,7 @@ function renderizarBibliotecaDoctrina(){
 async function descargarOriginalDoctrina(id,boton){
  boton.disabled=true;
  try{const result=await peticionDoctrina('descargar',{id});
-  if(!usuarioActual?.es_admin)return;
+  if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN'))return;
   const url=new URL(result.url);
   const origen=new URL(SUPABASE_URL).origin;
   if(url.protocol!=='https:'||url.origin!==origen||!url.pathname.startsWith('/storage/v1/object/sign/'))throw new Error('Referencia de descarga no válida');
@@ -134,7 +134,7 @@ async function descargarOriginalDoctrina(id,boton){
  finally{boton.disabled=false;}
 }
 async function incorporarOriginalDoctrina(){
- if(!usuarioActual?.es_admin)return;
+ if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN'))return;
  const boton=document.getElementById('doctrinaIncorporar');if(boton.disabled)return;
  const estado=document.getElementById('doctrinaCargaEstado');
  const file=document.getElementById('doctrinaArchivo').files[0];
@@ -155,7 +155,7 @@ async function incorporarOriginalDoctrina(){
    if(error)throw new Error('No se pudo subir el original. Reintente la carga.');
    cargaDoctrinaPendiente={path:preparada.path,sha256};
   }
-  if(!usuarioActual?.es_admin||usuarioActual.id!==actor)throw new Error('La sesión cambió. Vuelva a iniciar la operación.');
+  if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN')||usuarioActual.id!==actor)throw new Error('La sesión cambió. Vuelva a iniciar la operación.');
   estado.textContent='Comprobando integridad y registrando el borrador…';
   await peticionDoctrina('registrar',{...datos,path:cargaDoctrinaPendiente.path});
   cargaDoctrinaPendiente=null;document.getElementById('doctrinaFormulario').reset();
@@ -209,7 +209,7 @@ async function abrirVisorDoctrina(d,boton){
  if(!modal.open)modal.showModal();boton.disabled=true;
  try{
   const result=await peticionDoctrina('visualizar',{id:d.version_id});
-  if(solicitud!==solicitudVisorDoctrina||!usuarioActual?.es_admin||usuarioActual.id!==actor)return;
+  if(solicitud!==solicitudVisorDoctrina||(!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN')||usuarioActual.id!==actor)return;
   const url=new URL(result.url),origen=new URL(SUPABASE_URL).origin;
   if(url.protocol!=='https:'||url.origin!==origen||!url.pathname.startsWith('/storage/v1/object/sign/'))throw new Error('Referencia de consulta no válida');
   urlVisorDoctrina=url.href;
@@ -232,7 +232,7 @@ async function abrirTextoDoctrina(d){
  document.getElementById('doctrinaTextoPagina').value=1;document.getElementById('doctrinaTextoDialogo').showModal();await accionTextoDoctrina('texto_pagina');
 }
 async function accionTextoDoctrina(action){
- if(!versionTextoDoctrina||!usuarioActual?.es_admin)return;
+ if(!versionTextoDoctrina||(!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN'))return;
  if(action==='texto_pagina'&&document.getElementById('doctrinaTextoContenido').value!==textoPaginaBase&&!confirm('Hay cambios sin guardar. ¿Cargar otra página y descartarlos?'))return;
  if(action==='texto_revisar_pagina'&&Number(document.getElementById('doctrinaTextoPagina').value)!==paginaTextoCargada){document.getElementById('doctrinaTextoEstado').textContent='Cargue la página seleccionada antes de revisarla.';return;}
  const id=versionTextoDoctrina,consulta=++consultaTextoDoctrina,actor=usuarioActual.id;
@@ -255,7 +255,7 @@ async function buscarTextoDoctrina(){
  const resultados=document.getElementById('doctrinaBusquedaResultados');resultados.replaceChildren();
  try{
   const r=await peticionDoctrina('texto_buscar',{consulta:document.getElementById('doctrinaConsultaTexto').value.trim()});
-  if(!usuarioActual?.es_admin||usuarioActual.id!==actor||consultaBibliotecaDoctrina!==solicitud||consultaBusquedaTextoDoctrina!==busqueda)return;
+  if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN')||usuarioActual.id!==actor||consultaBibliotecaDoctrina!==solicitud||consultaBusquedaTextoDoctrina!==busqueda)return;
   if(r.cobertura){const aviso=document.createElement('p');aviso.className='admin-empty-state';aviso.textContent=`Cobertura: ${r.cobertura.consultables} de ${r.cobertura.vigentes} originales vigentes consultables. ${r.cobertura.pendientes} pendientes de indexación. Las coincidencias no constituyen una conclusión doctrinaria.`;resultados.appendChild(aviso);}
   for(const item of r.resultados){const articulo=document.createElement('article');articulo.className='doctrina-documento';const titulo=document.createElement('h4');titulo.textContent=item.titulo+' · página '+item.pagina+' · versión '+item.version;const texto=document.createElement('p');texto.textContent=item.fragmento;articulo.append(titulo,texto);const boton=document.createElement('button');boton.type='button';boton.className='btn-secondary';boton.textContent='Consultar original';boton.onclick=async()=>{await abrirVisorDoctrina({version_id:item.version_id,titulo:item.titulo,estado:'vigente'},boton);document.getElementById('doctrinaVisorPagina').value=item.pagina;irPaginaVisorDoctrina();};articulo.appendChild(boton);resultados.appendChild(articulo);}
   if(!r.resultados.length){const vacio=document.createElement('p');vacio.textContent='Sin coincidencias en los textos indexados. Esto no demuestra que el tema esté ausente de los originales pendientes.';resultados.appendChild(vacio);}
@@ -385,7 +385,7 @@ function ofrecerAprendizajeDoctrina(id,contenedor,vigente){
  bloque.append(aviso,boton);contenedor.append(bloque);
 }
 async function consultarAgenteDoctrina() {
- if (!usuarioActual?.es_admin) return;
+ if ((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN')) return;
  if(Date.now()<reintentoAgenteHasta){estadoConsultaDoctrina('El proveedor sigue en espera. Reanude en '+Math.ceil((reintentoAgenteHasta-Date.now())/1000)+' segundos; su pregunta se conserva.',true);return;}
  const formulario = document.getElementById('doctrinaAgenteFormulario');
  if (!formulario.reportValidity()) return;
@@ -451,7 +451,7 @@ document.getElementById('doctrinaAgentePregunta')?.addEventListener('keydown', e
 
 let doctrinaPreparacionActiva=false;
 async function prepararBibliotecaGroq(){
- if(!usuarioActual?.es_admin||doctrinaPreparacionActiva)return;
+ if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN')||doctrinaPreparacionActiva)return;
  if(!confirm('Se extraerá e indexará automáticamente el texto de los originales vigentes. Después se autorizarán sus pasajes legibles para consultas con Groq. Los PDF permanecerán privados. ¿Continuar?'))return;
  doctrinaPreparacionActiva=true;
  const actor=usuarioActual.id;
@@ -467,7 +467,7 @@ async function prepararBibliotecaGroq(){
   const pendientes=vigentes.filter(x=>!x.texto_indexado&&!x.texto_aprobado);
   informar('Biblioteca: '+vigentes.length+' originales vigentes. '+pendientes.length+' pendientes de extracción.');
   for(let i=0;i<pendientes.length;i++){
-   if(!usuarioActual?.es_admin||usuarioActual.id!==actor){informar('Preparación interrumpida por cambio de sesión.');return;}
+   if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN')||usuarioActual.id!==actor){informar('Preparación interrumpida por cambio de sesión.');return;}
    const item=pendientes[i];
    informar('Extrayendo '+(i+1)+' de '+pendientes.length+': '+item.titulo);
    try{
@@ -487,7 +487,7 @@ async function prepararBibliotecaGroq(){
 
 async function cargarAutorizacionesGroq(){
  const turno=++consultaPermisosGroq,actor=usuarioActual?.id,salida=document.getElementById('doctrinaGroqPermisos');salida.textContent='Consultando permisos…';
- try{const r=await peticionDoctrina('llm_listar');if(turno!==consultaPermisosGroq||!usuarioActual?.es_admin||usuarioActual.id!==actor)return;salida.replaceChildren();
+ try{const r=await peticionDoctrina('llm_listar');if(turno!==consultaPermisosGroq||(!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN')||usuarioActual.id!==actor)return;salida.replaceChildren();
   for(const item of r.autorizaciones){const fila=document.createElement('article');fila.className='doctrina-documento';const p=document.createElement('p'),b=document.createElement('button');p.textContent=`${item.titulo} · versión ${item.version} · ${item.autorizado?'Autorizado para Groq':'Sin autorización para Groq'}`;b.type='button';b.className='btn-secondary';b.textContent=item.autorizado?'Revocar permiso':'Autorizar fragmentos';b.hidden=usuarioActual?.rol==='ADMIN';b.classList.toggle('hidden',b.hidden);b.disabled=!item.autorizado&&!item.texto_indexado&&!item.texto_aprobado;
    b.onclick=async()=>{if(!item.autorizado&&!confirm(`¿Autoriza enviar fragmentos de «${item.titulo}», versión ${item.version}, a Groq usando GPT-OSS 120B? El proveedor recibirá también la pregunta y los antecedentes de cada consulta.`))return;b.disabled=true;try{await peticionDoctrina(item.autorizado?'llm_revocar':'llm_autorizar',{id:item.version_id,confirmacion:!item.autorizado});if(turno===consultaPermisosGroq&&usuarioActual?.id===actor){invalidarAgenteDoctrina();await cargarAutorizacionesGroq();}}catch(e){if(turno===consultaPermisosGroq&&usuarioActual?.id===actor){p.textContent=e.message;b.disabled=false;}}};fila.append(p,b);salida.appendChild(fila);}
   if(!r.autorizaciones.length)salida.textContent='No hay originales vigentes para autorizar.';

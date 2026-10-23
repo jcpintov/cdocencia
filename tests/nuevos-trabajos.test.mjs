@@ -66,13 +66,14 @@ test('PDF real de dos páginas: extracción completa y separación de encabezado
 });
 
 test('API de nuevos trabajos autentica antes de cargar el procesador y fija el actor del servidor',async()=>{
- const {readFile}=await import('node:fs/promises'),{runInNewContext}=await import('node:vm'),{esOperador}=await import('../lib/roles-admin.js');
+ const {readFile}=await import('node:fs/promises'),{runInNewContext}=await import('node:vm'),{esOperador,esSuperadmin}=await import('../lib/roles-admin.js');
  const raw=await readFile('api/admin-trabajos.js','utf8');const source=raw.replace(/^import .*;$/gm,'').replace("const {gestionarNuevoTrabajo}=await import('../server/nuevos-trabajos.js');","const {gestionarNuevoTrabajo}=hooks;").replace('export default async function handler','async function handler')+'\nhandler';
  async function ejecutar({token='Bearer fixture',rol='ADMIN',body={action:'nuevo_listar',actor:'intruso'}}={}){
   const calls=[];const perfil={email:'delegado@example.invalid',rol,es_admin:rol==='ADMIN'};
-  const h=runInNewContext(source,{esOperador,process:{env:{SUPABASE_URL:'fixture',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}},createClient:(_url,key)=>key==='public'?{auth:{getUser:async()=>({data:{user:{id:actor.id,email:perfil.email}}})}}:{from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:perfil})})})})},hooks:{gestionarNuevoTrabajo:async(b,o)=>{calls.push(o.actor.id);return {status:200,body:{ok:true}};}}});
+  const h=runInNewContext(source,{esOperador,esSuperadmin,process:{env:{SUPABASE_URL:'fixture',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}},createClient:(_url,key)=>key==='public'?{auth:{getUser:async()=>({data:{user:{id:actor.id,email:perfil.email}}})}}:{from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:perfil})})})})},hooks:{gestionarNuevoTrabajo:async(b,o)=>{calls.push(o.actor.id);return {status:200,body:{ok:true}};}}});
   const res={setHeader(){},status(c){this.code=c;return this;},json(v){this.body=v;return this;}};await h({method:'POST',headers:{authorization:token},body},res);return {res,calls};
  }
  for(const opt of [{token:''},{rol:'USER'}]){const r=await ejecutar(opt);assert.equal(r.calls.length,0);assert.ok([401,403].includes(r.res.code));}
+ const ia=await ejecutar({body:{action:'nuevo_generar',confirmado:true}});assert.equal(ia.res.code,403);assert.deepEqual(ia.calls,[]);
  const ok=await ejecutar();assert.equal(ok.res.code,200);assert.deepEqual(ok.calls,[actor.id]);assert.equal((await ejecutar({body:'{incorrecto'})).res.code,400);
 });

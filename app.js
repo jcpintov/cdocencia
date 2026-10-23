@@ -284,14 +284,14 @@ function configurarEntornoUsuario() {
 
   if (usuarioActual.es_admin) {
     document.getElementById('adminConsolaTitulo').textContent=esSuperadminSesion()?'Consola Superadmin':'Consola Administrador';
-    document.querySelectorAll('[data-solo-superadmin],#tabNavEditorDoctrina').forEach(e=>{e.hidden=!esSuperadminSesion();e.classList.toggle("hidden",!esSuperadminSesion());});
+    document.querySelectorAll('[data-solo-superadmin],#tabNavEditorDoctrina,#tabNavDoctrina').forEach(e=>{e.hidden=!esSuperadminSesion();e.classList.toggle("hidden",!esSuperadminSesion());});
     const reserva=document.querySelector('.doctrina-reserva');if(reserva)reserva.textContent='Espacio privado · '+(esSuperadminSesion()?'Superadmin':'Administrador');
     if (usuarioActual.debe_cambiar_clave) {
       document.getElementById('seccionAdmin').classList.add('hidden');
       document.getElementById('modalCambioClaveObligatorio').classList.remove('hidden');
       return;
     }
-    if(typeof cargarMemoriaAgenteSesion==='function')void cargarMemoriaAgenteSesion();
+    if(esSuperadminSesion()&&typeof cargarMemoriaAgenteSesion==='function')void cargarMemoriaAgenteSesion();
     document.getElementById('seccionAdmin').classList.remove('hidden');
     document.getElementById('seccionDocencia').classList.add('hidden');
     document.getElementById('seccionBienvenida').classList.add('hidden');
@@ -2608,7 +2608,7 @@ async function cargarDatosAdmin() {
 }
 
 function cambiarSubseccionAdmin(seccion) {
-  if(seccion==='editor_doctrina'&&usuarioActual?.rol==='ADMIN')return;
+  if(['editor_doctrina','doctrina'].includes(seccion)&&!esSuperadminSesion())return;
   // Fuente única de las doce vistas: id del botón, título, id de la sección.
   const vistasAdmin = {
     resumen:['tabNavResumen','Resumen ejecutivo','adminSeccionResumen'],

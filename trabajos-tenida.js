@@ -10,7 +10,7 @@ function limpiarTrabajosTenida(){
 }
 async function peticionTrabajos(action,datos={},binario=false){
  if(['revisar','contrastar','generar'].includes(action)&&Date.now()<reintentoOradorHasta)throw Error('Groq sigue en espera. Reanude en '+Math.ceil((reintentoOradorHasta-Date.now())/1000)+' segundos. El avance se conserva.');
- if(!usuarioActual?.es_admin)throw Error('Acceso exclusivo de Superadmin');
+ if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN'))throw Error('Acceso exclusivo de Superadmin');
  const {data,error}=await sbApp.auth.getSession();if(error||!data?.session?.access_token)throw Error('Sesión vencida. Inicie sesión nuevamente.');
  const r=await fetch('/api/admin-orador',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+data.session.access_token},body:JSON.stringify({action,...datos})});
  if(binario&&r.ok)return r.blob();
@@ -24,7 +24,7 @@ async function peticionTrabajos(action,datos={},binario=false){
 function elementoTrabajo(tag,texto,clase){const e=document.createElement(tag);if(texto!==undefined)e.textContent=texto;if(clase)e.className=clase;return e;}
 function botonTrabajo(texto,fn,primario=false){const b=elementoTrabajo('button',texto,primario?'btn-primary':'btn-secondary');b.type='button';b.onclick=fn;return b;}
 async function cargarTrabajosTenida(){
- if(!usuarioActual?.es_admin||trabajosOcupado)return;
+ if((!usuarioActual?.es_admin||usuarioActual?.rol==='ADMIN')||trabajosOcupado)return;
  const peticion=++trabajosPeticion;const estado=document.getElementById('trabajosEstado');estado.textContent='Cargando trabajos…';
  try{const r=await peticionTrabajos('listar');if(peticion!==trabajosPeticion)return;
   const lista=document.getElementById('trabajosLista');lista.replaceChildren();

@@ -1,4 +1,4 @@
-import {esOperador} from '../lib/roles-admin.js';
+import {esOperador,esSuperadmin} from '../lib/roles-admin.js';
 import { createClient } from '@supabase/supabase-js';
 
 function respond(res,status,data) {
@@ -26,6 +26,7 @@ export default async function handler(req,res) {
   if(typeof body==='string'){try{body=JSON.parse(body);}catch{return respond(res,400,{error:'Solicitud inválida'});}}
   if(!body||typeof body!=='object'||Array.isArray(body))return respond(res,400,{error:'Solicitud inválida'});
   req.body=body;const {action,id}=body;
+  if(action==='nuevo_generar'&&!esSuperadmin(perfil,identity.user))return respond(res,403,{error:'Las funciones de IA están reservadas a Superadmin'});
   if(typeof action==='string'&&action.startsWith('nuevo_')){
     const {gestionarNuevoTrabajo}=await import('../server/nuevos-trabajos.js');
     const r=await gestionarNuevoTrabajo(body,{admin,actor:identity.user});return respond(res,r.status,r.body);
