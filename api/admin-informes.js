@@ -1,3 +1,4 @@
+import {esOperador} from '../lib/roles-admin.js';
 import {createClient} from '@supabase/supabase-js';
 import {leerPaginas,maestrosVigentes,resumirAvances,resumirActividad} from '../lib/informes-ejecutivos.js';
 
@@ -33,11 +34,10 @@ export function crearHandlerInformes({cliente=createClient,plazoMs=20000}={}){
     if(authError?.status>=500||authError?.name==='AuthRetryableFetchError')throw new Error('Identidad temporalmente no disponible');
     if(authError||!identidad?.user)return {status:401,body:{error:'Sesión no válida'}};
     const actor=identidad.user,email=String(actor.email||'').trim().toLowerCase();
-    if(email!=='jpintov@gmail.com'&&actor.app_metadata?.superadmin_principal!==true)return {status:403,body:{error:'Operación exclusiva de Superadmin'}};
     const admin=cliente(url,secret,opciones);
-    const {data:perfil,error:perfilError}=await admin.from('usuarios').select('id,email,es_admin,cuenta_eliminada').eq('auth_user_id',actor.id).maybeSingle().abortSignal(signal);
+    const {data:perfil,error:perfilError}=await admin.from('usuarios').select('id,email,es_admin,rol,cuenta_eliminada').eq('auth_user_id',actor.id).maybeSingle().abortSignal(signal);
     if(perfilError)throw new Error('No fue posible comprobar el perfil');
-    if(!perfil?.es_admin||perfil.cuenta_eliminada||String(perfil.email||'').trim().toLowerCase()!==email)return {status:403,body:{error:'Operación exclusiva de Superadmin'}};
+    if(!esOperador(perfil,actor))return {status:403,body:{error:'Se requiere administración docente'}};
     const usuarios=await leerPaginas(()=>admin.from('usuarios').select('id,nombre,email,es_admin,cuenta_eliminada').order('id'),{signal});
     const maestros=maestrosVigentes(usuarios),ids=new Set(maestros.map(u=>u.id));
     const corte=new Date().toISOString();let data;

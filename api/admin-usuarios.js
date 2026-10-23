@@ -1,3 +1,4 @@
+import {esOperador} from '../lib/roles-admin.js';
 import { createClient } from '@supabase/supabase-js';
 
 function normalizarNombreHermano(valor) {
@@ -39,14 +40,10 @@ export default async function handler(req, res) {
     auth: { persistSession: false, autoRefreshToken: false }
   });
   const { data: profile, error: profileError } = await admin.from('usuarios')
-    .select('id,email,es_admin')
+    .select('id,email,es_admin,rol,cuenta_eliminada')
     .eq('auth_user_id', identity.user.id)
     .maybeSingle();
-  if (profileError || !profile?.es_admin ||
-      (String(identity.user.email || '').toLowerCase() !== 'jpintov@gmail.com' && identity.user.app_metadata?.superadmin_principal!==true) ||
-      String(profile.email || '').toLowerCase() !== String(identity.user.email||'').toLowerCase()) {
-    return reply(res, 403, { error: 'Sin autorización' });
-  }
+  if(profileError||!esOperador(profile,identity.user))return reply(res,403,{error:'Se requiere administración docente'});
 
   const { action } = req.body || {};
   if (!['crear','editar'].includes(action)) return reply(res, 400, { error: 'Acción no admitida' });
@@ -64,10 +61,11 @@ export default async function handler(req, res) {
       if(typeof id!=='string'||!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id))
         return reply(res,422,{error:'Seleccione un integrante válido'});
       const {data,error}=await admin.from('usuarios')
-        .select('id,email,es_admin,auth_user_id').eq('id',id).maybeSingle();
+        .select('id,email,es_admin,auth_user_id,rol,cuenta_eliminada').eq('id',id).maybeSingle();
       if(error)return reply(res,503,{error:'No se pudo verificar el integrante'});
       if(!data)return reply(res,404,{error:'Integrante no encontrado'});
-      if(data.es_admin)
+      if(data.cuenta_eliminada)return reply(res,404,{error:'Integrante no encontrado'});
+      if(data.es_admin||['ADMIN','SUPERADMIN'].includes(data.rol))
         return reply(res,403,{error:'Las cuentas administrativas y de prueba están protegidas'});
       if(String(data.email).toLowerCase()==='dummy@ofl.cl'&&email!=='dummy@ofl.cl')return reply(res,422,{error:'La cuenta Dummy conserva su correo de prueba; puede editar el nombre o eliminar la cuenta'});
       if(data.auth_user_id&&email!==String(data.email).toLowerCase())

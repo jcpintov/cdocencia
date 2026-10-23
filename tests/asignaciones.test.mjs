@@ -1,3 +1,4 @@
+const permisosSource=readFileSync(new URL('../lib/roles-admin.js',import.meta.url),'utf8').replace(/^export /gm,'');
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -22,16 +23,16 @@ test('nombres y temas no insertan HTML en la vista previa',()=>{
 });
 const raw=readFileSync(new URL('../api/admin-asignaciones.js',import.meta.url),'utf8');
 const source=raw.replace(/^import .*;\n/gm,'').replace('export default async function handler','async function handler');
-function setup({email='jpintov@gmail.com',admin=true,failSend=false,failFinish=false,reserva=true}={}){
+function setup({email='jpintov@gmail.com',admin=true,rol,failSend=false,failFinish=false,reserva=true}={}){
  const calls=[];
  const ctx={generarCorreoAsignacion,process:{env:{SUPABASE_URL:'url',SUPABASE_PUBLISHABLE_KEY:'key',SUPABASE_SERVICE_ROLE_KEY:'secret',SMTP_HOST:'host',SMTP_USER:'user',SMTP_PASSWORD:'secret'}},
  createClient:(_url,key)=>key==='key'?{auth:{getUser:async()=>({data:{user:{id:intento,email}},error:null})}}:
- {from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{email,es_admin:admin},error:null})})})}),
+ {from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{email,es_admin:admin,rol},error:null})})})}),
  rpc:async(_fn,{p_accion,p_datos})=>{calls.push({action:p_accion,data:p_datos});
  if(failFinish&&p_accion==='finalizar_correo')return {error:{code:'network'}};
  return {data:p_accion==='vista_correo'?registro:p_accion==='reservar_correo'?{enviar:reserva}:{ok:true},error:null};}},
  nodemailer:{createTransport:()=>({sendMail:async msg=>{calls.push({action:'sendMail',msg});if(failSend)throw Error('timeout');return {accepted:[registro.email,'jpintov@gmail.com'],messageId:'accepted'};}})}};
- runInNewContext(source,ctx);
+ runInNewContext(permisosSource+source,ctx);
  async function request(body,authorization='Bearer valid'){
  const res={setHeader(){},status(s){this.code=s;return this;},json(d){this.body=d;return this;}};
  await ctx.handler({method:'POST',headers:{authorization},body},res);return res;
@@ -77,3 +78,5 @@ test('fechas inexistentes y plazo anterior no llegan a la base',async()=>{
  const s=setup();assert.equal((await s.request({action:'crear',usuario_id:intento,codigo:'INCI011A',fecha_asignacion,fecha_entrega})).code,422);assert.equal(s.calls.length,0);
  }
 });
+
+test('Administrador delegado puede listar asignaciones con su propia identidad',async()=>{const s=setup({email:'delegado@example.invalid',rol:'ADMIN'});const r=await s.request({action:'listar'});assert.equal(r.code,200);assert.equal(s.calls[0].action,'listar');});

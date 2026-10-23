@@ -25,7 +25,7 @@
   const body=document.createElement('tbody');
   for(const fila of filas){const row=document.createElement('tr');fila.forEach(v=>row.appendChild(texto('td',v)));body.appendChild(row);}
   if(!filas.length){const row=document.createElement('tr'),td=texto('td','No hay registros para este informe.');td.colSpan=columnas.length;row.appendChild(td);body.appendChild(row);}
-  table.appendChild(body);seccion.appendChild(table);destino.appendChild(seccion);
+  table.appendChild(body);const marco=document.createElement('div');marco.className='informe-tabla-scroll';marco.tabIndex=0;marco.setAttribute('role','region');marco.setAttribute('aria-label',titulo||'Tabla del informe');if(columnas.length>1)table.style.minWidth=Math.max(540,columnas.length*110)+'px';marco.appendChild(table);seccion.appendChild(marco);destino.appendChild(seccion);
  }
  function validar(r,tipo){
   if(r?.ok!==true||r.tipo!==tipo||!Number.isFinite(Date.parse(r.generado_en))||!r.data)throw Error('El servidor entregó una respuesta incompleta. Intente nuevamente.');
@@ -40,7 +40,7 @@
   doc.appendChild(texto('p','DOCENCIA MASÓNICA DE TERCER GRADO'));
   doc.appendChild(texto('h2',titulos[r.tipo]));
   doc.appendChild(texto('p','Emitido: '+instante(r.generado_en)+' · America/Santiago'));
-  doc.appendChild(texto('p','Padrón docente vigente · excluye Superadmin y cuentas eliminadas.'));
+  doc.appendChild(texto('p','Padrón docente vigente · excluye administradores y cuentas eliminadas.'));
   const d=r.data;
   if(r.tipo==='asignaciones'){
    doc.appendChild(texto('p',d.filas.length+' trabajos con asignación vigente. Fechas en formato año-mes-día; entrega hasta las 23:30 h.'));
@@ -104,7 +104,7 @@
   linea('DOCENCIA MASÓNICA DE TERCER GRADO',10);
   linea(titulos[r.tipo],18,true);
   linea('Emitido: '+instante(r.generado_en)+' - America/Santiago',9);
-  linea('Padrón docente vigente. Excluye Superadmin y cuentas eliminadas.',9);
+  linea('Padrón docente vigente. Excluye administradores y cuentas eliminadas.',9);
   function tablaPDF(titulo,columnas,anchos,filas){
    if(y+25>fin)pagina();
    if(titulo)linea(titulo,12,true);

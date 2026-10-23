@@ -9,7 +9,7 @@ const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
 test('eliminada la leyenda lateral redundante en las vistas de usuario y Superadmin',()=>{
  assert.doesNotMatch(html,/<span>DOCENCIA PARA MAESTROS<\/span>/);
  assert.doesNotMatch(html,/admin-brand-eyebrow">DOCENCIA PARA MAESTROS/);
- assert.match(html,/<h3>Consola Superadmin<\/h3>/);
+ assert.match(html,/<h3 id="adminConsolaTitulo">Consola Superadmin<\/h3>/);
 });
 
 test('menú de Superadmin conserva los grupos y el orden solicitado',()=>{

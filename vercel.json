@@ -37,6 +37,9 @@
     },
     "api/admin-informes.js": {
       "maxDuration": 30
+    },
+    "api/admin-roles.js": {
+      "maxDuration": 20
     }
   },
   "buildCommand": "node scripts/verificar-groq.mjs && node scripts/verificar-orador.mjs",

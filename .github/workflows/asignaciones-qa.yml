@@ -8,6 +8,9 @@ on:
       - 'calendario-tenidas.js'
       - 'doctrina-admin.js'
       - 'perfil-superadmin.js'
+      - 'roles-admin.js'
+      - 'lib/roles-admin.js'
+      - 'supabase/migrations/**'
       - 'api/admin-*.js'
       - 'api/cron-calendario*.js'
       - 'lib/correo-calendario.js'
@@ -68,6 +71,7 @@ jobs:
           node tests/browser/doctrina-smoke.mjs
           node tests/browser/plataforma-dom.mjs
           node tests/database/avance-smoke.mjs
+          node tests/database/roles-smoke.mjs
           node tests/browser/orador-dom.mjs
           node tests/browser/memoria-casos-dom.mjs
           node tests/database/memoria-casos-smoke.mjs

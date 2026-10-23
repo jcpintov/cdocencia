@@ -22,6 +22,7 @@ const stub=`<script>window.supabase={createClient:()=>({auth:{getUser:async()=>(
 let modo='ok';
 const server=createServer(async(req,res)=>{try{
  const pathname=new URL(req.url,'http://localhost').pathname;
+ if(pathname==='/api/bitacora-sesion'){res.setHeader('Content-Type','application/json');res.end('{"ok":true}');return;}
  if(pathname==='/api/admin-informes'){
   let raw='';for await(const x of req)raw+=x;req.body=JSON.parse(raw);
   if(modo==='json'){res.setHeader('Content-Type','text/html');res.end('<html>respuesta inválida</html>');return;}
@@ -67,7 +68,7 @@ try{
  }
  modo='lento';await page.evaluate(()=>{void abrirInformeEjecutivo('actividad');});await page.locator('#btnCerrarInformeEjecutivo').click();await page.waitForTimeout(200);assert.equal(await dialog.isVisible(),false);assert.equal(await page.locator('#informeEjecutivoContenido').textContent(),'');
  modo='ok';await page.setViewportSize({width:390,height:844});await page.evaluate(()=>abrirInformeEjecutivo('actividad'));
- assert.ok(await page.locator('#btnDescargarInformeEjecutivo').isVisible());await page.screenshot({path:'tmp/informes-qa/modal-movil.png'});await page.locator('#btnCerrarInformeEjecutivo').click();
+ assert.ok(await page.locator('#btnDescargarInformeEjecutivo').isVisible());assert.ok(await page.locator('#informeEjecutivoContenido').evaluate(e=>e.scrollWidth<=e.clientWidth+1),'La vista previa cabe en móvil');assert.ok(await page.locator('.informe-tabla-scroll').first().evaluate(e=>e.scrollWidth>e.clientWidth),'La tabla ancha conserva desplazamiento propio');await page.screenshot({path:'tmp/informes-qa/modal-movil.png'});await page.locator('#btnCerrarInformeEjecutivo').click();
  await page.setViewportSize({width:1440,height:1000});await page.evaluate(()=>{cambiarSubseccionAdmin('asignaciones');});await page.locator('#asignacionesPadronBody tr').nth(25).waitFor();
  assert.equal(await page.locator('#asignacionesPadronBody tr').count(),26);assert.match(await page.locator('#asignacionesPadronConteo').textContent(),/1 con trabajo · 25 sin trabajo/);
  assert.equal(await page.locator('#asignacionesPadronBody script').count(),0);
@@ -78,7 +79,24 @@ try{
  await page.evaluate(()=>{cambiarSubseccionAdmin('usuarios');});await page.evaluate(padron=>{padronUsuariosAdmin=padron;renderizarPadronAdmin();},[...usuarios,administrador]);
  assert.equal(await page.locator('#tablaUsuariosAdminBody tr').count(),26);assert.equal(await page.locator('#tablaAdministradoresBody tr').count(),1);assert.doesNotMatch(await page.locator('#tablaUsuariosAdminBody').textContent(),/Julio César/);
  await page.screenshot({path:'tmp/informes-qa/padrones.png'});
+ // Recorrido del rol delegado: error controlado, otorgamiento y revocación desde el padrón.
+ let errorRol=true;const cambiosRol=[];
+ await page.route('**/api/admin-roles',async route=>{const body=route.request().postDataJSON();cambiosRol.push(body);if(errorRol)return route.fulfill({status:500,json:{error:'Error controlado del servidor'}});await page.evaluate(b=>{const u=padronUsuariosAdmin.find(x=>x.id===b.id);u.rol=b.rol;u.es_admin=b.rol==='ADMIN';},body);return route.fulfill({json:{ok:true,usuario:{id:body.id,rol:body.rol}}});});
+ await page.evaluate(()=>{cargarListadoUsuariosAdmin=async()=>renderizarPadronAdmin();});
+ await page.getByRole('button',{name:'Hacer administrador',exact:true}).first().click();
+ await page.locator('#cambioRolMotivo').fill('Responsable docente designado');await page.locator('#cambioRolGuardar').click();
+ await page.locator('#cambioRolEstado').filter({hasText:'Error controlado'}).waitFor();assert.equal(await page.locator('#cambioRolDialogo').isVisible(),true);
+ errorRol=false;await page.locator('#cambioRolGuardar').click();await page.waitForFunction(()=>!document.getElementById('cambioRolDialogo').open);
+ assert.equal(await page.locator('#tablaAdministradoresBody tr').count(),2);assert.match(await page.locator('#tablaAdministradoresBody').textContent(),/Administrador/);
+ await page.getByRole('button',{name:'Retirar rol',exact:true}).click();await page.locator('#cambioRolMotivo').fill('Fin de la responsabilidad');await page.locator('#cambioRolGuardar').click();await page.waitForFunction(()=>!document.getElementById('cambioRolDialogo').open);
+ assert.equal(await page.locator('#tablaAdministradoresBody tr').count(),1);assert.equal(cambiosRol.at(-1).rol,'USER');assert.equal(cambiosRol.at(-1).rol_actual,'ADMIN');
+ await page.evaluate(()=>{usuarioActual={id:'delegado',rol:'ADMIN',es_admin:true};renderizarPadronAdmin();});
+ assert.equal(await page.getByRole('button',{name:'Hacer administrador',exact:true}).count(),0);
+ await page.evaluate(()=>abrirCambioRol('u0','ADMIN'));assert.equal(await page.locator('#cambioRolDialogo').isVisible(),false);
+ await page.evaluate(()=>{usuarioActual={id:'admin',es_admin:true,rol:'SUPERADMIN'};});
+
  await page.evaluate(()=>{usuarioActual={es_admin:true};registrarIngresoAuditoria=async()=>{};cargarDatosAdmin=async()=>{};reiniciarTemporizadorInactividad=()=>{};cargarMemoriaAgenteSesion=async()=>{};cambiarSubseccionAdmin=()=>{};configurarEntornoUsuario();});assert.equal(await page.locator('#btnCambiarMiClave').isVisible(),false);
+ await page.evaluate(()=>{usuarioActual={id:'delegado',es_admin:true,rol:'ADMIN'};configurarEntornoUsuario();});assert.equal(await page.locator('#btnCambiarMiClave').isVisible(),true);assert.equal(await page.locator('#tabNavEditorDoctrina').isVisible(),false);assert.equal(await page.locator('.admin-perfil-btn').isVisible(),false);assert.equal(await page.locator('#adminConsolaTitulo').textContent(),'Consola Administrador');
  await page.evaluate(()=>{usuarioActual={es_admin:false};configurarEntornoUsuario();});assert.equal(await page.locator('#btnCambiarMiClave').isVisible(),true);
  assert.deepEqual(errors,[]);console.log('PASS HTTP/navegador: tres modales, tres PDF descargados, 4xx/5xx, JSON inválido, respuesta incompleta, cierre tardío, móvil, asignar/editar/eliminar y dos padrones.');console.log('TIEMPOS_QA '+JSON.stringify(tiempos));
 }finally{await browser.close();await new Promise(r=>server.close(r));}

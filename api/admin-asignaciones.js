@@ -1,3 +1,4 @@
+import {esOperador} from '../lib/roles-admin.js';
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
 import {randomUUID} from 'node:crypto';
@@ -19,10 +20,9 @@ export default async function handler(req,res){
   const auth=createClient(url,key,{auth:{persistSession:false,autoRefreshToken:false}});
   const {data:identity,error:authError}=await auth.auth.getUser(token);
   if(authError||!identity?.user)return reply(res,401,{error:'Sesión no válida'});
-  if(String(identity.user.email||'').toLowerCase()!=='jpintov@gmail.com'&&identity.user.app_metadata?.superadmin_principal!==true)return reply(res,403,{error:'Operación exclusiva de Superadmin'});
   const admin=createClient(url,secret,{auth:{persistSession:false,autoRefreshToken:false}});
-  const {data:perfil,error:perfilError}=await admin.from('usuarios').select('id,email,es_admin').eq('auth_user_id',identity.user.id).maybeSingle();
-  if(perfilError||!perfil?.es_admin||String(perfil.email||'').toLowerCase()!==String(identity.user.email||'').toLowerCase())return reply(res,403,{error:'Operación exclusiva de Superadmin'});
+  const {data:perfil,error:perfilError}=await admin.from('usuarios').select('id,email,es_admin,rol,cuenta_eliminada').eq('auth_user_id',identity.user.id).maybeSingle();
+  if(perfilError||!esOperador(perfil,identity.user))return reply(res,403,{error:'Se requiere administración docente'});
   let b=req.body;
   if(typeof b==='string'){try{b=JSON.parse(b);}catch{return reply(res,400,{error:'Solicitud inválida'});}}
   b=b||{};

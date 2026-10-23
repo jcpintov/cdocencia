@@ -14,7 +14,8 @@ test('extracción automática recibe estado indexado distinto a aprobación huma
 });
 test('el acceso documental permanece exclusivo de Superadmin y servicio Groq autorizado',()=>{
  assert.match(api,/admin\.from\('usuarios'\)/);
- assert.match(api,/superadmin_principal/);
+ assert.match(readFileSync(new URL('../lib/roles-admin.js',import.meta.url),'utf8'),/superadmin_principal/);
+ assert.match(api,/esSuperadmin\(perfil,user\)/);
  assert.match(api,/datos\.confirmacion!==true/);
  assert.match(api,/rpc\('texto_llm_autorizar_biblioteca',\{confirmacion:true\}\)/);
  assert.match(sql,/autorizacion_procesamiento_externo=true/);

@@ -1,3 +1,4 @@
+const permisosSource=readFileSync(new URL('../lib/roles-admin.js',import.meta.url),'utf8').replace(/^export /gm,'');
 import { readFileSync } from 'node:fs';
 import { Script, createContext } from 'node:vm';
 import test from 'node:test';
@@ -22,13 +23,13 @@ function setup(options = {}) {
               return { count: options.count ?? 26, error: null };
             } }) };
           }
-          if (fields === 'id,email,es_admin') {
+          if (fields === 'id,email,es_admin,rol,cuenta_eliminada') {
             return { eq: () => ({ maybeSingle: async () => ({
-              data: { id: 'admin-profile', email: 'jpintov@gmail.com', es_admin: options.isAdmin ?? true },
+              data: { id: 'admin-profile', email: options.rol==='ADMIN'?options.authEmail:'jpintov@gmail.com', rol:options.rol, es_admin: options.isAdmin ?? true },
               error: null
             }) }) };
           }
-          if (fields === 'id,email,es_admin,auth_user_id') {
+          if (fields === 'id,email,es_admin,auth_user_id,rol,cuenta_eliminada') {
             return { eq: () => ({ maybeSingle: async () => {
               calls.push('target');
               return {data:options.targetMissing?null:{
@@ -63,7 +64,7 @@ function setup(options = {}) {
     createClient: (_url, key) => key === 'test-publishable' ? publicClient : admin,
     process: { env: { SUPABASE_URL:'https://example.invalid', SUPABASE_PUBLISHABLE_KEY:'test-publishable', SUPABASE_SERVICE_ROLE_KEY:'test-server-key' } }
   });
-  const handler = new Script(code + '\nhandler;').runInContext(ctx);
+  const handler = new Script(permisosSource + code + '\nhandler;').runInContext(ctx);
   async function request(body, token='Bearer test') {
     const res = {
       statusCode: null, body: null,
@@ -150,3 +151,5 @@ test('rechaza edición de un correo ocupado por otro integrante',async()=>{
   assert.equal(r.statusCode,409);
   assert.deepEqual(s.calls,['target','lookup']);
 });
+
+test('Administrador crea y edita usuarios ordinarios, pero protege cuentas administrativas',async()=>{const s=setup({rol:'ADMIN',authEmail:'delegado@example.invalid'});assert.equal((await s.request({action:'crear',nombre:'Nombre Prueba',email:'test@example.invalid'})).statusCode,201);assert.equal((await s.request({action:'editar',id:idEdicion,nombre:'Nombre Prueba',email:'persona@example.invalid'})).statusCode,200);const protegido=setup({rol:'ADMIN',authEmail:'delegado@example.invalid',targetAdmin:true});assert.equal((await protegido.request({action:'editar',id:idEdicion,nombre:'Nombre Prueba',email:'persona@example.invalid'})).statusCode,403);assert.deepEqual(protegido.calls,['target']);});

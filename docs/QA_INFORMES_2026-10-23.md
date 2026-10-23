@@ -1,6 +1,6 @@
 # Informes ejecutivos y padrones separados — 2026-10-23
 
-Estado: preparado para revisión, sin fusionar ni desplegar.
+Estado: preparado para revisión, sin fusionar ni desplegar. La activación posterior del rol Administrador se documenta en `QA_ROL_ADMINISTRADOR_2026-10-23.md`; sustituye la propuesta de roles al final de este documento.
 Base: cd730bfa4ac8ce10a937241cc71cc25e7b57a88e.
 
 ## Cambios

@@ -1,3 +1,4 @@
+function esSuperadminSesion(){return usuarioActual?.es_admin===true&&usuarioActual?.rol!=='ADMIN';}
 if (window.pdfjsLib) {
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 }
@@ -182,7 +183,7 @@ async function iniciarSesion() {
     }
 
     const { data: perfil, error: errorPerfil } = await sbApp.from('usuarios')
-      .select('id,nombre,email,es_admin,debe_cambiar_clave')
+      .select('id,nombre,email,es_admin,rol,debe_cambiar_clave')
       .eq('auth_user_id', data.user.id).maybeSingle();
     if (solicitud !== versionSesion) return;
     if (errorPerfil || !perfil) {
@@ -234,7 +235,7 @@ async function recuperarSesionGuardada() {
       return;
     }
     const { data: perfil, error: perfilError } = await sbApp.from('usuarios')
-      .select('id,nombre,email,es_admin,debe_cambiar_clave')
+      .select('id,nombre,email,es_admin,rol,debe_cambiar_clave')
       .eq('auth_user_id', data.user.id).maybeSingle();
     if (solicitud !== versionSesion) return;
     if (perfilError || !perfil) {
@@ -279,9 +280,12 @@ function configurarEntornoUsuario() {
   reiniciarTemporizadorInactividad();
   document.getElementById('seccionLogin').classList.add('hidden');
   document.getElementById('btnSalir').classList.remove('hidden');
-  document.getElementById('btnCambiarMiClave').classList.toggle('hidden', usuarioActual.es_admin === true);
+  document.getElementById('btnCambiarMiClave').classList.toggle('hidden', esSuperadminSesion());
 
   if (usuarioActual.es_admin) {
+    document.getElementById('adminConsolaTitulo').textContent=esSuperadminSesion()?'Consola Superadmin':'Consola Administrador';
+    document.querySelectorAll('[data-solo-superadmin],#tabNavEditorDoctrina').forEach(e=>{e.hidden=!esSuperadminSesion();e.classList.toggle("hidden",!esSuperadminSesion());});
+    const reserva=document.querySelector('.doctrina-reserva');if(reserva)reserva.textContent='Espacio privado · '+(esSuperadminSesion()?'Superadmin':'Administrador');
     if (usuarioActual.debe_cambiar_clave) {
       document.getElementById('seccionAdmin').classList.add('hidden');
       document.getElementById('modalCambioClaveObligatorio').classList.remove('hidden');
@@ -380,6 +384,7 @@ function cerrarSesion() {
   if (botonIngreso) botonIngreso.disabled = false;
   window.limpiarAsignacionesAdmin?.();
   window.limpiarInformesAdmin?.();
+  window.limpiarRolesAdmin?.();
   limpiarBibliotecaDoctrina();
   window.cerrarPerfilSuperadmin?.();
   window.limpiarCalendarioTenidas?.();
@@ -548,7 +553,8 @@ function renderizarPadronAdmin() {
     celda(u.es_admin ? 'Superadmin' : 'Hermano');
     celda(u.debe_cambiar_clave ? 'Requiere cambio' : 'Al día');
     celda(u.auth_user_id ? 'Vinculado' : 'Pendiente de activación');
-    const acciones=celda(u.es_admin?'Administración protegida':'', 'admin-accion-pendiente');
+    const acciones=celda('', 'admin-accion-pendiente');
+    if(esSuperadminSesion()&&u.auth_user_id){const b=document.createElement('button');b.type='button';b.className='btn-secondary';b.textContent='Hacer administrador';b.onclick=()=>abrirCambioRol(u.id,'ADMIN');acciones.appendChild(b);}
 
     tbody.appendChild(tr);
   });
@@ -561,10 +567,12 @@ function renderizarAdministradoresAdmin() {
   if(contador)contador.textContent=administradores.length+' cuentas administrativas';
   administradores.forEach(u=>{
     const tr=document.createElement('tr');
-    [u.nombre,u.email,'Superadmin',u.auth_user_id?'Vinculado':'Pendiente de activación'].forEach(valor=>{const td=document.createElement('td');td.textContent=valor||'—';tr.appendChild(td);});
+    [u.nombre,u.email,u.rol==='ADMIN'?'Administrador':'Superadmin',u.auth_user_id?'Vinculado':'Pendiente de activación'].forEach(valor=>{const td=document.createElement('td');td.textContent=valor||'—';tr.appendChild(td);});
+    const acciones=document.createElement('td');
+    if(esSuperadminSesion()&&u.rol==='ADMIN'){const b=document.createElement('button');b.type='button';b.className='btn-secondary';b.textContent='Retirar rol';b.onclick=()=>abrirCambioRol(u.id,'USER');acciones.appendChild(b);}else acciones.textContent='Cuenta protegida';tr.appendChild(acciones);
     tbody.appendChild(tr);
   });
-  if(!administradores.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='No hay administradores en el padrón consultado.';tr.appendChild(td);tbody.appendChild(tr);}
+  if(!administradores.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=5;td.textContent='No hay administradores en el padrón consultado.';tr.appendChild(td);tbody.appendChild(tr);}
 }
 async function cargarListadoUsuariosAdmin() {
   const tbody = document.getElementById('tablaUsuariosAdminBody');
@@ -579,7 +587,7 @@ async function cargarListadoUsuariosAdmin() {
   if (botonAgregar) botonAgregar.disabled = true;
   try {
     const {data: usuarios, error} = await sbApp.from('usuarios')
-      .select('id, nombre, email, es_admin, debe_cambiar_clave, auth_user_id').eq('cuenta_eliminada',false).order('nombre', {ascending:true});
+      .select('id, nombre, email, es_admin, rol, cuenta_eliminada, debe_cambiar_clave, auth_user_id').eq('cuenta_eliminada',false).order('nombre', {ascending:true});
     if (consulta !== consultaPadronAdmin) return;
     if (error || !Array.isArray(usuarios)) {
       const codigo=error?.code;
@@ -2304,7 +2312,7 @@ async function abrirModalMisAvances(usuarioObjetivoId = null) {
   
   const { data: usuarioData } = await sbApp
     .from('usuarios')
-    .select('id,nombre,email,es_admin,debe_cambiar_clave,auth_user_id')
+    .select('id,nombre,email,es_admin,rol,debe_cambiar_clave,auth_user_id')
     .eq('id', idTarget)
     .single();
 
@@ -2444,7 +2452,7 @@ function imprimirInformeAvanceNativo() {
    ========================================================================== */
 async function abrirModalCertificado(moduloId = null, usuarioId = null) {
   const modTarget = moduloId ? listaModulos.find(m => m.id === moduloId) : moduloActual;
-  const userTarget = usuarioId ? (await sbApp.from('usuarios').select('id,nombre,email,es_admin,debe_cambiar_clave,auth_user_id').eq('id', usuarioId).single()).data : usuarioActual;
+  const userTarget = usuarioId ? (await sbApp.from('usuarios').select('id,nombre,email,es_admin,rol,debe_cambiar_clave,auth_user_id').eq('id', usuarioId).single()).data : usuarioActual;
 
   const { data: prog } = await sbApp
     .from('progreso_maestro')
@@ -2598,6 +2606,7 @@ async function cargarDatosAdmin() {
 }
 
 function cambiarSubseccionAdmin(seccion) {
+  if(seccion==='editor_doctrina'&&usuarioActual?.rol==='ADMIN')return;
   // Fuente única de las doce vistas: id del botón, título, id de la sección.
   const vistasAdmin = {
     resumen:['tabNavResumen','Resumen ejecutivo','adminSeccionResumen'],
@@ -3535,7 +3544,7 @@ async function guardarParametrosHermanoBD() {
 
 async function exportarRespaldoCompletoJSON() {
   try {
-    const { data: usuarios } = await sbApp.from('usuarios').select('id,nombre,email,es_admin,debe_cambiar_clave,auth_user_id');
+    const { data: usuarios } = await sbApp.from('usuarios').select('id,nombre,email,es_admin,rol,debe_cambiar_clave,auth_user_id');
     const { data: modulos } = await sbApp.from('modulos').select('*');
     const { data: progresos } = await sbApp.from('progreso_maestro').select('*');
     const { data: comentarios } = await sbApp.from('comentarios_muro').select('*');
@@ -3728,7 +3737,7 @@ function eliminarBloqueDoctrinaAdmin(idx) {
 }
 
 async function guardarDoctrinaAdmin() {
-  if (!usuarioActual?.es_admin) return;
+  if (!esSuperadminSesion()) return;
   const cont = document.getElementById('contenedorEditorDoctrinaAdmin');
   if (!cont) return;
   const bloques = [];

@@ -13,8 +13,8 @@ export default async function handler(req,res){
   const {data,error}=await client.auth.getUser(token),user=data?.user;
   if(error||!user?.id)return reply(401,{error:'Sesión no válida'});
   const admin=createClient(env.SUPABASE_URL,env.SUPABASE_SERVICE_ROLE_KEY,options);
-  const {data:perfil,error:pe}=await admin.from('usuarios').select('id,es_admin,email').eq('auth_user_id',user.id).maybeSingle();
-  if(pe||!perfil?.es_admin||(String(user.email).toLowerCase()!=='jpintov@gmail.com'&&user.app_metadata?.superadmin_principal!==true))return reply(403,{error:'Acceso exclusivo de Superadmin'});
+  const {data:perfil,error:pe}=await admin.from('usuarios').select('id,es_admin,email,rol,cuenta_eliminada').eq('auth_user_id',user.id).maybeSingle();
+  if(pe||!perfil?.es_admin||perfil.cuenta_eliminada===true||(perfil.rol&&perfil.rol!=='SUPERADMIN')||(String(user.email).toLowerCase()!=='jpintov@gmail.com'&&user.app_metadata?.superadmin_principal!==true))return reply(403,{error:'Acceso exclusivo de Superadmin'});
   const b=req.body||{};
   const rpc=async(accion,datos)=>{const r=await admin.rpc('superadmin_perfil_codigo',{p_actor:user.id,p_accion:accion,p_datos:datos});if(r.error)throw Error('No se pudo registrar el cambio');if(r.data?.error)throw Error(r.data.error);return r.data;};
   const hash=(id,codigo)=>createHmac('sha256',env.SMTP_PASSWORD).update('superadmin-perfil:'+user.id+':'+id+':'+codigo).digest('hex');

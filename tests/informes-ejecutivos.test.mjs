@@ -21,14 +21,14 @@ test('paginación recupera más de 1000 registros y rechaza una página fallida'
  await assert.rejects(leerPaginas(()=>({range:()=>({abortSignal:async()=>({error:{code:'42501'}})})})),/Lectura/);
  await assert.rejects(leerPaginas(()=>({range:()=>({abortSignal:async()=>({data:{}})})})),/inválida/);
 });
-function contexto({email='jpintov@gmail.com',perfil=true,authError=false,fallo=false,lento=false,incompleto=false}={}){
+function contexto({email='jpintov@gmail.com',perfil=true,rol,authError=false,fallo=false,lento=false,incompleto=false}={}){
  let llamadas=0;
  const tablas={usuarios,modulos,progreso_maestro:[],registro_accesos:[{usuario_id:'u1',creado_en:'2026-10-20T10:00:00Z'}]};
  const cliente=(_url,key)=>key==='key'?{auth:{getUser:async()=>lento?new Promise(()=>{}):({data:{user:{id:'auth-admin',email}},error:authError?{}:null})}}:{
   from(tabla){let solo=false,desde=0,hasta=499;const q={};
    for(const metodo of ['select','eq','order','lte'])q[metodo]=()=>q;
    q.maybeSingle=()=>{solo=true;return q;};q.range=(a,b)=>{desde=a;hasta=b;return q;};q.abortSignal=()=>q;
-   q.then=(ok,bad)=>Promise.resolve().then(()=>{llamadas++;if(fallo&&!solo)return {error:{code:'internal',message:'DATOS PRIVADOS'}};return {data:solo?{email,es_admin:perfil}:incompleto?null:tablas[tabla].slice(desde,hasta+1)};}).then(ok,bad);return q;
+   q.then=(ok,bad)=>Promise.resolve().then(()=>{llamadas++;if(fallo&&!solo)return {error:{code:'internal',message:'DATOS PRIVADOS'}};return {data:solo?{email,es_admin:perfil,rol}:incompleto?null:tablas[tabla].slice(desde,hasta+1)};}).then(ok,bad);return q;
   },
   rpc(){return {abortSignal:async()=>({data:{asignaciones:[{vigente:true,usuario_id:'u1',nombre:'Ana',codigo:'INCI011A',tema:'Tema',fecha_asignacion:'2026-10-01',fecha_entrega:'2026-10-22'},{vigente:false,usuario_id:'u2'}]}})};}
  };
@@ -66,3 +66,5 @@ test('fallos 5xx y respuestas incompletas nunca generan informe parcial',async()
 test('tiempo máximo cubre servidor de identidad que no responde: devuelve 504 en plazo acotado',async()=>{
  const r=await contexto({lento:true}).request();assert.equal(r.code,504);assert.ok(r.ms>=20&&r.ms<1000,'Plazo medido: '+r.ms);
 });
+
+test('Administrador delegado puede obtener los tres informes',async()=>{for(const tipo of ['actividad','avances','asignaciones'])assert.equal((await contexto({email:'delegado@example.invalid',rol:'ADMIN'}).request({tipo})).code,200);});

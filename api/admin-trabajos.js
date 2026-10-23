@@ -1,3 +1,4 @@
+import {esOperador} from '../lib/roles-admin.js';
 import { createClient } from '@supabase/supabase-js';
 
 function respond(res,status,data) {
@@ -18,12 +19,9 @@ export default async function handler(req,res) {
   const {data:identity,error:identityError}=await authClient.auth.getUser(token);
   if(identityError||!identity?.user?.id)return respond(res,401,{error:'Sesión no válida'});
   const admin=createClient(url,serviceKey,{auth:{persistSession:false,autoRefreshToken:false}});
-  const {data:perfil,error:perfilError}=await admin.from('usuarios').select('id,email,es_admin')
+  const {data:perfil,error:perfilError}=await admin.from('usuarios').select('id,email,es_admin,rol,cuenta_eliminada')
     .eq('auth_user_id',identity.user.id).maybeSingle();
-  if(perfilError||!perfil?.es_admin||
-    (String(identity.user.email||'').toLowerCase()!=='jpintov@gmail.com'&&identity.user.app_metadata?.superadmin_principal!==true)||
-    String(perfil.email||'').toLowerCase()!==String(identity.user.email||'').toLowerCase())
-    return respond(res,403,{error:'Operación exclusiva de Superadmin'});
+  if(perfilError||!esOperador(perfil,identity.user))return respond(res,403,{error:'Se requiere administración docente'});
   const {action,id}=req.body||{};
   if(!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(String(id||'')))
     return respond(res,422,{error:'Identificador de trabajo inválido'});

@@ -600,7 +600,7 @@
     <aside class="sidebar-admin">
       <div class="admin-brand">
         <span class="portal-nav-glyph admin-brand-glyph" aria-hidden="true">◇</span>
-        <div><h3>Consola Superadmin</h3></div>
+        <div><h3 id="adminConsolaTitulo">Consola Superadmin</h3></div>
       </div>
       <details id="adminNavegacion" class="admin-navigation" open>
         <summary class="admin-menu-toggle">Menú de administración<span aria-hidden="true">⌄</span></summary>
@@ -643,10 +643,10 @@
 </div>
         </nav>
         <div class="admin-side-footer" role="group" aria-label="Cuenta de Superadmin">
-          <button type="button" class="admin-perfil-btn" onclick="abrirPerfilSuperadmin()">Mi perfil</button>
+          <button type="button" data-solo-superadmin class="admin-perfil-btn" onclick="abrirPerfilSuperadmin()">Mi perfil</button>
           <button type="button" class="admin-logout" onclick="cerrarSesion()">Cerrar sesión</button>
         </div>
-        <div class="admin-links-bottom" aria-label="Herramientas externas">
+        <div class="admin-links-bottom" data-solo-superadmin aria-label="Herramientas externas">
           <p class="admin-menu-label">Herramientas externas</p>
           <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="admin-nav-link-ext">
             <span class="portal-nav-glyph" aria-hidden="true">◉</span><span>ChatGPT</span><span class="admin-external-mark" aria-hidden="true">↗</span><span class="admin-sr-only"> (abre en otra pestaña)</span>
@@ -706,7 +706,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Padrón y Administración de Usuarios</h2>
-            <p class="text-instruccion" style="margin: 0;">Consulte y amplíe el padrón de integrantes. La incorporación permanece reservada al Superadmin.</p>
+            <p class="text-instruccion" style="margin: 0;">Consulte y amplíe el padrón de integrantes. La administración de roles permanece reservada al Superadmin.</p>
           </div>
           <div class="admin-header-actions">
             <button class="btn-primary" id="btnAgregarUsuarioAdmin" type="button" onclick="abrirModalCrearUsuario()">Agregar usuario</button>
@@ -741,7 +741,7 @@
         <section class="asignaciones-padron" aria-labelledby="padronAdministradoresTitulo">
           <h3 id="padronAdministradoresTitulo">Administradores</h3>
           <p id="padronAdministradoresConteo" role="status" aria-live="polite"></p>
-          <div class="table-responsive"><table class="metricas-table"><thead><tr><th>Nombre</th><th>Correo electrónico</th><th>Rol</th><th>Acceso Auth</th></tr></thead><tbody id="tablaAdministradoresBody"></tbody></table></div>
+          <div class="table-responsive"><table class="metricas-table"><thead><tr><th>Nombre</th><th>Correo electrónico</th><th>Rol</th><th>Acceso Auth</th><th>Acciones</th></tr></thead><tbody id="tablaAdministradoresBody"></tbody></table></div>
         </section>
       </section>
 
@@ -1409,6 +1409,7 @@
 <dialog id="doctrinaTextoDialogo" aria-labelledby="doctrinaTextoTitulo"><h2 id="doctrinaTextoTitulo">Texto del original</h2><p>El texto legible se indexa sin revisión página por página. Puede corregir manualmente errores de extracción; las páginas escaneadas requieren OCR.</p><label for="doctrinaTextoPagina">Página del PDF</label><input id="doctrinaTextoPagina" type="number" min="1" max="600" value="1"><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_pagina')">Cargar página</button><label for="doctrinaTextoContenido">Texto de la página, editable para corregir la extracción</label><textarea id="doctrinaTextoContenido" maxlength="40000" rows="14"></textarea><label><input type="checkbox" id="doctrinaTextoSinTexto"> Página contrastada con el PDF y verificada sin texto</label><p id="doctrinaTextoEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" class="btn-secondary" onclick="cerrarTextoDoctrina()">Cerrar texto</button><button type="button" class="btn-secondary" onclick="contrastarPaginaTextoDoctrina(this)">Contrastar página con PDF</button><button type="button" id="doctrinaTextoExtraer" class="btn-secondary" onclick="accionTextoDoctrina('texto_extraer')">Extraer texto</button><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_revisar_pagina')">Guardar página revisada</button><button type="button" class="btn-primary" onclick="accionTextoDoctrina('texto_aprobar')">Aprobar extracción revisada</button></div></dialog>
 <dialog id="perfilSuperadminDialogo" aria-labelledby="perfilSuperadminTitulo"><h2 id="perfilSuperadminTitulo">Mi perfil de Superadmin</h2><p>Los cambios requieren un código enviado al correo actual. No se modifican antes de validarlo.</p><label for="perfilSuperadminNombre">Nombre</label><input id="perfilSuperadminNombre" type="text" minlength="3" maxlength="150" autocomplete="off"><label for="perfilSuperadminEmail">Correo nuevo</label><input id="perfilSuperadminEmail" type="email" maxlength="254" autocomplete="off"><label for="perfilSuperadminCodigo">Código de autorización</label><input id="perfilSuperadminCodigo" inputmode="numeric" autocomplete="one-time-code" maxlength="8"><p id="perfilSuperadminEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" id="perfilSuperadminCerrar" class="btn-secondary" onclick="cerrarPerfilSuperadmin()">Cerrar perfil</button><button type="button" id="perfilSuperadminSolicitar" class="btn-secondary" onclick="accionPerfilSuperadmin('solicitar')">Enviar código al correo actual</button><button type="button" id="perfilSuperadminConfirmar" class="btn-primary" onclick="accionPerfilSuperadmin('confirmar')">Validar código y guardar</button><button type="button" id="perfilSuperadminRecuperar" class="btn-secondary" hidden onclick="accionPerfilSuperadmin('recuperar')">Recuperar cambio pendiente</button></div></dialog>
   <script src="perfil-superadmin.js"></script>
+  <script src="roles-admin.js"></script>
   <script src="doctrina-admin.js?v=20261022e"></script>
   <script src="trabajos-tenida.js?v=20261022a"></script>
   <script src="bitacora-sesion.js"></script>
