@@ -6,10 +6,10 @@ const app=readFileSync(new URL('../app.js',import.meta.url),'utf8');
 test('Superadmin usa identidad Auth verificada en servidor, nunca trust de rol cliente',()=>{
  assert.match(api,/auth\.getUser\(token\)/);
  assert.match(api,/eq\('auth_user_id',identity\.user\.id\)/);
- assert.match(api,/perfil\?\.es_admin/);
- assert.match(api,/jpintov@gmail\.com/);
+ assert.match(api,/esOperador\(perfil,identity.user\)/);
+ assert.match(readFileSync(new URL('../lib/roles-admin.js',import.meta.url),'utf8'),/jpintov@gmail\.com/);
  assert.match(api,/SUPABASE_SERVICE_ROLE_KEY/);
- assert.match(api,/Operación exclusiva de Superadmin/);
+ assert.match(api,/Se requiere administración docente/);
 });
 test('solo admite editar y preguntas con validación de número, campos y catálogo',()=>{
  assert.match(api,/\['editar','preguntas'\]/);

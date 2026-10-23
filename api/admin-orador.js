@@ -1,3 +1,4 @@
+import {esOperador} from '../lib/roles-admin.js';
 import {createClient} from '@supabase/supabase-js';
 import {randomUUID,createHash} from 'node:crypto';
 import {validarFicha,extraerTrabajo,coincidenciasTrabajo,pedirJSONTrabajos,validarRevision,validarOratoria,generarOratoriaRevisada,exportarOratoria,promptOrador,ROL_ORADOR} from '../lib/trabajos-tenida.js';
@@ -18,8 +19,8 @@ export default async function handler(req,res){
   const {data,error}=await createClient(url,key,options).auth.getUser(token),user=data?.user;
   if(error||!user?.id)return reply(res,401,{error:'Sesión no válida'});
   const admin=createClient(url,secret,options);
-  const {data:perfil,error:pe}=await admin.from('usuarios').select('id,email,es_admin').eq('auth_user_id',user.id).maybeSingle();
-  if(pe||!perfil?.es_admin||(String(user.email||'').toLowerCase()!=='jpintov@gmail.com'&&user.app_metadata?.superadmin_principal!==true)||String(perfil.email||'').toLowerCase()!==String(user.email||'').toLowerCase())return reply(res,403,{error:'Acceso exclusivo de Superadmin'});
+  const {data:perfil,error:pe}=await admin.from('usuarios').select('id,email,es_admin,rol,cuenta_eliminada').eq('auth_user_id',user.id).maybeSingle();
+  if(pe||!esOperador(perfil,user))return reply(res,403,{error:'Se requiere administración docente'});
   rpc=async(accion,datos={})=>{const {data,error}=await admin.rpc('trabajos_tenida_superadmin',{p_actor:user.id,p_accion:accion,p_datos:datos});if(error)throw Error(error.code==='40001'?'El trabajo cambió o ya se está procesando. Actualícelo antes de continuar.':'No se pudo guardar el paso. Reintente.');return data;};
   const documental=async(accion,datos={})=>{const {data,error}=await admin.rpc('doctrina_texto_superadmin',{p_actor:user.id,p_accion:accion,p_datos:datos});if(error)throw Error('No se pudo consultar la biblioteca autorizada.');return data;};
   const {action,...d}=req.body||{};

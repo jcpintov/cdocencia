@@ -1,3 +1,4 @@
+import {esOperador} from '../lib/roles-admin.js';
 import {createClient} from '@supabase/supabase-js';
 const uuid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 function fechaValida(v){if(typeof v!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(v))return false;const d=new Date(v+'T12:00:00Z');return !Number.isNaN(d.getTime())&&d.toISOString().slice(0,10)===v;}
@@ -16,8 +17,8 @@ export default async function handler(req,res){
   const {data:identity,error:authError}=await auth.auth.getUser(token);
   if(authError||!identity?.user?.id)return reply(401,{error:'Sesión no válida'});
   const admin=createClient(url,service,{auth:{persistSession:false,autoRefreshToken:false}});
-  const {data:actor,error:actorError}=await admin.from('usuarios').select('id,email,es_admin').eq('auth_user_id',identity.user.id).maybeSingle();
-  if(actorError||!actor?.es_admin||String(actor.email).toLowerCase()!==String(identity.user.email).toLowerCase()||(String(identity.user.email).toLowerCase()!=='jpintov@gmail.com'&&identity.user.app_metadata?.superadmin_principal!==true))return reply(403,{error:'Acceso exclusivo de Superadmin'});
+  const {data:actor,error:actorError}=await admin.from('usuarios').select('id,email,es_admin,rol,cuenta_eliminada').eq('auth_user_id',identity.user.id).maybeSingle();
+  if(actorError||!esOperador(actor,identity.user))return reply(403,{error:'Se requiere administración docente'});
   const b=req.body||{};
   if(b.action==='listar'){
    if(typeof b.mes!=='string'||!/^\d{4}-(0[1-9]|1[0-2])$/.test(b.mes)||!fechaValida(b.mes+'-01'))return reply(422,{error:'Seleccione un mes válido'});

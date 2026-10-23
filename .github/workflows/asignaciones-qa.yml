@@ -8,7 +8,11 @@ on:
       - 'calendario-tenidas.js'
       - 'doctrina-admin.js'
       - 'perfil-superadmin.js'
+      - 'roles-admin.js'
+      - 'lib/roles-admin.js'
+      - 'supabase/migrations/**'
       - 'api/admin-*.js'
+      - 'server/**'
       - 'api/cron-calendario*.js'
       - 'lib/correo-calendario.js'
       - 'lib/hora-calendario.js'
@@ -26,6 +30,9 @@ on:
       - 'ui-v2.css'
       - 'styles.css'
       - 'asignaciones-admin.js'
+      - 'informes-admin.js'
+      - 'lib/informes-ejecutivos.js'
+      - 'assets/fonts/**'
       - 'api/admin-asignaciones.js'
       - 'lib/correo-asignacion.js'
       - 'lib/correo-recordatorio.js'
@@ -45,9 +52,11 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
+      - name: Instalar dependencias de la API sin scripts
+        run: npm ci --ignore-scripts
       - name: Preparar navegador aislado sin secretos
         run: |
-          npm install --prefix "$RUNNER_TEMP/qa" --ignore-scripts --no-package-lock playwright@1.62.1 jsdom@30.1.3 @electric-sql/pglite@0.5.11
+          npm install --prefix "$RUNNER_TEMP/qa" --ignore-scripts --no-package-lock playwright@1.62.1 jsdom@30.1.3 @electric-sql/pglite@0.5.11 html2pdf.js@0.10.1
           "$RUNNER_TEMP/qa/node_modules/.bin/playwright" install --with-deps chromium
       - name: Probar formulario y catálogo escritorio y móvil
         env:
@@ -56,12 +65,14 @@ jobs:
           QA_DOM_ROOT: ${{ runner.temp }}/qa
           QA_HILOS_CAPTURE: "1"
         run: |
+          node tests/browser/informes-smoke.mjs
           node tests/browser/asignaciones-smoke.mjs
           node tests/browser/usuarios-smoke.mjs
           node tests/browser/tenidas-smoke.mjs
           node tests/browser/doctrina-smoke.mjs
           node tests/browser/plataforma-dom.mjs
           node tests/database/avance-smoke.mjs
+          node tests/database/roles-smoke.mjs
           node tests/browser/orador-dom.mjs
           node tests/browser/memoria-casos-dom.mjs
           node tests/database/memoria-casos-smoke.mjs

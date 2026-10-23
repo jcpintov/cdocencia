@@ -1,3 +1,4 @@
+const permisosSource=readFileSync(new URL('../lib/roles-admin.js',import.meta.url),'utf8').replace(/^export /gm,'');
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -10,7 +11,7 @@ function perfil(opciones={}){
  const user={id,email:opciones.email||'jpintov@gmail.com',app_metadata:opciones.metadata||{}};
  const admin={from:()=>({select:()=>({eq:()=>({maybeSingle:async()=>({data:{id:'perfil',es_admin:opciones.admin!==false,email:user.email}})})})}),rpc:async(_n,{p_accion,p_datos})=>{calls.push({accion:p_accion,datos:p_datos});if(opciones.codigoInvalido&&p_accion==='validar')return {data:{error:'Código inválido o vencido'}};if(opciones.falloFinal&&p_accion==='finalizar')return {error:{code:'network'}};return {data:cambio};},auth:{admin:{updateUserById:async(...args)=>{updates.push(args);return opciones.falloAuth?{error:{code:'conflict'}}:{data:{user}};}}}};
  const ctx={process:{env:{SUPABASE_URL:'url',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service',SMTP_HOST:'host',SMTP_USER:'from@example.invalid',SMTP_PASSWORD:'fixture'}},createClient:(_u,k)=>k==='public'?{auth:{getUser:async()=>({data:{user}})}}:admin,createHmac,randomUUID:()=>id,randomInt:()=>12345678,nodemailer:{createTransport:()=>({sendMail:async m=>{emails.push(m);return {accepted:opciones.falloSMTP?[]:[cambio.email_anterior]};}})}};
- runInNewContext(source,ctx);
+ runInNewContext(permisosSource+source,ctx);
  return {calls,emails,updates,request:async(body,token='Bearer fixture')=>{const r={setHeader(){},status(s){this.code=s;return this;},json(b){this.body=b;return this;}};await ctx.handler({method:'POST',headers:{authorization:token},body},r);return r;}};
 }
 test('perfil requiere identidad Superadmin verificada, no acepta user_metadata como rol',async()=>{
@@ -41,12 +42,9 @@ const dummySource=readFileSync(new URL('../api/admin-usuarios.js',import.meta.ur
 function dummy({email='dummy@ofl.cl',es_admin=false,falloAuth=false}={}){
  const target={id,email,es_admin,auth_user_id:'dummy-auth',cuenta_eliminada:false},calls=[];
  const admin={from(){let perfil=false;const q={select(){return q;},eq(k){if(k==='auth_user_id')perfil=true;return q;},update(v){calls.push(['update',v]);Object.assign(target,v);return q;},maybeSingle:async()=>({data:perfil?{id:'admin',email:'jpintov@gmail.com',es_admin:true}:target})};return q;},auth:{admin:{deleteUser:async(...args)=>{calls.push(['delete',...args]);return falloAuth?{error:{status:500}}:{};}}}};
- const ctx={process:{env:{SUPABASE_URL:'url',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}},createClient:(_u,k)=>k==='public'?{auth:{getUser:async()=>({data:{user:{id:'admin-auth',email:'jpintov@gmail.com'}}})}}:admin};runInNewContext(dummySource,ctx);
+ const ctx={process:{env:{SUPABASE_URL:'url',SUPABASE_PUBLISHABLE_KEY:'public',SUPABASE_SERVICE_ROLE_KEY:'service'}},createClient:(_u,k)=>k==='public'?{auth:{getUser:async()=>({data:{user:{id:'admin-auth',email:'jpintov@gmail.com'}}})}}:admin};runInNewContext(permisosSource+dummySource,ctx);
  return {calls,target,request:async()=>{const r={setHeader(){},status(s){this.code=s;return this;},json(v){this.body=v;return this;}};await ctx.handler({method:'POST',headers:{authorization:'Bearer fixture'},body:{action:'eliminar_dummy',id}},r);return r;}};
 }
-test('eliminar Dummy revoca Auth y conserva el perfil histórico desvinculado; repetir no elimina dos veces',async()=>{
- const s=dummy();assert.equal((await s.request()).code,200);assert.equal(s.calls[0][0],'delete');assert.equal(s.calls[0][2],true);assert.equal(s.target.auth_user_id,null);assert.equal(s.target.cuenta_eliminada,true);assert.equal((await s.request()).code,200);assert.equal(s.calls.filter(c=>c[0]==='delete').length,1);
-});
-test('eliminar Dummy no admite otros usuarios ni Superadmin y no archiva si no se pudo revocar Auth',async()=>{
- assert.equal((await dummy({email:'otro@example.invalid'}).request()).code,403);assert.equal((await dummy({es_admin:true}).request()).code,403);const s=dummy({falloAuth:true});assert.equal((await s.request()).code,503);assert.equal(s.target.cuenta_eliminada,false);
+test('acción antigua de cuenta de prueba está retirada y no elimina otras cuentas',async()=>{
+ const s=dummy();assert.equal((await s.request()).code,400);assert.equal(s.calls.length,0);
 });

@@ -600,7 +600,7 @@
     <aside class="sidebar-admin">
       <div class="admin-brand">
         <span class="portal-nav-glyph admin-brand-glyph" aria-hidden="true">◇</span>
-        <div><h3>Consola Superadmin</h3></div>
+        <div><h3 id="adminConsolaTitulo">Consola Superadmin</h3></div>
       </div>
       <details id="adminNavegacion" class="admin-navigation" open>
         <summary class="admin-menu-toggle">Menú de administración<span aria-hidden="true">⌄</span></summary>
@@ -643,10 +643,10 @@
 </div>
         </nav>
         <div class="admin-side-footer" role="group" aria-label="Cuenta de Superadmin">
-          <button type="button" class="admin-perfil-btn" onclick="abrirPerfilSuperadmin()">Mi perfil</button>
+          <button type="button" data-solo-superadmin class="admin-perfil-btn" onclick="abrirPerfilSuperadmin()">Mi perfil</button>
           <button type="button" class="admin-logout" onclick="cerrarSesion()">Cerrar sesión</button>
         </div>
-        <div class="admin-links-bottom" aria-label="Herramientas externas">
+        <div class="admin-links-bottom" data-solo-superadmin aria-label="Herramientas externas">
           <p class="admin-menu-label">Herramientas externas</p>
           <a href="https://chatgpt.com/" target="_blank" rel="noopener noreferrer" class="admin-nav-link-ext">
             <span class="portal-nav-glyph" aria-hidden="true">◉</span><span>ChatGPT</span><span class="admin-external-mark" aria-hidden="true">↗</span><span class="admin-sr-only"> (abre en otra pestaña)</span>
@@ -678,6 +678,14 @@
           <button type="button" class="admin-kpi admin-kpi-accion" onclick="abrirDetalleKpiResumen('comentarios')" aria-label="Consultar reflexiones, comentarios y respuestas del Muro docente"><span>Comentarios</span><strong id="kpiComentarios">—</strong><small class="admin-kpi-descripcion">Reflexiones · Comentarios · Respuestas</small><small class="admin-kpi-ir">Ver aportes →</small></button>
         </div>
         <p id="resumenAdminEstado" class="text-instruccion" role="status"></p>
+        <section class="informes-ejecutivos" aria-labelledby="informesEjecutivosTitulo">
+          <h2 id="informesEjecutivosTitulo">Informes</h2>
+          <div class="informes-ejecutivos-acciones">
+            <button type="button" class="btn-secondary" onclick="abrirInformeEjecutivo('asignaciones')">Trabajos asignados</button>
+            <button type="button" class="btn-secondary" onclick="abrirInformeEjecutivo('avances')">Avance de los maestros</button>
+            <button type="button" class="btn-secondary" onclick="abrirInformeEjecutivo('actividad')">Actividad de acceso</button>
+          </div>
+        </section>
         <button class="btn-primary" onclick="cambiarSubseccionAdmin('usuarios')">Administrar usuarios</button>
         <section id="cronogramaTrabajosAdmin" class="cronograma-trabajos" aria-labelledby="cronogramaTrabajosTitulo">
           <div class="admin-card-header"><div><h2 id="cronogramaTrabajosTitulo">Cronograma de trabajos</h2><p class="text-instruccion">Pendientes por fecha de entrega, desde la más próxima. Publicados al final, del último subido al más antiguo. Cada trabajo abre sus opciones.</p></div><button type="button" class="admin-link-btn" onclick="cargarCronogramaAdmin()">Actualizar cronograma</button></div>
@@ -698,7 +706,7 @@
         <div class="admin-card-header">
           <div>
             <h2>Padrón y Administración de Usuarios</h2>
-            <p class="text-instruccion" style="margin: 0;">Consulte y amplíe el padrón de integrantes. La incorporación permanece reservada al Superadmin.</p>
+            <p class="text-instruccion" style="margin: 0;">Consulte y amplíe el padrón de integrantes. La administración de roles permanece reservada al Superadmin.</p>
           </div>
           <div class="admin-header-actions">
             <button class="btn-primary" id="btnAgregarUsuarioAdmin" type="button" onclick="abrirModalCrearUsuario()">Agregar usuario</button>
@@ -709,7 +717,7 @@
 
         <div class="admin-list-toolbar">
           <div class="admin-search-field"><label for="buscarUsuarioAdmin">Buscar integrante</label><input id="buscarUsuarioAdmin" type="search" name="buscarUsuarioAdmin" placeholder="Nombre o correo" aria-controls="tablaUsuariosAdminBody" oninput="renderizarPadronAdmin()"></div>
-          <div class="admin-search-field"><label for="filtrarEstadoUsuarioAdmin">Estado de acceso</label><select id="filtrarEstadoUsuarioAdmin" onchange="renderizarPadronAdmin()"><option value="todos">Todas las cuentas</option><option value="activos">Integrantes con acceso activo</option><option value="pendientes">Integrantes pendientes de activación</option><option value="especiales">Administrador y cuenta de prueba</option></select></div>
+          <div class="admin-search-field"><label for="filtrarEstadoUsuarioAdmin">Estado de acceso</label><select id="filtrarEstadoUsuarioAdmin" onchange="renderizarPadronAdmin()"><option value="todos">Todas las cuentas</option><option value="activos">Integrantes con acceso activo</option><option value="pendientes">Integrantes pendientes de activación</option></select></div>
           <span id="padronUsuariosConteo" role="status" aria-live="polite"></span>
         </div>
         <p id="padronUsuariosEstado" class="admin-list-status" role="status" aria-live="polite"></p>
@@ -730,6 +738,11 @@
             </tbody>
           </table>
         </div>
+        <section class="asignaciones-padron" aria-labelledby="padronAdministradoresTitulo">
+          <h3 id="padronAdministradoresTitulo">Administradores</h3>
+          <p id="padronAdministradoresConteo" role="status" aria-live="polite"></p>
+          <div class="table-responsive"><table class="metricas-table"><thead><tr><th>Nombre</th><th>Correo electrónico</th><th>Rol</th><th>Acceso Auth</th><th>Acciones</th></tr></thead><tbody id="tablaAdministradoresBody"></tbody></table></div>
+        </section>
       </section>
 
       <!-- SUBSECCIÓN 1: ASOCIACIÓN Y ADJUNCIÓN DE ARCHIVOS ORIGINALES -->
@@ -738,6 +751,11 @@
         <p id="asignacionesEstado" role="status" aria-live="polite"></p>
         <button type="button" id="btnAbrirNuevaAsignacion" class="btn-primary" onclick="abrirNuevaAsignacionDocente()">Asignar trabajo</button>
         <p class="asignacion-aviso">Recordatorio automático único: revisión diaria después de siete días de atraso, si la solicitud original fue enviada y el tema aún no está publicado. Todos los correos llevan copia oculta a jpintov@gmail.com.</p>
+        <section class="asignaciones-padron" aria-labelledby="asignacionesPadronTitulo">
+          <h3 id="asignacionesPadronTitulo">Listado general de usuarios</h3>
+          <p id="asignacionesPadronConteo" role="status" aria-live="polite"></p>
+          <div class="table-responsive"><table class="metricas-table asignaciones-table"><thead><tr><th>Nombre</th><th>Asignación</th><th>Trabajo</th><th>Acciones</th></tr></thead><tbody id="asignacionesPadronBody"><tr><td colspan="4">Abra esta sección para consultar el padrón docente.</td></tr></tbody></table></div>
+        </section>
         <div class="asignacion-lista-cabecera">
           <p id="asignacionesConteo" role="status" aria-live="polite"></p>
           <label for="asignacionesEstadoFiltro">Mostrar <select id="asignacionesEstadoFiltro" name="filtro_estado_asignaciones" onchange="renderizarAsignacionesDocentes()"><option value="todos">Todas las vigentes</option><option value="entregados">Entregadas / publicadas</option><option value="pendientes">Pendientes de publicación</option><option value="vencidos">Vencidos sin publicar</option></select></label>
@@ -975,9 +993,7 @@
           <div class="doctrina-chat-encabezado">
             <div>
               <h3 id="doctrinaChatTitulo">Consulta doctrinal</h3>
-              <p>Pregunta a la biblioteca en lenguaje natural y contrasta las fuentes citadas.</p>
             </div>
-            <span class="doctrina-chat-privado">Consulta privada</span>
           </div>
           <div class="doctrina-hilo">
           <div id="doctrinaConversacion" class="doctrina-conversacion" role="log" aria-label="Conversación con el asistente" aria-live="polite"></div>
@@ -985,9 +1001,8 @@
           </div>
           <form id="doctrinaAgenteFormulario" onsubmit="event.preventDefault();consultarAgenteDoctrina()">
             <label for="doctrinaAgentePregunta" class="doctrina-pregunta-etiqueta">Tu consulta</label>
-            <textarea id="doctrinaAgentePregunta" name="consulta_doctrina" rows="3" minlength="10" maxlength="2000" placeholder="Escribe tu pregunta sobre la doctrina, los reglamentos o el simbolismo…" aria-describedby="doctrinaPreguntaAyuda" required></textarea>
+            <textarea id="doctrinaAgentePregunta" name="consulta_doctrina" rows="3" minlength="10" maxlength="2000" placeholder="Escribe tu pregunta sobre la doctrina, los reglamentos o el simbolismo…" required></textarea>
             <div class="doctrina-envio">
-              <p id="doctrinaPreguntaAyuda" class="doctrina-envio-ayuda">Ctrl + Enter para consultar · <span id="doctrinaPreguntaContador" aria-live="off">0 / 2000</span></p>
               <div class="doctrina-acciones-chat">
                 <button id="doctrinaAgenteConsultar" type="submit" class="btn-primary">Consultar</button>
                 <button id="doctrinaNuevaConversacion" type="button" class="btn-secondary" onclick="nuevaConversacionDoctrina()">Nueva conversación</button>
@@ -998,7 +1013,7 @@
         <details class="doctrina-administracion trabajos-panel" id="trabajosPanel" ontoggle="if(this.open)cargarTrabajosTenida()">
           <summary>Trabajos de tenida · Orador</summary>
           <div class="doctrina-panel-contenido">
-            <div class="trabajos-encabezado"><p>Del trabajo leído a sus conclusiones, con revisión documental previa.</p><button type="button" class="btn-secondary" onclick="nuevoTrabajoTenida()">Nuevo trabajo</button></div>
+            <div class="trabajos-encabezado"><button type="button" class="btn-secondary" onclick="nuevoTrabajoTenida()">Nuevo trabajo</button></div>
             <div id="trabajosLista" class="trabajos-lista"></div>
             <form id="trabajosFormulario" class="trabajos-formulario" onsubmit="event.preventDefault();subirTrabajoTenida()" hidden>
               <h3>Incorporar trabajo</h3>
@@ -1079,7 +1094,7 @@
             <select id="filtroUsuarioAcceso" name="filtroUsuarioAcceso" onchange="cargarBitacoraAccesos(this.value)">
               <option value="todos">👥 Todos los Hermanos</option>
             </select>
-            <label style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem"><input type="checkbox" id="ocultarAdminAccesos" name="ocultar_admin_accesos" onchange="cargarBitacoraAccesos()"> Ocultar administrador y cuenta de prueba</label>
+            <label style="display:inline-flex;align-items:center;gap:6px;font-size:.85rem"><input type="checkbox" id="ocultarAdminAccesos" name="ocultar_admin_accesos" onchange="cargarBitacoraAccesos()"> Ocultar administrador</label>
             <button class="admin-link-btn" onclick="cargarBitacoraAccesos()">🔄 Actualizar</button>
           </div>
         </div>
@@ -1381,13 +1396,20 @@
   <script src="app.js"></script>
   <script src="comentarios-hilos.js"></script>
   <script src="asignaciones-admin.js"></script>
+  <script src="informes-admin.js"></script>
   <script src="feriados-chile.js"></script>
   <script src="calendario-tenidas.js"></script>
 <dialog id="doctrinaRevisionDialogo" aria-labelledby="doctrinaRevisionTitulo"><h2>Revisión del original</h2><h3 id="doctrinaRevisionTitulo"></h3><input type="hidden" id="doctrinaRevisionId"><label for="doctrinaRevisionNota">Observaciones de revisión</label><textarea id="doctrinaRevisionNota" maxlength="2000" rows="5"></textarea><p id="doctrinaRevisionEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" class="btn-secondary" onclick="document.getElementById('doctrinaRevisionDialogo').close()">Cerrar</button><button type="button" class="btn-secondary" onclick="guardarRevisionDoctrina('devolver')">Dejar en revisión</button><button type="button" class="btn-primary" onclick="guardarRevisionDoctrina('aprobar')">Aprobar como vigente</button></div></dialog>
+<dialog id="dialogInformeEjecutivo" class="informe-ejecutivo-dialog" aria-labelledby="informeEjecutivoTitulo">
+  <header class="informe-ejecutivo-cabecera"><h2 id="informeEjecutivoTitulo">Informe</h2><div class="informe-ejecutivo-acciones"><button type="button" id="btnDescargarInformeEjecutivo" class="btn-primary" onclick="descargarInformeEjecutivoPDF()" disabled>Descargar PDF</button><button type="button" id="btnCerrarInformeEjecutivo" class="btn-secondary" onclick="cerrarInformeEjecutivo()">Cerrar</button></div></header>
+  <p id="informeEjecutivoEstado" role="status" aria-live="polite"></p>
+  <div class="informe-ejecutivo-vista" tabindex="0" role="region" aria-label="Vista previa del informe"><article id="informeEjecutivoContenido" class="informe-documento" aria-busy="false"></article></div>
+</dialog>
 <dialog id="doctrinaVisorDialogo" aria-labelledby="doctrinaVisorTitulo"><div class="doctrina-acciones"><h2 id="doctrinaVisorTitulo">Consulta del original</h2><button type="button" class="btn-secondary" onclick="cerrarVisorDoctrina()">Cerrar consulta</button></div><form onsubmit="event.preventDefault();irPaginaVisorDoctrina()"><label for="doctrinaVisorPagina">Página del PDF</label><input id="doctrinaVisorPagina" type="number" min="1" max="10000" value="1" required><button type="submit" class="btn-secondary">Ir a página</button></form><p id="doctrinaVisorEstado" role="status" aria-live="polite"></p><iframe id="doctrinaVisorMarco" title="Original PDF privado" referrerpolicy="no-referrer"></iframe></dialog>
 <dialog id="doctrinaTextoDialogo" aria-labelledby="doctrinaTextoTitulo"><h2 id="doctrinaTextoTitulo">Texto del original</h2><p>El texto legible se indexa sin revisión página por página. Puede corregir manualmente errores de extracción; las páginas escaneadas requieren OCR.</p><label for="doctrinaTextoPagina">Página del PDF</label><input id="doctrinaTextoPagina" type="number" min="1" max="600" value="1"><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_pagina')">Cargar página</button><label for="doctrinaTextoContenido">Texto de la página, editable para corregir la extracción</label><textarea id="doctrinaTextoContenido" maxlength="40000" rows="14"></textarea><label><input type="checkbox" id="doctrinaTextoSinTexto"> Página contrastada con el PDF y verificada sin texto</label><p id="doctrinaTextoEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" class="btn-secondary" onclick="cerrarTextoDoctrina()">Cerrar texto</button><button type="button" class="btn-secondary" onclick="contrastarPaginaTextoDoctrina(this)">Contrastar página con PDF</button><button type="button" id="doctrinaTextoExtraer" class="btn-secondary" onclick="accionTextoDoctrina('texto_extraer')">Extraer texto</button><button type="button" class="btn-secondary" onclick="accionTextoDoctrina('texto_revisar_pagina')">Guardar página revisada</button><button type="button" class="btn-primary" onclick="accionTextoDoctrina('texto_aprobar')">Aprobar extracción revisada</button></div></dialog>
 <dialog id="perfilSuperadminDialogo" aria-labelledby="perfilSuperadminTitulo"><h2 id="perfilSuperadminTitulo">Mi perfil de Superadmin</h2><p>Los cambios requieren un código enviado al correo actual. No se modifican antes de validarlo.</p><label for="perfilSuperadminNombre">Nombre</label><input id="perfilSuperadminNombre" type="text" minlength="3" maxlength="150" autocomplete="off"><label for="perfilSuperadminEmail">Correo nuevo</label><input id="perfilSuperadminEmail" type="email" maxlength="254" autocomplete="off"><label for="perfilSuperadminCodigo">Código de autorización</label><input id="perfilSuperadminCodigo" inputmode="numeric" autocomplete="one-time-code" maxlength="8"><p id="perfilSuperadminEstado" role="status" aria-live="polite"></p><div class="doctrina-acciones"><button type="button" id="perfilSuperadminCerrar" class="btn-secondary" onclick="cerrarPerfilSuperadmin()">Cerrar perfil</button><button type="button" id="perfilSuperadminSolicitar" class="btn-secondary" onclick="accionPerfilSuperadmin('solicitar')">Enviar código al correo actual</button><button type="button" id="perfilSuperadminConfirmar" class="btn-primary" onclick="accionPerfilSuperadmin('confirmar')">Validar código y guardar</button><button type="button" id="perfilSuperadminRecuperar" class="btn-secondary" hidden onclick="accionPerfilSuperadmin('recuperar')">Recuperar cambio pendiente</button></div></dialog>
   <script src="perfil-superadmin.js"></script>
+  <script src="roles-admin.js"></script>
   <script src="doctrina-admin.js?v=20261022e"></script>
   <script src="trabajos-tenida.js?v=20261022a"></script>
   <script src="bitacora-sesion.js"></script>

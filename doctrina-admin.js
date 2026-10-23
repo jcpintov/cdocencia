@@ -8,16 +8,17 @@ async function cargarMemoriaAgenteSesion(){
  const version=++versionMemoriaSesion;
  const vigente=()=>usuarioActual?.es_admin&&usuarioActual.id===actor&&version===versionMemoriaSesion;
  let aviso=document.getElementById('doctrinaMemoriaEstado');
- if(!aviso){const f=document.getElementById('doctrinaAgenteFormulario');if(f){aviso=document.createElement('p');aviso.id='doctrinaMemoriaEstado';aviso.setAttribute('role','status');f.before(aviso);}}
+ // La memoria se recupera en silencio; solo los fallos requieren un aviso.
+ if(aviso){aviso.remove();aviso=null;}
  const promesa=(async()=>{
   try{
    const r=await peticionDoctrina('memoria_sesion');
    if(!vigente())return;
    if(r.memoria?.schema_version!==1||!Array.isArray(r.memoria.criterios)||!Array.isArray(r.memoria.casos))throw Error('Memoria incompleta');
    memoriaPersistenteSesion={actor,memoria:r.memoria};
-   if(aviso)aviso.textContent=r.memoria.persistencia_casos?'Memoria recuperada: '+r.memoria.casos.length+' casos revisados recientes. Lo aprendido se conserva entre sesiones.':'Criterios editoriales recuperados. La memoria persistente de casos está pendiente de activación.';
+
    return r.memoria;
-  }catch{if(vigente()&&aviso)aviso.textContent='No se pudo recuperar la memoria de sesión. Los registros del servidor no se han borrado.';}
+  }catch{if(vigente()){const salida=document.getElementById('doctrinaAgenteResultado');if(salida)salida.textContent='No se pudo recuperar la memoria de sesión. Intente nuevamente.';}}
   finally{if(vigente())cargaMemoriaSesion=null;}
  })();
  cargaMemoriaSesion={actor,promesa};return promesa;
@@ -271,8 +272,6 @@ async function contrastarPaginaTextoDoctrina(boton){
 function ajustarCompositorDoctrina(){
  const campo=document.getElementById('doctrinaAgentePregunta');
  if(!campo)return;
- const contador=document.getElementById('doctrinaPreguntaContador');
- if(contador)contador.textContent=campo.value.length+' / '+campo.maxLength;
  campo.style.height='auto';
  if(campo.value)campo.style.height=Math.min(Math.max(campo.scrollHeight,104),192)+'px';
 }
@@ -476,6 +475,7 @@ async function prepararBibliotecaGroq(){
    }catch(e){omitidos++;errores.push(item.titulo+': '+String(e.message||'no se pudo extraer').slice(0,100));}
   }
   informar('Indexación terminada. Habilitando pasajes legibles de los originales vigentes para Groq…');
+  if(usuarioActual?.rol==='ADMIN'){informar('Biblioteca indexada. Las autorizaciones para proveedores las gestiona Superadmin.');return;}
   const autorizacion=await peticionDoctrina('llm_autorizar_biblioteca',{confirmacion:true});
   const activos=Number(autorizacion.autorizados||0);
   informar('Biblioteca: '+activos+' versiones autorizadas para Groq; '+extraidos+' extracciones nuevas; '+omitidos+' originales requieren atención.'+(errores.length?' Pendientes: '+errores.slice(0,5).join(' | '):''));
@@ -487,7 +487,7 @@ async function prepararBibliotecaGroq(){
 async function cargarAutorizacionesGroq(){
  const turno=++consultaPermisosGroq,actor=usuarioActual?.id,salida=document.getElementById('doctrinaGroqPermisos');salida.textContent='Consultando permisos…';
  try{const r=await peticionDoctrina('llm_listar');if(turno!==consultaPermisosGroq||!usuarioActual?.es_admin||usuarioActual.id!==actor)return;salida.replaceChildren();
-  for(const item of r.autorizaciones){const fila=document.createElement('article');fila.className='doctrina-documento';const p=document.createElement('p'),b=document.createElement('button');p.textContent=`${item.titulo} · versión ${item.version} · ${item.autorizado?'Autorizado para Groq':'Sin autorización para Groq'}`;b.type='button';b.className='btn-secondary';b.textContent=item.autorizado?'Revocar permiso':'Autorizar fragmentos';b.disabled=!item.autorizado&&!item.texto_indexado&&!item.texto_aprobado;
+  for(const item of r.autorizaciones){const fila=document.createElement('article');fila.className='doctrina-documento';const p=document.createElement('p'),b=document.createElement('button');p.textContent=`${item.titulo} · versión ${item.version} · ${item.autorizado?'Autorizado para Groq':'Sin autorización para Groq'}`;b.type='button';b.className='btn-secondary';b.textContent=item.autorizado?'Revocar permiso':'Autorizar fragmentos';b.hidden=usuarioActual?.rol==='ADMIN';b.classList.toggle('hidden',b.hidden);b.disabled=!item.autorizado&&!item.texto_indexado&&!item.texto_aprobado;
    b.onclick=async()=>{if(!item.autorizado&&!confirm(`¿Autoriza enviar fragmentos de «${item.titulo}», versión ${item.version}, a Groq usando GPT-OSS 120B? El proveedor recibirá también la pregunta y los antecedentes de cada consulta.`))return;b.disabled=true;try{await peticionDoctrina(item.autorizado?'llm_revocar':'llm_autorizar',{id:item.version_id,confirmacion:!item.autorizado});if(turno===consultaPermisosGroq&&usuarioActual?.id===actor){invalidarAgenteDoctrina();await cargarAutorizacionesGroq();}}catch(e){if(turno===consultaPermisosGroq&&usuarioActual?.id===actor){p.textContent=e.message;b.disabled=false;}}};fila.append(p,b);salida.appendChild(fila);}
   if(!r.autorizaciones.length)salida.textContent='No hay originales vigentes para autorizar.';
  }catch(e){if(turno===consultaPermisosGroq&&usuarioActual?.id===actor)salida.textContent=e.message;}

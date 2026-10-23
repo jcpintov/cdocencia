@@ -2,7 +2,7 @@
  const $=id=>document.getElementById(id);let solicitud=null,version=0,ocupado=false;
  window.cerrarPerfilSuperadmin=()=>{version++;solicitud=null;$('perfilSuperadminCodigo').value='';$('perfilSuperadminNombre').value='';$('perfilSuperadminEmail').value='';$('perfilSuperadminEstado').textContent='';$('perfilSuperadminDialogo').close();};
  window.abrirPerfilSuperadmin=async()=>{
-  if(!usuarioActual?.es_admin)return;solicitud=null;version++;
+  if(!(usuarioActual?.es_admin===true&&usuarioActual?.rol!=='ADMIN'))return;solicitud=null;version++;
   $('perfilSuperadminNombre').value=usuarioActual.nombre||'';$('perfilSuperadminEmail').value=usuarioActual.email||'';
   $('perfilSuperadminNombre').disabled=false;$('perfilSuperadminEmail').disabled=false;
   $('perfilSuperadminCodigo').value='';$('perfilSuperadminEstado').textContent='';$('perfilSuperadminRecuperar').hidden=true;
@@ -10,7 +10,7 @@
   await window.accionPerfilSuperadmin('pendiente');
  };
  window.accionPerfilSuperadmin=async action=>{
-  if(ocupado||!usuarioActual?.es_admin)return;
+  if(ocupado||!(usuarioActual?.es_admin===true&&usuarioActual?.rol!=='ADMIN'))return;
   if(!['solicitar','pendiente'].includes(action)&&!solicitud){$('perfilSuperadminEstado').textContent='Solicite primero un código.';return;}
   if(action==='solicitar'&&(!String($('perfilSuperadminNombre').value).trim()||!$('perfilSuperadminEmail').checkValidity()))return;
   const actor=usuarioActual.id,revision=version;ocupado=true;

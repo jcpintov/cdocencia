@@ -10,7 +10,7 @@ test('nombre de usuario normal activa modal para editar por id y no habilita per
  assert.match(tramo,/className='admin-usuario-nombre-btn'/);
  assert.match(tramo,/addEventListener\('click',\(\)=>abrirModalEditarUsuario\(u\.id\)\)/);
  assert.match(tramo,/!u\.es_admin/);
- assert.match(tramo,/dummy@ofl\.cl/);
+ assert.match(tramo,/renderizarAdministradoresAdmin\(\)/);
 });
 test('editor reutiliza el modal de alta y protege el correo vinculado a Auth',()=>{
  const tramo=app.slice(app.indexOf('function abrirModalCrearUsuario()'),app.indexOf('function confirmarEliminarUsuario()'));
