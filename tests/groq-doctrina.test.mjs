@@ -127,3 +127,18 @@ test('una corrección con fuentes previas vuelve al planificador antes de respon
  const r=await consultarGroqDoctrina({...entrada,pregunta:'Corrijo: no se negó, no pudo asistir.',historial:[{role:'user',content:'El hermano se negó.'}],fuentesPrevias:[fuente]},{rpc,fetchImpl,env:{GROQ_API_KEY:'fixture',GROQ_ZDR_CONFIRMADO:'true'}});
  assert.equal(r.generativo,true);assert.equal(planificaciones,1);assert.ok(consultas.includes('capacidad OR impedimento'));
 });
+
+test('seis páginas extensas caben en el presupuesto sin perder referencias y marcan sus recortes',async()=>{
+ let cuerpo;
+ const paginas=Array.from({length:6},(_,i)=>({...fuente,pagina:i+1}));
+ const rpc=async(a,d)=>{
+  if(a==='texto_buscar')return {resultados:paginas};
+  if(a==='texto_llm_listar')return {autorizaciones:[{...fuente,autorizado:true,modelo:MODELO_GROQ}]};
+  if(a==='texto_pagina')return {sha256:'abc',pagina:{numero:d.pagina,texto:'Contenido documental extenso. '.repeat(250)}};
+  return {ok:true,id:'reserva'};
+ };
+ const fetchImpl=async(_u,o)=>{const b=JSON.parse(o.body);if(b.tools)return {ok:true,text:async()=>JSON.stringify({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'buscar_biblioteca',arguments:'{"consultas":["acacia"]}'}}]}}]})};cuerpo=b;return {ok:true,text:async()=>JSON.stringify({choices:[{finish_reason:'stop',message:{content:JSON.stringify(resultado())}}]})};};
+ const r=await consultarGroqDoctrina(entrada,{rpc,fetchImpl,env:{GROQ_API_KEY:'fixture',GROQ_ZDR_CONFIRMADO:'true'}});
+ assert.equal(r.generativo,true);assert.ok(Buffer.byteLength(cuerpo.messages.map(m=>m.content).join(''))<=22000);
+ const e=JSON.parse(cuerpo.messages[1].content);assert.equal(e.fuentes.length,6);assert.ok(e.fuentes.every(f=>f.fragmento.endsWith(' […]')));assert.equal(e.pregunta,entrada.pregunta);
+});
