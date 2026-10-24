@@ -17,3 +17,12 @@ test('lee página y continuación elegidas por IA sin ejecutar búsqueda por pal
  }});
  assert.ok(!acciones.includes('texto_buscar'));assert.ok(r.recuperadas[0].resultados.some(p=>p.pagina===85));
 });
+
+test('un mapa extenso se acota antes de llamar a Groq sin alterar la consulta ni el catálogo',async()=>{
+ const pregunta='requisitos exaltacion';let enviado;
+ const contexto={reserva:{id:'r'},ambiente:{principios:'Ayuda y asistencia.',catalogo:'D1 Constitución',mapa_normativo:'D1 p1: Artículo 1\n'.repeat(5000)},documentos:[],paginas:[]};
+ await buscarBibliotecaConGroq({pregunta},{contexto,env:{GROQ_API_KEY:'fixture'},modelo:'fixture',rpc:async()=>({ok:true,resultados:[]}),fetchImpl:async(_u,o)=>{enviado=JSON.parse(o.body);return {ok:true,text:async()=>JSON.stringify({choices:[{finish_reason:'tool_calls',message:{tool_calls:[{type:'function',function:{name:'buscar_biblioteca',arguments:'{"consultas":["exaltación"]}'}}]}}]})};}});
+ assert.ok(Buffer.byteLength(JSON.stringify(enviado.messages))<=22000);
+ assert.equal(JSON.parse(enviado.messages.at(-1).content).pregunta,pregunta);
+ const a=JSON.parse(enviado.messages[1].content).ambiente_documental;assert.equal(a.catalogo,'D1 Constitución');assert.match(a.mapa_normativo,/Mapa parcial/);assert.equal(contexto.ambiente.mapa_normativo.length,90000);
+});
