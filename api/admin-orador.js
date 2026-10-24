@@ -1,13 +1,17 @@
 import {esSuperadmin} from '../lib/roles-admin.js';
 import {createClient} from '@supabase/supabase-js';
 import {randomUUID,createHash} from 'node:crypto';
-import {validarFicha,extraerTrabajo,coincidenciasTrabajo,pedirJSONTrabajos,validarRevision,validarOratoria,generarOratoriaRevisada,exportarOratoria,promptOrador,ROL_ORADOR} from '../lib/trabajos-tenida.js';
+import {palabras,aplicarCierreOratoria,validarFicha,extraerTrabajo,coincidenciasTrabajo,pedirJSONTrabajos,validarRevision,validarOratoria,generarOratoriaRevisada,exportarOratoria,promptOrador,ROL_ORADOR} from '../lib/trabajos-tenida.js';
 import {prepararConsultaAgente} from '../lib/agente-doctrina.js';
 import {consultarGroqDoctrina} from '../lib/groq-doctrina.js';
 const BUCKET='trabajos-tenida-privados',MAX=10485760;
 const uuid=v=>typeof v==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);
 const reply=(res,status,data)=>{res.setHeader('Cache-Control','no-store');return res.status(status).json(data);};
-const visible=w=>({id:w.id,revision:w.revision,datos:{...w.datos,extraccion:{...w.datos.extraccion,texto:undefined,bloques:undefined}},bloques_total:w.datos.extraccion.bloques.length});
+const visible=w=>{
+ const oratoria=w.datos.oratoria?{...w.datos.oratoria,texto:aplicarCierreOratoria(w.datos.oratoria.texto,w.datos.ficha)}:null;
+ if(oratoria){oratoria.palabras=palabras(oratoria.texto);oratoria.minutos=Math.round(oratoria.palabras/117*10)/10;}
+ return {id:w.id,revision:w.revision,datos:{...w.datos,...(oratoria?{oratoria}:{}),extraccion:{...w.datos.extraccion,texto:undefined,bloques:undefined}},bloques_total:w.datos.extraccion.bloques.length};
+};
 export default async function handler(req,res){
  if(req.method!=='POST'){res.setHeader('Allow','POST');return reply(res,405,{error:'Método no permitido'});}
  const token=/^Bearer (.+)$/i.exec(req.headers?.authorization||'')?.[1];if(!token)return reply(res,401,{error:'Sesión requerida'});
@@ -95,7 +99,7 @@ export default async function handler(req,res){
    }finally{await documental('texto_llm_finalizar',{id:reserva.id,estado});}
   }else if(action==='editar'){
    if(!datos.oratoria)throw Error('Primero genere las conclusiones.');
-   datos.oratoria={...datos.oratoria,...validarOratoria({texto:d.texto}),estado:'revisado_por_orador',editado_en:new Date().toISOString()};
+   datos.oratoria={...datos.oratoria,...validarOratoria({texto:d.texto},datos.ficha),estado:'revisado_por_orador',editado_en:new Date().toISOString()};
   }
   const guardado=await rpc('guardar',{id:trabajo.id,revision:trabajo.revision,bloqueo:trabajo.bloqueo,datos,paso:action});trabajo=null;
   return reply(res,200,{ok:true,trabajo:visible(guardado)});
