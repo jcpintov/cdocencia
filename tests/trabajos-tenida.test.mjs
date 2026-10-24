@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {validarFicha,dividirTrabajo,extraerTrabajo,coincidenciasTrabajo,validarRevision,validarOratoria,generarOratoriaRevisada,pedirJSONTrabajos,exportarOratoria,ROL_ORADOR,promptOrador} from '../lib/trabajos-tenida.js';
+import {palabras,cierreOratoria,aplicarCierreOratoria,validarFicha,dividirTrabajo,extraerTrabajo,coincidenciasTrabajo,validarRevision,validarOratoria,generarOratoriaRevisada,pedirJSONTrabajos,exportarOratoria,ROL_ORADOR,promptOrador} from '../lib/trabajos-tenida.js';
 import JSZip from 'jszip';
 const ficha={tema:'Trabajo sobre la escucha',autor:'Autor de prueba',tenida:'Tenida ordinaria',fecha:'2026-10-22',grado:1,tipo:'ordinaria',uso_ia:'no_informada',nota_ia:''};
 
@@ -10,7 +10,7 @@ test('corrige una oratoria fuera de rango una vez y no reintenta un límite de p
   llamadas++;if(llamadas===2)assert.match(prompt,/Revisión obligatoria/);
   return {texto:Array(llamadas===1?100:350).fill('Reflexión').join(' ')};
  }});
- assert.equal(r.palabras,350);assert.equal(llamadas,2);
+ assert.equal(r.palabras,palabras(r.texto));assert.equal(llamadas,2);
  llamadas=0;
  await assert.rejects(generarOratoriaRevisada(ficha,{}, {pedir:async()=>{llamadas++;throw Object.assign(Error('Límite'),{status:429});}}),/Límite/);
  assert.equal(llamadas,1);
@@ -77,4 +77,30 @@ test('Word exporta solo la oratoria en carta Calibri 12 e interlineado simple; e
 test('rechaza documentos ilegibles y contenido excesivo sin truncarlo',async()=>{
  await assert.rejects(()=>extraerTrabajo(Buffer.from('no pdf'),'pdf'),/PDF válido/);
  const z=new JSZip();z.file('word/document.xml','<x/>');await assert.rejects(async()=>extraerTrabajo(await z.generateAsync({type:'nodebuffer'}),'docx'));
+});
+
+test('suprime la devolución de palabra en todos los tipos y cuenta solo el texto final',async()=>{
+ const base=Array(350).fill('Reflexión').join(' ');
+ for(const tipo of ['ordinaria','iniciacion','aumento','exaltacion']){
+  assert.doesNotMatch(promptOrador({...ficha,tipo}),/Devolver la palabra al VM o RM según la ficha/);
+  for(const cierre of ['Vuelvo la palabra al Venerable Maestro.','DEVUELVO LA PALABRA AL VM.','Vuelvo la palabra al RM.']){
+   const r=validarOratoria({texto:base+'\n'+cierre});assert.equal(r.texto,base);assert.equal(r.palabras,350);
+  }
+ }
+ const bytes=await exportarOratoria({datos:{ficha,oratoria:{texto:base+'\nVuelvo la palabra al Venerable Maestro.'}}});
+ const zip=await JSZip.loadAsync(bytes);assert.doesNotMatch(await zip.file('word/document.xml').async('string'),/Vuelvo la palabra/);
+ assert.throws(()=>validarOratoria({texto:Array(310).fill('Reflexión').join(' ')+' Vuelvo la palabra al Venerable Maestro.'}),/315–385/);
+});
+
+test('cierre literal según grado, único, al final y también en Word',async()=>{
+ const base=Array(320).fill('Reflexión').join(' ');
+ for(const grado of [1,2,3]){
+  const f={...ficha,grado};const cierre=cierreOratoria(grado);
+  assert.equal(cierre,grado===3?'R.·.M,.·. por la plancha recientemente leída y los aportes de los VV.·.MM.·., podemos concluir que hemos trabajado masónicamente.':'V.·.M,.·. por la plancha recientemente leída y los aportes de los QQ.·.HH.·., podemos concluir que hemos trabajado masónicamente.');
+  const texto=aplicarCierreOratoria(base+'\n'+cierreOratoria(1)+'\n'+cierreOratoria(3)+'\nVuelvo la palabra al Venerable Maestro.',f);
+  assert.equal(texto,base+'\n\n'+cierre);assert.equal(aplicarCierreOratoria(texto,f),texto);
+  const r=validarOratoria({texto},f);assert.equal(r.palabras,palabras(texto));assert.ok(r.palabras<=385);
+  assert.ok(promptOrador(f).includes(cierre));
+  const zip=await JSZip.loadAsync(await exportarOratoria({datos:{ficha:f,oratoria:{texto:base}}}));const xml=await zip.file('word/document.xml').async('string');assert.ok(xml.includes(cierre));
+ }
 });

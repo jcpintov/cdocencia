@@ -1,3 +1,4 @@
+import {palabras} from '../lib/trabajos-tenida.js';
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
 import {SEMANTICA_COMUN,CRITICA_ARGUMENTAL,SEMANTICA_CONSULTAS,SEMANTICA_ORATORIA,senalesSemanticas,puedeReutilizarFuentes} from '../lib/semantica-agentes.js';
 import {prepararConsultaAgente,contextoConversacion} from '../lib/agente-doctrina.js';
@@ -35,7 +36,7 @@ test('criterios cubren familias de falacias y evitan falsos positivos por autori
 });
 test('oratoria requiere apoyos verificables cuando recibe un trabajo revisado y no cambia su extensión',async()=>{
  assert.deepEqual(validarApoyosOratoria([{bloque:1,pasaje}],bloques),[{bloque:1,pasaje}]);assert.throws(()=>validarApoyosOratoria([{bloque:2,pasaje}],bloques),/no coincide/);assert.throws(()=>validarApoyosOratoria([],bloques),/Falta respaldo/);assert.throws(()=>validarApoyosOratoria([{bloque:1,pasaje:'Todos deben aceptar la propuesta sin examinarla.'}],[{numero:1,pasajes:['No todos deben aceptar la propuesta sin examinarla.']}]),/no coincide/);
- let n=0;const r=await generarOratoriaRevisada(ficha,{trabajo_completo_revisado:bloques},{pedir:async prompt=>{n++;assert.ok(prompt.includes(SEMANTICA_ORATORIA));assert.ok(prompt.includes(CRITICA_ARGUMENTAL));return {texto:Array(350).fill('Reflexión').join(' '),...(n===2?{apoyos:[{bloque:1,pasaje}]}:{})};}});assert.equal(n,2);assert.equal(r.palabras,350);assert.equal(r.apoyos[0].pasaje,pasaje);
+ let n=0;const r=await generarOratoriaRevisada(ficha,{trabajo_completo_revisado:bloques},{pedir:async prompt=>{n++;assert.ok(prompt.includes(SEMANTICA_ORATORIA));assert.ok(prompt.includes(CRITICA_ARGUMENTAL));return {texto:Array(350).fill('Reflexión').join(' '),...(n===2?{apoyos:[{bloque:1,pasaje}]}:{})};}});assert.equal(n,2);assert.equal(r.palabras,palabras(r.texto));assert.equal(r.apoyos[0].pasaje,pasaje);
 });
 test('criterios compartidos no se duplican en la petición al proveedor',async()=>{
  await pedirJSONTrabajos(promptOrador(ficha),{}, {env:{GROQ_API_KEY:'fixture',GROQ_ZDR_CONFIRMADO:'true'},fetchImpl:async(_u,o)=>{const p=JSON.parse(o.body).messages[0].content;assert.equal(p.split(SEMANTICA_COMUN).length-1,1);assert.equal(p.split(CRITICA_ARGUMENTAL).length-1,1);return {ok:true,json:async()=>({choices:[{finish_reason:'stop',message:{content:'{"texto":"fixture"}'}}]})};}});
