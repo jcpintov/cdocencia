@@ -119,3 +119,13 @@ test('editor y base de datos preservan vinculación y seguridad',()=>{
  assert.match(sql,/REVOKE ALL ON public\.modulos_temas FROM PUBLIC,anon,authenticated/);
  assert.match(sql,/\(1,'INCI013A'\),\(1,'INCI013B'\),\(1,'INCI013C'\)/);
 });
+
+test('asignados y vencidos muestran estado sin enlace hasta disponer del trabajo',()=>{
+ const r=lib.construirDirectorioUnidadesDocencia(unidades,[],objetivos,[{codigo:'INCI013A',estado:'asignado'},{codigo:'INCI013B',estado:'vencido'}]);
+ for(const [codigo,estado] of [['INCI013A','asignado'],['INCI013B','vencido']]){
+  const inicio=r.indexOf('data-codigo-docencia="'+codigo+'"'),fin=r.indexOf('</article>',inicio),tarjeta=r.slice(r.lastIndexOf('<article',inicio),fin);
+  assert.match(tarjeta,new RegExp('tema-'+estado));assert.doesNotMatch(tarjeta,/<button|data-modulo-id/);
+ }
+ const cargado=lib.construirDirectorioUnidadesDocencia(unidades,modulos,objetivos,[{codigo:'INCI013A',estado:'vencido'}]);
+ const inicio=cargado.indexOf('data-codigo-docencia="INCI013A"'),fin=cargado.indexOf('</article>',inicio);assert.match(cargado.slice(inicio,fin),/data-modulo-id="m1"/);
+});

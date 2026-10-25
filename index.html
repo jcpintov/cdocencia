@@ -754,7 +754,7 @@
         <section class="asignaciones-padron" aria-labelledby="asignacionesPadronTitulo">
           <h3 id="asignacionesPadronTitulo">Listado general de usuarios</h3>
           <p id="asignacionesPadronConteo" role="status" aria-live="polite"></p>
-          <div class="table-responsive"><table class="metricas-table asignaciones-table"><thead><tr><th>Nombre</th><th>Asignación</th><th>Trabajo</th><th>Acciones</th></tr></thead><tbody id="asignacionesPadronBody"><tr><td colspan="4">Abra esta sección para consultar el padrón docente.</td></tr></tbody></table></div>
+          <div class="table-responsive"><table class="metricas-table asignaciones-table"><thead><tr><th>Nombre</th><th>Asignación</th><th>Trabajo</th></tr></thead><tbody id="asignacionesPadronBody"><tr><td colspan="3">Abra esta sección para consultar el padrón docente.</td></tr></tbody></table></div>
         </section>
         <div class="asignacion-lista-cabecera">
           <p id="asignacionesConteo" role="status" aria-live="polite"></p>
@@ -860,6 +860,7 @@
           </div>
           <div class="admin-header-actions">
             <button type="button" class="btn-primary" onclick="abrirNuevoTrabajo()">Subir trabajo nuevo</button>
+            <button type="button" class="btn-secondary" onclick="abrirInventarioTrabajos()">Enviar inventario de trabajos</button>
             <button id="btnActualizarTrabajosAdmin" type="button" class="admin-link-btn" onclick="cargarGestionTrabajosAdmin()">Actualizar lista</button>
           </div>
         </div>
@@ -1474,6 +1475,16 @@
   <script src="trabajos-tenida.js?v=20261022a"></script>
   <script src="bitacora-sesion.js"></script>
   <script src="ui-v2.js" defer></script>
+<dialog id="inventarioDialog" class="informe-ejecutivo-dialog" aria-labelledby="inventarioTitulo">
+ <header class="informe-ejecutivo-cabecera"><h2 id="inventarioTitulo">Enviar inventario de trabajos</h2><button type="button" class="btn-secondary" onclick="cerrarInventarioTrabajos()">Cerrar inventario</button></header>
+ <p id="inventarioResumen"></p>
+ <details><summary>Excluir casillas solo de este envío</summary><div id="inventarioExclusiones"></div></details>
+ <button type="button" class="btn-secondary" onclick="actualizarInventarioTrabajos()">Actualizar vista previa</button>
+ <p id="inventarioEstado" role="status" aria-live="polite"></p>
+ <iframe id="inventarioVista" title="Vista previa del correo de inventario" sandbox="" style="width:100%;height:48vh;border:1px solid #b8cad8;background:white"></iframe>
+ <button id="inventarioEnviar" type="button" class="btn-primary" onclick="enviarInventarioTrabajos()" disabled>Enviar correo de inventario</button>
+</dialog>
+<script src="inventario-trabajos.js"></script>
 </body>
 </html>
 

@@ -383,6 +383,7 @@ function cerrarSesion() {
   const botonIngreso = document.querySelector('#formAccesoCamara button[type="submit"]');
   if (botonIngreso) botonIngreso.disabled = false;
   window.limpiarAsignacionesAdmin?.();
+  window.limpiarInventarioTrabajos?.();
   window.limpiarNuevosTrabajos?.();
   window.limpiarInformesAdmin?.();
   window.limpiarRolesAdmin?.();
@@ -906,7 +907,7 @@ async function consultarVinculosDocencia() {
 // Cada vínculo surge de unidad_codigo de un trabajo activo en Supabase.
 // Cuatro áreas > ocho unidades > veinticuatro subunidades > 139 temas.
 // Objetivos fieles al documento; trabajos enlazados SOLO por códigos guardados.
-function construirDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[]) {
+function construirDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[],estados=[]) {
   if(!Array.isArray(unidades)||!unidades.length)return '';
   const ordenadas=[...unidades].sort((a,b)=>a.orden-b.orden);
   const mapa=new Map(ordenadas.map(u=>[u.codigo,u]));
@@ -930,7 +931,10 @@ function construirDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[]) {
 
   const temaHTML=t=>{
     const mods=relacionados(t.codigo),activo=mods.length>0;
-    return '<article class="docencia-tarjeta-tema '+(activo?'disponible':'pendiente')+
+    const pendiente=estados.find(x=>x.codigo===t.codigo)?.estado;
+    const clase=!activo&&['asignado','vencido','recibido'].includes(pendiente)?pendiente:'';
+    const etiquetaPendiente={asignado:'Asignado · trabajo no recibido',vencido:'Vencido · trabajo pendiente',recibido:'Recibido · pendiente de carga'}[clase]||'Tema por desarrollar';
+    return '<article class="docencia-tarjeta-tema '+(activo?'disponible':'pendiente')+(clase?' tema-'+clase:'')+
       '" data-codigo-docencia="'+e(t.codigo)+'" tabindex="-1">'+
       '<span class="docencia-tema-codigo">'+e(t.codigo)+'</span>'+
       (mods.length===1?
@@ -939,7 +943,7 @@ function construirDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[]) {
         '<span class="docencia-tema-acceso">Ver trabajo ↗</span></button>'
       : mods.length>1?
         '<strong class="docencia-tema-titulo">'+e(t.detalle)+'</strong>'+tarjetasTrabajos(t.codigo)
-      : '<span class="docencia-tema-titulo">'+e(t.detalle)+'</span><span class="docencia-tema-pendiente">Tema por desarrollar</span>')+
+      : '<span class="docencia-tema-titulo">'+e(t.detalle)+'</span><span class="docencia-tema-pendiente">'+e(etiquetaPendiente)+'</span>')+
       '</article>';
   };
   const etiqueta=n=>n===1?'1 trabajo disponible':n+' trabajos disponibles';
@@ -1002,7 +1006,7 @@ function expandirContenidoDocente(abrir) {
   document.getElementById('catalogoUnidadesContenido')?.querySelectorAll('details').forEach(d=>{d.open=!!abrir;});
 }
 
-function renderizarDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[]) {
+function renderizarDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[],estados=[]) {
   const seccion=document.getElementById('catalogoDirectorioUnidades');
   const contenedor=document.getElementById('catalogoUnidadesContenido');
   if(!seccion||!contenedor)return;
@@ -1011,7 +1015,7 @@ function renderizarDirectorioUnidadesDocencia(unidades,trabajos,objetivos=[]) {
     seccion.classList.add('hidden');
     return;
   }
-  contenedor.innerHTML=construirDirectorioUnidadesDocencia(unidades,trabajos,objetivos);
+  contenedor.innerHTML=construirDirectorioUnidadesDocencia(unidades,trabajos,objetivos,estados);
   const conteo=document.getElementById('contenidoDocenteConteo');
   if(conteo)conteo.textContent=unidades.filter(u=>tipoUnidadDocencia(u.codigo)==='tema').length+' temas en el programa';
   seccion.classList.remove('hidden');
@@ -1207,7 +1211,10 @@ async function renderizarCatalogoTrabajos(vista = 'trabajos') {
     `;
   });
 
-  renderizarDirectorioUnidadesDocencia(unidades, listaModulos, objetivos);
+  let estadosTemas=[];
+  if(vista==='contenido'){const r=await sbApp.rpc('maestro_estados_temas_docencia');if(r.error)throw r.error;estadosTemas=r.data||[];}
+  if(!vigente())return false;
+  renderizarDirectorioUnidadesDocencia(unidades, listaModulos, objetivos,estadosTemas);
   estado.hidden = true;
   return true;
   } catch (error) {

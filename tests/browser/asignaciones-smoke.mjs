@@ -133,6 +133,15 @@ try{
  await page.getByRole('button',{name:'Observación de José Pérez',exact:true}).click();
  await page.locator('#observacionAsignacionTexto').fill('Excusado por disponibilidad. <script>texto plano</script>');await page.locator('#btnGuardarObservacionAsignacion').click();await page.locator('#dialogObservacionAsignacion').waitFor({state:'hidden'});
  assert.match(await page.locator('#asignacionesPadronBody').textContent(),/Excusado por disponibilidad/);assert.equal(await page.locator('#asignacionesPadronBody script').count(),0);
+ const filaPadron=page.locator('#asignacionesPadronBody tr').first();
+ assert.equal(await filaPadron.locator('td').count(),3);
+ assert.equal(await filaPadron.locator('td').nth(1).locator('.asignaciones-padron-acciones').textContent(),'Editar observación, Asignar trabajo');
+ assert.equal(await filaPadron.locator('td').nth(2).locator('.asignaciones-padron-acciones').textContent(),'Editar, Marcar como entregado, Eliminar');
+ assert.equal(await filaPadron.locator('.admin-link-btn').count(),0);
+ await comprobarContraste('#asignacionesPadronBody button[aria-label="Observación de José Pérez"]');
+ await comprobarContraste('#asignacionesPadronBody .asignacion-acceso-eliminar');
+ if(process.env.QA_PADRON_CAPTURE){const anterior=page.viewportSize();await page.setViewportSize({width:1440,height:900});await page.locator('[aria-labelledby="asignacionesPadronTitulo"]').screenshot({path:process.env.QA_PADRON_CAPTURE});await page.setViewportSize(anterior);}
+
  await page.getByRole('button',{name:'Marcar como entregado INCI011A de José Pérez',exact:true}).click();await page.locator('#entregaAsignacionNota').fill('Recibido por correo');await page.locator('#btnConfirmarEntregaAsignacion').click();await page.locator('#dialogEntregaAsignacion').waitFor({state:'hidden'});
  assert.ok(assignments[0].entregado_el);assert.equal(await page.locator('#kpiResumenEntregados').textContent(),'1');assert.equal(await page.locator('#kpiResumenPendientes').textContent(),'0');assert.equal(await page.locator('#kpiTrabajosPublicados').textContent(),'0');
  await page.locator('#asignacionesEstadoFiltro').selectOption('pendientes');assert.equal(await page.locator('#asignacionesBody tr.asignacion-fila').count(),0);

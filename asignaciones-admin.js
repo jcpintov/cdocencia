@@ -138,7 +138,7 @@
  }
  function renderPadron(){
   const cuerpo=$('asignacionesPadronBody');if(!cuerpo)return;cuerpo.replaceChildren();
-  if(!datosCargados){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='Padrón pendiente de actualización.';tr.appendChild(td);cuerpo.appendChild(tr);$('asignacionesPadronConteo').textContent='';return;}
+  if(!datosCargados){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=3;td.textContent='Padrón pendiente de actualización.';tr.appendChild(td);cuerpo.appendChild(tr);$('asignacionesPadronConteo').textContent='';return;}
   const vigentes=datos.asignaciones.filter(a=>a.vigente),mapa=new Map();
   vigentes.forEach(a=>{if(!mapa.has(a.usuario_id))mapa.set(a.usuario_id,[]);mapa.get(a.usuario_id).push(a);});
   const usuarios=[...datos.usuarios].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'));
@@ -149,23 +149,23 @@
    tr.className='asignacion-fila '+(tareas.length?'asignacion-pendiente':'asignacion-sin-trabajo');
    const nombre=document.createElement('td');nombre.textContent=u.nombre;tr.appendChild(nombre);
    const tiene=document.createElement('td');tiene.textContent=tareas.length?'Con trabajo ('+tareas.length+')':'Sin trabajo';if(u.observacion){const nota=document.createElement('p');nota.className='asignacion-observacion';nota.textContent=u.observacion;tiene.appendChild(nota);}tr.appendChild(tiene);
-   const trabajos=document.createElement('td'),acciones=document.createElement('td');
-   function boton(etiqueta,accion){const b=document.createElement('button');b.type='button';b.className='admin-link-btn';b.textContent=etiqueta;b.disabled=ocupado;b.addEventListener('click',accion);return b;}
-   const comentar=boton(u.observacion?'Editar observación':'Agregar observación',()=>abrirObservacion(u));comentar.setAttribute('aria-label','Observación de '+u.nombre);tiene.appendChild(comentar);
+   const trabajos=document.createElement('td');
+   function accesos(destino,lista){const grupo=document.createElement('div');grupo.className='asignaciones-padron-acciones';lista.forEach((b,i)=>{if(i)grupo.appendChild(document.createTextNode(', '));grupo.appendChild(b);});destino.appendChild(grupo);}
+   function boton(etiqueta,accion){const b=document.createElement('button');b.type='button';b.className='asignacion-acceso-texto';b.textContent=etiqueta;b.disabled=ocupado;b.addEventListener('click',accion);return b;}
+   const comentar=boton(u.observacion?'Editar observación':'Agregar observación',()=>abrirObservacion(u));comentar.setAttribute('aria-label','Observación de '+u.nombre);
    if(!tareas.length)trabajos.textContent='—';
    tareas.forEach(a=>{
-    const linea=document.createElement('p');linea.textContent=a.codigo+' · '+a.tema+' · '+estadoTrabajo(a);trabajos.appendChild(linea);
-    const grupo=document.createElement('div');grupo.className='asignaciones-padron-acciones';
+    const bloque=document.createElement('div');bloque.className='asignacion-padron-trabajo';const linea=document.createElement('p');linea.textContent=a.codigo+' · '+a.tema+' · '+estadoTrabajo(a);bloque.appendChild(linea);
     const editar=boton('Editar',()=>seleccionar(a.id));editar.setAttribute('aria-label','Editar '+a.codigo+' de '+u.nombre);
-    const eliminar=boton('Eliminar',()=>{seleccionar(a.id);void guardar('eliminar');});eliminar.setAttribute('aria-label','Eliminar asignación '+a.codigo+' de '+u.nombre);
+    const eliminar=boton('Eliminar',()=>{seleccionar(a.id);void guardar('eliminar');});eliminar.classList.add('asignacion-acceso-eliminar');eliminar.setAttribute('aria-label','Eliminar asignación '+a.codigo+' de '+u.nombre);
     const entregar=boton(a.entregado_el?'Reabrir como pendiente':'Marcar como entregado',()=>abrirEntrega(a));entregar.setAttribute('aria-label',(a.entregado_el?'Reabrir ':'Marcar como entregado ')+a.codigo+' de '+u.nombre);entregar.dataset.publicado=String(!!a.recordatorio?.publicado);entregar.disabled=ocupado||!!a.recordatorio?.publicado;
-    grupo.append(editar,eliminar,entregar);acciones.appendChild(grupo);
+    accesos(bloque,[editar,entregar,eliminar]);trabajos.appendChild(bloque);
    });
    const asignar=boton('Asignar trabajo',()=>{window.abrirNuevaAsignacionDocente();$('asignacionUsuario').value=u.id;contexto();$('asignacionTema').focus();});
-   asignar.setAttribute('aria-label','Asignar trabajo a '+u.nombre);acciones.appendChild(asignar);
-   tr.append(trabajos,acciones);cuerpo.appendChild(tr);
+   asignar.setAttribute('aria-label','Asignar trabajo a '+u.nombre);accesos(tiene,[comentar,asignar]);
+   tr.appendChild(trabajos);cuerpo.appendChild(tr);
   }
-  if(!usuarios.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=4;td.textContent='No hay usuarios docentes en el padrón.';tr.appendChild(td);cuerpo.appendChild(tr);}
+  if(!usuarios.length){const tr=document.createElement('tr'),td=document.createElement('td');td.colSpan=3;td.textContent='No hay usuarios docentes en el padrón.';tr.appendChild(td);cuerpo.appendChild(tr);}
  }
  function render(){
   opciones();const cuerpo=$('asignacionesBody');cuerpo.replaceChildren();

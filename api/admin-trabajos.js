@@ -1,4 +1,4 @@
-import {esOperador} from '../lib/roles-admin.js';
+import {esOperador,esSuperadmin} from '../lib/roles-admin.js';
 import { createClient } from '@supabase/supabase-js';
 
 function respond(res,status,data) {
@@ -26,6 +26,12 @@ export default async function handler(req,res) {
   if(typeof body==='string'){try{body=JSON.parse(body);}catch{return respond(res,400,{error:'Solicitud inválida'});}}
   if(!body||typeof body!=='object'||Array.isArray(body))return respond(res,400,{error:'Solicitud inválida'});
   req.body=body;const {action,id}=body;
+  if(typeof action==='string'&&action.startsWith('inventario_')){
+    if(!esSuperadmin(perfil,identity.user))return respond(res,403,{error:'El inventario requiere Superadmin'});
+    const {gestionarInventario}=await import('../server/inventario-trabajos.js');
+    try{const r=await gestionarInventario(body,{admin,actor:identity.user});return respond(res,r.status,r.body);}
+    catch{return respond(res,503,{error:'No se pudo completar la operación de inventario'});}
+  }
   if(typeof action==='string'&&action.startsWith('nuevo_')){
     const {gestionarNuevoTrabajo}=await import('../server/nuevos-trabajos.js');
     const r=await gestionarNuevoTrabajo(body,{admin,actor:identity.user});return respond(res,r.status,r.body);

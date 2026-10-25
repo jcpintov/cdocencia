@@ -2941,11 +2941,20 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 /* Informes ejecutivos: vista previa y documento de descarga comparten formato. */
 .informes-ejecutivos{margin:18px 0 24px;padding:18px;border:1px solid #ccd8e2;border-radius:10px;background:#f4f8fb;color:#243b50}
 .informes-ejecutivos h2{margin:0 0 12px;font-size:1.1rem}
-.informes-ejecutivos-acciones,.informe-ejecutivo-acciones,.asignaciones-padron-acciones{display:flex;flex-wrap:wrap;gap:8px}
+.informes-ejecutivos-acciones,.informe-ejecutivo-acciones{display:flex;flex-wrap:wrap;gap:8px}
 .informes-ejecutivos .btn-secondary{color:#243b50;background:#fff;border:1px solid #9caebb}
 .asignaciones-padron{margin:22px 0;padding:16px 0;border-top:1px solid #ccd8e2;border-bottom:1px solid #ccd8e2}
 .asignaciones-padron td p{margin:0 0 8px}
-.asignaciones-padron-acciones{margin-bottom:8px}
+#asignacionesPadronBody td{vertical-align:top}
+#asignacionesPadronBody .asignaciones-padron-acciones{display:block;margin-top:5px;line-height:1.8;color:#52687a}
+#asignacionesPadronBody .asignacion-padron-trabajo+.asignacion-padron-trabajo{margin-top:14px}
+#seccionAdmin #asignacionesPadronBody .asignacion-acceso-texto{display:inline;width:auto;min-width:0;min-height:0;padding:2px 0;margin:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:#175786;font:inherit;font-size:.88rem;line-height:inherit;text-align:left;white-space:normal;cursor:pointer;transform:none}
+#seccionAdmin #asignacionesPadronBody .asignacion-acceso-texto:is(:hover,:focus-visible){text-decoration:underline;text-underline-offset:3px}
+#seccionAdmin #asignacionesPadronBody .asignacion-acceso-texto:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+#seccionAdmin #asignacionesPadronBody .asignacion-acceso-eliminar{color:#a02b3c}
+#seccionAdmin #asignacionesPadronBody .asignacion-acceso-texto:disabled{color:#64748b;cursor:default;text-decoration:none}
+body.theme-nocturno #seccionAdmin #asignacionesPadronBody .asignacion-acceso-texto{color:#9dcefa}
+body.theme-nocturno #seccionAdmin #asignacionesPadronBody .asignacion-acceso-eliminar{color:#ffacba}
 .informe-ejecutivo-dialog{margin:auto;width:min(1120px,94vw);max-width:94vw;max-height:90dvh;padding:20px;border:1px solid #b3c4d0;border-radius:12px;background:#f1f5f8;color:#243b50;box-shadow:0 20px 70px #0005}
 .informe-ejecutivo-dialog::backdrop{background:#122231a8}
 .informe-ejecutivo-cabecera{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -3015,3 +3024,11 @@ body:has(#seccionContenidoDocente:not(.hidden)){display:block;height:auto;min-he
 @media(max-width:600px){.nuevo-trabajo-dialog{padding:14px}.nuevo-trabajo-grid{grid-template-columns:1fr}.nuevo-trabajo-dialog button{max-width:100%}}
 .nuevo-trabajo-dialog{overflow-wrap:anywhere}
 .nuevo-trabajo-grid>div,.nuevo-trabajo-dialog form{min-width:0}
+
+#inventarioExclusiones{display:grid;gap:8px;margin:12px 0;max-height:230px;overflow:auto}
+#inventarioExclusiones label{display:flex;gap:8px;align-items:center}
+#inventarioExclusiones input{width:auto;min-height:0}
+#seccionContenidoDocente .docencia-tarjeta-tema.tema-asignado{background:#e7f1ff;border-color:#73a1d9;border-left:4px solid #3477ba}
+#seccionContenidoDocente .docencia-tarjeta-tema.tema-vencido{background:#fce7ef;border-color:#d78ba5;border-left:4px solid #b84970}
+#seccionContenidoDocente .tema-asignado :is(.docencia-tema-titulo,.docencia-tema-pendiente){color:#174d80}
+#seccionContenidoDocente .tema-vencido :is(.docencia-tema-titulo,.docencia-tema-pendiente){color:#812e4c}

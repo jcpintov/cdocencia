@@ -75,6 +75,7 @@ jobs:
           node tests/browser/informes-smoke.mjs
           node tests/browser/nuevos-trabajos-smoke.mjs
           node tests/browser/asignaciones-smoke.mjs
+          node tests/browser/inventario-smoke.mjs
           node tests/browser/usuarios-smoke.mjs
           node tests/browser/tenidas-smoke.mjs
           node tests/browser/doctrina-smoke.mjs
