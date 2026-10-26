@@ -29,3 +29,11 @@ test('sin confirmación o autor ajeno no se envía; SMTP incierto nunca se reint
  assert.equal((await gestionarInventario({action:'inventario_enviar',id,confirmado:true},e)).status,503);
  assert.equal((await gestionarInventario({action:'inventario_enviar',id,confirmado:true},e)).status,409);assert.equal(n,1);assert.equal(e.tablas.docencia_inventarios_correo[0].estado,'incierto');
 });
+test('edición modifica solo asunto y cuerpo, escapa HTML y queda impedida tras enviar',async()=>{
+ const e=entorno(),id=randomUUID();e.tablas.usuarios.forEach(x=>x.es_admin=false);await gestionarInventario({action:'inventario_preparar',id,excluir_ids:[enzo.id]},e);
+ const editado=await gestionarInventario({action:'inventario_editar',id,asunto:'Asunto revisado',texto:'Texto revisado <script>alert(1)</script>\n\nhttps://cmaestros.ofl.cl',from:'ajeno@example.invalid',bcc:[enzo.email]},e);
+ assert.equal(editado.status,200);assert.equal(editado.body.correo.subject,'Asunto revisado');assert.match(editado.body.correo.text,/Texto revisado/);assert.doesNotMatch(editado.body.correo.html,/<script>/);assert.deepEqual(editado.body.correo.bcc,[uno.email]);assert.equal(editado.body.correo.from,'no-reply@ofl.cl');
+ assert.equal((await gestionarInventario({action:'inventario_editar',id,asunto:'Cabecera\nBcc: ajeno',texto:'Texto'},e)).status,422);
+ e.transport={sendMail:async c=>({accepted:c.bcc,rejected:[],messageId:'fixture'})};await gestionarInventario({action:'inventario_enviar',id,confirmado:true},e);
+ assert.equal((await gestionarInventario({action:'inventario_editar',id,asunto:'Nuevo',texto:'Otro'},e)).status,409);
+});

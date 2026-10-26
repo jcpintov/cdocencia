@@ -1481,6 +1481,10 @@
  <details><summary>Excluir casillas solo de este envío</summary><div id="inventarioExclusiones"></div></details>
  <button type="button" class="btn-secondary" onclick="actualizarInventarioTrabajos()">Actualizar vista previa</button>
  <p id="inventarioEstado" role="status" aria-live="polite"></p>
+ <label for="inventarioAsunto">Asunto del correo</label><input id="inventarioAsunto" type="text" maxlength="250" oninput="marcarEdicionInventario()">
+ <label for="inventarioTexto">Cuerpo del correo · editable</label><textarea id="inventarioTexto" rows="12" maxlength="60000" oninput="marcarEdicionInventario()"></textarea>
+ <button type="button" class="btn-secondary" onclick="aplicarEdicionInventario()">Aplicar cambios a vista previa</button>
+
  <iframe id="inventarioVista" title="Vista previa del correo de inventario" sandbox="" style="width:100%;height:48vh;border:1px solid #b8cad8;background:white"></iframe>
  <button id="inventarioEnviar" type="button" class="btn-primary" onclick="enviarInventarioTrabajos()" disabled>Enviar correo de inventario</button>
 </dialog>

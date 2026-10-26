@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import {generarCorreoInventario} from '../lib/correo-inventario.js';
+import {generarCorreoInventario,htmlCorreoInventario} from '../lib/correo-inventario.js';
 const uuid=v=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v||'');
 export async function gestionarInventario(body,{admin,actor,env=process.env,transport}){
  const responder=(status,data)=>({status,body:data});
@@ -25,6 +25,15 @@ export async function gestionarInventario(body,{admin,actor,env=process.env,tran
   const correo=generarCorreoInventario(trabajos,destinatarios),contenido={correo,trabajos,destinatarios,excluidos:elegibles.filter(x=>excluir.includes(x.id)).map(({id,nombre})=>({id,nombre}))};
   const r=await admin.from('docencia_inventarios_correo').insert({id,actor:actor.id,contenido});
   if(r.error)return responder(409,{error:'No se pudo preparar este envío. Use una vista previa nueva.'});
+  return responder(200,{ok:true,id,...contenido});
+ }
+ if(body.action==='inventario_editar'){
+  if(typeof body.asunto!=='string'||!body.asunto.trim()||body.asunto.length>250||/[\r\n]/.test(body.asunto)||typeof body.texto!=='string'||!body.texto.trim()||body.texto.length>60000)return responder(422,{error:'Revise el asunto y el cuerpo del correo'});
+  const anterior=await admin.from('docencia_inventarios_correo').select('contenido').eq('id',id).eq('actor',actor.id).eq('estado','preparado').maybeSingle();
+  if(anterior.error||!anterior.data)return responder(409,{error:'Esta vista previa ya fue enviada o no está disponible'});
+  const texto=body.texto.replace(/\r\n?/g,'\n').trim(),contenido={...anterior.data.contenido,correo:{...anterior.data.contenido.correo,subject:body.asunto.trim(),text:texto,html:htmlCorreoInventario(texto)}};
+  const guardado=await admin.from('docencia_inventarios_correo').update({contenido}).eq('id',id).eq('actor',actor.id).eq('estado','preparado').select('id').maybeSingle();
+  if(guardado.error||!guardado.data)return responder(409,{error:'No se pudieron aplicar cambios; el envío pudo haber comenzado'});
   return responder(200,{ok:true,id,...contenido});
  }
  if(body.action!=='inventario_enviar'||body.confirmado!==true)return responder(422,{error:'Se requiere confirmar la vista previa'});

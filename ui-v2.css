@@ -3032,3 +3032,5 @@ body.theme-nocturno #seccionAdmin #asignacionesPadronBody .asignacion-acceso-eli
 #seccionContenidoDocente .docencia-tarjeta-tema.tema-vencido{background:#fce7ef;border-color:#d78ba5;border-left:4px solid #b84970}
 #seccionContenidoDocente .tema-asignado :is(.docencia-tema-titulo,.docencia-tema-pendiente){color:#174d80}
 #seccionContenidoDocente .tema-vencido :is(.docencia-tema-titulo,.docencia-tema-pendiente){color:#812e4c}
+
+#inventarioDialog :is(#inventarioAsunto,#inventarioTexto){display:block;box-sizing:border-box;width:100%;margin:6px 0 14px;font:16px/1.5 Calibri,Arial,sans-serif}
