@@ -33,7 +33,7 @@
  const button=document.getElementById('btnAcceso');
  let cargando=false;
  async function abrirOriginal(token){
-   const response=await fetch('/api/landing-original',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+   const response=await fetch('/api/admin-usuarios?operacion=landing',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
    if(!response.ok){
      if(response.status===403)throw new Error('Esta cuenta no dispone de permisos de administrador.');
      if(response.status===401)throw new Error('Sesión caducada. Ingrese nuevamente.');
