@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<title>Acceso reservado | Cámara de Docencia</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;1,7..72,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css?v=doctrina-20261022e">
+<link rel="stylesheet" href="/ui-v2.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>.hidden{display:none!important}.login-wrapper{min-height:65vh}.card{max-width:520px}#estadoAcceso{margin-top:16px;text-align:center}</style>
+</head>
+<body>
+<header><div class="brand-title"><span aria-hidden="true">🏛️</span><span class="brand-title-text">DOCENCIA MASÓNICA DE TERCER GRADO</span></div></header>
+<main id="seccionLogin" class="login-wrapper">
+<form class="card card-trazado" id="formAcceso" autocomplete="on">
+<h2 style="text-align:center;margin-bottom:6px">Cámara de Docencia</h2>
+<p class="login-sub">Acceso reservado a administración.</p>
+<div class="form-group"><label for="correoAdmin">Correo electrónico:</label><input id="correoAdmin" type="email" autocomplete="username" required></div>
+<div class="form-group"><label for="claveAdmin">Contraseña:</label><input id="claveAdmin" type="password" autocomplete="current-password" required></div>
+<button class="btn-primary" id="btnAcceso" type="submit">Acceder a la Cámara</button>
+<p id="estadoAcceso" role="status" aria-live="polite"></p>
+</form>
+</main>
+<script>
+(function(){
+ 'use strict';
+ const client=window.supabase.createClient('https://pwnnpjygnviyzyyvfxnq.supabase.co','sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF');
+ const status=document.getElementById('estadoAcceso');
+ const button=document.getElementById('btnAcceso');
+ let cargando=false;
+ async function abrirOriginal(token){
+   const response=await fetch('/api/landing-original',{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+   if(!response.ok){
+     if(response.status===403)throw new Error('Esta cuenta no dispone de permisos de administrador.');
+     if(response.status===401)throw new Error('Sesión caducada. Ingrese nuevamente.');
+     throw new Error('No fue posible recuperar el landing original.');
+   }
+   const html=await response.text();
+   document.open();document.write(html);document.close();
+ }
+ document.getElementById('formAcceso').addEventListener('submit',async function(e){
+   e.preventDefault();if(cargando)return;
+   cargando=true;button.disabled=true;status.textContent='Verificando acceso…';
+   try{
+     const {data,error}=await client.auth.signInWithPassword({
+       email:document.getElementById('correoAdmin').value.trim().toLowerCase(),
+       password:document.getElementById('claveAdmin').value
+     });
+     if(error||!data?.session?.access_token)throw new Error('Credenciales incorrectas o acceso no disponible.');
+     await abrirOriginal(data.session.access_token);
+   }catch(err){status.textContent=err.message||'Error de autenticación';}
+   finally{cargando=false;button.disabled=false;}
+ });
+ client.auth.getSession().then(({data})=>{
+  if(data?.session?.access_token){status.textContent='Verificando sesión administrativa…';
+   abrirOriginal(data.session.access_token).catch(()=>{status.textContent='Ingrese con una cuenta administrativa.';});
+  }
+ }).catch(()=>{});
+})();
+</script>
+</body></html>
