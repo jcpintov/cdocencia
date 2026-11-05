@@ -43,7 +43,7 @@
       "includeFiles": "node_modules/unpdf/dist/**"
     }
   },
-  "buildCommand": "node --check api/landing-original.js",
+  "buildCommand": "node --check api/admin-usuarios.js",
   "outputDirectory": ".",
   "rewrites": [
     {
