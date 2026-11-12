@@ -25,7 +25,7 @@ test('sin fecha real de solicitud no se inventa un recordatorio',()=>{
 });
 function fixture({duplicado=false,publicado=false,smtpFalla=false,registroFalla=false,copia=true}={}){
  const calls=[],reservados=new Set();let contador=0;
- const admin={rpc:async(_fn,{p_accion,p_datos})=>{
+ const admin={from(tabla){assert.equal(tabla,'auditoria_correos');return {insert:async()=>({error:null}),update:()=>({eq:async()=>({error:null})})};},rpc:async(_fn,{p_accion,p_datos})=>{
   calls.push({action:p_accion,data:p_datos});
   if(p_accion==='candidatos')return {data:duplicado?[a,a]:[a]};
   if(p_accion==='reservar'){if(reservados.has(p_datos.id))return {data:{enviar:false}};reservados.add(p_datos.id);return {data:{enviar:true}};}
@@ -75,7 +75,7 @@ test('aviso de publicación conserva texto aprobado, vínculo HTTPS y copia ocul
 });
 test('aviso al autor usa su cola y no repite una publicación',async()=>{
  const {procesarPublicaciones}=await import('../lib/procesar-recordatorios.js');let reservado=false;const enviados=[],rpc=[];
- const admin={rpc:async(fn,{p_accion,p_datos})=>{rpc.push(fn);if(p_accion==='candidatos')return {data:[a]};if(p_accion==='reservar'){const enviar=!reservado;reservado=true;return {data:{enviar}};}return {data:{enviar:true,ok:true}};}};
+ const admin={from(tabla){assert.equal(tabla,'auditoria_correos');return {insert:async()=>({error:null}),update:()=>({eq:async()=>({error:null})})};},rpc:async(fn,{p_accion,p_datos})=>{rpc.push(fn);if(p_accion==='candidatos')return {data:[a]};if(p_accion==='reservar'){const enviar=!reservado;reservado=true;return {data:{enviar}};}return {data:{enviar:true,ok:true}};}};
  const transport={sendMail:async msg=>{enviados.push(msg);return {accepted:[a.email,'jpintov@gmail.com']};}};
  for(let i=0;i<2;i++)await procesarPublicaciones({admin,transport,from:'qa@example.invalid',randomUUID:()=>String(i)});
  assert.equal(enviados.length,1);assert.ok(rpc.every(fn=>fn==='docencia_publicaciones_servicio'));assert.match(enviados[0].text,/ha sido publicado/);
