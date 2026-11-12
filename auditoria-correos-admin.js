@@ -1,7 +1,19 @@
 /* Panel privado de auditoría de correos. El servidor valida nuevamente el rol. */
 (function(){
  'use strict';
- let filas=[],generado='',limitado=false,abierto=false;
+ let filas=[],generado='',limitado=false,abierto=false,fechaEmision='';
+ const hoyChile=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Santiago',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ function cambiarFecha(){
+  const input=$('auditoriaFechaEmision');
+  if(!autorizado()){input.value=fechaEmision;return;}
+  const nueva=input.value;
+  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(nueva)){input.value=fechaEmision;return;}
+  if(nueva===fechaEmision)return;
+  if(nueva!==hoyChile()&&!window.confirm('La fecha '+nueva+' es diferente de la fecha actual ('+hoyChile()+'). ¿Confirma la nueva fecha de emisión del informe?')){
+   input.value=fechaEmision;return;
+  }
+  fechaEmision=nueva;
+ }
  const $=id=>document.getElementById(id);
  const autorizado=()=>typeof usuarioActual!=='undefined'&&usuarioActual?.es_admin===true&&usuarioActual?.rol!=='ADMIN';
  const fmt=v=>v?new Intl.DateTimeFormat('es-CL',{dateStyle:'short',timeStyle:'medium',timeZone:'America/Santiago'}).format(new Date(v)):'—';
@@ -16,6 +28,7 @@
 <label>Tipo <select id="auditoriaTipo"><option value="">Todos</option><option value="asignacion">Asignación</option><option value="recordatorio">Recordatorio</option><option value="calendario">Calendario</option><option value="publicacion">Publicación</option></select></label>
 <label>Buscar <input id="auditoriaBuscar" maxlength="120" placeholder="Correo, remitente o asunto"></label>
 <button type="submit">Consultar</button></form>
+<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px"><label for="auditoriaFechaEmision">Fecha de emisión del informe: </label><input type="date" id="auditoriaFechaEmision"><small>Modifica la fecha declarada del informe, no las fechas reales de los envíos.</small></div>
 <p id="auditoriaEstadoVista" role="status" aria-live="polite" style="padding:12px 0"></p>
 <div style="overflow-x:auto"><table style="min-width:1020px;width:100%;font-size:12px;border-collapse:collapse" id="auditoriaTabla"><thead><tr><th>Fecha y hora (Chile)</th><th>Remitente</th><th>Para / CC / CCO</th><th>Asunto</th><th>Tipo</th><th>Estado</th><th>ID / referencia</th></tr></thead><tbody></tbody></table></div>
 <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px">
@@ -27,9 +40,11 @@
   $('auditoriaCorreosFiltros').onsubmit=e=>{e.preventDefault();consultar();};
   $('auditoriaCsv').onclick=exportarCsv;
   $('auditoriaPdf').onclick=exportarPdf;
+  $('auditoriaFechaEmision').addEventListener('change',cambiarFecha);
   const hoy=new Date(),fechaChile=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Santiago',year:'numeric',month:'2-digit',day:'2-digit'}).format(hoy);
   $('auditoriaHasta').value=fechaChile;
   $('auditoriaDesde').value=fechaChile.slice(0,8)+'01';
+  fechaEmision=fechaChile;$('auditoriaFechaEmision').value=fechaEmision;
  }
  async function consultar(){
   if(!autorizado())return;
@@ -55,13 +70,16 @@
  function datosTabla(){return [['Fecha y hora (Chile)','Remitente','Para','CC','CCO','Asunto','Tipo','Estado','ID','Origen','ID SMTP','Error'],
  ...filas.map(f=>[fmt(f.creado_en),f.remitente,f.destinatarios.join('; '),f.cc.join('; '),f.cco.join('; '),f.asunto,f.tipo,f.estado,f.intento_id||f.id,f.origen_id||'',f.message_id||'',f.error_codigo||''])];}
  function exportarCsv(){
-  const texto='\uFEFF'+datosTabla().map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
-  const url=URL.createObjectURL(new Blob([texto],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='auditoria-correos-'+generado.slice(0,10)+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  if(!autorizado())return;
+  const cabecera=[['Fecha de emisión declarada',fechaEmision],['Fecha y hora real de generación',fmt(generado)],[]];
+  const texto='\uFEFF'+[...cabecera,...datosTabla()].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  const url=URL.createObjectURL(new Blob([texto],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='auditoria-correos-'+fechaEmision+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
  async function exportarPdf(){
+  if(!autorizado())return;
   if(typeof html2pdf!=='function'){$('auditoriaEstadoVista').textContent='Generador PDF no disponible';return;}
   const area=document.createElement('div');area.style.cssText='font-family:Arial;color:#152d3c;padding:20px;font-size:9px';
-  area.innerHTML='<h2>AUDITORÍA DE CORREOS — OFL 146</h2><p>Emisión: '+esc(fmt(generado))+' · Registros: '+filas.length+'</p><p>«Aceptado SMTP» no equivale a entrega verificada.</p>';
+  area.innerHTML='<h2>AUDITORÍA DE CORREOS — OFL 146</h2><p>Fecha de emisión: '+esc(fechaEmision)+' · Generado realmente: '+esc(fmt(generado))+' · Registros: '+filas.length+'</p><p>«Aceptado SMTP» no equivale a entrega verificada.</p>';
   const table=document.createElement('table');table.style.cssText='border-collapse:collapse;width:100%';
   for(const [i,row] of datosTabla().entries()){
    const tr=document.createElement('tr');
@@ -71,14 +89,14 @@
    }table.appendChild(tr);
   }
   area.appendChild(table);
-  try{await html2pdf().set({margin:5,filename:'auditoria-correos-'+generado.slice(0,10)+'.pdf',html2canvas:{scale:1.5},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'},pagebreak:{mode:['css','legacy']}}).from(area).save();}
+  try{await html2pdf().set({margin:5,filename:'auditoria-correos-'+fechaEmision+'.pdf',html2canvas:{scale:1.5},jsPDF:{unit:'mm',format:'a4',orientation:'landscape'},pagebreak:{mode:['css','legacy']}}).from(area).save();}
   catch{$('auditoriaEstadoVista').textContent='No fue posible generar el PDF';}
  }
  function insertarAcceso(){
   const container=document.querySelector('.informes-ejecutivos-acciones');
   if(!container)return;
   let boton=$('btnAuditoriaCorreos');
-  if(!boton){boton=document.createElement('button');boton.type='button';boton.id='btnAuditoriaCorreos';boton.className='btn-secondary hidden';boton.textContent='Auditoría de correos';container.appendChild(boton);boton.onclick=()=>{if(!autorizado())return;montar();$('auditoriaCorreosDialogo').showModal();abierto=true;consultar();};}
+  if(!boton){boton=document.createElement('button');boton.type='button';boton.id='btnAuditoriaCorreos';boton.className='btn-secondary hidden';boton.textContent='Auditoría de correos';container.appendChild(boton);boton.onclick=()=>{if(!autorizado())return;montar();fechaEmision=hoyChile();$('auditoriaFechaEmision').value=fechaEmision;$('auditoriaCorreosDialogo').showModal();abierto=true;consultar();};}
   boton.classList.toggle('hidden',!autorizado());
  }
  document.addEventListener('DOMContentLoaded',insertarAcceso);
