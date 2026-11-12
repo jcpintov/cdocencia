@@ -23,7 +23,7 @@
     const nueva=input.value;
     if(!/^\d{4}-\d{2}-\d{2}$/.test(nueva)){input.value=fechaEmisionAceptada;return;}
     if(nueva===fechaEmisionAceptada)return;
-    if(nueva!==hoyChile()&&!window.confirm('La fecha seleccionada ('+nueva+') difiere de la fecha actual de Chile ('+hoyChile()+'). ¿Confirma utilizarla como fecha de emisión declarada?')){
+    if(!window.confirm('La fecha seleccionada ('+nueva+') difiere de la fecha actual de Chile ('+hoyChile()+'). ¿Confirma utilizarla como fecha de emisión declarada?')){
      input.value=fechaEmisionAceptada;return;
     }
     fechaEmisionAceptada=nueva;fechaEmisionDeclarada=nueva;
