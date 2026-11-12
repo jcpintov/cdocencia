@@ -20,6 +20,8 @@ jobs:
         run: |
           set -euo pipefail
           find . -type f -name '*.js' -not -path './node_modules/*' -print0 | xargs -0 -r -n1 node --check
+      - name: Preparar interfaz de pruebas en checkout temporal
+        run: node scripts/preparar-landing-ci.mjs
       - name: Contrato de primer acceso (sin conexiones externas)
         run: node --test tests/*.test.mjs
 
