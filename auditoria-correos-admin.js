@@ -25,7 +25,7 @@
 <form id="auditoriaCorreosFiltros" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
 <label>Desde <input type="date" id="auditoriaDesde"></label><label>Hasta <input type="date" id="auditoriaHasta"></label>
 <label>Estado <select id="auditoriaEstado"><option value="">Todos</option><option value="aceptado_smtp">Aceptado SMTP</option><option value="error">Error</option><option value="pendiente">Pendiente</option><option value="incierto">Incierto</option></select></label>
-<label>Tipo <select id="auditoriaTipo"><option value="">Todos</option><option value="asignacion">Asignación</option><option value="recordatorio">Recordatorio</option><option value="calendario">Calendario</option><option value="publicacion">Publicación</option></select></label>
+<label>Tipo <select id="auditoriaTipo"><option value="">Todos</option><option value="asignacion">Asignación</option><option value="recordatorio">Recordatorio</option><option value="calendario">Calendario</option><option value="publicacion">Publicación</option><option value="inventario">Inventario</option><option value="codigo_perfil">Código de autorización</option></select></label>
 <label>Buscar <input id="auditoriaBuscar" maxlength="120" placeholder="Correo, remitente o asunto"></label>
 <button type="submit">Consultar</button></form>
 <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px"><label for="auditoriaFechaEmision">Fecha de emisión del informe: </label><input type="date" id="auditoriaFechaEmision"><small>Modifica la fecha declarada del informe, no las fechas reales de los envíos.</small></div>
