@@ -23,6 +23,7 @@ async function servirLandingOriginal(req,res){
 }
 
 import informes from '../server/admin-informes.js';
+import auditoriaCorreos from '../server/admin-auditoria-correos.js';
 import gestionarRoles from '../server/admin-roles.js';
 import {esOperador} from '../lib/roles-admin.js';
 import { createClient } from '@supabase/supabase-js';
@@ -41,6 +42,7 @@ function reply(res, status, message) {
 export default async function handler(req, res) {
   if(req.method==='GET' && req.query?.operacion==='landing')return servirLandingOriginal(req,res);
   if(req.query?.operacion==='informes')return informes(req,res);
+  if(req.query?.operacion==='auditoria-correos')return auditoriaCorreos(req,res);
   if(req.query?.operacion==='roles')return gestionarRoles(req,res);
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
