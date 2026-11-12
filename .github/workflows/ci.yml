@@ -23,3 +23,15 @@ jobs:
       - name: Contrato de primer acceso (sin conexiones externas)
         run: node --test tests/*.test.mjs
 
+
+  auditoria:
+    name: Auditoría de correos y fechas (aislada)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Instalar dependencias
+        run: npm ci --ignore-scripts
+      - name: Verificar auditoría, permisos, rutas y fechas
+        run: node --test tests/auditoria-correos.test.mjs tests/vercel-rutas.test.mjs
