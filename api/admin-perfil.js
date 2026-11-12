@@ -1,5 +1,6 @@
 import {createClient} from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
+import {enviarConAuditoria} from '../lib/auditoria-correos.js';
 import {randomInt,randomUUID,createHmac} from 'node:crypto';
 export default async function handler(req,res){
  const reply=(s,b)=>{res.setHeader('Cache-Control','no-store');return res.status(s).json(b);};
@@ -27,7 +28,7 @@ export default async function handler(req,res){
    const cambio=await rpc('solicitar',{id,nombre,email,hash:hash(id,codigo)});
    try{
     const transport=nodemailer.createTransport({host:env.SMTP_HOST,port:Number(env.SMTP_PORT||465),secure:env.SMTP_SECURE!=='false',connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000,auth:{user:env.SMTP_USER,pass:env.SMTP_PASSWORD}});
-    const envio=await transport.sendMail({from:env.SMTP_FROM||env.SMTP_USER,to:cambio.email_anterior,subject:'OFL.CL · Autorización de cambio de perfil Superadmin',text:`Se solicitó cambiar su perfil de Superadmin.\n\nNombre: ${nombre}\nCorreo propuesto: ${email}\n\nCódigo de autorización: ${codigo}\n\nVálido por 10 minutos y hasta cinco intentos. Si no solicitó este cambio, no comparta el código.\n\nOFL.CL`});
+    const envio=await enviarConAuditoria({admin,transport,tipo:'codigo_perfil',origenId:id,intentoId:id,correo:{from:env.SMTP_FROM||env.SMTP_USER,to:cambio.email_anterior,subject:'OFL.CL · Autorización de cambio de perfil Superadmin',text:`Se solicitó cambiar su perfil de Superadmin.\n\nNombre: ${nombre}\nCorreo propuesto: ${email}\n\nCódigo de autorización: ${codigo}\n\nVálido por 10 minutos y hasta cinco intentos. Si no solicitó este cambio, no comparta el código.\n\nOFL.CL`}});
     if(!envio.accepted?.some(x=>String(x).toLowerCase()===cambio.email_anterior.toLowerCase()))throw Error('SMTP no confirmó al destinatario');
     await rpc('habilitar',{id});
    }catch{await rpc('fallido',{id});return reply(503,{error:'No se confirmó el envío del código. El perfil no ha cambiado.'});}
