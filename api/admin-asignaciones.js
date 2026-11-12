@@ -1,6 +1,7 @@
 import {esOperador} from '../lib/roles-admin.js';
 import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
+import {enviarConAuditoria} from '../lib/auditoria-correos.js';
 import {randomUUID} from 'node:crypto';
 import {procesarPublicaciones} from '../lib/procesar-recordatorios.js';
 import { generarCorreoAsignacion } from '../lib/correo-asignacion.js';
@@ -59,7 +60,7 @@ export default async function handler(req,res){
    let enviado=false;
    try{
     const transport=nodemailer.createTransport({host,port:Number(process.env.SMTP_PORT||465),secure:process.env.SMTP_SECURE!=='false',connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000,auth:{user,pass}});
-    const resultado=await transport.sendMail({...correo,from:process.env.SMTP_FROM||user});
+    const resultado=await enviarConAuditoria({admin,transport,correo:{...correo,from:process.env.SMTP_FROM||user},tipo:'asignacion',origenId:b.id,intentoId:b.intento});
     if(!Array.isArray(resultado.accepted)||!resultado.accepted.some(x=>String(x).toLowerCase()===String(correo.to).toLowerCase()))throw new Error('destinatario_no_aceptado');
     enviado=true;
     const copiaAceptada=resultado.accepted.some(x=>String(x).toLowerCase()===correo.bcc);
