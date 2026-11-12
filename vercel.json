@@ -47,6 +47,10 @@
   "outputDirectory": ".",
   "rewrites": [
     {
+      "source": "/api/admin-auditoria-correos",
+      "destination": "/api/admin-usuarios?operacion=auditoria-correos"
+    },
+    {
       "source": "/api/admin-informes",
       "destination": "/api/admin-usuarios?operacion=informes"
     },
