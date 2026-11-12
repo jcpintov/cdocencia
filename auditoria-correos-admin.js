@@ -7,7 +7,7 @@
   const input=$('auditoriaFechaEmision');
   if(!autorizado()){input.value=fechaEmision;return;}
   const nueva=input.value;
-  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(nueva)){input.value=fechaEmision;return;}
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(nueva)){input.value=fechaEmision;return;}
   if(nueva===fechaEmision)return;
   if(nueva!==hoyChile()&&!window.confirm('La fecha '+nueva+' es diferente de la fecha actual ('+hoyChile()+'). ¿Confirma la nueva fecha de emisión del informe?')){
    input.value=fechaEmision;return;
