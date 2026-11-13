@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow,noarchive">
-<title>Acceso reservado | Cámara de Docencia</title>
+<title>Acceso administrativo reservado | Cámara de Docencia</title>
 <link rel="icon" href="/logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="/styles.css?v=doctrina-20261022e">
 <link rel="stylesheet" href="/ui-v2.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>.hidden{display:none!important}.login-wrapper{min-height:65vh}.card{max-width:520px}#estadoAcceso{margin-top:16px;text-align:center}</style>
+<style>.hidden{display:none!important}.login-wrapper{min-height:65vh}.card{max-width:520px}#estadoAcceso{margin-top:16px;text-align:center}.acceso-reservado-aviso{font-size:.87rem;line-height:1.55;text-align:center;color:var(--text-muted,#586674);margin:12px auto 20px;max-width:43ch}</style>
 </head>
 <body>
 <header><div class="brand-title"><span aria-hidden="true">🏛️</span><span class="brand-title-text">DOCENCIA MASÓNICA DE TERCER GRADO</span></div></header>
@@ -19,6 +19,7 @@
 <form class="card card-trazado" id="formAcceso" autocomplete="on">
 <h2 style="text-align:center;margin-bottom:6px">Cámara de Docencia</h2>
 <p class="login-sub">Acceso reservado a administración.</p>
+<p class="acceso-reservado-aviso">El acceso administrativo continúa disponible por esta dirección. La portada pública permanece temporalmente fuera de servicio.</p>
 <div class="form-group"><label for="correoAdmin">Correo electrónico:</label><input id="correoAdmin" type="email" autocomplete="username" required></div>
 <div class="form-group"><label for="claveAdmin">Contraseña:</label><input id="claveAdmin" type="password" autocomplete="current-password" required></div>
 <button class="btn-primary" id="btnAcceso" type="submit">Acceder a la Cámara</button>
@@ -37,7 +38,7 @@
    if(!response.ok){
      if(response.status===403)throw new Error('Esta cuenta no dispone de permisos de administrador.');
      if(response.status===401)throw new Error('Sesión caducada. Ingrese nuevamente.');
-     throw new Error('No fue posible recuperar el landing original.');
+     throw new Error('No fue posible abrir la consola administrativa.');
    }
    const html=await response.text();
    document.open();document.write(html);document.close();
