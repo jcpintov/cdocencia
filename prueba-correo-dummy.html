@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive"><title>Prueba SMTP · Superadmin</title>
+<link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/ui-v2.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>main{max-width:650px;margin:9vh auto;padding:24px}.card{padding:26px}button:disabled{opacity:.55;cursor:wait}#estado{white-space:pre-line;margin-top:18px;overflow-wrap:anywhere}</style>
+</head><body><main><section class="card card-trazado">
+<h2>Prueba SMTP · Cámara de Docencia</h2>
+<p>Acción reservada al Superadmin. Se enviará <strong>un único mensaje</strong> dirigido exclusivamente a las cuentas Dummy, sin modificar asignaciones.</p>
+<ul><li>fotos.jpintov@gmail.com</li><li>peritajes.jpintov@gmail.com</li></ul>
+<p>Requiere sesión Superadmin iniciada en <a href="/a1.html">a1.html</a>.</p>
+<button class="btn-primary" type="button" id="enviar" disabled>Enviar correo de prueba a los Dummy</button>
+<p id="estado" role="status" aria-live="polite">Comprobando sesión…</p>
+</section></main>
+<script>
+(async function(){
+ const out=document.getElementById('estado'),btn=document.getElementById('enviar');
+ const client=window.supabase.createClient('https://pwnnpjygnviyzyyvfxnq.supabase.co','sb_publishable_NExezuss4il3RPgO8Vifxw_pspbe5wF');
+ let session;
+ try{
+  const result=await client.auth.getSession();session=result.data?.session;
+  if(!session){out.textContent='No hay sesión activa. Abre a1.html e ingresa como Superadmin.';return;}
+  out.textContent='Sesión detectada. La prueba está lista para su autorización.';
+  btn.disabled=false;
+ }catch{out.textContent='No fue posible comprobar la sesión.';return;}
+ btn.addEventListener('click',async()=>{
+  if(btn.disabled)return;
+  btn.disabled=true;out.textContent='Enviando y registrando el intento…';
+  try{
+   const result=await client.auth.getSession();
+   const token=result.data?.session?.access_token;
+   if(!token)throw Error('Sesión caducada: vuelve a ingresar en a1.html.');
+   const resp=await fetch('/api/admin-usuarios?operacion=prueba-correo-dummy',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:'{}',cache:'no-store'});
+   const json=await resp.json();
+   if(!resp.ok)throw Error(json.error||'Error HTTP '+resp.status);
+   out.textContent='SMTP aceptado. Destinatarios aceptados: '+json.aceptados_smtp.join(', ')+(json.rechazados_smtp.length?' · Rechazados: '+json.rechazados_smtp.join(', '):'')+'\nID de mensaje: '+(json.message_id||'(no disponible)')+'\nRevisa la bandeja de entrada y spam de ambas cuentas.';
+  }catch(e){out.textContent='No se completó el envío: '+e.message;}
+ });
+})();
+</script></body></html>
