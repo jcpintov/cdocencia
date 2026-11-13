@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import {mkdtempSync,mkdirSync,readFileSync,writeFileSync,rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join,dirname} from 'node:path';
+import {execFileSync} from 'node:child_process';
 import {cambiarLanding,extraerLandingOriginal} from '../scripts/landing-mode.mjs';
-const leer=r=>readFileSync(new URL('../'+r,import.meta.url),'utf8');
+const leer=r=>r==='index.html'?execFileSync('git',['show','HEAD:index.html'],{encoding:'utf8'}):readFileSync(new URL('../'+r,import.meta.url),'utf8');
 
 test('el landing completo puede restaurarse y luego volver a mantenimiento sin afectar a1',()=>{
  const temp=mkdtempSync(join(tmpdir(),'docencia-landing-'));
