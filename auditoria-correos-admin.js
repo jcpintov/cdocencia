@@ -79,65 +79,98 @@
   const url=URL.createObjectURL(new Blob([texto],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='auditoria-correos-'+fechaEmision+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
  async function exportarPdf(){
-  if(!autorizado()||exportando)return;
+  if(!autorizado()||exportando||!filas.length)return;
   if(typeof html2pdf!=='function'){$('auditoriaEstadoVista').textContent='Generador PDF no disponible';return;}
-  if(!filas.length)return;
   exportando=true;$('auditoriaPdf').disabled=true;
-  const estado=$('auditoriaEstadoVista');estado.textContent='Preparando PDF de '+filas.length+' registros…';
-  // Se usa una ficha por correo; una tabla extensa en A4 recorta asunto, cuerpo e identificadores.
-  const area=document.createElement('div');
-  area.style.cssText='box-sizing:border-box;width:730px;background:#fff;color:#1c3342;font:11px/1.45 Arial,sans-serif;padding:10px';
-  const cab=document.createElement('header');
-  cab.style.cssText='border-bottom:3px solid #b3914f;padding:4px 0 13px;margin-bottom:12px';
-  const titulo=document.createElement('h1');titulo.textContent='AUDITORÍA DE CORREOS · OFL 146';
-  titulo.style.cssText='font-size:18px;margin:0 0 8px;color:#183749';
-  const detalles=document.createElement('p');detalles.textContent='Fecha de emisión: '+fechaEmision+'  ·  Generado: '+fmt(generado)+'  ·  Registros: '+filas.length;
-  detalles.style.cssText='font-size:10px;margin:0 0 6px';
-  const advert=document.createElement('p');advert.textContent='«Aceptado SMTP» no acredita entrega al buzón. Los envíos históricos conservan el estado registrado en asignaciones y no constituyen una verificación SMTP independiente.';
-  advert.style.cssText='font-size:10px;margin:0;color:#607585';
-  cab.append(titulo,detalles,advert);area.appendChild(cab);
-  const agrega=(elemento,etiqueta,valor)=>{
-   const fila=document.createElement('div');fila.style.cssText='margin:3px 0;overflow-wrap:anywhere;word-break:break-word';
-   const nombre=document.createElement('strong');nombre.textContent=etiqueta+': ';
-   const dato=document.createElement('span');dato.textContent=String(valor??'—')||'—';
-   fila.append(nombre,dato);elemento.appendChild(fila);
-  };
-  filas.forEach((f,i)=>{
-   const ficha=document.createElement('section');
-   ficha.className='auditoria-pdf-ficha';
-   ficha.style.cssText='page-break-inside:avoid;break-inside:avoid;border:1px solid #cad7de;border-radius:5px;margin:0 0 12px;padding:11px 13px;max-width:100%;box-sizing:border-box';
-   const h=document.createElement('h2');h.textContent='REGISTRO '+(i+1)+' · '+fmt(f.creado_en);
-   h.style.cssText='font-size:12px;background:#e9f0f3;color:#224154;padding:7px;margin:-11px -13px 8px';
-   ficha.appendChild(h);
-   agrega(ficha,'Remitente',f.remitente||'No registrado');
-   agrega(ficha,'Para',(f.destinatarios||[]).join('; '));
-   if((f.cc||[]).length)agrega(ficha,'CC',f.cc.join('; '));
-   if((f.cco||[]).length)agrega(ficha,'CCO',f.cco.join('; '));
-   agrega(ficha,'Asunto',f.asunto);
-   agrega(ficha,'Estado SMTP',f.estado==='historico_enviado'?'Enviado según historial; aceptación SMTP no verificable':f.estado);
-   agrega(ficha,'Tipo / origen',f.tipo+' · '+(f.fuente||'auditoria_correos'));
-   agrega(ficha,'ID de mensaje SMTP',f.message_id||'No registrado');
-   agrega(ficha,'ID de intento',f.intento_id||f.id);
-   if(f.origen_id)agrega(ficha,'Referencia',f.origen_id);
-   if((f.aceptados_smtp||[]).length)agrega(ficha,'Aceptados SMTP',f.aceptados_smtp.join('; '));
-   if((f.rechazados_smtp||[]).length)agrega(ficha,'Rechazados SMTP',f.rechazados_smtp.join('; '));
-   if(f.error_codigo)agrega(ficha,'Error',f.error_codigo+' '+(f.error_detalle||''));
-   const subtitulo=document.createElement('p');subtitulo.textContent='PRIMERAS 10 LÍNEAS DEL CORREO';
-   subtitulo.style.cssText='font-size:10px;font-weight:bold;color:#305367;margin:9px 0 3px';
-   const cuerpo=document.createElement('pre');
-   cuerpo.textContent=f.extracto||'Contenido no almacenado en la auditoría';
-   cuerpo.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;font:10px/1.45 Arial,sans-serif;margin:0;padding:8px;background:#f5f8fa;border:1px solid #e4edf0';
-   ficha.append(subtitulo,cuerpo);area.appendChild(ficha);
-  });
+  const estado=$('auditoriaEstadoVista');
+  estado.textContent='Generando PDF de '+filas.length+' registros…';
   try{
-   await html2pdf().set({margin:[10,10,12,10],filename:'auditoria-correos-'+fechaEmision+'.pdf',
-    image:{type:'jpeg',quality:.97},html2canvas:{scale:1.6,useCORS:true},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-    pagebreak:{mode:['css','legacy'],avoid:['.auditoria-pdf-ficha']}
-   }).from(area).save();
-   estado.textContent='PDF generado: '+filas.length+' registros.';
-  }catch(e){estado.textContent='No fue posible generar el PDF. '+String(e?.message||'').slice(0,110);}
-  finally{exportando=false;$('auditoriaPdf').disabled=!filas.length;}
+   // La librería html2pdf incluye jsPDF. Se extrae la instancia, pero todo el
+   // contenido se dibuja como TEXTO real: seleccionable, buscable y sin capturas.
+   const canvas=document.createElement('canvas');canvas.width=40;canvas.height=1;
+   const pdf=await html2pdf().set({margin:0,jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}})
+     .from(canvas,'canvas').toPdf().get('pdf');
+   for(const [nombre,estilo] of [['Regular','normal'],['Bold','bold']]){
+    const respuesta=await fetch('/assets/fonts/Docencia-'+nombre+'.ttf',{cache:'force-cache'});
+    if(!respuesta.ok)throw Error('No fue posible cargar la tipografía del informe');
+    const bytes=new Uint8Array(await respuesta.arrayBuffer());
+    let binario='';for(let i=0;i<bytes.length;i+=8192)binario+=String.fromCharCode(...bytes.subarray(i,i+8192));
+    const archivo='Docencia-'+nombre+'.ttf';
+    pdf.addFileToVFS(archivo,btoa(binario));pdf.addFont(archivo,'Docencia',estilo);
+   }
+   pdf.setProperties({title:'Auditoría de correos · OFL 146',subject:'Registro institucional de correos',author:'Cámara de Docencia · OFL 146'});
+   const izquierda=15,ancho=180,limite=274;
+   let y=0,numero=0;
+   function pagina(){
+    if(numero)pdf.addPage();
+    numero++;
+    pdf.setFillColor(255,255,255);pdf.rect(0,0,210,297,'F');
+    pdf.setFillColor(22,55,73);pdf.rect(0,0,210,22,'F');
+    pdf.setTextColor(255,255,255);pdf.setFont('Docencia','bold');pdf.setFontSize(13);
+    pdf.text('AUDITORÍA DE CORREOS · OFL 146',izquierda,14);
+    pdf.setTextColor(38,62,77);pdf.setFont('Docencia','normal');pdf.setFontSize(8);
+    pdf.text('Fecha de emisión: '+fechaEmision+'   |   Generado: '+fmt(generado)+'   |   Registros: '+filas.length,izquierda,29);
+    y=36;
+   }
+   function asegurar(alto){if(y+alto>limite)pagina();}
+   function linea(etiqueta,valor){
+    const contenido=etiqueta+': '+String(valor==null||valor===''?'—':valor);
+    pdf.setFont('Docencia','normal');pdf.setFontSize(8.6);pdf.setTextColor(31,54,69);
+    const partes=pdf.splitTextToSize(contenido,ancho-10);
+    const alto=Math.max(1,partes.length)*4.35+1.8;
+    asegurar(alto);
+    pdf.text(partes,izquierda+4,y+4.1,{lineHeightFactor:1.12});y+=alto;
+   }
+   function extracto(texto){
+    pdf.setFont('Docencia','bold');pdf.setFontSize(8.2);pdf.setTextColor(45,79,97);
+    asegurar(9);pdf.text('PRIMERAS 10 LÍNEAS DEL CORREO',izquierda+4,y+4);y+=7;
+    pdf.setFont('Docencia','normal');pdf.setFontSize(8.1);pdf.setTextColor(36,58,69);
+    const fragmento=String(texto||'Contenido no almacenado en la auditoría');
+    for(const lineaTexto of fragmento.split(/\r?\n/)){
+     const partes=pdf.splitTextToSize(lineaTexto||' ',ancho-16);
+     for(const p of partes){asegurar(4.3);pdf.text(p,izquierda+8,y+3.2);y+=4.3;}
+    }
+    y+=3;
+   }
+   pagina();
+   pdf.setFont('Docencia','normal');pdf.setFontSize(8);pdf.setTextColor(86,105,119);
+   const advertencia='La aceptación SMTP no garantiza entrega al buzón. Los registros históricos se muestran según las asignaciones; no acreditan una comprobación SMTP individual.';
+   const aviso=pdf.splitTextToSize(advertencia,ancho);
+   pdf.text(aviso,izquierda,y+3);y+=aviso.length*4+7;
+   for(const [i,f] of filas.entries()){
+    // Empezar cada ficha en una sola página cuando el espacio disponible sea reducido.
+    asegurar(45);
+    pdf.setFillColor(231,240,245);pdf.setDrawColor(196,213,224);pdf.rect(izquierda,y,ancho,9,'FD');
+    pdf.setTextColor(30,65,85);pdf.setFont('Docencia','bold');pdf.setFontSize(9.1);
+    pdf.text('REGISTRO '+(i+1)+' · '+fmt(f.creado_en),izquierda+4,y+6);y+=11;
+    linea('Remitente',f.remitente||'No registrado');
+    linea('Destinatarios',(f.destinatarios||[]).join('; '));
+    if((f.cc||[]).length)linea('CC',f.cc.join('; '));
+    if((f.cco||[]).length)linea('CCO',f.cco.join('; '));
+    linea('Asunto',f.asunto);
+    linea('Estado SMTP',f.estado==='historico_enviado'?'Enviado según historial; aceptación SMTP no verificable':f.estado);
+    linea('Tipo y origen',f.tipo+' / '+(f.fuente||'auditoria_correos'));
+    linea('Identificador SMTP',f.message_id||'No registrado');
+    linea('ID de intento',f.intento_id||f.id);
+    if(f.origen_id)linea('Referencia de origen',f.origen_id);
+    if((f.aceptados_smtp||[]).length)linea('Aceptados SMTP',f.aceptados_smtp.join('; '));
+    if((f.rechazados_smtp||[]).length)linea('Rechazados SMTP',f.rechazados_smtp.join('; '));
+    if(f.error_codigo)linea('Error',f.error_codigo+' '+(f.error_detalle||''));
+    extracto(f.extracto);
+    asegurar(5);pdf.setDrawColor(217,229,233);pdf.line(izquierda,y,izquierda+ancho,y);y+=6;
+   }
+   const total=pdf.internal.getNumberOfPages();
+   for(let n=1;n<=total;n++){
+    pdf.setPage(n);pdf.setDrawColor(210,220,226);pdf.line(izquierda,282,izquierda+ancho,282);
+    pdf.setTextColor(97,113,123);pdf.setFont('Docencia','normal');pdf.setFontSize(7.5);
+    pdf.text('Documento privado · '+n+' / '+total,izquierda,288);
+    pdf.text('Cámara de Docencia · Talagante',195,288,{align:'right'});
+   }
+   pdf.save('auditoria-correos-'+fechaEmision+'.pdf');
+   estado.textContent='PDF generado correctamente: '+filas.length+' registros, '+total+' páginas.';
+  }catch(e){
+   estado.textContent='No fue posible generar el PDF: '+String(e?.message||'error').slice(0,140);
+  }finally{exportando=false;$('auditoriaPdf').disabled=!filas.length;}
  }
  function insertarAcceso(){
   const container=document.querySelector('.informes-ejecutivos-acciones');
