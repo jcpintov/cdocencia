@@ -20,21 +20,23 @@
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function montar(){
   if($('auditoriaCorreosDialogo'))return;
-  const d=document.createElement('dialog');d.id='auditoriaCorreosDialogo';d.style.cssText='max-width:min(1120px,96vw);width:96vw;max-height:90vh;overflow:auto;padding:22px;border-radius:12px;border:1px solid #9aabb5;background:#fff;color:#172b3a;z-index:9999';
-  d.innerHTML=`<h2 style="margin:0 0 8px">Auditoría de correos — Superadmin</h2><p style="margin:0 0 18px">La aceptación por el servidor SMTP no confirma entrega al buzón.</p>
-<form id="auditoriaCorreosFiltros" style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+  const d=document.createElement('dialog');d.id='auditoriaCorreosDialogo';d.className='auditoria-correos-dialogo';
+  if(!document.getElementById('auditoriaCorreosCss')){const css=document.createElement('link');css.id='auditoriaCorreosCss';css.rel='stylesheet';css.href='/auditoria-correos-modal.css?v=20261113';document.head.appendChild(css);}
+  d.setAttribute('aria-labelledby','auditoriaCorreosTitulo');
+  d.innerHTML=`<div class="auditoria-contenedor"><header class="auditoria-cabecera"><div><span class="auditoria-etiqueta">Control administrativo · Superadmin</span><h2 id="auditoriaCorreosTitulo">Auditoría de correos</h2><p>Registro de envíos y aceptación SMTP. La aceptación del servidor no acredita entrega al buzón.</p></div><button id="auditoriaCerrarSuperior" type="button" aria-label="Cerrar auditoría" class="auditoria-cerrar-x">×</button></header><div class="auditoria-cuerpo"><section class="auditoria-bloque"><h3>Filtros de consulta</h3>
+<form id="auditoriaCorreosFiltros" class="auditoria-filtros">
 <label>Desde <input type="date" id="auditoriaDesde"></label><label>Hasta <input type="date" id="auditoriaHasta"></label>
 <label>Estado <select id="auditoriaEstado"><option value="">Todos</option><option value="aceptado_smtp">Aceptado SMTP</option><option value="error">Error</option><option value="pendiente">Pendiente</option><option value="incierto">Incierto</option></select></label>
-<label>Tipo <select id="auditoriaTipo"><option value="">Todos</option><option value="asignacion">Asignación</option><option value="recordatorio">Recordatorio</option><option value="calendario">Calendario</option><option value="publicacion">Publicación</option><option value="inventario">Inventario</option><option value="codigo_perfil">Código de autorización</option></select></label>
-<label>Buscar <input id="auditoriaBuscar" maxlength="120" placeholder="Correo, remitente o asunto"></label>
-<button type="submit">Consultar</button></form>
-<div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px"><label for="auditoriaFechaEmision">Fecha de emisión del informe: </label><input type="date" id="auditoriaFechaEmision"><small>Modifica la fecha declarada del informe, no las fechas reales de los envíos.</small></div>
-<p id="auditoriaEstadoVista" role="status" aria-live="polite" style="padding:12px 0"></p>
-<div style="overflow-x:auto"><table style="min-width:1020px;width:100%;font-size:12px;border-collapse:collapse" id="auditoriaTabla"><thead><tr><th>Fecha y hora (Chile)</th><th>Remitente</th><th>Para / CC / CCO</th><th>Asunto</th><th>Tipo</th><th>Estado</th><th>ID / referencia</th></tr></thead><tbody></tbody></table></div>
-<div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px">
-<button type="button" id="auditoriaCsv" disabled>Exportar CSV</button><button type="button" id="auditoriaPdf" disabled>Exportar PDF</button><button type="button" id="auditoriaCerrar">Cerrar</button></div>`;
+<label>Tipo <select id="auditoriaTipo"><option value="">Todos</option><option value="asignacion">Asignación</option><option value="recordatorio">Recordatorio</option><option value="calendario">Calendario</option><option value="publicacion">Publicación</option><option value="inventario">Inventario</option><option value="codigo_perfil">Código de autorización</option><option value="prueba_smtp_dummy">Prueba SMTP Dummy</option></select></label>
+<label class="auditoria-buscar">Buscar <input id="auditoriaBuscar" maxlength="120" placeholder="Correo, remitente o asunto"></label>
+<button type="submit" class="auditoria-boton-primario">Consultar</button></form></section>
+<section class="auditoria-bloque auditoria-emision"><label for="auditoriaFechaEmision">Fecha de emisión del informe <input type="date" id="auditoriaFechaEmision"></label><small>Modifica únicamente la fecha declarada del informe; no cambia las fechas reales de envío y generación.</small></section>
+<p id="auditoriaEstadoVista" role="status" aria-live="polite" class="auditoria-estado"></p>
+<div class="auditoria-tabla-marco" role="region" aria-label="Registros de auditoría" tabindex="0"><table id="auditoriaTabla"><thead><tr><th>Fecha y hora (Chile)</th><th>Remitente</th><th>Para / CC / CCO</th><th>Asunto</th><th>Tipo</th><th>Estado</th><th>ID / referencia</th></tr></thead><tbody></tbody></table></div>
+</div><footer class="auditoria-pie"><span>Descargas locales · Acceso reservado</span><div class="auditoria-acciones">
+<button type="button" id="auditoriaCsv" disabled>Exportar CSV</button><button type="button" id="auditoriaPdf" disabled>Exportar PDF</button><button type="button" id="auditoriaCerrar" class="auditoria-boton-primario">Cerrar</button></div></footer></div>`;
   document.body.appendChild(d);
-  d.querySelectorAll('th,td').forEach(e=>e.style.cssText='border-bottom:1px solid #dbe2e8;padding:7px;text-align:left;vertical-align:top');
+  $('auditoriaCerrarSuperior').onclick=()=>d.close();
   $('auditoriaCerrar').onclick=()=>d.close();
   d.addEventListener('close',()=>{abierto=false;filas=[];});
   $('auditoriaCorreosFiltros').onsubmit=e=>{e.preventDefault();consultar();};
@@ -61,7 +63,7 @@
    for(const f of filas){
     const tr=document.createElement('tr');
     const vals=[fmt(f.creado_en),f.remitente,[...f.destinatarios.map(x=>'Para: '+x),...f.cc.map(x=>'CC: '+x),...f.cco.map(x=>'CCO: '+x)].join(' | '),f.asunto,f.tipo,f.estado,(f.intento_id||f.id)+(f.origen_id?' / '+f.origen_id:'')];
-    for(const v of vals){const td=document.createElement('td');td.textContent=v;td.style.cssText='padding:7px;border-bottom:1px solid #dbe2e8;vertical-align:top';tr.appendChild(td);}tbody.appendChild(tr);
+    for(const v of vals){const td=document.createElement('td');td.textContent=v;tr.appendChild(td);}tbody.appendChild(tr);
    }
    estado.textContent=filas.length+' registros mostrados.'+(limitado?' Se alcanzó el máximo de 2.000: acote el período.':'');
    $('auditoriaCsv').disabled=!filas.length;$('auditoriaPdf').disabled=!filas.length;
