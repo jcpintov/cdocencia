@@ -1,0 +1,36 @@
+
+#auditoriaCorreosDialogo{position:fixed;inset:0;box-sizing:border-box;width:min(1200px,calc(100vw - 30px));max-width:1200px;max-height:92dvh;margin:auto;padding:0;border:1px solid #d4dce1;border-radius:16px;background:#f7f9fa;color:#183447;box-shadow:0 22px 75px rgba(9,26,39,.32);font-family:Inter,Arial,sans-serif;overflow:hidden;z-index:9999}
+#auditoriaCorreosDialogo::backdrop{background:rgba(12,27,39,.7);backdrop-filter:blur(3px)}
+#auditoriaCorreosDialogo .auditoria-contenedor{display:flex;flex-direction:column;max-height:92dvh;min-height:0}
+#auditoriaCorreosDialogo .auditoria-cabecera{background:#123449;color:#fff;padding:22px 26px 18px;display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-shrink:0}
+#auditoriaCorreosDialogo .auditoria-etiqueta{font-size:.73rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#d7bb81}
+#auditoriaCorreosDialogo h2{font-family:Inter,Arial,sans-serif;color:#fff;font-size:clamp(1.17rem,2vw,1.5rem);line-height:1.25;margin:6px 0 8px}
+#auditoriaCorreosDialogo .auditoria-cabecera p{margin:0;color:#d4e0e7;font-size:.86rem;line-height:1.5}
+#auditoriaCorreosDialogo .auditoria-cerrar-x{flex:0 0 38px;height:38px;border:1px solid #829cac;border-radius:9px;color:#fff;background:transparent;cursor:pointer;font-size:1.4rem}
+#auditoriaCorreosDialogo .auditoria-cuerpo{padding:20px 26px;overflow:auto;min-height:0;flex:1}
+#auditoriaCorreosDialogo .auditoria-bloque{border:1px solid #d9e3e8;border-radius:11px;background:#fff;padding:16px 18px;margin-bottom:15px}
+#auditoriaCorreosDialogo .auditoria-bloque h3{font:700 .91rem Inter,Arial,sans-serif;color:#1c3b4f;margin:0 0 14px}
+#auditoriaCorreosDialogo .auditoria-filtros{display:grid;grid-template-columns:repeat(2,minmax(130px,1fr)) minmax(125px,.85fr) minmax(160px,1fr) minmax(190px,1.5fr) auto;align-items:end;gap:12px}
+#auditoriaCorreosDialogo .auditoria-filtros label,#auditoriaCorreosDialogo .auditoria-emision label{display:flex;flex-direction:column;gap:6px;min-width:0;margin:0;color:#344b5e;font-size:.78rem;font-weight:600}
+#auditoriaCorreosDialogo input,#auditoriaCorreosDialogo select{box-sizing:border-box;width:100%;min-width:0;height:40px;padding:7px 10px;background:#fff;color:#183447;border:1px solid #c4d0d8;border-radius:8px;font:400 .85rem Inter,Arial,sans-serif}
+#auditoriaCorreosDialogo button{box-sizing:border-box;min-height:40px;padding:9px 15px;border-radius:8px;font:600 .84rem Inter,Arial,sans-serif;cursor:pointer}
+#auditoriaCorreosDialogo button:focus-visible,#auditoriaCorreosDialogo input:focus-visible,#auditoriaCorreosDialogo select:focus-visible{outline:3px solid #b8924d;outline-offset:2px}
+#auditoriaCorreosDialogo .auditoria-boton-primario{border:1px solid #21536b;background:#21536b;color:#fff}
+#auditoriaCorreosDialogo .auditoria-boton-primario:hover{background:#143c52}
+#auditoriaCorreosDialogo .auditoria-emision{display:flex;gap:15px;align-items:center;flex-wrap:wrap}
+#auditoriaCorreosDialogo .auditoria-emision label{width:min(230px,100%)}
+#auditoriaCorreosDialogo .auditoria-emision small{font-size:.78rem;line-height:1.5;color:#607789;flex:1 1 240px}
+#auditoriaCorreosDialogo .auditoria-estado{min-height:20px;padding:2px 0 10px;margin:0;color:#30546b;font-size:.86rem;font-weight:600}
+#auditoriaCorreosDialogo .auditoria-tabla-marco{overflow:auto;max-height:43vh;border:1px solid #d9e3e8;border-radius:9px;background:#fff;overscroll-behavior:contain}
+#auditoriaCorreosDialogo table{min-width:1020px;width:100%;border-collapse:separate;border-spacing:0;font-size:.77rem;line-height:1.45}
+#auditoriaCorreosDialogo th{position:sticky;top:0;z-index:1;text-align:left;background:#eaf1f5;color:#203f52;padding:12px 10px;border-bottom:1px solid #cad7df;white-space:nowrap}
+#auditoriaCorreosDialogo td{padding:10px;vertical-align:top;border-bottom:1px solid #e2eaf0;color:#2b4353;overflow-wrap:anywhere}
+#auditoriaCorreosDialogo tbody tr:nth-child(even){background:#f7fafb}
+#auditoriaCorreosDialogo tbody tr:hover{background:#eef5f8}
+#auditoriaCorreosDialogo .auditoria-pie{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap;padding:15px 26px;background:#fff;border-top:1px solid #dce4e8;flex-shrink:0}
+#auditoriaCorreosDialogo .auditoria-pie>span{font-size:.73rem;color:#627a89}
+#auditoriaCorreosDialogo .auditoria-acciones{display:flex;gap:9px;flex-wrap:wrap}
+#auditoriaCorreosDialogo .auditoria-acciones button:not(.auditoria-boton-primario){background:#fff;color:#24495d;border:1px solid #a8bac6}
+#auditoriaCorreosDialogo .auditoria-acciones button:disabled{opacity:.48;cursor:not-allowed}
+@media(max-width:1100px){#auditoriaCorreosDialogo .auditoria-filtros{grid-template-columns:repeat(3,minmax(0,1fr))}#auditoriaCorreosDialogo .auditoria-buscar{grid-column:span 2}}
+@media(max-width:700px){#auditoriaCorreosDialogo{width:calc(100vw - 12px);max-height:96dvh;border-radius:10px}#auditoriaCorreosDialogo .auditoria-contenedor{max-height:96dvh}#auditoriaCorreosDialogo .auditoria-cabecera{padding:16px}#auditoriaCorreosDialogo .auditoria-cuerpo{padding:12px}#auditoriaCorreosDialogo .auditoria-bloque{padding:12px}#auditoriaCorreosDialogo .auditoria-filtros{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}#auditoriaCorreosDialogo .auditoria-buscar{grid-column:1/-1}#auditoriaCorreosDialogo .auditoria-filtros button{grid-column:1/-1}#auditoriaCorreosDialogo .auditoria-pie{padding:12px 16px}#auditoriaCorreosDialogo .auditoria-acciones{width:100%}#auditoriaCorreosDialogo .auditoria-acciones button{flex:1 1 auto}#auditoriaCorreosDialogo .auditoria-tabla-marco{max-height:38vh}}

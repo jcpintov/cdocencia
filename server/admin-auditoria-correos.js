@@ -32,7 +32,7 @@ export default async function handler(req,res){
   const {desde,hasta,estado,tipo,busqueda}=b;
   if((desde&&!fecha(desde))||(hasta&&!fecha(hasta))||(desde&&hasta&&desde>hasta))return res.status(422).json({error:'Período inválido'});
   if(desde&&hasta&&(Date.parse(hasta)-Date.parse(desde)>366*86400000))return res.status(422).json({error:'Máximo 366 días'});
-  if(estado&&!['pendiente','aceptado_smtp','error','incierto'].includes(estado))return res.status(422).json({error:'Estado inválido'});
+  if(estado&&!['pendiente','aceptado_smtp','error','incierto','historico_enviado'].includes(estado))return res.status(422).json({error:'Estado inválido'});
   if(tipo&&(typeof tipo!=='string'||tipo.length>80))return res.status(422).json({error:'Tipo inválido'});
   if(busqueda&&(typeof busqueda!=='string'||busqueda.length>120))return res.status(422).json({error:'Búsqueda demasiado larga'});
   let q=admin.from('auditoria_correos').select('id,creado_en,remitente,destinatarios,cc,cco,asunto,tipo,origen_id,intento_id,estado,aceptados_smtp,rechazados_smtp,message_id,error_codigo,error_detalle',{count:'exact'});
@@ -40,11 +40,40 @@ export default async function handler(req,res){
   if(hasta)q=q.lt('creado_en',inicioChile(diaSiguiente(hasta)));
   if(estado)q=q.eq('estado',estado);
   if(tipo)q=q.eq('tipo',tipo);
-  // La búsqueda textual se realiza solo sobre el conjunto recuperado (sin interpolar filtros SQL).
   const {data,error,count}=await q.order('creado_en',{ascending:false}).limit(2000);
   if(error)throw error;
+  const actuales=(data||[]).map(f=>({...f,fuente:'auditoria_correos',extracto:null}));
+  // Los registros históricos conservan el cuerpo textual y el Message-ID, pero no
+  // prueban aceptación SMTP ante el destinatario. No se altera su estado original.
+  let historicos=[];
+  let totalHistoricos=0;
+  if((!tipo||tipo==='asignacion')&&(!estado||estado==='historico_enviado')){
+   let h=admin.from('docencia_asignaciones_correos')
+     .select('id,asignacion_id,destinatario,copia_oculta,asunto,texto,estado,message_id,creado_en,finalizado_en',{count:'exact'})
+     .eq('estado','enviado');
+   if(desde)h=h.gte('creado_en',inicioChile(desde));
+   if(hasta)h=h.lt('creado_en',inicioChile(diaSiguiente(hasta)));
+   const {data:historico,error:errorHistorico,count:conteo}=await h.order('creado_en',{ascending:false}).limit(2000);
+   if(errorHistorico)throw errorHistorico;
+   totalHistoricos=conteo||0;
+   historicos=(historico||[]).map(f=>({
+    id:f.id,creado_en:f.finalizado_en||f.creado_en,remitente:'No registrado en origen',
+    destinatarios:f.destinatario?[f.destinatario]:[],cc:[],cco:f.copia_oculta?[f.copia_oculta]:[],
+    asunto:f.asunto||'',tipo:'asignacion',origen_id:f.asignacion_id,intento_id:f.id,
+    estado:'historico_enviado',aceptados_smtp:[],rechazados_smtp:[],
+    message_id:f.message_id,error_codigo:null,error_detalle:null,
+    fuente:'docencia_asignaciones_correos',
+    extracto:typeof f.texto==='string'?f.texto.split(/\r?\n/).map(v=>v.trim()).filter(Boolean).slice(0,10).join('\n'):null
+   }));
+  }
+  const idsNuevos=new Set(actuales.map(f=>f.message_id).filter(Boolean));
+  historicos=historicos.filter(f=>!f.message_id||!idsNuevos.has(f.message_id));
   const needle=String(busqueda||'').trim().toLocaleLowerCase('es-CL');
-  const filas=needle?data.filter(f=>[f.remitente,f.asunto,...f.destinatarios,...f.cc,...f.cco].some(v=>String(v||'').toLocaleLowerCase('es-CL').includes(needle))):data;
-  return res.status(200).json({ok:true,generado_en:new Date().toISOString(),filas,total:count,limitado:count>2000});
+  const coincide=f=>[f.remitente,f.asunto,f.extracto,...f.destinatarios,...f.cc,...f.cco].some(v=>String(v||'').toLocaleLowerCase('es-CL').includes(needle));
+  const filas=[...actuales,...historicos].filter(f=>!needle||coincide(f))
+   .sort((a,b)=>Date.parse(b.creado_en)-Date.parse(a.creado_en)).slice(0,2000);
+  const total=(count||0)+totalHistoricos;
+  return res.status(200).json({ok:true,generado_en:new Date().toISOString(),filas,total,
+    limitado:(count||0)>=2000||totalHistoricos>=2000||total>2000});
  }catch(e){console.error('AUDITORIA_CORREOS_QUERY',e?.code||'error');return res.status(503).json({error:'No fue posible consultar la auditoría'});}
 }
