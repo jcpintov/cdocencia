@@ -24,4 +24,5 @@ create index if not exists auditoria_correos_tipo_fecha_idx on public.auditoria_
 create unique index if not exists auditoria_correos_intento_idx on public.auditoria_correos (tipo,intento_id) where intento_id is not null;
 alter table public.auditoria_correos enable row level security;
 revoke all on public.auditoria_correos from anon, authenticated, public;
+grant select, insert, update on public.auditoria_correos to service_role;
 -- Sin policies: únicamente backend con service_role accede.
