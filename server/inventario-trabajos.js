@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import {generarCorreoInventario,htmlCorreoInventario} from '../lib/correo-inventario.js';
+import {enviarConAuditoria} from '../lib/auditoria-correos.js';
 const uuid=v=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v||'');
 export async function gestionarInventario(body,{admin,actor,env=process.env,transport}){
  const responder=(status,data)=>({status,body:data});
@@ -43,7 +44,7 @@ export async function gestionarInventario(body,{admin,actor,env=process.env,tran
  const correo=r.data.contenido.correo;
  try{
   transport??=nodemailer.createTransport({host:env.SMTP_HOST,port:Number(env.SMTP_PORT||465),secure:env.SMTP_SECURE!=='false',connectionTimeout:10000,greetingTimeout:10000,socketTimeout:20000,auth:{user:env.SMTP_USER,pass:env.SMTP_PASSWORD}});
-  const enviado=await transport.sendMail(correo),aceptados=new Set((enviado.accepted||[]).map(x=>String(x).toLowerCase())),rechazados=(enviado.rejected||[]).length;
+  const enviado=await enviarConAuditoria({admin,transport,correo,tipo:'inventario',origenId:id,intentoId:id}),aceptados=new Set((enviado.accepted||[]).map(x=>String(x).toLowerCase())),rechazados=(enviado.rejected||[]).length;
   const completo=correo.bcc.every(x=>aceptados.has(x));
   const guardado=await admin.from('docencia_inventarios_correo').update({estado:completo?'enviado':'incierto',aceptados:aceptados.size,rechazados,message_id:enviado.messageId,finalizado_en:new Date().toISOString()}).eq('id',id).eq('estado','enviando');
   return responder(completo&&!guardado.error?200:503,{ok:completo&&!guardado.error,id,aceptados:aceptados.size,rechazados,mensaje:completo?'Correo aceptado por el servidor SMTP para todas las casillas.':'Envío sin confirmación completa. Revise antes de repetir.'});

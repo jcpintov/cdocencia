@@ -31,6 +31,7 @@ function setup({email='jpintov@gmail.com',admin=true,rol,failSend=false,failFini
  rpc:async(_fn,{p_accion,p_datos})=>{calls.push({action:p_accion,data:p_datos});
  if(failFinish&&p_accion==='finalizar_correo')return {error:{code:'network'}};
  return {data:p_accion==='vista_correo'?registro:p_accion==='reservar_correo'?{enviar:reserva}:{ok:true},error:null};}},
+ enviarConAuditoria:({transport,correo})=>transport.sendMail(correo),
  nodemailer:{createTransport:()=>({sendMail:async msg=>{calls.push({action:'sendMail',msg});if(failSend)throw Error('timeout');return {accepted:[registro.email,'jpintov@gmail.com'],messageId:'accepted'};}})}};
  runInNewContext(permisosSource+source,ctx);
  async function request(body,authorization='Bearer valid'){

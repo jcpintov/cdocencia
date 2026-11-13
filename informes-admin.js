@@ -5,6 +5,34 @@
  const titulos={asignaciones:'Trabajos asignados',avances:'Avance de los maestros',actividad:'Actividad de acceso'};
  let solicitud=0,controlador=null,exportando=false,informe=null,origen=null;
  let fuentesPDF=null,emblemaPDF=null;
+ let fechaEmisionDeclarada='',fechaEmisionAceptada='';
+ const hoyChile=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'America/Santiago',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+ const permisoEditarFecha=()=>usuarioActual?.es_admin===true&&usuarioActual?.rol!=='ADMIN';
+ function fechaElegida(r){return fechaEmisionDeclarada||new Intl.DateTimeFormat('en-CA',{timeZone:'America/Santiago',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(r.generado_en));}
+ function configurarFecha(){
+  let bloque=$('informeFechaEmisionBloque');
+  if(!bloque){
+   bloque=document.createElement('div');bloque.id='informeFechaEmisionBloque';bloque.style.cssText='display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0';
+   const etiqueta=document.createElement('label');etiqueta.htmlFor='informeFechaEmision';etiqueta.textContent='Fecha de emisión del informe:';
+   const input=document.createElement('input');input.type='date';input.id='informeFechaEmision';input.setAttribute('aria-label','Fecha de emisión del informe');
+   const aviso=document.createElement('small');aviso.textContent='Solo cambia la fecha declarada, no los datos ni la fecha real de generación.';
+   bloque.append(etiqueta,input,aviso);
+   $('informeEjecutivoEstado').before(bloque);
+   input.addEventListener('change',()=>{
+    if(!permisoEditarFecha()){input.value=fechaEmisionAceptada;return;}
+    const nueva=input.value;
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(nueva)){input.value=fechaEmisionAceptada;return;}
+    if(nueva===fechaEmisionAceptada)return;
+    if(!window.confirm('La fecha seleccionada ('+nueva+') difiere de la fecha actual de Chile ('+hoyChile()+'). ¿Confirma utilizarla como fecha de emisión declarada?')){
+     input.value=fechaEmisionAceptada;return;
+    }
+    fechaEmisionAceptada=nueva;fechaEmisionDeclarada=nueva;
+    if(informe)presentar(informe);
+   });
+  }
+  bloque.hidden=!permisoEditarFecha();
+  const input=$('informeFechaEmision');input.value=fechaEmisionAceptada;input.disabled=!permisoEditarFecha();
+ }
  async function cargarEmblemaPDF(){
   if(!emblemaPDF)emblemaPDF=fetch('/imgs/emblema.png',{signal:AbortSignal.timeout(10000)}).then(async r=>{
    if(!r.ok)throw Error('No fue posible cargar el emblema del informe');
@@ -53,7 +81,7 @@
   const identidad=document.createElement('div');identidad.className='informe-membrete-identidad';
   identidad.append(texto('p','PLATAFORMA DE DOCENCIA PARA MAESTROS'),texto('p','R.·.L.·. OFL 146'),texto('p','TALAGANTE'));
   const emblema=document.createElement('img');emblema.src='/imgs/emblema.png';emblema.alt='Emblema de la R.·.L.·. Orestes Frödden Lorenzen N.º 146';emblema.width=902;emblema.height=851;
-  const detalle=document.createElement('div');detalle.className='informe-membrete-detalle';detalle.append(texto('h2',encabezados[r.tipo]),texto('p','EMISIÓN: '+emision(r.generado_en)));
+  const detalle=document.createElement('div');detalle.className='informe-membrete-detalle';detalle.append(texto('h2',encabezados[r.tipo]),texto('p','FECHA DE EMISIÓN: '+fechaElegida(r)),texto('p','GENERADO REALMENTE: '+emision(r.generado_en)));
   membrete.append(identidad,emblema,detalle);doc.appendChild(membrete);
   const d=r.data;
   if(r.tipo==='asignaciones'){
@@ -73,6 +101,7 @@
   if(!usuarioActual?.es_admin||!titulos[tipo]||exportando)return;
   controlador?.abort();controlador=new AbortController();const signal=controlador.signal,n=++solicitud,actor=usuarioActual;
   informe=null;origen=document.activeElement;
+  fechaEmisionDeclarada=fechaEmisionAceptada=hoyChile();configurarFecha();
   $('informeEjecutivoContenido').replaceChildren();$('btnDescargarInformeEjecutivo').disabled=true;
   $('informeEjecutivoTitulo').textContent=titulos[tipo];$('informeEjecutivoEstado').textContent='Consultando informe completo…';
   $('informeEjecutivoContenido').setAttribute('aria-busy','true');
@@ -95,14 +124,14 @@
  };
  window.cerrarInformeEjecutivo=function(){
   if(exportando)return;
-  ++solicitud;controlador?.abort();controlador=null;informe=null;
+  ++solicitud;controlador?.abort();controlador=null;informe=null;fechaEmisionDeclarada='';fechaEmisionAceptada='';
   $('dialogInformeEjecutivo')?.close();$('informeEjecutivoContenido')?.replaceChildren();
   if($('informeEjecutivoEstado'))$('informeEjecutivoEstado').textContent='';
   if($('btnDescargarInformeEjecutivo'))$('btnDescargarInformeEjecutivo').disabled=true;
   origen?.focus?.({preventScroll:true});
  };
  window.limpiarInformesAdmin=function(){
-  ++solicitud;controlador?.abort();informe=null;
+  ++solicitud;controlador?.abort();informe=null;fechaEmisionDeclarada='';fechaEmisionAceptada='';
   $('dialogInformeEjecutivo')?.close();$('informeEjecutivoContenido')?.replaceChildren();
  };
  function dibujarInformePDF(pdf,r,emblema){
@@ -115,7 +144,8 @@
    pdf.addImage(emblema,'PNG',149,9,26,26*851/902,'emblema-institucional','FAST');
    pdf.setTextColor(112,126,143);pdf.setFontSize(10);
    const titulo=pdf.splitTextToSize(encabezados[r.tipo],105);pdf.text(titulo,287,18,{align:'right'});
-   pdf.setFontSize(9);pdf.text('EMISIÓN: '+emision(r.generado_en),287,18+titulo.length*5+5,{align:'right'});
+   pdf.setFontSize(9);pdf.text('FECHA DE EMISIÓN: '+fechaElegida(r),287,18+titulo.length*5+5,{align:'right'});
+   pdf.setFontSize(8);pdf.text('GENERADO: '+emision(r.generado_en),287,18+titulo.length*5+10,{align:'right'});
    pdf.setDrawColor(25,42,55);pdf.setLineWidth(.6);pdf.line(izq,40,287,40);pdf.setLineWidth(.15);y=48;
   }
   membrete();
@@ -180,7 +210,7 @@
    if(n!==solicitud||usuarioActual!==actor||!usuarioActual?.es_admin)return;
    const total=pdf.internal.getNumberOfPages();
    for(let pagina=1;pagina<=total;pagina++){pdf.setPage(pagina);pdf.setFontSize(8);pdf.setTextColor(80);pdf.text('Documento privado · '+pagina+' / '+total,10,204);}
-   pdf.save('informe-'+datos.tipo+'-'+datos.generado_en.slice(0,10)+'.pdf');
+   pdf.save('informe-'+datos.tipo+'-'+fechaElegida(datos)+'.pdf');
    $('informeEjecutivoEstado').textContent='Descarga PDF preparada.';
   }catch{
    if(n===solicitud)$('informeEjecutivoEstado').textContent='No fue posible generar el PDF. La vista previa sigue disponible; intente nuevamente.';
