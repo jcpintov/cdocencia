@@ -72,7 +72,8 @@
  function exportarCsv(){
   if(!autorizado())return;
   const cabecera=[['Fecha de emisión declarada',fechaEmision],['Fecha y hora real de generación',fmt(generado)],[]];
-  const texto='\uFEFF'+[...cabecera,...datosTabla()].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  const seguro=v=>{const t=String(v??'');return /^[\s]*[=+@-]/.test(t)?"'"+t:t;};
+  const texto='\uFEFF'+[...cabecera,...datosTabla()].map(row=>row.map(v=>'"'+seguro(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');
   const url=URL.createObjectURL(new Blob([texto],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='auditoria-correos-'+fechaEmision+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
  }
  async function exportarPdf(){
