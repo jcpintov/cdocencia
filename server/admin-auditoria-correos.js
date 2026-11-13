@@ -1,8 +1,8 @@
 import {createClient} from '@supabase/supabase-js';
 import {esSuperadmin} from '../lib/roles-admin.js';
-const fecha=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&!Number.isNaN(Date.parse(v+'T12:00:00Z'));
+const fecha=v=>typeof v==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(v)&&!Number.isNaN(Date.parse(v+'T12:00:00Z'))&&new Date(v+'T12:00:00Z').toISOString().slice(0,10)===v;
 const partes=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Santiago',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
-function inicioChile(dia){
+export function inicioChile(dia){
  const objetivo=Date.parse(dia+'T00:00:00Z');let resultado=objetivo+4*3600000;
  // Ajuste iterativo para cambios de horario de verano e invierno.
  for(let i=0;i<4;i++){
