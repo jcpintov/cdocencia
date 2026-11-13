@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {enviarConAuditoria} from '../lib/auditoria-correos.js';
 import {readFileSync} from 'node:fs';
 import {esSuperadmin} from '../lib/roles-admin.js';
+import {inicioChile} from '../server/admin-auditoria-correos.js';
 
 function simulacion({insertError=null,resultado={accepted:['destino@ejemplo.cl'],rejected:[],messageId:'<test@example.cl>'},smtpError=null}={}){
  const operaciones=[];let envios=0;
@@ -75,4 +76,14 @@ test('a1.html mantiene acceso privado sin sustituir la portada pública de mante
  assert.match(acceso,/Acceso reservado a administración/);
  assert.match(portada,/Plataforma temporalmente fuera de Servicio/);
  assert.doesNotMatch(portada,/auditoria-correos-admin\\.js/);
+});
+
+test('la medianoche de Santiago se convierte a UTC con horario de verano e invierno',()=>{
+ assert.equal(inicioChile('2026-01-15'),'2026-01-15T03:00:00.000Z');
+ assert.equal(inicioChile('2026-07-15'),'2026-07-15T04:00:00.000Z');
+});
+test('la exportación CSV neutraliza entradas que podrían convertirse en fórmulas',()=>{
+ const s=readFileSync(new URL('../auditoria-correos-admin.js',import.meta.url),'utf8');
+ assert.match(s,/\[=\+@-\]/);
+ assert.match(s,/const seguro=v/);
 });
