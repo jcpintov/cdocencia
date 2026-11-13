@@ -72,10 +72,10 @@ test('a1.html mantiene acceso privado sin sustituir la portada pública de mante
  const acceso=readFileSync(new URL('../a1.html',import.meta.url),'utf8');
  const portada=readFileSync(new URL('../index.html',import.meta.url),'utf8');
  assert.match(acceso,/admin-usuarios\?operacion=landing/);
- assert.match(acceso,/getSession\\(\\)/);
+ assert.match(acceso,/getSession\(\)/);
  assert.match(acceso,/Acceso reservado a administración/);
  assert.match(portada,/Plataforma temporalmente fuera de Servicio/);
- assert.doesNotMatch(portada,/auditoria-correos-admin\\.js/);
+ assert.doesNotMatch(portada,/auditoria-correos-admin\.js/);
 });
 
 test('la medianoche de Santiago se convierte a UTC con horario de verano e invierno',()=>{
