@@ -70,7 +70,7 @@ test('los cuatro informes contemplan fecha de emisión y trazabilidad',()=>{
 test('a1.html mantiene acceso privado sin sustituir la portada pública de mantenimiento',()=>{
  const acceso=readFileSync(new URL('../a1.html',import.meta.url),'utf8');
  const portada=readFileSync(new URL('../index.html',import.meta.url),'utf8');
- assert.match(acceso,/admin-usuarios\\?operacion=landing/);
+ assert.match(acceso,/admin-usuarios\?operacion=landing/);
  assert.match(acceso,/getSession\\(\\)/);
  assert.match(acceso,/Acceso reservado a administración/);
  assert.match(portada,/Plataforma temporalmente fuera de Servicio/);
